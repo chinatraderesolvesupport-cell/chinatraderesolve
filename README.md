@@ -1,4 +1,4 @@
-# ChinaTradeResolve Free Access + Email v1.1
+# ChinaTradeResolve Free Access + Persistent PostgreSQL v1.2
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -165,3 +165,23 @@ A successful test sends one message to `chinatraderesolve.support@gmail.com`.
 - optional completion/feedback request after a case is closed.
 
 If SMTP is unavailable, the application still accepts cases and keeps messages in the SQLite `notification_outbox`.
+
+
+## Persistent database for free hosting
+
+Free Render web services have an ephemeral filesystem. Do not use the local SQLite file for public applications because it can disappear after a restart, redeploy, or idle spin-down.
+
+For deployment, create a persistent Neon PostgreSQL database and set:
+
+```env
+DATABASE_URL=postgresql://...
+```
+
+When `DATABASE_URL` is present, the app automatically creates and uses PostgreSQL tables. When it is absent, local development and tests continue to use SQLite.
+
+## Render deployment notes
+
+- Docker runtime is supported.
+- The Docker command binds to Render's `PORT` variable.
+- Keep SMTP variables empty on a Free Render web service because outbound SMTP ports are blocked. Connect an HTTPS email provider later.
+- Set `APP_SECRET` and `ADMIN_TOKEN` to separate long random secrets.

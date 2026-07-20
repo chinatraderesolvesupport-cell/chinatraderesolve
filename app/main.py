@@ -39,7 +39,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="1.1.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="1.3.0")
 app.add_middleware(SessionMiddleware, secret_key=settings.app_secret, same_site="lax", https_only=False)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
@@ -149,10 +149,13 @@ def health() -> dict[str, Any]:
         "support_enabled": bool(safe_support_url()),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "email_delivery_configured": bool(
-            settings.smtp_host
-            and settings.smtp_username
-            and settings.smtp_password
-            and settings.admin_email
+            (settings.email_bridge_url and settings.email_bridge_secret)
+            or (
+                settings.smtp_host
+                and settings.smtp_username
+                and settings.smtp_password
+                and settings.admin_email
+            )
         ),
     }
 

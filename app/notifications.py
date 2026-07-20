@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import smtplib
 from email.message import EmailMessage
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from .config import settings
 from .db import mark_notification, pending_notifications, queue_notification
@@ -40,24 +43,63 @@ def queue_case_notifications(case: dict) -> None:
         )
 
 
+def _deliver_via_bridge(item: dict) -> None:
+    if not settings.email_bridge_url or not settings.email_bridge_secret:
+        raise RuntimeError("Email bridge is not configured")
+    payload = json.dumps(
+        {
+            "secret": settings.email_bridge_secret,
+            "to": item["recipient"],
+            "subject": item["subject"],
+            "body": item["body"],
+        }
+    ).encode("utf-8")
+    request = Request(
+        settings.email_bridge_url,
+        data=payload,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=settings.email_bridge_timeout_seconds) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+    except (HTTPError, URLError) as exc:
+        raise RuntimeError(f"Email bridge request failed: {exc}") from exc
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Email bridge returned invalid JSON") from exc
+    if result.get("ok") is not True:
+        raise RuntimeError(f"Email bridge rejected the message: {result.get('error', 'unknown_error')}")
+
+
+def _deliver_via_smtp(item: dict) -> None:
+    msg = EmailMessage()
+    msg["From"] = settings.smtp_from
+    msg["To"] = item["recipient"]
+    msg["Subject"] = item["subject"]
+    msg.set_content(item["body"])
+    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
+        smtp.starttls()
+        if settings.smtp_username:
+            smtp.login(settings.smtp_username, settings.smtp_password or "")
+        smtp.send_message(msg)
+
+
 def deliver_pending() -> dict[str, int]:
     pending = pending_notifications()
     result = {"sent": 0, "failed": 0, "pending": 0}
-    if not settings.smtp_host:
+    bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
+    smtp_ready = bool(settings.smtp_host)
+    if not bridge_ready and not smtp_ready:
         result["pending"] = len(pending)
         return result
     for item in pending:
-        msg = EmailMessage()
-        msg["From"] = settings.smtp_from
-        msg["To"] = item["recipient"]
-        msg["Subject"] = item["subject"]
-        msg.set_content(item["body"])
         try:
-            with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
-                smtp.starttls()
-                if settings.smtp_username:
-                    smtp.login(settings.smtp_username, settings.smtp_password or "")
-                smtp.send_message(msg)
+            if bridge_ready:
+                _deliver_via_bridge(item)
+            else:
+                _deliver_via_smtp(item)
             mark_notification(item["id"], "sent")
             result["sent"] += 1
         except Exception as exc:

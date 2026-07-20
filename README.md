@@ -1,4 +1,4 @@
-# ChinaTradeResolve Free Access + Persistent PostgreSQL v1.2
+# ChinaTradeResolve Free Access + PostgreSQL + HTTPS Email Bridge v1.3
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -185,3 +185,15 @@ When `DATABASE_URL` is present, the app automatically creates and uses PostgreSQ
 - The Docker command binds to Render's `PORT` variable.
 - Keep SMTP variables empty on a Free Render web service because outbound SMTP ports are blocked. Connect an HTTPS email provider later.
 - Set `APP_SECRET` and `ADMIN_TOKEN` to separate long random secrets.
+
+
+## HTTPS email bridge for Render Free
+
+Render Free cannot use outbound SMTP ports. Configure the Google Apps Script web-app endpoint instead:
+
+```env
+EMAIL_BRIDGE_URL=https://script.google.com/macros/s/.../exec
+EMAIL_BRIDGE_SECRET=the-same-secret-stored-in-Apps-Script
+```
+
+When both variables are present, queued confirmation and admin-alert emails are delivered through the HTTPS bridge. SMTP remains available as a local or non-Render fallback.

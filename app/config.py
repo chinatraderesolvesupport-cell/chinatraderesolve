@@ -25,6 +25,9 @@ class Settings:
     smtp_password: str | None = os.getenv("SMTP_PASSWORD")
     smtp_from: str = os.getenv("SMTP_FROM", "ChinaTradeResolve <chinatraderesolve.support@gmail.com>")
     admin_email: str | None = os.getenv("ADMIN_EMAIL", "chinatraderesolve.support@gmail.com")
+    email_bridge_url: str | None = os.getenv("EMAIL_BRIDGE_URL")
+    email_bridge_secret: str | None = os.getenv("EMAIL_BRIDGE_SECRET")
+    email_bridge_timeout_seconds: float = float(os.getenv("EMAIL_BRIDGE_TIMEOUT_SECONDS", "20"))
     free_access_mode: bool = os.getenv("FREE_ACCESS_MODE", "true").lower() == "true"
     support_url: str | None = os.getenv("SUPPORT_URL")
     support_project_name: str = os.getenv("SUPPORT_PROJECT_NAME", "ChinaTradeResolve")

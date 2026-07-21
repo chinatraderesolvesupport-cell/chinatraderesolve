@@ -189,3 +189,81 @@ def test_ai_triage_structured_response_mock(monkeypatch):
 def valid_payload_model():
     from app.schemas import ApplicationCreate
     return ApplicationCreate.model_validate(valid_payload())
+
+
+def test_russian_localization_and_security_headers():
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "Команда по разбору дел ChinaTradeResolve" in home.text
+    assert "ChinaTradeResolve Case Review Team" not in home.text
+    assert "Электронная почта" in home.text
+    assert home.headers["x-content-type-options"] == "nosniff"
+    assert home.headers["x-frame-options"] == "DENY"
+    assert "frame-ancestors 'none'" in home.headers["content-security-policy"]
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(
+            preferred_language="Russian",
+            email="russian@example.com",
+            description=(
+                "В письменном заказе указана натуральная кожа. Поставщик подтвердил это в переписке, "
+                "но фотографии полученного товара показывают другой материал. У нас есть инвойс, заказ, "
+                "переписка и фотографии, и мы просим частичный возврат средств."
+            ),
+        ),
+    )
+    assert created.status_code == 201
+    status = client.get(created.json()["status_url"])
+    assert status.status_code == 200
+    assert "Статус дела" in status.text
+    assert "No service fee" not in status.text
+    assert status.headers["cache-control"] == "no-store"
+
+
+def test_admin_login_rate_limit():
+    headers = {"x-forwarded-for": "203.0.113.77"}
+    for _ in range(5):
+        response = client.post("/admin/login", data={"token": "wrong-token"}, headers=headers)
+        assert response.status_code == 401
+    blocked = client.post("/admin/login", data={"token": "wrong-token"}, headers=headers)
+    assert blocked.status_code == 429
+    assert "Слишком много попыток" in blocked.text
+
+
+def test_retention_removes_related_confidential_data():
+    from app.db import connect, execute, save_feedback, soft_delete_expired, transaction, update_status
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="retention@example.com", supplier_name="Confidential Supplier"),
+    ).json()
+
+    # Resolve the internal id and close the case through an allowed transition.
+    with transaction() as conn:
+        row = execute(conn, "SELECT id,status FROM cases WHERE case_reference=?", (created["case_reference"],)).fetchone()
+        case_id = int(row["id"])
+    current = row["status"]
+    if current == "submitted":
+        update_status(case_id, "needs_information", "test")
+        current = "needs_information"
+    update_status(case_id, "closed", "retention test")
+    save_feedback(case_id, {
+        "rating": 5,
+        "feedback_text": "Confidential feedback that must be removed.",
+        "display_name": "Private name",
+        "testimonial_consent": True,
+    })
+    with transaction() as conn:
+        execute(conn, "UPDATE cases SET created_at='2000-01-01T00:00:00+00:00' WHERE id=?", (case_id,))
+
+    assert soft_delete_expired(90) >= 1
+    with transaction() as conn:
+        case = execute(conn, "SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
+        assert case["deleted_at"] is not None
+        assert case["supplier_name"] == ""
+        assert case["order_number"] == ""
+        assert case["triage_json"] == '{"deleted":true}'
+        assert execute(conn, "SELECT COUNT(*) AS n FROM feedback WHERE case_id=?", (case_id,)).fetchone()["n"] == 0
+        assert execute(conn, "SELECT COUNT(*) AS n FROM notification_outbox WHERE case_id=?", (case_id,)).fetchone()["n"] == 0
+        assert execute(conn, "SELECT COUNT(*) AS n FROM audit_log WHERE case_id=?", (case_id,)).fetchone()["n"] == 0

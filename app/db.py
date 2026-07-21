@@ -383,13 +383,34 @@ def dashboard_counts() -> dict[str, int]:
 
 def soft_delete_expired(days: int) -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec="seconds")
+    deleted_at = utcnow()
     with transaction() as conn:
-        cur = execute(
+        rows = execute(
             conn,
-            "UPDATE cases SET deleted_at=?,full_name='DELETED',email='deleted@example.invalid',description='DELETED',admin_note='' WHERE deleted_at IS NULL AND created_at<? AND status='closed'",
-            (utcnow(), cutoff),
-        )
-        return int(cur.rowcount)
+            "SELECT id FROM cases WHERE deleted_at IS NULL AND created_at<? AND status='closed'",
+            (cutoff,),
+        ).fetchall()
+        case_ids = [int(row["id"]) for row in rows]
+        for case_id in case_ids:
+            # Remove free-text and contact data from every related table, not only the main case row.
+            execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
+            execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
+            execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))
+            execute(
+                conn,
+                """
+                UPDATE cases SET
+                    deleted_at=?, updated_at=?, full_name='DELETED', email='deleted@example.invalid',
+                    country='', purchasing_channel='', amount_in_dispute='', supplier_name='',
+                    order_number='', order_value='', requested_result='', description='DELETED',
+                    ai_consent=0, sharing_authority=0, pilot_terms=0, no_guarantee=0,
+                    triage_json='{"deleted":true}', triage_source='deleted',
+                    public_message='DELETED', admin_note=''
+                WHERE id=?
+                """,
+                (deleted_at, deleted_at, case_id),
+            )
+        return len(case_ids)
 
 
 def save_feedback(case_id: int, payload: dict[str, Any]) -> dict[str, Any]:

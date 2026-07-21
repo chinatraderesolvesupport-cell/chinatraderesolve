@@ -39,7 +39,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="1.6.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="1.7.0")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -50,6 +50,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
+admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 init_db()
 
 
@@ -64,7 +65,7 @@ def require_admin(request: Request) -> None:
 
 def make_reference() -> str:
     year = datetime.now(timezone.utc).year
-    return f"CTR-{year}-{secrets.token_hex(3).upper()}"
+    return f"CTR-{year}-{secrets.token_hex(5).upper()}"
 
 
 def safe_support_url() -> str | None:
@@ -75,6 +76,25 @@ def safe_support_url() -> str | None:
     if parsed.scheme not in {"https", "http"} or not parsed.netloc:
         return None
     return raw
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'",
+    )
+    if settings.public_base_url.startswith("https://"):
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    if request.url.path.startswith(("/admin", "/case/")):
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 
@@ -308,8 +328,17 @@ def admin_login_page(request: Request) -> HTMLResponse:
 
 @app.post("/admin/login", response_class=HTMLResponse)
 def admin_login(request: Request, token: str = Form(...)) -> HTMLResponse:
+    key = f"admin-login:{client_key(request)}"
+    if not admin_login_limiter.allow(key):
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={"error": "Слишком много попыток входа. Повторите позже."},
+            status_code=429,
+        )
     if not secrets.compare_digest(token, settings.admin_token):
         return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": "Неверный токен администратора"}, status_code=401)
+    request.session.clear()
     request.session["admin"] = True
     return RedirectResponse("/admin", status_code=303)
 

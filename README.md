@@ -1,4 +1,4 @@
-# ChinaTradeResolve Multilingual v2.0
+# ChinaTradeResolve Crypto Support v2.2
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -16,7 +16,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - retention/anonymisation script;
 - automated tests and Docker packaging.
 
-## Multilingual v2.0
+## Multilingual v2.2
 
 - detects the visitor’s browser language on the first visit;
 - provides desktop and mobile language selectors;
@@ -40,15 +40,25 @@ The public staging pages retain `noindex` until the operator is ready for search
 
 ## Voluntary support
 
-The support button is provider-agnostic. Configure one server variable when a payment/support account is ready:
+The multilingual support page includes four direct cryptocurrency options:
+
+- Bitcoin (`BTC`) on the Bitcoin network;
+- Ether (`ETH`) on Ethereum Mainnet;
+- Tether (`USDT`) on TRON (`TRC20`);
+- Solana (`SOL`) on the Solana network.
+
+The public wallet addresses are configured through environment variables and can be hidden by leaving a value empty:
 
 ```env
-SUPPORT_URL=https://your-support-provider.example/your-project
+BTC_ADDRESS=1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4
+ETH_ADDRESS=0x2F8a2773F8254d061ef286Bac8BF922344a2A494
+USDT_TRC20_ADDRESS=TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R
+SOL_ADDRESS=AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm
 ```
 
-When `SUPPORT_URL` is empty, the support page clearly states that financial support is not yet connected. No code change is required later.
+The page provides local QR images, copy-address controls, exact network warnings and a reminder that support is optional and never affects case handling. Public wallet addresses are not secrets, but private keys, recovery phrases and passwords must never be placed in the project or environment file.
 
-Before enabling support publicly, confirm the legal operator, provider terms, tax treatment, refund/error process and final wording with a qualified adviser.
+An optional external support provider can still be added with `SUPPORT_URL`; it is hidden when the variable is empty. Before public launch, confirm the legal operator, provider terms, tax treatment, accounting process and final wording with a qualified adviser.
 
 ## Feedback and testimonials
 
@@ -85,7 +95,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Multilingual_v2.0
+cd ChinaTradeResolve_CryptoSupport_v2.2
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -135,7 +145,7 @@ pytest -q
 - obtain legal review for Privacy, Terms, AI Notice, Support wording and Disclaimer;
 - use HTTPS and secure cookies;
 - configure a real email provider;
-- choose and configure a voluntary-support provider only after legal/tax review;
+- verify the voluntary-support wording, public wallet ownership, legal/tax treatment and accounting process;
 - add managed backups, monitoring, rate limits and incident logging;
 - perform privacy and security review.
 

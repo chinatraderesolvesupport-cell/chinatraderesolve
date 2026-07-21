@@ -1,4 +1,4 @@
-ChinaTradeResolve Multilingual v2.0
+ChinaTradeResolve Crypto Support v2.2
 
 Production-ready staging package with six interface languages:
 English, French, German, Spanish, Russian and Serbian.
@@ -9,3 +9,5 @@ Telegram and WhatsApp are intentionally not included in this release.
 
 See README.md and README_RU.txt for setup and deployment instructions.
 Never upload .env or secrets to GitHub.
+
+Voluntary crypto support: BTC/Bitcoin, ETH/Ethereum Mainnet, USDT/TRON (TRC20), and SOL/Solana, with local QR codes and copy-address controls.

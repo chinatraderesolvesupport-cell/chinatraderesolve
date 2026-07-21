@@ -21,6 +21,13 @@ import qrcode
 from qrcode.constants import ERROR_CORRECT_H
 
 from .ai_triage import ai_triage
+from .ai_assistant import (
+    AssistantConfigurationError,
+    AssistantProviderError,
+    assistant_is_enabled,
+    assistant_reply,
+    localized_error,
+)
 from .config import settings
 from .db import (
     create_case,
@@ -40,13 +47,13 @@ from .notifications import (
     queue_case_notifications,
     queue_completion_notification,
 )
-from .schemas import ApplicationCreate, FeedbackCreate
+from .schemas import ApplicationCreate, AssistantChatRequest, AssistantChatResponse, FeedbackCreate
 from .security import SlidingWindowRateLimiter, client_key
 from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="2.2.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="3.0.0")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -58,6 +65,7 @@ app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
+assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
 init_db()
 
 
@@ -356,6 +364,7 @@ def home(request: Request) -> HTMLResponse:
         context={
             "support_enabled": support_is_available(),
             "contact_email": settings.contact_email,
+            "ai_assistant_enabled": assistant_is_enabled(),
         },
     )
 
@@ -367,6 +376,7 @@ def health() -> dict[str, Any]:
         "free_access_mode": settings.free_access_mode,
         "support_enabled": support_is_available(),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
+        "ai_assistant_enabled": assistant_is_enabled(),
         "email_delivery_configured": bool(
             (settings.email_bridge_url and settings.email_bridge_secret)
             or (
@@ -377,6 +387,22 @@ def health() -> dict[str, Any]:
             )
         ),
     }
+
+
+@app.post("/api/assistant", response_model=AssistantChatResponse)
+async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -> AssistantChatResponse:
+    key = f"assistant:{client_key(request)}"
+    if not assistant_limiter.allow(key):
+        raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
+    if not assistant_is_enabled():
+        raise HTTPException(status_code=503, detail=localized_error(payload.language, "unavailable"))
+    try:
+        reply = await assistant_reply(payload)
+    except AssistantConfigurationError:
+        raise HTTPException(status_code=503, detail=localized_error(payload.language, "unavailable"))
+    except AssistantProviderError:
+        raise HTTPException(status_code=502, detail=localized_error(payload.language, "unavailable"))
+    return AssistantChatResponse(reply=reply)
 
 
 @app.get("/support", response_class=HTMLResponse)

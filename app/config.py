@@ -16,6 +16,11 @@ class Settings:
     enable_ai_triage: bool = os.getenv("ENABLE_AI_TRIAGE", "false").lower() == "true"
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str | None = os.getenv("OPENAI_MODEL")
+    enable_ai_assistant: bool = os.getenv("ENABLE_AI_ASSISTANT", "false").lower() == "true"
+    openai_assistant_model: str | None = os.getenv("OPENAI_ASSISTANT_MODEL") or os.getenv("OPENAI_MODEL")
+    openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
+    ai_assistant_max_output_tokens: int = int(os.getenv("AI_ASSISTANT_MAX_OUTPUT_TOKENS", "500"))
+    ai_assistant_history_messages: int = int(os.getenv("AI_ASSISTANT_HISTORY_MESSAGES", "8"))
     openai_timeout_seconds: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "20"))
     retention_days: int = int(os.getenv("RETENTION_DAYS", "90"))
     contact_email: str = os.getenv("CONTACT_EMAIL", "chinatraderesolve.support@gmail.com")

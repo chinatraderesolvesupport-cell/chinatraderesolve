@@ -408,3 +408,197 @@ def test_solana_address_validation_is_network_specific():
     assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm") is True
     assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Z0") is False
     assert _valid_solana("short") is False
+
+
+def test_ai_assistant_frontend_and_disabled_endpoint():
+    import json
+
+    home = client.get("/")
+    assert home.status_code == 200
+    assert 'id="aiChatRoot"' in home.text
+    assert 'id="aiChatPanel"' in home.text
+    assert "fetch('/api/assistant'" in home.text
+    assert "maxlength=\"1500\"" in home.text
+    # The widget remains hidden until the server-side API key/model are configured.
+    assert 'data-enabled="false" hidden' in home.text
+
+    translations = json.loads(client.get("/static/translations-v2.json").text)
+    for language in ("en", "fr", "de", "es", "ru", "sr"):
+        assert translations[language]["ai_chat_button"].strip()
+        assert translations[language]["ai_chat_notice"].strip()
+        assert translations[language]["ai_chat_welcome"].strip()
+
+    unavailable = client.post(
+        "/api/assistant",
+        json={
+            "language": "ru",
+            "messages": [{"role": "user", "content": "Как подготовить доказательства?"}],
+        },
+    )
+    assert unavailable.status_code == 503
+    assert "временно недоступен" in unavailable.json()["detail"]
+
+
+def test_ai_assistant_request_validation():
+    response = client.post(
+        "/api/assistant",
+        json={
+            "language": "en",
+            "messages": [{"role": "assistant", "content": "This cannot be the final message."}],
+        },
+    )
+    assert response.status_code == 422
+
+    too_long = client.post(
+        "/api/assistant",
+        json={
+            "language": "en",
+            "messages": [{"role": "user", "content": "x" * 2001}],
+        },
+    )
+    assert too_long.status_code == 422
+
+
+def test_ai_assistant_responses_api_mock(monkeypatch):
+    import asyncio
+    from types import SimpleNamespace
+
+    import app.ai_assistant as module
+    from app.schemas import AssistantChatRequest
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "output": [
+                    {
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": "Prepare the written order, invoice, supplier messages and a dated chronology.",
+                            }
+                        ]
+                    }
+                ]
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            captured["timeout"] = kwargs.get("timeout")
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, headers, json):
+            captured["url"] = url
+            captured["headers"] = headers
+            captured["body"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(
+        module,
+        "settings",
+        SimpleNamespace(
+            enable_ai_assistant=True,
+            openai_api_key="test-key",
+            openai_assistant_model="test-assistant-model",
+            openai_moderation_model=None,
+            ai_assistant_history_messages=8,
+            ai_assistant_max_output_tokens=500,
+            openai_timeout_seconds=7,
+        ),
+    )
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    payload = AssistantChatRequest.model_validate(
+        {
+            "language": "en",
+            "messages": [
+                {"role": "user", "content": "What documents should I prepare?"}
+            ],
+        }
+    )
+    reply = asyncio.run(module.assistant_reply(payload))
+    assert "written order" in reply
+    assert captured["url"].endswith("/v1/responses")
+    assert captured["body"]["store"] is False
+    assert captured["body"]["model"] == "test-assistant-model"
+    assert captured["body"]["max_output_tokens"] == 500
+    assert captured["body"]["input"][0]["role"] == "developer"
+    assert "not legal advice" in captured["body"]["input"][0]["content"][0]["text"]
+    assert captured["headers"]["Authorization"] == "Bearer test-key"
+
+
+def test_ai_assistant_moderation_blocks_narrow_category(monkeypatch):
+    import asyncio
+    from types import SimpleNamespace
+
+    import app.ai_assistant as module
+    from app.schemas import AssistantChatRequest
+
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, headers, json):
+            calls.append(url)
+            if url.endswith("/v1/moderations"):
+                return FakeResponse(
+                    {
+                        "results": [
+                            {
+                                "flagged": True,
+                                "categories": {"sexual/minors": True},
+                            }
+                        ]
+                    }
+                )
+            raise AssertionError("Responses API must not be called after a narrow moderation block")
+
+    monkeypatch.setattr(
+        module,
+        "settings",
+        SimpleNamespace(
+            enable_ai_assistant=True,
+            openai_api_key="test-key",
+            openai_assistant_model="test-assistant-model",
+            openai_moderation_model="omni-moderation-latest",
+            ai_assistant_history_messages=8,
+            ai_assistant_max_output_tokens=500,
+            openai_timeout_seconds=7,
+        ),
+    )
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    payload = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [{"role": "user", "content": "unsafe test input"}],
+        }
+    )
+    reply = asyncio.run(module.assistant_reply(payload))
+    assert "не могу помочь" in reply
+    assert calls == ["https://api.openai.com/v1/moderations"]

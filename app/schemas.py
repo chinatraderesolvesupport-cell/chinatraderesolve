@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class ApplicationCreate(BaseModel):
@@ -79,3 +79,33 @@ class FeedbackCreate(BaseModel):
     @classmethod
     def normalize_feedback_text(cls, value: object) -> str:
         return " ".join(str(value or "").split()).strip()
+
+
+AssistantLanguage = Literal["en", "fr", "de", "es", "ru", "sr"]
+
+
+class AssistantMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def normalize_content(cls, value: object) -> str:
+        return " ".join(str(value or "").split()).strip()
+
+
+class AssistantChatRequest(BaseModel):
+    language: AssistantLanguage = "en"
+    messages: list[AssistantMessage] = Field(min_length=1, max_length=10)
+
+    @model_validator(mode="after")
+    def validate_conversation(self) -> "AssistantChatRequest":
+        if self.messages[-1].role != "user":
+            raise ValueError("The final chat message must be from the user")
+        if sum(len(message.content) for message in self.messages) > 10000:
+            raise ValueError("Conversation is too long")
+        return self
+
+
+class AssistantChatResponse(BaseModel):
+    reply: str = Field(min_length=1, max_length=5000)

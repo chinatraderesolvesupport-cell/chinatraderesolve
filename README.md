@@ -1,4 +1,4 @@
-# ChinaTradeResolve Crypto Support v2.2
+# ChinaTradeResolve AI Assistant v3.0
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -7,6 +7,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - six-language public application form (English, French, German, Spanish, Russian and Serbian);
 - SQLite case database and audit log;
 - deterministic safety-first triage;
+- optional multilingual public AI assistant;
 - optional OpenAI structured triage;
 - exception-driven admin queue;
 - private case-status page;
@@ -16,7 +17,31 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - retention/anonymisation script;
 - automated tests and Docker packaging.
 
-## Multilingual v2.2
+
+## Public AI assistant v3.0
+
+The main page now contains a multilingual AI information assistant for English, French, German, Spanish, Russian and Serbian. The widget remains hidden until the server is configured with an API key and model.
+
+The assistant can:
+
+- explain the ChinaTradeResolve process and free-access limits;
+- help a visitor identify useful evidence and organise a dispute description;
+- explain which matters are outside scope or require urgent human professional help;
+- answer in the language currently selected on the site.
+
+Safety and privacy controls:
+
+- the API key stays on the server and is never sent to browser JavaScript;
+- the browser sends only the recent chat history to the site’s own `/api/assistant` endpoint;
+- chat messages are not written to the ChinaTradeResolve case database;
+- OpenAI Responses requests use `store: false`;
+- input length, output length and request frequency are limited;
+- the assistant is explicitly forbidden from promising outcomes, giving binding legal advice, requesting passwords/private keys or claiming access to private case data;
+- a narrow moderation check blocks the most sensitive prohibited category while allowing legitimate dispute descriptions to receive safe guidance.
+
+The assistant cannot read case records, status links, email, uploaded documents or the admin database. Case-specific automation is intentionally left for a later controlled phase.
+
+## Multilingual foundation
 
 - detects the visitor’s browser language on the first visit;
 - provides desktop and mobile language selectors;
@@ -95,7 +120,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_CryptoSupport_v2.2
+cd ChinaTradeResolve_AI_Assistant_v3.0
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -109,6 +134,21 @@ Open:
 - support page: `http://127.0.0.1:8000/support`
 - health: `http://127.0.0.1:8000/health`
 
+## Enable the public AI assistant
+
+Set these variables in Render (or in a local `.env` file):
+
+```env
+ENABLE_AI_ASSISTANT=true
+OPENAI_API_KEY=...
+OPENAI_MODEL=<model available in your OpenAI project>
+# Optional: use a different model for the assistant.
+OPENAI_ASSISTANT_MODEL=
+OPENAI_MODERATION_MODEL=omni-moderation-latest
+```
+
+When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After deployment, `/health` must report `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.
+
 ## Enable AI triage
 
 ```env
@@ -118,6 +158,8 @@ OPENAI_MODEL=<model available in your OpenAI project>
 ```
 
 The application sends only structured intake fields, not files. Deterministic triage runs first; AI can add nuance but cannot lower hard-stop safety decisions.
+
+A step-by-step Render guide in Russian is included in `AI_ASSISTANT_SETUP_RU.md`.
 
 ## Email
 

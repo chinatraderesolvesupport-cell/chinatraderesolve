@@ -267,3 +267,11 @@ def test_retention_removes_related_confidential_data():
         assert execute(conn, "SELECT COUNT(*) AS n FROM feedback WHERE case_id=?", (case_id,)).fetchone()["n"] == 0
         assert execute(conn, "SELECT COUNT(*) AS n FROM notification_outbox WHERE case_id=?", (case_id,)).fetchone()["n"] == 0
         assert execute(conn, "SELECT COUNT(*) AS n FROM audit_log WHERE case_id=?", (case_id,)).fetchone()["n"] == 0
+
+
+def test_application_form_does_not_render_object_object_errors():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert 'Array.isArray(result.detail)' in response.text
+    assert 'minlength="2" name="full_name"' in response.text
+    assert "result.detail||'Submission failed.'" not in response.text

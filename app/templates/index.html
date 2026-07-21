@@ -346,7 +346,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <form id="caseForm" novalidate="">
 <input aria-hidden="true" autocomplete="off" class="honeypot" name="company_website" tabindex="-1"/>
 <div class="form-step active" id="stepOne">
-<div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" name="full_name" required=""/></div>
+<div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">Электронная почта</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
 <div class="field"><label data-i18n="country" for="country">Страна</label><input autocomplete="country-name" id="country" name="country"/></div>
 <div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_russian" selected="" value="Russian">Русский</option><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
@@ -491,7 +491,7 @@ const stepOne=document.getElementById('stepOne'),stepTwo=document.getElementById
 const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog2'),label1=document.getElementById('label1'),label2=document.getElementById('label2');
 document.getElementById('nextBtn').addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
-  const ok=n && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
+  const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');window.location.hash='submit'}
 });
 document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active')});
@@ -519,8 +519,31 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       credentials:'same-origin',
       body:JSON.stringify(payload)
     });
-    const result=await response.json();
-    if(!response.ok)throw new Error(result.detail||'Submission failed.');
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok){
+      const lang=document.documentElement.lang;
+      const fallbacks={ru:'Проверьте заполненные поля и попробуйте ещё раз.',sr:'Proverite popunjena polja i pokušajte ponovo.',en:'Please check the form fields and try again.'};
+      const labels={
+        ru:{full_name:'Имя и фамилия',email:'Электронная почта',description:'Краткое описание',free_access_terms:'Условия бесплатного доступа',sharing_authority:'Право передавать информацию',no_guarantee:'Подтверждение отсутствия гарантии'},
+        sr:{full_name:'Ime i prezime',email:'Email adresa',description:'Kratak opis',free_access_terms:'Uslovi besplatnog pristupa',sharing_authority:'Pravo na deljenje informacija',no_guarantee:'Potvrda bez garancije'},
+        en:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}
+      };
+      let message='';
+      if(Array.isArray(result.detail)){
+        const fieldNames=[...new Set(result.detail.map(item=>{
+          const loc=Array.isArray(item&&item.loc)?item.loc:[];
+          const field=loc.length?loc[loc.length-1]:'';
+          return (labels[lang]||labels.en)[field]||'';
+        }).filter(Boolean))];
+        if(fieldNames.length){
+          const prefixes={ru:'Проверьте поля: ',sr:'Proverite polja: ',en:'Check these fields: '};
+          message=(prefixes[lang]||prefixes.en)+fieldNames.join(', ')+'.';
+        }
+      }else if(typeof result.detail==='string'){
+        message=result.detail;
+      }
+      throw new Error(message||(fallbacks[lang]||fallbacks.en));
+    }
     form.style.display='none';
     document.getElementById('confirmation').style.display='block';
     document.getElementById('caseNumber').textContent=result.case_reference;

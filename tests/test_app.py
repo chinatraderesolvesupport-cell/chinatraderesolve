@@ -361,3 +361,50 @@ def test_french_german_and_spanish_status_localization():
         assert notice in status.text
         assert "No service fee" not in status.text
         assert body["public_message"] in status.text
+
+
+def test_crypto_support_wallets_and_network_warnings():
+    page = client.get("/support")
+    assert page.status_code == 200
+    expected = {
+        "1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4": "Bitcoin",
+        "0x2F8a2773F8254d061ef286Bac8BF922344a2A494": "Ethereum Mainnet",
+        "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R": "TRON (TRC20)",
+        "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm": "Solana",
+    }
+    for address, network in expected.items():
+        assert address in page.text
+        assert network in page.text
+    assert "Send BTC only through the Bitcoin network." in page.text
+    assert "Отправляйте только ETH через Ethereum Mainnet." in page.text
+    assert "Send USDT only through TRON (TRC20)." in page.text
+    assert "Отправляйте только SOL через сеть Solana." in page.text
+    assert page.text.count('data-copy=') == 4
+    assert "seed phrase" in page.text
+    assert "seed-фразу" in page.text
+
+
+def test_crypto_qr_assets_are_served_as_png():
+    for asset in ("btc", "eth", "usdt-trc20", "sol"):
+        response = client.get(f"/support/qr/{asset}.png")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+        assert len(response.content) > 500
+
+
+def test_crypto_wallet_configuration_is_valid_and_support_is_enabled():
+    from app.main import crypto_wallets, support_is_available
+
+    wallets = crypto_wallets()
+    assert [item["asset"] for item in wallets] == ["BTC", "ETH", "USDT", "SOL"]
+    assert [item["network"] for item in wallets] == ["Bitcoin", "Ethereum Mainnet", "TRON (TRC20)", "Solana"]
+    assert support_is_available() is True
+
+
+def test_solana_address_validation_is_network_specific():
+    from app.main import _valid_solana
+
+    assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm") is True
+    assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Z0") is False
+    assert _valid_solana("short") is False

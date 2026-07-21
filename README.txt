@@ -1,8 +1,11 @@
-ChinaTradeResolve Working Hours Update v1.4
+ChinaTradeResolve Multilingual v2.0
 
-Upload the app folder to the GitHub repository and replace the existing app/templates/index.html file.
-Do not upload .env or any secrets.
+Production-ready staging package with six interface languages:
+English, French, German, Spanish, Russian and Serbian.
 
-Updated working hours:
-Monday–Friday, 09:00–17:00 Belgrade time (CET/CEST).
-Initial response within 2 business days.
+Includes browser-language detection, manual language selection, localized intake,
+status pages, client notifications and multilingual legal/support pages.
+Telegram and WhatsApp are intentionally not included in this release.
+
+See README.md and README_RU.txt for setup and deployment instructions.
+Never upload .env or secrets to GitHub.

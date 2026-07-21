@@ -1,10 +1,10 @@
-# ChinaTradeResolve Free Access + PostgreSQL + HTTPS Email Bridge v1.3
+# ChinaTradeResolve Multilingual v2.0
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 ## Included
 
-- multilingual public application form;
+- six-language public application form (English, French, German, Spanish, Russian and Serbian);
 - SQLite case database and audit log;
 - deterministic safety-first triage;
 - optional OpenAI structured triage;
@@ -15,6 +15,19 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - SMTP notification outbox;
 - retention/anonymisation script;
 - automated tests and Docker packaging.
+
+## Multilingual v2.0
+
+- detects the visitor’s browser language on the first visit;
+- provides desktop and mobile language selectors;
+- remembers the manual selection locally;
+- localizes the main site, intake validation, case status, support page, legal pages and sample assessment;
+- synchronizes the selected interface language with the application’s preferred-language field;
+- localizes deterministic triage output and applicant emails;
+- keeps the v1.8 form-error fix and never renders validation objects as `[object Object]`;
+- does not include Telegram or WhatsApp integrations.
+
+The public staging pages retain `noindex` until the operator is ready for search-engine indexing.
 
 ## Financial model
 
@@ -72,7 +85,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Free_Access_v1.0
+cd ChinaTradeResolve_Multilingual_v2.0
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

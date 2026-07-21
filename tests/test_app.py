@@ -275,3 +275,89 @@ def test_application_form_does_not_render_object_object_errors():
     assert 'Array.isArray(result.detail)' in response.text
     assert 'minlength="2" name="full_name"' in response.text
     assert "result.detail||'Submission failed.'" not in response.text
+
+
+def test_multilingual_frontend_assets_are_complete():
+    import json
+
+    home = client.get("/")
+    assert home.status_code == 200
+    for code in ("en", "fr", "de", "es", "ru", "sr"):
+        assert f'value="{code}"' in home.text
+    assert "/static/translations-v2.js" in home.text
+    assert "ctr_lang_v20" in home.text
+    assert "navigator.languages" in home.text
+
+    translations = client.get("/static/translations-v2.json")
+    assert translations.status_code == 200
+    data = json.loads(translations.text)
+    assert set(data) == {"en", "fr", "de", "es", "ru", "sr"}
+    english_keys = set(data["en"])
+    assert len(english_keys) >= 230
+    for language, copy in data.items():
+        assert set(copy) == english_keys, language
+        assert "[object Object]" not in json.dumps(copy, ensure_ascii=False)
+        assert all(isinstance(value, str) and value.strip() for value in copy.values())
+
+    for path in (
+        "/static/privacy.html",
+        "/static/terms.html",
+        "/static/refund.html",
+        "/static/ai-notice.html",
+        "/static/disclaimer.html",
+        "/static/sample_case_assessment.html",
+    ):
+        page = client.get(path)
+        assert page.status_code == 200
+        assert "/static/legal-i18n-v2.js" in page.text
+        assert 'value="fr"' in page.text
+        assert 'value="de"' in page.text
+        assert 'value="es"' in page.text
+
+
+def test_french_german_and_spanish_status_localization():
+    cases = [
+        (
+            "French",
+            "french@example.com",
+            "La commande écrite précise le cuir. Le fournisseur l’a confirmé dans les messages, mais les photos montrent un autre matériau. Nous avons la facture, la commande, les messages et les photos.",
+            '<html lang="fr">',
+            "Statut du dossier",
+            "Aucun paiement ni téléchargement",
+        ),
+        (
+            "German",
+            "german@example.com",
+            "Die schriftliche Bestellung nennt Leder. Der Lieferant bestätigte dies in Nachrichten, aber die Fotos zeigen ein anderes Material. Wir haben Rechnung, Bestellung, Nachrichten und Fotos.",
+            '<html lang="de">',
+            "Fallstatus",
+            "weder Zahlung noch Datei-Upload",
+        ),
+        (
+            "Spanish",
+            "spanish@example.com",
+            "El pedido escrito especifica cuero. El proveedor lo confirmó en mensajes, pero las fotografías muestran otro material. Tenemos factura, pedido, mensajes y fotografías.",
+            '<html lang="es">',
+            "Estado del caso",
+            "no se requiere pago ni carga de archivos",
+        ),
+    ]
+    for index, (language, email, description, html_lang, title, notice) in enumerate(cases, start=10):
+        created = client.post(
+            "/api/applications",
+            headers={"x-forwarded-for": f"198.51.100.{index}"},
+            json=valid_payload(
+                preferred_language=language,
+                email=email,
+                description=description,
+            ),
+        )
+        assert created.status_code == 201
+        body = created.json()
+        status = client.get(body["status_url"])
+        assert status.status_code == 200
+        assert html_lang in status.text
+        assert title in status.text
+        assert notice in status.text
+        assert "No service fee" not in status.text
+        assert body["public_message"] in status.text

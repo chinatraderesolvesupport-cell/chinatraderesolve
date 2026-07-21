@@ -32,7 +32,7 @@
 <div class="card support">
   <h2>{{ copy.support_heading }}</h2>
   <p>{{ copy.support_text }}</p>
-  {% if support_url %}<a class="btn primary" href="/support">{{ copy.support_button }}</a>{% else %}<p class="fine">{{ copy.not_ready }}</p>{% endif %}
+  {% if support_available %}<a class="btn primary" href="/support">{{ copy.support_button }}</a>{% else %}<p class="fine">{{ copy.not_ready }}</p>{% endif %}
 </div>
 {% endif %}
 </div></body></html>

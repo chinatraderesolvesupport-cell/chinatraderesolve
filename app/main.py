@@ -1,17 +1,24 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import secrets
 from datetime import datetime, timezone
+from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+
+import qrcode
+from qrcode.constants import ERROR_CORRECT_H
 
 from .ai_triage import ai_triage
 from .config import settings
@@ -39,7 +46,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="2.0.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="2.2.0")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -76,6 +83,97 @@ def safe_support_url() -> str | None:
     if parsed.scheme not in {"https", "http"} or not parsed.netloc:
         return None
     return raw
+
+
+_BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+
+def _base58check_payload(address: str) -> bytes | None:
+    try:
+        number = 0
+        for char in address:
+            number = number * 58 + _BASE58_ALPHABET.index(char)
+        decoded = number.to_bytes((number.bit_length() + 7) // 8, "big") if number else b""
+        decoded = b"\x00" * (len(address) - len(address.lstrip("1"))) + decoded
+    except (ValueError, OverflowError):
+        return None
+    if len(decoded) < 5:
+        return None
+    payload, checksum = decoded[:-4], decoded[-4:]
+    expected = hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]
+    return payload if secrets.compare_digest(checksum, expected) else None
+
+
+def _valid_btc(address: str) -> bool:
+    if address.startswith(("1", "3")):
+        payload = _base58check_payload(address)
+        return bool(payload and payload[0] in {0x00, 0x05})
+    # Bech32 addresses are accepted by strict shape here; the configured legacy address
+    # receives full Base58Check validation above.
+    return bool(re.fullmatch(r"bc1[ac-hj-np-z02-9]{11,71}", address))
+
+
+def _valid_tron(address: str) -> bool:
+    payload = _base58check_payload(address)
+    return bool(payload and len(payload) == 21 and payload[0] == 0x41)
+
+
+def _valid_eth(address: str) -> bool:
+    return bool(re.fullmatch(r"0x[a-fA-F0-9]{40}", address))
+
+
+def _valid_solana(address: str) -> bool:
+    """Validate a Solana public key as a 32-byte Base58 value."""
+    if not re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{32,44}", address):
+        return False
+    try:
+        number = 0
+        for char in address:
+            number = number * 58 + _BASE58_ALPHABET.index(char)
+        decoded = number.to_bytes((number.bit_length() + 7) // 8, "big") if number else b""
+        decoded = b"\x00" * (len(address) - len(address.lstrip("1"))) + decoded
+    except (ValueError, OverflowError):
+        return False
+    return len(decoded) == 32
+
+
+def crypto_wallets() -> list[dict[str, str]]:
+    """Return only public wallet addresses that pass network-specific validation."""
+    configured = [
+        ("btc", "Bitcoin", "BTC", "Bitcoin", settings.btc_address, _valid_btc),
+        ("eth", "Ethereum", "ETH", "Ethereum Mainnet", settings.eth_address, _valid_eth),
+        ("usdt-trc20", "Tether", "USDT", "TRON (TRC20)", settings.usdt_trc20_address, _valid_tron),
+        ("sol", "Solana", "SOL", "Solana", settings.sol_address, _valid_solana),
+    ]
+    wallets: list[dict[str, str]] = []
+    for wallet_id, name, asset, network, raw_address, validator in configured:
+        address = (raw_address or "").strip()
+        if not address or not validator(address):
+            continue
+        wallets.append({
+            "id": wallet_id,
+            "name": name,
+            "asset": asset,
+            "network": network,
+            "address": address,
+            "qr_url": f"/support/qr/{wallet_id}.png",
+        })
+    return wallets
+
+
+def support_is_available() -> bool:
+    return bool(safe_support_url() or crypto_wallets())
+
+
+@lru_cache(maxsize=16)
+def _qr_png(payload: str) -> bytes:
+    qr = qrcode.QRCode(version=None, error_correction=ERROR_CORRECT_H, box_size=12, border=4)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    image = qr.make_image(fill_color="black", back_color="white")
+    output = BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    return output.getvalue()
 
 
 @app.middleware("http")
@@ -256,7 +354,7 @@ def home(request: Request) -> HTMLResponse:
         request=request,
         name="index.html",
         context={
-            "support_enabled": bool(safe_support_url()),
+            "support_enabled": support_is_available(),
             "contact_email": settings.contact_email,
         },
     )
@@ -267,7 +365,7 @@ def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "free_access_mode": settings.free_access_mode,
-        "support_enabled": bool(safe_support_url()),
+        "support_enabled": support_is_available(),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "email_delivery_configured": bool(
             (settings.email_bridge_url and settings.email_bridge_secret)
@@ -288,8 +386,21 @@ def support_page(request: Request) -> HTMLResponse:
         name="support.html",
         context={
             "support_url": safe_support_url(),
+            "wallets": crypto_wallets(),
             "project_name": settings.support_project_name,
         },
+    )
+
+
+@app.get("/support/qr/{wallet_id}.png")
+def support_qr(wallet_id: str) -> Response:
+    wallet = next((item for item in crypto_wallets() if item["id"] == wallet_id), None)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    return Response(
+        content=_qr_png(wallet["address"]),
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff"},
     )
 
 
@@ -345,6 +456,7 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "feedback": feedback,
             "feedback_saved": bool(feedback_saved),
             "support_url": safe_support_url(),
+            "support_available": support_is_available(),
             "status_label": PUBLIC_STATUS_LABELS.get(language, PUBLIC_STATUS_LABELS["English"]).get(case["status"], case["status"]),
             "risk_label": PUBLIC_RISK_LABELS.get(language, PUBLIC_RISK_LABELS["English"]).get(case["risk_level"], case["risk_level"]),
             "page_language": {"English": "en", "French": "fr", "German": "de", "Spanish": "es", "Russian": "ru", "Serbian": "sr"}.get(language, "en"),

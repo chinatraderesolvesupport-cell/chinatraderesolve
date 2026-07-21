@@ -60,6 +60,52 @@ def _parse_amount(text: str) -> float | None:
         return None
 
 
+
+_RU = {
+"The request may involve altering, concealing or fabricating evidence.": "Запрос может предполагать изменение, сокрытие или изготовление доказательств.",
+"The description indicates an urgent legal, authority or deadline-sensitive issue.": "Описание указывает на срочный юридический вопрос, обращение органов или критический срок.",
+"A laboratory, compliance, customs or technical specialist may be required.": "Может потребоваться лабораторный, сертификационный, таможенный или технический специалист.",
+"The stated dispute value is high and requires human scope review.": "Указана высокая сумма спора, поэтому требуется ручная проверка объёма помощи.",
+"The selected issue does not clearly match the current free-access scope.": "Выбранная проблема не полностью соответствует текущему объёму бесплатной помощи.",
+"Supplier or company name": "Название поставщика или компании",
+"Order number or transaction reference": "Номер заказа или идентификатор транзакции",
+"Approximate amount in dispute or order value": "Примерная сумма спора или стоимость заказа",
+"Which written records or photographs are available": "Какие письменные материалы или фотографии имеются",
+"A more detailed chronology of what happened": "Более подробная хронология событий",
+"Preferred practical outcome": "Желаемый практический результат",
+"This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Заявка не может быть принята, поскольку запрос может предполагать ненадлежащее обращение с доказательствами.",
+"Decline and preserve an internal audit record.": "Отклонить заявку и сохранить внутреннюю запись аудита.",
+"Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Описание может касаться срочного юридического вопроса или действий государственных органов. Без ручной проверки автоматическая система не может безопасно оценить такую заявку.",
+"Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Немедленно передать на ручную проверку; при наличии сроков рекомендовать заявителю обратиться к квалифицированному специалисту.",
+"The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Дело может соответствовать направлению сервиса, но его стоимость или техническая сложность требуют ручной проверки.",
+"Review scope and decide whether an external specialist is required.": "Проверить объём помощи и определить, нужен ли внешний специалист.",
+"More information is needed to determine whether the case fits the free-access service.": "Нужно больше информации, чтобы определить, подходит ли дело для бесплатной помощи.",
+"Request a clearer description of the supplier dispute and requested outcome.": "Запросить более точное описание спора и желаемого результата.",
+"The application appears suitable for free-access review, subject to capacity and a final scope check.": "Заявка предварительно подходит для бесплатного рассмотрения при наличии мощности и после окончательной проверки объёма помощи.",
+"Place in the free-access candidate queue and request up to five key files if selected.": "Поместить в очередь кандидатов и при отборе запросить не более пяти ключевых файлов.",
+"The case may fit the free-access service, but additional information is needed before selection.": "Дело может подходить для бесплатной помощи, но до отбора требуется дополнительная информация.",
+"Request the missing information listed by the triage result.": "Запросить недостающую информацию, указанную в результате проверки.",
+"The case was assessed against the current free-access scope and evidence indicators.": "Дело оценено с учётом текущего объёма бесплатной помощи и имеющихся признаков доказательств.",
+}
+_SR = {
+"Supplier or company name":"Naziv dobavljača ili kompanije", "Order number or transaction reference":"Broj porudžbine ili oznaka transakcije", "Approximate amount in dispute or order value":"Približan iznos spora ili vrednost porudžbine", "Which written records or photographs are available":"Koji pisani dokazi ili fotografije postoje", "A more detailed chronology of what happened":"Detaljnija hronologija događaja", "Preferred practical outcome":"Željeni praktični ishod",
+"The case may fit the free-access service, but additional information is needed before selection.":"Slučaj može odgovarati besplatnoj usluzi, ali su potrebne dodatne informacije pre izbora.",
+"The case appears potentially relevant, but its value or technical complexity requires human scope review.":"Slučaj može biti relevantan, ali njegova vrednost ili tehnička složenost zahtevaju ljudsku proveru obima.",
+"The case was assessed against the current free-access scope and evidence indicators.":"Slučaj je procenjen prema trenutnom obimu besplatne usluge i pokazateljima dokaza.",
+}
+
+def _localize_result(result: TriageResult, language: str) -> TriageResult:
+    mapping = _RU if language == "Russian" else _SR if language == "Serbian" else None
+    if not mapping:
+        return result
+    return result.model_copy(update={
+        "reasons": [mapping.get(x, x) for x in result.reasons],
+        "missing_information": [mapping.get(x, x) for x in result.missing_information],
+        "recommended_action": mapping.get(result.recommended_action, result.recommended_action),
+        "public_message": mapping.get(result.public_message, result.public_message),
+    })
+
+
 def rules_triage(app: ApplicationCreate) -> TriageResult:
     combined = f"{app.main_problem} {app.description} {app.requested_result}"
     urgent = _contains(combined, URGENT_TERMS)
@@ -164,7 +210,7 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
     priority = min(100, priority)
 
     confidence = 0.88 if hard_stop else 0.78 if decision == "pilot_candidate" else 0.72
-    return TriageResult(
+    result = TriageResult(
         decision=decision,
         risk_level=risk,
         priority=priority,
@@ -179,6 +225,7 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
         public_message=public,
         source="rules",
     )
+    return _localize_result(result, app.preferred_language)
 
 
 def merge_triage(rule_result: TriageResult, ai_result: TriageResult | None) -> TriageResult:

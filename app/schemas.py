@@ -34,7 +34,7 @@ class ApplicationCreate(BaseModel):
         text = " ".join(str(value or "").split())
         return text.strip()
 
-    @field_validator("free_access_terms", "sharing_authority", "ai_consent", "no_guarantee")
+    @field_validator("free_access_terms", "sharing_authority", "no_guarantee")
     @classmethod
     def require_consent(cls, value: bool) -> bool:
         if not value:

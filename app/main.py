@@ -39,8 +39,14 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="1.3.0")
-app.add_middleware(SessionMiddleware, secret_key=settings.app_secret, same_site="lax", https_only=False)
+app = FastAPI(title="ChinaTradeResolve Free Access", version="1.6.0")
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.app_secret,
+    same_site="lax",
+    https_only=settings.public_base_url.startswith("https://"),
+    max_age=3600,
+)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
@@ -70,6 +76,41 @@ def safe_support_url() -> str | None:
         return None
     return raw
 
+
+
+STATUS_LABELS = {
+    "submitted": "Получено", "needs_information": "Нужна информация",
+    "pilot_candidate": "Кандидат на бесплатную помощь", "human_review": "Ручная проверка",
+    "declined": "Отклонено", "accepted": "Принято", "closed": "Закрыто",
+}
+RISK_LABELS = {"critical": "Критический", "high": "Высокий", "medium": "Средний", "low": "Низкий"}
+LANGUAGE_LABELS = {"English": "Английский", "Russian": "Русский", "Serbian": "Сербский"}
+ACTOR_LABELS = {"system": "система", "triage": "автопроверка", "admin": "администратор", "client": "клиент"}
+EVENT_LABELS = {"application_created": "заявка создана", "triage_completed": "автопроверка завершена", "status_updated": "статус изменён", "feedback_submitted": "отзыв отправлен", "triage_recomputed": "автопроверка повторена"}
+PROBLEM_LABELS = {
+    "Goods not delivered": "Товар не доставлен",
+    "Poor quality or defects": "Низкое качество или дефекты",
+    "Wrong material or specification": "Неверный материал или спецификация",
+    "Questionable documents": "Сомнительные документы",
+    "Supplier refuses refund": "Поставщик отказывается возвращать деньги",
+    "Marketplace rejected the claim": "Площадка отклонила претензию",
+}
+RESULT_LABELS = {
+    "Full refund": "Полный возврат", "Partial refund": "Частичный возврат", "Replacement": "Замена",
+    "Completion of order": "Завершение исполнения заказа", "Negotiated settlement": "Согласованное урегулирование",
+    "Not sure": "Пока не определено",
+}
+CHANNEL_LABELS = {"Direct supplier contract": "Прямой договор с поставщиком", "Other": "Другое"}
+PUBLIC_STATUS_LABELS = {
+    "English": {"submitted":"Received","needs_information":"Information needed","pilot_candidate":"Free-review candidate","human_review":"Human review","declined":"Declined","accepted":"Accepted","closed":"Closed"},
+    "Russian": STATUS_LABELS,
+    "Serbian": {"submitted":"Primljeno","needs_information":"Potrebne informacije","pilot_candidate":"Kandidat za besplatni pregled","human_review":"Ljudski pregled","declined":"Odbijeno","accepted":"Prihvaćeno","closed":"Zatvoreno"},
+}
+PUBLIC_RISK_LABELS = {
+    "English": {"critical":"Critical","high":"High","medium":"Medium","low":"Low"},
+    "Russian": RISK_LABELS,
+    "Serbian": {"critical":"Kritičan","high":"Visok","medium":"Srednji","low":"Nizak"},
+}
 
 STATUS_COPY = {
     "English": {
@@ -224,6 +265,9 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "feedback": feedback,
             "feedback_saved": bool(feedback_saved),
             "support_url": safe_support_url(),
+            "status_label": PUBLIC_STATUS_LABELS.get(language, PUBLIC_STATUS_LABELS["English"]).get(case["status"], case["status"]),
+            "risk_label": PUBLIC_RISK_LABELS.get(language, PUBLIC_RISK_LABELS["English"]).get(case["risk_level"], case["risk_level"]),
+            "page_language": {"Russian": "ru", "Serbian": "sr"}.get(language, "en"),
         },
     )
 
@@ -265,7 +309,7 @@ def admin_login_page(request: Request) -> HTMLResponse:
 @app.post("/admin/login", response_class=HTMLResponse)
 def admin_login(request: Request, token: str = Form(...)) -> HTMLResponse:
     if not secrets.compare_digest(token, settings.admin_token):
-        return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": "Invalid admin token"}, status_code=401)
+        return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": "Неверный токен администратора"}, status_code=401)
     request.session["admin"] = True
     return RedirectResponse("/admin", status_code=303)
 
@@ -284,7 +328,15 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
     return templates.TemplateResponse(
         request=request,
         name="admin_dashboard.html",
-        context={"cases": cases, "counts": dashboard_counts(), "status_filter": status or "", "risk_filter": risk or ""},
+        context={
+            "cases": cases,
+            "counts": dashboard_counts(),
+            "status_filter": status or "",
+            "risk_filter": risk or "",
+            "status_labels": STATUS_LABELS,
+            "risk_labels": RISK_LABELS,
+            "problem_labels": PROBLEM_LABELS,
+        },
     )
 
 
@@ -303,6 +355,14 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "triage": json.loads(case["triage_json"]),
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),
+            "status_labels": STATUS_LABELS,
+            "risk_labels": RISK_LABELS,
+            "language_labels": LANGUAGE_LABELS,
+            "actor_labels": ACTOR_LABELS,
+            "event_labels": EVENT_LABELS,
+            "problem_labels": PROBLEM_LABELS,
+            "result_labels": RESULT_LABELS,
+            "channel_labels": CHANNEL_LABELS,
         },
     )
 

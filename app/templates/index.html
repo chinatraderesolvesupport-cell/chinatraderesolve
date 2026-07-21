@@ -1,12 +1,13 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+
+<html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ChinaTradeResolve — Free Supplier Dispute Support</title>
-<meta name="description" content="Apply for free supplier-dispute support. No service fee and no large document archive required at the application stage.">
-<meta name="robots" content="noindex,nofollow">
-<meta name="csrf-mode" content="same-origin">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>ChinaTradeResolve — бесплатная помощь в спорах с поставщиками</title>
+<meta content="Подайте бесплатную заявку по спору с китайским поставщиком. На этапе заявки не требуется оплата или загрузка большого архива документов." name="description"/>
+<meta content="noindex,nofollow" name="robots"/>
+<meta content="same-origin" name="csrf-mode"/>
 <style>
 :root{
   --bg:#0f172a;--panel:#172033;--panel2:#132238;--navy:#17324D;--teal:#14B8A6;
@@ -124,358 +125,337 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </style>
 </head>
 <body>
-<div class="prototype-banner" data-i18n="prototype">Free access phase — no service fees. Voluntary support is optional and never affects priority.</div>
+<div class="prototype-banner" data-i18n="prototype">Этап бесплатного доступа — без платы за услуги. Добровольная поддержка не влияет на приоритет.</div>
 <header>
-  <div class="wrap">
-    <nav>
-      <div class="brand">
-        <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true">
-          <path class="doc" d="M7 3.5h12l6 6V28H7z"/>
-          <path class="doc" d="M19 3.5V10h6"/>
-          <path class="line" d="M11 14h9M11 18h6"/>
-          <path class="check" d="M16.5 23l2.4 2.4 5-5.4"/>
-        </svg>
-        <span class="brand-word">ChinaTrade<span>Resolve</span></span>
-      </div>
-      <div class="links">
-        <a href="#services" data-i18n="nav_services">Services</a>
-        <a href="#process" data-i18n="nav_process">How It Works</a>
-        <a href="#free-access" data-i18n="nav_pricing">Free Access</a>
-        <a href="#about" data-i18n="nav_about">About</a>
-        <a href="#faq" data-i18n="nav_faq">FAQ</a>
-        <a href="#support" data-i18n="nav_support">Support</a>
-      </div>
-      <div class="actions">
-        <select id="langSelect" class="lang" aria-label="Language">
-          <option value="en">English</option><option value="ru">Русский</option><option value="sr">Srpski</option>
-        </select>
-        <a class="btn primary" href="#submit" data-i18n="submit_case">Submit a Free Case Review</a>
-        <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mobilePanel" aria-label="Open navigation menu">☰</button>
-      </div>
-    </nav>
-    <div id="mobilePanel" class="mobile-panel">
-      <span class="mobile-lang-label" data-i18n="language_label">Language</span>
-      <select id="mobileLangSelect" class="lang" aria-label="Language">
-        <option value="en">English</option><option value="ru">Русский</option><option value="sr">Srpski</option>
-      </select>
-      <a href="#services" data-i18n="nav_services">Services</a>
-      <a href="#process" data-i18n="nav_process">How It Works</a>
-      <a href="#free-access" data-i18n="nav_pricing">Free Access</a>
-      <a href="#about" data-i18n="nav_about">About</a>
-      <a href="#faq" data-i18n="nav_faq">FAQ</a>
-        <a href="#support" data-i18n="nav_support">Support</a>
-    </div>
-  </div>
+<div class="wrap">
+<nav>
+<div class="brand">
+<svg aria-hidden="true" class="brand-logo" viewbox="0 0 32 32">
+<path class="doc" d="M7 3.5h12l6 6V28H7z"></path>
+<path class="doc" d="M19 3.5V10h6"></path>
+<path class="line" d="M11 14h9M11 18h6"></path>
+<path class="check" d="M16.5 23l2.4 2.4 5-5.4"></path>
+</svg>
+<span class="brand-word">ChinaTrade<span>Resolve</span></span>
+</div>
+<div class="links">
+<a data-i18n="nav_services" href="#services">Услуги</a>
+<a data-i18n="nav_process" href="#process">Как это работает</a>
+<a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
+<a data-i18n="nav_about" href="#about">О проекте</a>
+<a data-i18n="nav_faq" href="#faq">FAQ</a>
+<a data-i18n="nav_support" href="#support">Поддержать</a>
+</div>
+<div class="actions">
+<select aria-label="Язык" class="lang" id="langSelect">
+<option selected="" value="ru">Русский</option><option value="en">English</option><option value="sr">Srpski</option>
+</select>
+<a class="btn primary" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
+<button aria-controls="mobilePanel" aria-expanded="false" aria-label="Открыть меню" class="menu-btn" id="menuBtn">☰</button>
+</div>
+</nav>
+<div class="mobile-panel" id="mobilePanel">
+<span class="mobile-lang-label" data-i18n="language_label">Язык</span>
+<select aria-label="Язык" class="lang" id="mobileLangSelect">
+<option selected="" value="ru">Русский</option><option value="en">English</option><option value="sr">Srpski</option>
+</select>
+<a data-i18n="nav_services" href="#services">Услуги</a>
+<a data-i18n="nav_process" href="#process">Как это работает</a>
+<a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
+<a data-i18n="nav_about" href="#about">О проекте</a>
+<a data-i18n="nav_faq" href="#faq">FAQ</a>
+<a data-i18n="nav_support" href="#support">Поддержать</a>
+</div>
+</div>
 </header>
-
 <section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <div class="eyebrow" data-i18n="hero_eyebrow">China Supplier Dispute Support</div>
-      <h1 data-i18n="hero_title">We turn confusion into a clear case.</h1>
-      <p class="lead" data-i18n="hero_text">ChinaTradeResolve helps buyers and businesses organise evidence, identify contradictions and prepare structured claims in disputes with Chinese suppliers and marketplaces.</p>
-      <div class="hero-buttons">
-        <a class="btn primary" href="#submit" data-i18n="free_assessment">Submit a Free Case Review</a>
-        <a class="btn" href="#process" data-i18n="how_it_works">How It Works</a>
-      </div>
-      <div class="trust-pills">
-        <span data-i18n="trust_marker1">Human-reviewed</span>
-        <span data-i18n="trust_marker2">Confidential approach</span>
-        <span data-i18n="trust_marker3">No guaranteed outcomes</span>
-      </div>
-      <div class="note" data-i18n="languages_note">Applications may be submitted in English, Russian or Serbian. Key documents are requested only after selection.</div>
-    </div>
-    <aside class="hero-card">
-      <div class="eyebrow" data-i18n="example_case">Example Case Overview</div>
-      <div class="row"><div class="label" data-i18n="issue">Issue</div><div class="value" data-i18n="issue_value">Product does not match specification</div></div>
-      <div class="row"><div class="label" data-i18n="evidence">Evidence</div><div class="value">Order · Invoice · Messages · Photos</div></div>
-      <div class="row"><div class="label" data-i18n="status">Status</div><div class="value status" data-i18n="status_value">Evidence review in progress</div></div>
-      <div class="row"><div class="label" data-i18n="next_step">Next step</div><div class="value" data-i18n="next_step_value">Formal claim preparation</div></div>
-    </aside>
-  </div>
+<div class="wrap hero-grid">
+<div>
+<div class="eyebrow" data-i18n="hero_eyebrow">Помощь в спорах с китайскими поставщиками</div>
+<h1 data-i18n="hero_title">Мы превращаем хаос в понятное дело.</h1>
+<p class="lead" data-i18n="hero_text">ChinaTradeResolve помогает покупателям и компаниям систематизировать доказательства, находить противоречия и готовить структурированные претензии в спорах с китайскими поставщиками и маркетплейсами.</p>
+<div class="hero-buttons">
+<a class="btn primary" data-i18n="free_assessment" href="#submit">Отправить бесплатную заявку</a>
+<a class="btn" data-i18n="how_it_works" href="#process">Как это работает</a>
+</div>
+<div class="trust-pills">
+<span data-i18n="trust_marker1">Проверяется человеком</span>
+<span data-i18n="trust_marker2">Конфиденциальный подход</span>
+<span data-i18n="trust_marker3">Без гарантии результата</span>
+</div>
+<div class="note" data-i18n="languages_note">Заявку можно подать на английском, русском или сербском языке. Ключевые документы запрашиваются только после отбора.</div>
+</div>
+<aside class="hero-card">
+<div class="eyebrow" data-i18n="example_case">Пример обзора дела</div>
+<div class="row"><div class="label" data-i18n="issue">Проблема</div><div class="value" data-i18n="issue_value">Товар не соответствует спецификации</div></div>
+<div class="row"><div class="label" data-i18n="evidence">Доказательства</div><div class="value">Order · Invoice · Messages · Photos</div></div>
+<div class="row"><div class="label" data-i18n="status">Статус</div><div class="value status" data-i18n="status_value">Идёт анализ доказательств</div></div>
+<div class="row"><div class="label" data-i18n="next_step">Следующий шаг</div><div class="value" data-i18n="next_step_value">Подготовка формальной претензии</div></div>
+</aside>
+</div>
 </section>
-
 <section id="situations">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="choose_situation">Choose Your Situation</div>
-    <h2 data-i18n="what_happened">What happened?</h2>
-    <p class="intro" data-i18n="choose_text">Select the option that best matches your case.</p>
-    <div class="grid g4">
-      <div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">I Already Have a Dispute</h3><p data-i18n="s1_text">The supplier refuses to resolve the problem or the marketplace rejected the claim.</p></div>
-      <div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">Goods Not Delivered</h3><p data-i18n="s2_text">Shipment is delayed, cancelled or the supplier stopped responding.</p></div>
-      <div class="card"><div class="icon">03</div><h3 data-i18n="s3_title">Quality or Specification Problem</h3><p data-i18n="s3_text">The goods are defective, incomplete or different from the order.</p></div>
-      <div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">Check a Deal Before Payment</h3><p data-i18n="s4_text">You want to reduce risk before sending money.</p></div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="choose_situation">Выберите ситуацию</div>
+<h2 data-i18n="what_happened">Что произошло?</h2>
+<p class="intro" data-i18n="choose_text">Выберите вариант, который лучше всего соответствует вашему делу.</p>
+<div class="grid g4">
+<div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">Спор уже открыт</h3><p data-i18n="s1_text">Поставщик отказывается решать проблему или площадка отклонила претензию.</p></div>
+<div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">Товар не доставлен</h3><p data-i18n="s2_text">Отгрузка задержана, отменена или поставщик перестал отвечать.</p></div>
+<div class="card"><div class="icon">03</div><h3 data-i18n="s3_title">Проблема качества или спецификации</h3><p data-i18n="s3_text">Товар неисправен, неполный или отличается от заказа.</p></div>
+<div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">Проверка до оплаты</h3><p data-i18n="s4_text">Вы хотите снизить риск до отправки денег.</p></div>
+</div>
+</div>
 </section>
-
-
 <section class="pilot-section" id="free-access">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="pilot_eyebrow">Free Access Phase</div>
-    <h2 data-i18n="pilot_title">Use ChinaTradeResolve free of charge while the project is being validated</h2>
-    <p class="intro" data-i18n="pilot_intro">There is no fixed end date. The service remains free until ChinaTradeResolve announces a future change in advance.</p>
-    <div class="pilot-box">
-      <div class="pilot-card">
-        <div class="pilot-badge" data-i18n="pilot_badge">Free access · capacity-based acceptance</div>
-        <h3 data-i18n="pilot_receive_title">What free-access users may receive</h3>
-        <ul class="pilot-list">
-          <li data-i18n="pilot_receive1">A preliminary review of one main dispute issue</li>
-          <li data-i18n="pilot_receive2">A short written assessment of strengths, weaknesses and missing evidence</li>
-          <li data-i18n="pilot_receive3">A recommended next-step checklist</li>
-          <li data-i18n="pilot_receive4">One short clarification round after delivery</li>
-        </ul>
-      </div>
-      <div class="pilot-card">
-        <h3 data-i18n="pilot_limits_title">Free-access boundaries</h3>
-        <ul class="pilot-list">
-          <li data-i18n="pilot_limit1">No service fee is charged</li>
-          <li data-i18n="pilot_limit2">No supplier or marketplace contact in the participant’s name</li>
-          <li data-i18n="pilot_limit3">No urgent court, arbitration or limitation-deadline cases</li>
-          <li data-i18n="pilot_limit4">No large archives: initially only a case summary and up to 5 key files after acceptance</li>
-          <li data-i18n="pilot_limit5">Applications are accepted according to scope, evidence and available capacity</li>
-        </ul>
-        <div class="pilot-limit" data-i18n="pilot_selection">Free access is not time-limited, but individual cases may be declined when they are outside scope, too urgent or exceed available capacity.</div>
-        <div class="pilot-limit" data-i18n="pilot_feedback">Users may leave honest feedback. Permission to publish any testimonial is separate, optional and never automatic.</div>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="pilot_eyebrow">Этап бесплатного доступа</div>
+<h2 data-i18n="pilot_title">Используйте ChinaTradeResolve бесплатно, пока мы проверяем жизнеспособность проекта</h2>
+<p class="intro" data-i18n="pilot_intro">Фиксированной даты окончания нет. Сервис остаётся бесплатным, пока ChinaTradeResolve заранее не объявит об изменении модели.</p>
+<div class="pilot-box">
+<div class="pilot-card">
+<div class="pilot-badge" data-i18n="pilot_badge">Бесплатный доступ · приём с учётом доступной мощности</div>
+<h3 data-i18n="pilot_receive_title">Что могут получить пользователи</h3>
+<ul class="pilot-list">
+<li data-i18n="pilot_receive1">Предварительный анализ одной основной проблемы спора</li>
+<li data-i18n="pilot_receive2">Краткая письменная оценка сильных и слабых сторон и недостающих доказательств</li>
+<li data-i18n="pilot_receive3">Чек-лист рекомендуемых следующих действий</li>
+<li data-i18n="pilot_receive4">Один короткий раунд уточнений после выдачи результата</li>
+</ul>
+</div>
+<div class="pilot-card">
+<h3 data-i18n="pilot_limits_title">Границы бесплатного доступа</h3>
+<ul class="pilot-list">
+<li data-i18n="pilot_limit1">Плата за услуги не взимается</li>
+<li data-i18n="pilot_limit2">Нет общения с поставщиком или площадкой от имени участника</li>
+<li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками</li>
+<li data-i18n="pilot_limit4">Без больших архивов: сначала только описание, после отбора — до 5 ключевых файлов</li>
+<li data-i18n="pilot_limit5">Заявки принимаются с учётом профиля дела, доказательств и доступной мощности</li>
+</ul>
+<div class="pilot-limit" data-i18n="pilot_selection">Бесплатный доступ не ограничен сроком, но отдельное дело может быть отклонено, если оно вне компетенции, срочное или превышает доступную мощность.</div>
+<div class="pilot-limit" data-i18n="pilot_feedback">Пользователь может оставить честный отзыв. Разрешение на публикацию запрашивается отдельно, добровольно и не приводит к автоматической публикации.</div>
+</div>
+</div>
+</div>
 </section>
-
 <section class="light" id="services">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="services_eyebrow">Full Service Direction</div>
-    <h2 data-i18n="services_title">What the complete service is designed to deliver</h2>
-    <p class="intro" data-i18n="services_note">Free-access users receive the scope described above, subject to case fit and available capacity.</p>
-    <div class="grid g4">
-      <div class="card"><h3 data-i18n="receive1">Clear Case Assessment</h3><p data-i18n="receive1_text">Main facts, possible breaches, strengths, weaknesses and realistic options.</p></div>
-      <div class="card"><h3 data-i18n="receive2">Organised Evidence Package</h3><p data-i18n="receive2_text">Chronology, evidence index, labelled exhibits and concise case summary.</p></div>
-      <div class="card"><h3 data-i18n="receive3">Professional Claim Documents</h3><p data-i18n="receive3_text">Formal demand, marketplace appeal, supplier response or refund request.</p></div>
-      <div class="card"><h3 data-i18n="receive4">Practical Action Plan</h3><p data-i18n="receive4_text">What to submit, where to submit it, what is missing and what to avoid.</p></div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="services_eyebrow">Направление полного сервиса</div>
+<h2 data-i18n="services_title">Что должен предоставлять полноценный сервис</h2>
+<p class="intro" data-i18n="services_note">Участники пилота получают только ограниченный результат, описанный в разделе пилота.</p>
+<div class="grid g4">
+<div class="card"><h3 data-i18n="receive1">Понятная оценка дела</h3><p data-i18n="receive1_text">Основные факты, возможные нарушения, сильные и слабые стороны.</p></div>
+<div class="card"><h3 data-i18n="receive2">Организованный пакет доказательств</h3><p data-i18n="receive2_text">Хронология, индекс доказательств, приложения и краткое резюме.</p></div>
+<div class="card"><h3 data-i18n="receive3">Профессиональные документы</h3><p data-i18n="receive3_text">Претензия, апелляция, ответ поставщику или запрос возврата.</p></div>
+<div class="card"><h3 data-i18n="receive4">Практический план действий</h3><p data-i18n="receive4_text">Что, куда и как отправлять, чего не хватает и чего избегать.</p></div>
+</div>
+</div>
 </section>
-
 <section id="pricing">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="pricing_eyebrow">Services Available During Free Access</div>
-    <h2 data-i18n="pricing_title">Clear scope. Clear deliverables.</h2>
-    <p class="intro" data-i18n="pricing_note">No service fee is charged during the current free-access phase. Availability and scope depend on case complexity and capacity.</p>
-    <div class="grid g4">
-      <div class="card"><h3 data-i18n="p1">Case Review</h3><div class="price" data-i18n="currently_free">Currently free</div><div class="best-for"><b data-i18n="best_for">Best for</b><span data-i18n="best1">Understanding whether your evidence supports a credible position.</span></div><ul><li data-i18n="p1a">Evidence review</li><li data-i18n="p1b">Strengths and weaknesses</li><li data-i18n="p1c">Missing evidence</li><li data-i18n="p1d">Action plan</li></ul></div>
-      <div class="card highlight"><h3 data-i18n="p2">Claim Preparation</h3><div class="price" data-i18n="currently_free">Currently free</div><div class="best-for"><b data-i18n="best_for">Best for</b><span data-i18n="best2">Cases where the key documents already exist but the claim lacks structure.</span></div><ul><li data-i18n="p2a">Formal demand</li><li data-i18n="p2b">Detailed chronology</li><li data-i18n="p2c">Evidence appendix</li><li data-i18n="p2d">One revision</li></ul></div>
-      <div class="card"><h3 data-i18n="p3">Full Dispute Support</h3><div class="price" data-i18n="currently_free">Currently free</div><div class="best-for"><b data-i18n="best_for">Best for</b><span data-i18n="best3">Active disputes requiring ongoing responses and a consistent strategy.</span></div><ul><li data-i18n="p3a">Response analysis</li><li data-i18n="p3b">Further objections</li><li data-i18n="p3c">Evidence updates</li><li data-i18n="p3d">Strategy support</li></ul></div>
-      <div class="card"><h3 data-i18n="p4">Pre-Payment Review</h3><div class="price" data-i18n="currently_free">Currently free</div><div class="best-for"><b data-i18n="best_for">Best for</b><span data-i18n="best4">Checking unclear terms and preventable risks before money is sent.</span></div><ul><li data-i18n="p4a">Invoice check</li><li data-i18n="p4b">Specification review</li><li data-i18n="p4c">Supplier questions</li><li data-i18n="p4d">Risk checklist</li></ul></div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="pricing_eyebrow">Услуги во время бесплатного доступа</div>
+<h2 data-i18n="pricing_title">Понятный объём. Понятный результат.</h2>
+<p class="intro" data-i18n="pricing_note">Во время текущего этапа плата за услуги не взимается. Доступность и объём помощи зависят от сложности дела и доступной мощности.</p>
+<div class="grid g4">
+<div class="card"><h3 data-i18n="p1">Анализ дела</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best1">Чтобы понять, подтверждают ли доказательства убедительную позицию.</span></div><ul><li data-i18n="p1a">Анализ доказательств</li><li data-i18n="p1b">Сильные и слабые стороны</li><li data-i18n="p1c">Недостающие доказательства</li><li data-i18n="p1d">План действий</li></ul></div>
+<div class="card highlight"><h3 data-i18n="p2">Подготовка претензии</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best2">Когда основные документы уже собраны, но претензии не хватает структуры.</span></div><ul><li data-i18n="p2a">Формальная претензия</li><li data-i18n="p2b">Подробная хронология</li><li data-i18n="p2c">Приложение с доказательствами</li><li data-i18n="p2d">Одна редакция</li></ul></div>
+<div class="card"><h3 data-i18n="p3">Полное сопровождение</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best3">Для продолжающегося спора, где нужны последовательные ответы и стратегия.</span></div><ul><li data-i18n="p3a">Анализ ответов</li><li data-i18n="p3b">Подготовка возражений</li><li data-i18n="p3c">Обновление доказательств</li><li data-i18n="p3d">Стратегическая поддержка</li></ul></div>
+<div class="card"><h3 data-i18n="p4">Проверка до оплаты</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best4">Для проверки неясных условий и рисков до отправки денег.</span></div><ul><li data-i18n="p4a">Проверка инвойса</li><li data-i18n="p4b">Проверка спецификации</li><li data-i18n="p4c">Вопросы поставщику</li><li data-i18n="p4d">Чек-лист рисков</li></ul></div>
+</div>
+</div>
 </section>
-
 <section class="navy" id="process">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="process_eyebrow">How It Works</div>
-    <h2 data-i18n="process_title">From scattered files to a clear position</h2>
-    <div class="steps">
-      <div class="step" data-n="1"><h3 data-i18n="step1">Submit</h3><p data-i18n="step1_text">Send basic information and key files.</p></div>
-      <div class="step" data-n="2"><h3 data-i18n="step2">Scope Check</h3><p data-i18n="step2_text">We identify the appropriate service.</p></div>
-      <div class="step" data-n="3"><h3 data-i18n="step3">Evidence Review</h3><p data-i18n="step3_text">We organise facts and contradictions.</p></div>
-      <div class="step" data-n="4"><h3 data-i18n="step4">Preparation</h3><p data-i18n="step4_text">We prepare the assessment or claim.</p></div>
-      <div class="step" data-n="5"><h3 data-i18n="step5">Approval</h3><p data-i18n="step5_text">You review before submission.</p></div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="process_eyebrow">Как это работает</div>
+<h2 data-i18n="process_title">От разрозненных файлов к ясной позиции</h2>
+<div class="steps">
+<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Отправьте базовую информацию и ключевые файлы.</p></div>
+<div class="step" data-n="2"><h3 data-i18n="step2">Проверка объёма</h3><p data-i18n="step2_text">Мы определяем подходящую услугу.</p></div>
+<div class="step" data-n="3"><h3 data-i18n="step3">Анализ доказательств</h3><p data-i18n="step3_text">Мы систематизируем факты и противоречия.</p></div>
+<div class="step" data-n="4"><h3 data-i18n="step4">Подготовка</h3><p data-i18n="step4_text">Готовим оценку или претензию.</p></div>
+<div class="step" data-n="5"><h3 data-i18n="step5">Утверждение</h3><p data-i18n="step5_text">Вы проверяете документ до отправки.</p></div>
+</div>
+</div>
 </section>
-
 <section class="light" id="trust">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="trust_eyebrow">Trust & Transparency</div>
-    <h2 data-i18n="trust_title">Know who is handling your case</h2>
-    <div class="trust-box">
-      <div class="operator">
-        <strong data-i18n="operator_title">ChinaTradeResolve Case Review Team</strong>
-        <p data-i18n="operator_text">Independent commercial dispute support. Operated from Serbia. The legal operator name, business address and verified contact information will be published before public launch. No service fee is charged during free access.</p>
-        <div class="placeholder" data-i18n="operator_placeholder">P0 status: legal operator details are not yet final. No payments or document uploads are accepted.</div>
-      </div>
-      <div class="sample">
-        <div class="sample-page">
-          <div class="sample-header">
-            <div>
-              <strong data-i18n="sample_title">Sample Case Assessment</strong>
-              <div class="mini" data-i18n="sample_sub">An anonymised example of the deliverable</div>
-            </div>
-            <div class="sample-score" data-i18n="sample_status">Human reviewed</div>
-          </div>
-          <div class="sample-tags">
-            <span data-i18n="sample_tag1">Chronology</span>
-            <span data-i18n="sample_tag2">Evidence index</span>
-            <span data-i18n="sample_tag3">Risk analysis</span>
-          </div>
-          <table>
-            <tr><th data-i18n="table_issue">Issue</th><th data-i18n="table_evidence">Evidence</th><th data-i18n="table_risk">Risk</th></tr>
-            <tr><td data-i18n="table_row1">Wrong material</td><td data-i18n="table_row2">EX-03 Order + EX-07 supplier message</td><td data-i18n="table_row3">Terminology may be disputed</td></tr>
-            <tr><td data-i18n="table_row4">Missing component</td><td data-i18n="table_row5">EX-02 Invoice + EX-11 photographs</td><td data-i18n="table_row6">Final specification must be confirmed</td></tr>
-          </table>
-        </div>
-        <a class="btn dark" href="/static/sample_case_assessment.html" data-i18n="view_sample">View Sample Report</a>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="trust_eyebrow">Доверие и прозрачность</div>
+<h2 data-i18n="trust_title">Вы должны знать, кто работает с вашим делом</h2>
+<div class="trust-box">
+<div class="operator">
+<strong data-i18n="operator_title">ChinaTradeResolve Case Review Team</strong>
+<p data-i18n="operator_text">Независимая коммерческая помощь в спорах. Работа ведётся из Сербии. Проект находится на этапе ограниченного бесплатного доступа; юридические и платёжные реквизиты будут опубликованы до подключения платных функций.</p>
+<div class="placeholder" data-i18n="operator_placeholder">Статус прототипа: данные юридического исполнителя ещё не утверждены. Через этот прототип не принимаются платежи и документы.</div>
+</div>
+<div class="sample">
+<div class="sample-page">
+<div class="sample-header">
+<div>
+<strong data-i18n="sample_title">Пример оценки дела</strong>
+<div class="mini" data-i18n="sample_sub">Обезличенный пример результата</div>
+</div>
+<div class="sample-score" data-i18n="sample_status">Проверено человеком</div>
+</div>
+<div class="sample-tags">
+<span data-i18n="sample_tag1">Хронология</span>
+<span data-i18n="sample_tag2">Индекс доказательств</span>
+<span data-i18n="sample_tag3">Анализ рисков</span>
+</div>
+<table>
+<tr><th data-i18n="table_issue">Проблема</th><th data-i18n="table_evidence">Доказательства</th><th data-i18n="table_risk">Риск</th></tr>
+<tr><td data-i18n="table_row1">Неверный материал</td><td data-i18n="table_row2">EX-03 заказ + EX-07 сообщение поставщика</td><td data-i18n="table_row3">Терминология может оспариваться</td></tr>
+<tr><td data-i18n="table_row4">Недостающий компонент</td><td data-i18n="table_row5">EX-02 инвойс + EX-11 фотографии</td><td data-i18n="table_row6">Нужно подтвердить финальную спецификацию</td></tr>
+</table>
+</div>
+<a class="btn dark" data-i18n="view_sample" href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
+</div>
+</div>
+</div>
 </section>
-
 <section id="ai">
-  <div class="wrap grid g2">
-    <div>
-      <div class="eyebrow" data-i18n="ai_eyebrow">AI-Assisted. Human-Controlled.</div>
-      <h2 data-i18n="ai_title">AI assists with organisation. Human review controls the outcome.</h2>
-      <p class="intro" data-i18n="ai_text">AI may help organise long files and prepare initial comparisons. Final conclusions and outgoing documents remain human-reviewed.</p>
-    </div>
-    <div class="quote" data-i18n="ai_quote">A credible claim is stronger than an exaggerated one.</div>
-  </div>
+<div class="wrap grid g2">
+<div>
+<div class="eyebrow" data-i18n="ai_eyebrow">ИИ помогает. Человек контролирует.</div>
+<h2 data-i18n="ai_title">ИИ помогает организовать материалы. Результат контролирует человек.</h2>
+<p class="intro" data-i18n="ai_text">ИИ может систематизировать большие объёмы файлов и подготовить первичное сравнение. Финальные выводы и исходящие документы проверяет человек.</p>
+</div>
+<div class="quote" data-i18n="ai_quote">Достоверная претензия сильнее преувеличенной.</div>
+</div>
 </section>
-
 <section class="light" id="about">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="about_eyebrow">About ChinaTradeResolve</div>
-    <h2 data-i18n="about_title">Built from real-world experience</h2>
-    <p class="intro" data-i18n="about_text">Buyers often have strong evidence, but it is scattered across messages, invoices, screenshots and platform records. We turn those materials into a clear, reviewable case.</p>
-    <div class="grid g3">
-      <div class="card"><h3 data-i18n="about1">Evidence Before Emotion</h3><p data-i18n="about1_text">Claims are built on documents, dates and written statements.</p></div>
-      <div class="card"><h3 data-i18n="about2">Honest Assessment</h3><p data-i18n="about2_text">Weaknesses and counterarguments are identified rather than hidden.</p></div>
-      <div class="card"><h3 data-i18n="about3">Client Control</h3><p data-i18n="about3_text">No important document is submitted without approval.</p></div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="about_eyebrow">О ChinaTradeResolve</div>
+<h2 data-i18n="about_title">Создано на основе реального опыта</h2>
+<p class="intro" data-i18n="about_text">У покупателей часто есть сильные доказательства, но они разбросаны по сообщениям, инвойсам, скриншотам и материалам платформ. Мы превращаем их в понятное дело.</p>
+<div class="grid g3">
+<div class="card"><h3 data-i18n="about1">Доказательства важнее эмоций</h3><p data-i18n="about1_text">Претензии строятся на документах, датах и письменных заявлениях.</p></div>
+<div class="card"><h3 data-i18n="about2">Честная оценка</h3><p data-i18n="about2_text">Слабые места и контраргументы не скрываются.</p></div>
+<div class="card"><h3 data-i18n="about3">Контроль клиента</h3><p data-i18n="about3_text">Ни один важный документ не отправляется без одобрения.</p></div>
+</div>
+</div>
 </section>
-
 <section id="submit">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="form_eyebrow">Free Case Application</div>
-    <h2 data-i18n="form_title">Submit a case for free review</h2>
-    <p class="intro" data-i18n="form_intro">Start with a short summary. Key documents are requested only if the case is accepted for review.</p>
-    <div class="form-speed" data-i18n="form_speed">About 2 minutes · No service fee · No large upload</div>
-    <div class="form-shell">
-      <div class="progress-labels"><span class="active" id="label1" data-i18n="form_stage1">Basic Details</span><span id="label2" data-i18n="form_stage2">Case Information</span></div>
-      <div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
-      <form id="caseForm" novalidate>
-        <input class="honeypot" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div class="form-step active" id="stepOne">
-          <div class="field"><label for="fullName" data-i18n="full_name">Full name</label><input id="fullName" name="full_name" required autocomplete="name"></div>
-          <div class="field"><label for="email" data-i18n="email_label">Email</label><input id="email" name="email" type="email" required autocomplete="email"></div>
-          <div class="field"><label for="country" data-i18n="country">Country</label><input id="country" name="country" autocomplete="country-name"></div>
-          <div class="field"><label for="preferred" data-i18n="preferred_lang">Preferred language</label><select id="preferred" name="preferred_language"><option value="English" data-i18n="opt_english">English</option><option value="Russian" data-i18n="opt_russian">Russian</option><option value="Serbian" data-i18n="opt_serbian">Serbian</option></select></div>
-          <div class="field"><label for="channel" data-i18n="channel">Purchasing channel</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option value="Direct supplier contract" data-i18n="opt_direct">Direct supplier contract</option><option value="Other" data-i18n="opt_other">Other</option></select></div>
-          <div class="field"><label for="amountDispute" data-i18n="amount">Amount in dispute</label><input id="amountDispute" name="amount_in_dispute" placeholder="e.g. EUR 4,000"></div>
-          <div class="field full"><label for="mainProblem" data-i18n="main_problem">Main problem</label><select id="mainProblem" name="main_problem"><option value="Goods not delivered" data-i18n="opt_problem1">Goods not delivered</option><option value="Poor quality or defects" data-i18n="opt_problem2">Poor quality or defects</option><option value="Wrong material or specification" data-i18n="opt_problem3">Wrong material or specification</option><option value="Questionable documents" data-i18n="opt_problem4">Questionable documents</option><option value="Supplier refuses refund" data-i18n="opt_problem5">Supplier refuses refund</option><option value="Marketplace rejected the claim" data-i18n="opt_problem6">Marketplace rejected the claim</option></select></div>
-          <div class="field full"><div class="error" id="stepError" data-i18n="form_error">Please complete your name and a valid email address.</div></div>
-          <div class="field full form-actions"><span></span><button type="button" class="btn primary" id="nextBtn" data-i18n="continue">Continue</button></div>
-        </div>
-
-        <div class="form-step" id="stepTwo">
-          <div class="field"><label for="supplierName" data-i18n="supplier_name">Supplier or company name</label><input id="supplierName" name="supplier_name"></div>
-          <div class="field"><label for="orderNumber" data-i18n="order_number">Order number</label><input id="orderNumber" name="order_number"></div>
-          <div class="field"><label for="orderValue" data-i18n="order_value">Total order value</label><input id="orderValue" name="order_value"></div>
-          <div class="field"><label for="requestedResult" data-i18n="requested_result">Requested result</label><select id="requestedResult" name="requested_result"><option value="Full refund" data-i18n="opt_result1">Full refund</option><option value="Partial refund" data-i18n="opt_result2">Partial refund</option><option value="Replacement" data-i18n="opt_result3">Replacement</option><option value="Completion of order" data-i18n="opt_result4">Completion of order</option><option value="Negotiated settlement" data-i18n="opt_result5">Negotiated settlement</option><option value="Not sure" data-i18n="opt_result6">Not sure</option></select></div>
-          <div class="field full"><label for="description" data-i18n="description">Brief description</label><textarea id="description" name="description" required minlength="50" data-i18n-placeholder="description_ph" placeholder="Order date, amount paid, supplier promises, what went wrong and the result you are seeking."></textarea><div class="hint" data-i18n="description_hint">Please provide at least 50 characters so the case can be screened responsibly.</div></div>
-          <div class="field full filebox"><label data-i18n="upload">Documents are not required at the application stage</label><div class="hint" data-i18n="upload_hint">If selected, you will be asked for no more than 5 key files for the initial review.</div></div>
-          <div class="field full"><label><input type="checkbox" name="free_access_terms" required style="width:auto;margin-right:8px"><span data-i18n="pilot_consent">I understand that the service is currently free, acceptance depends on scope and capacity, and future monetisation may be introduced only after advance notice.</span></label></div>
-          <div class="field full"><label><input type="checkbox" name="sharing_authority" required style="width:auto;margin-right:8px"><span data-i18n="consent1">I confirm that I am authorised to share the submitted information and documents.</span></label></div>
-          <div class="field full"><label><input type="checkbox" name="ai_consent" required style="width:auto;margin-right:8px"><span data-i18n="consent2">I consent to AI-assisted processing for the purpose of reviewing the case, subject to human review.</span></label></div>
-          <div class="field full"><label><input type="checkbox" name="no_guarantee" required style="width:auto;margin-right:8px"><span data-i18n="consent3">I understand that ChinaTradeResolve does not guarantee recovery or any particular outcome.</span></label></div>
-          <div class="field full"><div id="submitStatus" class="submit-status" role="status" aria-live="polite"></div></div>
-          <div class="field full form-actions"><button type="button" class="btn dark" id="backBtn" data-i18n="back">Back</button><button class="btn primary" type="submit" data-i18n="submit_review">Submit Free Application</button></div>
-        </div>
-      </form>
-      <div id="confirmation" style="display:none">
-        <h3 data-i18n="received">Free application received</h3>
-        <p data-i18n="received_text">Your application has been saved and automatically screened. Keep the case reference below. If email delivery is configured, a confirmation is also sent automatically.</p>
-        <div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div><div style="margin-top:10px"><a id="statusLink" class="btn dark" style="display:none" data-i18n="view_case_status">View case status</a></div></div>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="form_eyebrow">Бесплатная заявка</div>
+<h2 data-i18n="form_title">Отправьте дело на бесплатный анализ</h2>
+<p class="intro" data-i18n="form_intro">Начните с краткого описания. Ключевые документы будут запрошены только после принятия дела на анализ.</p>
+<div class="form-speed" data-i18n="form_speed">Около 2 минут · Без платы за услуги · Без больших загрузок</div>
+<div class="form-shell">
+<div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">Основные данные</span><span data-i18n="form_stage2" id="label2">Информация о деле</span></div>
+<div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
+<form id="caseForm" novalidate="">
+<input aria-hidden="true" autocomplete="off" class="honeypot" name="company_website" tabindex="-1"/>
+<div class="form-step active" id="stepOne">
+<div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" name="full_name" required=""/></div>
+<div class="field"><label data-i18n="email_label" for="email">Email</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
+<div class="field"><label data-i18n="country" for="country">Страна</label><input autocomplete="country-name" id="country" name="country"/></div>
+<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_russian" selected="" value="Russian">Русский</option><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
+<div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
+<div class="field"><label data-i18n="amount" for="amountDispute">Сумма спора</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
+<div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option></select></div>
+<div class="field full"><div class="error" data-i18n="form_error" id="stepError">Укажите имя и корректный email.</div></div>
+<div class="field full form-actions"><span></span><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
+</div>
+<div class="form-step" id="stepTwo">
+<div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
+<div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
+<div class="field"><label data-i18n="order_value" for="orderValue">Общая стоимость заказа</label><input id="orderValue" name="order_value"/></div>
+<div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
+<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea data-i18n-placeholder="description_ph" id="description" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="hint" data-i18n="description_hint">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div></div>
+<div class="field full filebox"><label data-i18n="upload">На этапе заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отбора мы запросим не более 5 ключевых файлов для первичного анализа.</div></div>
+<div class="field full"><label><input name="free_access_terms" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а платная модель может быть введена только после предварительного уведомления.</span></label></div>
+<div class="field full"><label><input name="sharing_authority" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
+<div class="field full"><label><input name="ai_consent" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent2">Я добровольно согласен на использование ИИ-инструментов для анализа дела при обязательной человеческой проверке. Без согласия заявка будет обработана встроенными правилами и, при необходимости, вручную.</span></label></div>
+<div class="field full"><label><input name="no_guarantee" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
+<div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
+<div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button class="btn primary" data-i18n="submit_review" type="submit">Отправить бесплатную заявку</button></div>
+</div>
+</form>
+<div id="confirmation" style="display:none">
+<h3 data-i18n="received">Бесплатная заявка сохранена</h3>
+<p data-i18n="received_text">Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.</p>
+<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div><div style="margin-top:10px"><a class="btn dark" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div></div>
+</div>
+</div>
+</div>
 </section>
-
 <section class="light" id="contact">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="contact_eyebrow">Contact & Availability</div>
-    <h2 data-i18n="contact_title">Clear ways to reach the service</h2>
-    <div class="contact-grid">
-      <div class="contact-card">
-        <strong data-i18n="contact_details">ChinaTradeResolve Case Review Team</strong>
-        <p data-i18n="contact_intro">Independent commercial dispute support operated from Serbia.</p>
-        <p><a href="mailto:{{ contact_email }}" class="contact-email">{{ contact_email }}</a></p>
-<div class="placeholder" data-i18n="contact_placeholder">Use this address for general questions. Case applications should still be submitted through the structured form.</div>
-      </div>
-      <div class="contact-card">
-        <strong data-i18n="hours">Working hours</strong>
-        <p data-i18n="hours_text">Display the working days, time zone and expected response time. Avoid promising 24/7 human support unless it truly exists.</p>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="contact_eyebrow">Контакты и доступность</div>
+<h2 data-i18n="contact_title">Понятные способы связи</h2>
+<div class="contact-grid">
+<div class="contact-card">
+<strong data-i18n="contact_details">ChinaTradeResolve Case Review Team</strong>
+<p data-i18n="contact_intro">Независимая коммерческая помощь в спорах, работающая из Сербии.</p>
+<p><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+<div class="placeholder" data-i18n="contact_placeholder">Используйте этот адрес для общих вопросов. Заявки по делам лучше подавать через структурированную форму.</div>
+</div>
+<div class="contact-card">
+<strong data-i18n="hours">Часы работы</strong>
+<p data-i18n="hours_text">Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.</p>
+</div>
+</div>
+</div>
 </section>
-
-
 <section class="support-section" id="support">
-  <div class="wrap">
-    <div class="support-box">
-      <div>
-        <div class="eyebrow" data-i18n="support_eyebrow">Voluntary Support</div>
-        <h2 data-i18n="support_title">If ChinaTradeResolve helped you, you may support its development</h2>
-        <p class="intro" data-i18n="support_text">The service is currently free. A contribution is entirely optional and is not payment for a case review.</p>
-        <a class="btn primary" href="/support" data-i18n="support_button">Support the Project</a>
-      </div>
-      <div class="support-card">
-        <h3 data-i18n="support_rules_title">Support never changes the service</h3>
-        <ul>
-          <li data-i18n="support_rule1">It does not affect case acceptance or priority.</li>
-          <li data-i18n="support_rule2">It does not purchase a result, refund or favourable assessment.</li>
-          <li data-i18n="support_rule3">It is requested only as an optional way to help cover project costs.</li>
-        </ul>
-        <p class="support-note" data-i18n="support_notice">A support provider can be connected later through one server setting; no code changes are required.</p>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
+<div class="support-box">
+<div>
+<div class="eyebrow" data-i18n="support_eyebrow">Добровольная поддержка</div>
+<h2 data-i18n="support_title">Если ChinaTradeResolve помог вам, можно поддержать развитие проекта</h2>
+<p class="intro" data-i18n="support_text">Сервис сейчас бесплатный. Финансовая поддержка полностью добровольна и не является оплатой анализа дела.</p>
+<a class="btn primary" data-i18n="support_button" href="/support">Поддержать проект</a>
+</div>
+<div class="support-card">
+<h3 data-i18n="support_rules_title">Поддержка ничего не меняет в обслуживании</h3>
+<ul>
+<li data-i18n="support_rule1">Она не влияет на принятие дела или приоритет.</li>
+<li data-i18n="support_rule2">Она не покупает результат, возврат средств или благоприятную оценку.</li>
+<li data-i18n="support_rule3">Это только добровольный способ помочь покрыть расходы проекта.</li>
+</ul>
+<p class="support-note" data-i18n="support_notice">Платёжный сервис подключается одной настройкой сервера, без изменения кода.</p>
+</div>
+</div>
+</div>
 </section>
-
 <section class="light" id="faq">
-  <div class="wrap">
-    <div class="eyebrow" data-i18n="faq_eyebrow">Frequently Asked Questions</div>
-    <h2 data-i18n="faq_title">Important questions</h2>
-    <details><summary data-i18n="faq1">Can you guarantee a refund?</summary><p data-i18n="faq1_text">No. Results depend on the evidence, contract, payment method, platform rules and supplier response.</p></details>
-    <details><summary data-i18n="faq2">Do you work only with Alibaba?</summary><p data-i18n="faq2_text">No. Cases may involve Alibaba, AliExpress, Made-in-China or direct supplier contracts.</p></details>
-    <details><summary data-i18n="faq3">Are you a law firm?</summary><p data-i18n="faq3_text">No. ChinaTradeResolve provides commercial dispute support, document analysis, claim preparation and communication assistance.</p></details>
-    <details><summary data-i18n="faq4">How is AI used?</summary><p data-i18n="faq4_text">AI may help organise and compare materials. Important conclusions and outgoing documents require human review.</p></details>
-  </div>
+<div class="wrap">
+<div class="eyebrow" data-i18n="faq_eyebrow">Часто задаваемые вопросы</div>
+<h2 data-i18n="faq_title">Важные вопросы</h2>
+<details><summary data-i18n="faq1">Вы гарантируете возврат?</summary><p data-i18n="faq1_text">Нет. Результат зависит от доказательств, договора, способа оплаты, правил площадки и ответа поставщика.</p></details>
+<details><summary data-i18n="faq2">Вы работаете только с Alibaba?</summary><p data-i18n="faq2_text">Нет. Дела могут касаться Alibaba, AliExpress, Made-in-China или прямых договоров.</p></details>
+<details><summary data-i18n="faq3">Вы юридическая фирма?</summary><p data-i18n="faq3_text">Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.</p></details>
+<details><summary data-i18n="faq4">Как используется ИИ?</summary><p data-i18n="faq4_text">ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.</p></details>
+</div>
 </section>
-
-
 <section class="final-cta">
-  <div class="wrap">
-    <div class="final-cta-box">
-      <div>
-        <div class="eyebrow" data-i18n="final_eyebrow">Start With the Evidence</div>
-        <h2 data-i18n="final_title">Your evidence may be stronger than your current claim.</h2>
-        <p data-i18n="final_text">Submit the basic facts and receive a clear recommendation on the next step.</p>
-      </div>
-      <a class="btn primary" href="#submit" data-i18n="final_button">Submit a Free Case Review</a>
-    </div>
-  </div>
+<div class="wrap">
+<div class="final-cta-box">
+<div>
+<div class="eyebrow" data-i18n="final_eyebrow">Начните с доказательств</div>
+<h2 data-i18n="final_title">Ваши доказательства могут быть сильнее, чем текущая претензия.</h2>
+<p data-i18n="final_text">Отправьте основные факты и получите понятную рекомендацию по следующему шагу.</p>
+</div>
+<a class="btn primary" data-i18n="final_button" href="#submit">Отправить бесплатную заявку</a>
+</div>
+</div>
 </section>
-
 <footer>
-  <div class="wrap foot">
-    <div><div class="brand">
-        <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true">
-          <path class="doc" d="M7 3.5h12l6 6V28H7z"/>
-          <path class="doc" d="M19 3.5V10h6"/>
-          <path class="line" d="M11 14h9M11 18h6"/>
-          <path class="check" d="M16.5 23l2.4 2.4 5-5.4"/>
-        </svg>
-        <span class="brand-word">ChinaTrade<span>Resolve</span></span>
-      </div><div class="small" data-i18n="footer_text">Commercial dispute support for buyers working with Chinese suppliers.</div></div>
-    <div class="legal-links small"><a href="/static/privacy.html" data-i18n="legal_privacy">Privacy</a><a href="/static/terms.html" data-i18n="legal_terms">Terms</a><a href="/static/refund.html" data-i18n="legal_payment">Payment Policy</a><a href="/static/ai-notice.html" data-i18n="legal_ai">AI Notice</a><a href="/static/disclaimer.html" data-i18n="legal_disclaimer">Disclaimer</a><a href="/support" data-i18n="nav_support">Support</a></div>
-    <div class="small">© 2026 ChinaTradeResolve · <a href="/admin/login">Admin</a></div>
-  </div>
+<div class="wrap foot">
+<div><div class="brand">
+<svg aria-hidden="true" class="brand-logo" viewbox="0 0 32 32">
+<path class="doc" d="M7 3.5h12l6 6V28H7z"></path>
+<path class="doc" d="M19 3.5V10h6"></path>
+<path class="line" d="M11 14h9M11 18h6"></path>
+<path class="check" d="M16.5 23l2.4 2.4 5-5.4"></path>
+</svg>
+<span class="brand-word">ChinaTrade<span>Resolve</span></span>
+</div><div class="small" data-i18n="footer_text">Коммерческая помощь покупателям, работающим с китайскими поставщиками.</div></div>
+<div class="legal-links small"><a data-i18n="legal_privacy" href="/static/privacy.html">Конфиденциальность</a><a data-i18n="legal_terms" href="/static/terms.html">Условия</a><a data-i18n="legal_payment" href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" href="/static/disclaimer.html">Ограничение ответственности</a><a data-i18n="nav_support" href="/support">Поддержать</a></div>
+<div class="small">© 2026 ChinaTradeResolve</div>
+</div>
 </footer>
-
-<a class="btn primary mobile" href="#submit" data-i18n="submit_case">Submit a Free Case Review</a>
-
+<a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
 <script>
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
@@ -574,11 +554,11 @@ p2:"Подготовка претензии",from390:"от €390",p2a:"Форм
 p3:"Полное сопровождение",from750:"от €750",p3a:"Анализ ответов",p3b:"Подготовка возражений",p3c:"Обновление доказательств",p3d:"Стратегическая поддержка",
 p4:"Проверка до оплаты",from190:"от €190",p4a:"Проверка инвойса",p4b:"Проверка спецификации",p4c:"Вопросы поставщику",p4d:"Чек-лист рисков",
 process_eyebrow:"Как это работает",process_title:"От разрозненных файлов к ясной позиции",step1:"Заявка",step1_text:"Отправьте базовую информацию и ключевые файлы.",step2:"Проверка объёма",step2_text:"Мы определяем подходящую услугу.",step3:"Анализ доказательств",step3_text:"Мы систематизируем факты и противоречия.",step4:"Подготовка",step4_text:"Готовим оценку или претензию.",step5:"Утверждение",step5_text:"Вы проверяете документ до отправки.",
-trust_eyebrow:"Доверие и прозрачность",trust_title:"Вы должны знать, кто работает с вашим делом",operator_title:"ChinaTradeResolve Case Review Team",operator_text:"Независимая коммерческая помощь в спорах. Работа ведётся из Сербии. Юридическое имя исполнителя, адрес, реквизиты для счетов и подтверждённые контакты будут опубликованы до запуска.",operator_placeholder:"Статус прототипа: данные юридического исполнителя ещё не утверждены. Через этот прототип не принимаются платежи и документы.",sample_title:"Пример оценки дела",sample_sub:"Обезличенный пример результата",sample_status:"Проверено человеком",sample_tag1:"Хронология",sample_tag2:"Индекс доказательств",sample_tag3:"Анализ рисков",table_issue:"Проблема",table_evidence:"Доказательства",table_risk:"Риск",table_row1:"Неверный материал",table_row2:"EX-03 заказ + EX-07 сообщение поставщика",table_row3:"Терминология может оспариваться",table_row4:"Недостающий компонент",table_row5:"EX-02 инвойс + EX-11 фотографии",table_row6:"Нужно подтвердить финальную спецификацию",view_sample:"Открыть пример отчёта",
+trust_eyebrow:"Доверие и прозрачность",trust_title:"Вы должны знать, кто работает с вашим делом",operator_title:"ChinaTradeResolve Case Review Team",operator_text:"Независимая коммерческая помощь в спорах. Работа ведётся из Сербии. Проект находится на этапе ограниченного бесплатного доступа; юридические и платёжные реквизиты будут опубликованы до подключения платных функций.",operator_placeholder:"Статус прототипа: данные юридического исполнителя ещё не утверждены. Через этот прототип не принимаются платежи и документы.",sample_title:"Пример оценки дела",sample_sub:"Обезличенный пример результата",sample_status:"Проверено человеком",sample_tag1:"Хронология",sample_tag2:"Индекс доказательств",sample_tag3:"Анализ рисков",table_issue:"Проблема",table_evidence:"Доказательства",table_risk:"Риск",table_row1:"Неверный материал",table_row2:"EX-03 заказ + EX-07 сообщение поставщика",table_row3:"Терминология может оспариваться",table_row4:"Недостающий компонент",table_row5:"EX-02 инвойс + EX-11 фотографии",table_row6:"Нужно подтвердить финальную спецификацию",view_sample:"Открыть пример отчёта",
 ai_eyebrow:"ИИ помогает. Человек контролирует.",ai_title:"ИИ помогает организовать материалы. Результат контролирует человек.",ai_text:"ИИ может систематизировать большие объёмы файлов и подготовить первичное сравнение. Финальные выводы и исходящие документы проверяет человек.",ai_quote:"Достоверная претензия сильнее преувеличенной.",
 about_eyebrow:"О ChinaTradeResolve",about_title:"Создано на основе реального опыта",about_text:"У покупателей часто есть сильные доказательства, но они разбросаны по сообщениям, инвойсам, скриншотам и материалам платформ. Мы превращаем их в понятное дело.",about1:"Доказательства важнее эмоций",about1_text:"Претензии строятся на документах, датах и письменных заявлениях.",about2:"Честная оценка",about2_text:"Слабые места и контраргументы не скрываются.",about3:"Контроль клиента",about3_text:"Ни один важный документ не отправляется без одобрения.",
-form_eyebrow:"Бесплатная заявка",form_title:"Отправьте дело на бесплатный анализ",form_intro:"Начните с краткого описания. Ключевые документы будут запрошены только после принятия дела на анализ.",form_speed:"Около 2 минут · Без платы за услуги · Без больших загрузок",form_stage1:"Основные данные",form_stage2:"Информация о деле",email_label:"Email",language_label:"Язык",full_name:"Имя и фамилия",country:"Страна",preferred_lang:"Предпочитаемый язык",channel:"Канал покупки",amount:"Сумма спора",main_problem:"Основная проблема",form_error:"Укажите имя и корректный email.",continue:"Продолжить",supplier_name:"Поставщик или компания",order_number:"Номер заказа",order_value:"Общая стоимость заказа",requested_result:"Желаемый результат",description:"Краткое описание",description_hint:"Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.",description_ph:"Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь.",upload:"На этапе заявки документы не требуются",upload_hint:"После отбора мы запросим не более 5 ключевых файлов для первичного анализа.",consent1:"Я подтверждаю, что имею право передавать указанную информацию и документы.",consent2:"Я согласен на использование ИИ-инструментов для анализа дела при обязательной человеческой проверке.",consent3:"Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.",back:"Назад",submit_review:"Отправить бесплатную заявку",received:"Бесплатная заявка сохранена",received_text:"Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.",view_case_status:"Посмотреть статус дела",
-contact_eyebrow:"Контакты и доступность",contact_title:"Понятные способы связи",contact_details:"ChinaTradeResolve Case Review Team",contact_intro:"Независимая коммерческая помощь в спорах, работающая из Сербии.",contact_placeholder:"Используйте этот адрес для общих вопросов. Заявки по делам лучше подавать через структурированную форму.",hours:"Часы работы",hours_text:"Укажите рабочие дни, часовой пояс и ожидаемый срок ответа. Не обещайте круглосуточную ручную поддержку, если её нет.",
+form_eyebrow:"Бесплатная заявка",form_title:"Отправьте дело на бесплатный анализ",form_intro:"Начните с краткого описания. Ключевые документы будут запрошены только после принятия дела на анализ.",form_speed:"Около 2 минут · Без платы за услуги · Без больших загрузок",form_stage1:"Основные данные",form_stage2:"Информация о деле",email_label:"Email",language_label:"Язык",full_name:"Имя и фамилия",country:"Страна",preferred_lang:"Предпочитаемый язык",channel:"Канал покупки",amount:"Сумма спора",main_problem:"Основная проблема",form_error:"Укажите имя и корректный email.",continue:"Продолжить",supplier_name:"Поставщик или компания",order_number:"Номер заказа",order_value:"Общая стоимость заказа",requested_result:"Желаемый результат",description:"Краткое описание",description_hint:"Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.",description_ph:"Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь.",amount_ph:"например, EUR 4 000",upload:"На этапе заявки документы не требуются",upload_hint:"После отбора мы запросим не более 5 ключевых файлов для первичного анализа.",consent1:"Я подтверждаю, что имею право передавать указанную информацию и документы.",consent2:"Я добровольно согласен на использование ИИ-инструментов для анализа дела при обязательной человеческой проверке. Без согласия заявка будет обработана встроенными правилами и, при необходимости, вручную.",consent3:"Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.",back:"Назад",submit_review:"Отправить бесплатную заявку",received:"Бесплатная заявка сохранена",received_text:"Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.",view_case_status:"Посмотреть статус дела",
+contact_eyebrow:"Контакты и доступность",contact_title:"Понятные способы связи",contact_details:"ChinaTradeResolve Case Review Team",contact_intro:"Независимая коммерческая помощь в спорах, работающая из Сербии.",contact_placeholder:"Используйте этот адрес для общих вопросов. Заявки по делам лучше подавать через структурированную форму.",hours:"Часы работы",hours_text:"Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.",
 final_eyebrow:"Начните с доказательств",final_title:"Ваши доказательства могут быть сильнее, чем текущая претензия.",final_text:"Отправьте основные факты и получите понятную рекомендацию по следующему шагу.",final_button:"Отправить бесплатную заявку",support_eyebrow:"Добровольная поддержка",support_title:"Если ChinaTradeResolve помог вам, можно поддержать развитие проекта",support_text:"Сервис сейчас бесплатный. Финансовая поддержка полностью добровольна и не является оплатой анализа дела.",support_button:"Поддержать проект",support_rules_title:"Поддержка ничего не меняет в обслуживании",support_rule1:"Она не влияет на принятие дела или приоритет.",support_rule2:"Она не покупает результат, возврат средств или благоприятную оценку.",support_rule3:"Это только добровольный способ помочь покрыть расходы проекта.",support_notice:"Платёжный сервис подключается одной настройкой сервера, без изменения кода.",faq_eyebrow:"Часто задаваемые вопросы",faq_title:"Важные вопросы",faq1:"Вы гарантируете возврат?",faq1_text:"Нет. Результат зависит от доказательств, договора, способа оплаты, правил площадки и ответа поставщика.",faq2:"Вы работаете только с Alibaba?",faq2_text:"Нет. Дела могут касаться Alibaba, AliExpress, Made-in-China или прямых договоров.",faq3:"Вы юридическая фирма?",faq3_text:"Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.",faq4:"Как используется ИИ?",faq4_text:"ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.",opt_english:"Английский",opt_russian:"Русский",opt_serbian:"Сербский",opt_direct:"Прямой договор с поставщиком",opt_other:"Другое",opt_problem1:"Товар не доставлен",opt_problem2:"Низкое качество или дефекты",opt_problem3:"Неверный материал или спецификация",opt_problem4:"Сомнительные документы",opt_problem5:"Поставщик отказывается возвращать деньги",opt_problem6:"Площадка отклонила претензию",opt_result1:"Полный возврат",opt_result2:"Частичный возврат",opt_result3:"Замена",opt_result4:"Завершение исполнения заказа",opt_result5:"Согласованное урегулирование",opt_result6:"Пока не уверен",legal_privacy:"Конфиденциальность",legal_terms:"Условия",legal_payment:"Политика оплаты",legal_ai:"Уведомление об ИИ",legal_disclaimer:"Ограничение ответственности",footer_text:"Коммерческая помощь покупателям, работающим с китайскими поставщиками."
 },
 sr:{
@@ -596,22 +576,23 @@ p2:"Priprema zahteva",from390:"od €390",p2a:"Formalni zahtev",p2b:"Detaljna hr
 p3:"Puna podrška u sporu",from750:"od €750",p3a:"Analiza odgovora",p3b:"Dalji prigovori",p3c:"Ažuriranje dokaza",p3d:"Strateška podrška",
 p4:"Provera pre plaćanja",from190:"od €190",p4a:"Provera fakture",p4b:"Provera specifikacije",p4c:"Pitanja dobavljaču",p4d:"Kontrolna lista rizika",
 process_eyebrow:"Kako funkcioniše",process_title:"Od rasutih fajlova do jasnog stava",step1:"Pošaljite",step1_text:"Pošaljite osnovne informacije i ključne fajlove.",step2:"Provera obima",step2_text:"Određujemo odgovarajuću uslugu.",step3:"Pregled dokaza",step3_text:"Organizujemo činjenice i kontradikcije.",step4:"Priprema",step4_text:"Pripremamo procenu ili zahtev.",step5:"Odobrenje",step5_text:"Vi pregledate dokument pre slanja.",
-trust_eyebrow:"Poverenje i transparentnost",trust_title:"Znajte ko obrađuje vaš slučaj",operator_title:"ChinaTradeResolve Case Review Team",operator_text:"Nezavisna komercijalna podrška u sporovima. Usluga se vodi iz Srbije. Pravno ime pružaoca, poslovna adresa, podaci za fakturisanje i potvrđeni kontakti biće objavljeni pre pokretanja.",operator_placeholder:"Status prototipa: podaci pravnog pružaoca još nisu konačni. Ovaj prototip ne prima uplate ni dokumenta.",sample_title:"Primer procene slučaja",sample_sub:"Anonimizovan primer rezultata",sample_status:"Ljudski pregledano",sample_tag1:"Hronologija",sample_tag2:"Indeks dokaza",sample_tag3:"Analiza rizika",table_issue:"Problem",table_evidence:"Dokazi",table_risk:"Rizik",table_row1:"Pogrešan materijal",table_row2:"EX-03 porudžbina + EX-07 poruka dobavljača",table_row3:"Terminologija može biti sporna",table_row4:"Nedostajuća komponenta",table_row5:"EX-02 faktura + EX-11 fotografije",table_row6:"Konačna specifikacija mora biti potvrđena",view_sample:"Pogledajte primer izveštaja",
+trust_eyebrow:"Poverenje i transparentnost",trust_title:"Znajte ko obrađuje vaš slučaj",operator_title:"ChinaTradeResolve Case Review Team",operator_text:"Nezavisna komercijalna podrška u sporovima iz Srbije. Projekat je u fazi ograničenog besplatnog pristupa; pravni i platni podaci biće objavljeni pre uvođenja plaćenih funkcija.",operator_placeholder:"Status prototipa: podaci pravnog pružaoca još nisu konačni. Ovaj prototip ne prima uplate ni dokumenta.",sample_title:"Primer procene slučaja",sample_sub:"Anonimizovan primer rezultata",sample_status:"Ljudski pregledano",sample_tag1:"Hronologija",sample_tag2:"Indeks dokaza",sample_tag3:"Analiza rizika",table_issue:"Problem",table_evidence:"Dokazi",table_risk:"Rizik",table_row1:"Pogrešan materijal",table_row2:"EX-03 porudžbina + EX-07 poruka dobavljača",table_row3:"Terminologija može biti sporna",table_row4:"Nedostajuća komponenta",table_row5:"EX-02 faktura + EX-11 fotografije",table_row6:"Konačna specifikacija mora biti potvrđena",view_sample:"Pogledajte primer izveštaja",
 ai_eyebrow:"AI pomaže. Čovek kontroliše.",ai_title:"AI pomaže u organizaciji. Ljudska provera kontroliše ishod.",ai_text:"AI može organizovati velike količine fajlova i pripremiti početna poređenja. Konačne zaključke i izlazna dokumenta pregleda čovek.",ai_quote:"Verodostojan zahtev je jači od preuveličanog.",
 about_eyebrow:"O ChinaTradeResolve",about_title:"Nastalo iz stvarnog iskustva",about_text:"Kupci često imaju snažne dokaze, ali su oni rasuti po porukama, fakturama, snimcima ekrana i zapisima platforme. Mi ih pretvaramo u jasan slučaj.",about1:"Dokazi pre emocija",about1_text:"Zahtevi se zasnivaju na dokumentima, datumima i pisanim izjavama.",about2:"Iskrena procena",about2_text:"Slabosti i mogući kontraargumenti se ne skrivaju.",about3:"Kontrola klijenta",about3_text:"Nijedan važan dokument se ne šalje bez odobrenja.",
-form_eyebrow:"Besplatna prijava",form_title:"Pošaljite slučaj na besplatan pregled",form_intro:"Počnite kratkim sažetkom. Ključna dokumenta će biti zatražena samo ako slučaj bude prihvaćen.",form_speed:"Oko 2 minuta · Bez naknade · Bez velikih otpremanja",form_stage1:"Osnovni podaci",form_stage2:"Informacije o slučaju",email_label:"Email",language_label:"Jezik",full_name:"Ime i prezime",country:"Država",preferred_lang:"Željeni jezik",channel:"Kanal kupovine",amount:"Iznos spora",main_problem:"Glavni problem",form_error:"Unesite ime i ispravnu email adresu.",continue:"Nastavi",supplier_name:"Dobavljač ili kompanija",order_number:"Broj porudžbine",order_value:"Ukupna vrednost porudžbine",requested_result:"Željeni rezultat",description:"Kratak opis",description_hint:"Opišite situaciju u najmanje 50 znakova kako bi prijava mogla odgovorno da se pregleda.",description_ph:"Datum porudžbine, plaćeni iznos, obećanja dobavljača, šta je pošlo naopako i koji rezultat tražite.",upload:"Dokumenti nisu potrebni u fazi prijave",upload_hint:"Ako budete izabrani, tražićemo najviše 5 ključnih fajlova za početni pregled.",consent1:"Potvrđujem da imam pravo da podelim dostavljene informacije i dokumente.",consent2:"Saglasan sam sa AI-potpomognutom obradom u svrhu pregleda slučaja, uz ljudsku proveru.",consent3:"Razumem da ChinaTradeResolve ne garantuje povraćaj novca niti određeni ishod.",back:"Nazad",submit_review:"Pošaljite besplatnu prijavu",received:"Besplatna prijava je sačuvana",received_text:"Prijava je sačuvana i automatski pregledana. Sačuvajte broj slučaja ispod.",view_case_status:"Pogledajte status slučaja",
-contact_eyebrow:"Kontakt i dostupnost",contact_title:"Jasni načini kontakta",contact_details:"ChinaTradeResolve Case Review Team",contact_intro:"Nezavisna komercijalna podrška u sporovima, vođena iz Srbije.",contact_placeholder:"Koristite ovu adresu za opšta pitanja. Prijave slučajeva treba slati kroz strukturisani obrazac.",hours:"Radno vreme",hours_text:"Navedite radne dane, vremensku zonu i očekivano vreme odgovora. Ne obećavajte ljudsku podršku 24/7 ako je nema.",
+form_eyebrow:"Besplatna prijava",form_title:"Pošaljite slučaj na besplatan pregled",form_intro:"Počnite kratkim sažetkom. Ključna dokumenta će biti zatražena samo ako slučaj bude prihvaćen.",form_speed:"Oko 2 minuta · Bez naknade · Bez velikih otpremanja",form_stage1:"Osnovni podaci",form_stage2:"Informacije o slučaju",email_label:"Email",language_label:"Jezik",full_name:"Ime i prezime",country:"Država",preferred_lang:"Željeni jezik",channel:"Kanal kupovine",amount:"Iznos spora",main_problem:"Glavni problem",form_error:"Unesite ime i ispravnu email adresu.",continue:"Nastavi",supplier_name:"Dobavljač ili kompanija",order_number:"Broj porudžbine",order_value:"Ukupna vrednost porudžbine",requested_result:"Željeni rezultat",description:"Kratak opis",description_hint:"Opišite situaciju u najmanje 50 znakova kako bi prijava mogla odgovorno da se pregleda.",description_ph:"Datum porudžbine, plaćeni iznos, obećanja dobavljača, šta je pošlo naopako i koji rezultat tražite.",amount_ph:"na primer, EUR 4.000",upload:"Dokumenti nisu potrebni u fazi prijave",upload_hint:"Ako budete izabrani, tražićemo najviše 5 ključnih fajlova za početni pregled.",consent1:"Potvrđujem da imam pravo da podelim dostavljene informacije i dokumente.",consent2:"Dobrovoljno pristajem na korišćenje AI alata uz obaveznu ljudsku proveru. Bez saglasnosti prijava se obrađuje pravilima i, po potrebi, ručno.",consent3:"Razumem da ChinaTradeResolve ne garantuje povraćaj novca niti određeni ishod.",back:"Nazad",submit_review:"Pošaljite besplatnu prijavu",received:"Besplatna prijava je sačuvana",received_text:"Prijava je sačuvana i automatski pregledana. Sačuvajte broj slučaja ispod.",view_case_status:"Pogledajte status slučaja",
+contact_eyebrow:"Kontakt i dostupnost",contact_title:"Jasni načini kontakta",contact_details:"ChinaTradeResolve Case Review Team",contact_intro:"Nezavisna komercijalna podrška u sporovima, vođena iz Srbije.",contact_placeholder:"Koristite ovu adresu za opšta pitanja. Prijave slučajeva treba slati kroz strukturisani obrazac.",hours:"Radno vreme",hours_text:"Ponedeljak–petak, 09:00–17:00 po vremenu u Beogradu (CET/CEST). Prvi odgovor u roku od 2 radna dana.",
 final_eyebrow:"Počnite od dokaza",final_title:"Vaši dokazi mogu biti jači od trenutnog zahteva.",final_text:"Pošaljite osnovne činjenice i dobijte jasnu preporuku za sledeći korak.",final_button:"Pošaljite besplatnu prijavu",support_eyebrow:"Dobrovoljna podrška",support_title:"Ako vam je ChinaTradeResolve pomogao, možete podržati razvoj projekta",support_text:"Usluga je trenutno besplatna. Finansijska podrška je potpuno dobrovoljna i nije plaćanje pregleda slučaja.",support_button:"Podržite projekat",support_rules_title:"Podrška ne menja uslugu",support_rule1:"Ne utiče na prihvatanje ili prioritet slučaja.",support_rule2:"Ne kupuje ishod, povraćaj ili povoljnu procenu.",support_rule3:"To je samo dobrovoljan način da se pomognu troškovi projekta.",support_notice:"Servis za podršku se povezuje jednom serverskom postavkom, bez promene koda.",faq_eyebrow:"Česta pitanja",faq_title:"Važna pitanja",faq1:"Da li garantujete povraćaj novca?",faq1_text:"Ne. Ishod zavisi od dokaza, ugovora, načina plaćanja, pravila platforme i odgovora dobavljača.",faq2:"Da li radite samo sa Alibaba sporovima?",faq2_text:"Ne. Slučajevi mogu uključivati Alibaba, AliExpress, Made-in-China ili direktne ugovore.",faq3:"Da li ste advokatska kancelarija?",faq3_text:"Ne. ChinaTradeResolve pruža komercijalnu podršku, analizu dokumenata, pripremu zahteva i pomoć u komunikaciji.",faq4:"Kako se koristi AI?",faq4_text:"AI može pomoći u organizovanju i poređenju materijala. Važni zaključci i izlazni dokumenti zahtevaju ljudsku proveru.",opt_english:"Engleski",opt_russian:"Ruski",opt_serbian:"Srpski",opt_direct:"Direktan ugovor sa dobavljačem",opt_other:"Drugo",opt_problem1:"Roba nije isporučena",opt_problem2:"Loš kvalitet ili nedostaci",opt_problem3:"Pogrešan materijal ili specifikacija",opt_problem4:"Sumnjiva dokumenta",opt_problem5:"Dobavljač odbija povraćaj",opt_problem6:"Platforma je odbila zahtev",opt_result1:"Pun povraćaj",opt_result2:"Delimičan povraćaj",opt_result3:"Zamena",opt_result4:"Završetak porudžbine",opt_result5:"Dogovoreno poravnanje",opt_result6:"Nisam siguran",legal_privacy:"Privatnost",legal_terms:"Uslovi",legal_payment:"Politika plaćanja",legal_ai:"AI obaveštenje",legal_disclaimer:"Odricanje odgovornosti",footer_text:"Komercijalna podrška kupcima koji rade sa kineskim dobavljačima."
 }
 };
 
 const enBase={}; document.querySelectorAll('[data-i18n]').forEach(el=>enBase[el.dataset.i18n]=el.textContent);
+const enPlaceholderBase={}; document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>enPlaceholderBase[el.dataset.i18nPlaceholder]=el.placeholder);
 translations.en=enBase;
 function setLang(lang){
   document.documentElement.lang=lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(translations[lang]&&translations[lang][key])el.textContent=translations[lang][key]});
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const key=el.dataset.i18nPlaceholder;if(translations[lang]&&translations[lang][key])el.placeholder=translations[lang][key]});
-  try{localStorage.setItem('ctr_lang',lang)}catch(_e){}
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const key=el.dataset.i18nPlaceholder;const value=lang==='en'?enPlaceholderBase[key]:(translations[lang]&&translations[lang][key]);if(value)el.placeholder=value});
+  try{localStorage.setItem('ctr_lang_v16',lang)}catch(_e){}
 }
 const langSelect=document.getElementById('langSelect');
 const mobileLangSelect=document.getElementById('mobileLangSelect');
@@ -622,8 +603,8 @@ function chooseLanguage(lang){
 }
 langSelect.addEventListener('change',e=>chooseLanguage(e.target.value));
 mobileLangSelect.addEventListener('change',e=>{chooseLanguage(e.target.value);closeMobileMenu()});
-let saved='en';
-try{saved=localStorage.getItem('ctr_lang')||'en'}catch(_e){saved='en'}
+let saved='ru';
+try{saved=localStorage.getItem('ctr_lang_v16')||'ru'}catch(_e){saved='ru'}
 chooseLanguage(saved);
 </script>
 </body>

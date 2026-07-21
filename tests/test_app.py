@@ -48,8 +48,8 @@ def test_health_and_home_free_access():
     assert health.json()["support_enabled"] is True
     home = client.get("/")
     assert home.status_code == 200
-    assert "Free Access Phase" in home.text
-    assert "Support the Project" in home.text
+    assert "Этап бесплатного доступа" in home.text
+    assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
     assert health.json()["email_delivery_configured"] is False
 
@@ -79,10 +79,15 @@ def test_missing_free_access_consent_rejected():
     assert response.status_code == 422
 
 
+def test_ai_consent_is_optional():
+    response = client.post("/api/applications", json=valid_payload(ai_consent=False, email="no-ai@example.com"))
+    assert response.status_code == 201
+
+
 def test_support_page_is_optional_and_non_priority():
     page = client.get("/support")
     assert page.status_code == 200
-    assert "not payment for a service" in page.text
+    assert "не является оплатой услуги" in page.text
     assert "https://example.com/support" in page.text
 
 
@@ -92,7 +97,7 @@ def test_admin_auth_queue_close_and_feedback():
     assert login.status_code == 303
     dashboard = client.get("/admin")
     assert dashboard.status_code == 200
-    assert "Exception-driven case queue" in dashboard.text
+    assert "Очередь дел, требующих внимания" in dashboard.text
 
     # Find the case id from the queue link.
     import re
@@ -121,7 +126,7 @@ def test_admin_auth_queue_close_and_feedback():
     assert "Thank you. Your feedback has been recorded." in saved.text
     admin_case = client.get(f"/admin/case/{case_id}")
     assert "The chronology and next-step checklist" in admin_case.text
-    assert "Publication consent:</b> yes" in admin_case.text
+    assert "Согласие на публикацию:</b> да" in admin_case.text
 
 
 def test_ai_triage_structured_response_mock(monkeypatch):

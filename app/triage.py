@@ -13,12 +13,18 @@ URGENT_TERMS = {
     "суд", "арбитраж", "полиция", "уголов", "срок давности", "срок истекает", "банкрот",
     "таможня задержала", "угроз", "вымогатель", "краже личности",
     "sud", "arbitraža", "policija", "krivič", "rok zastare", "stečaj", "pretnj", "iznuda",
+    "tribunal", "procès", "arbitrage", "police", "pénal", "délai", "prescription", "faillite", "douane", "menace", "extorsion",
+    "gericht", "klage", "schiedsverfahren", "polizei", "straf", "frist", "verjähr", "insolvenz", "zoll", "drohung", "erpressung",
+    "tribunal", "demanda", "arbitraje", "policía", "penal", "plazo", "prescripción", "quiebra", "aduana", "amenaza", "extorsión",
 }
 
 ILLEGAL_REQUEST_TERMS = {
     "fake evidence", "forge document", "alter evidence", "hide evidence", "delete messages",
     "подделать доказ", "изменить доказ", "скрыть доказ", "удалить переписку",
     "falsifikovati dokaz", "sakriti dokaz", "izmeniti dokaz",
+    "falsifier les preuves", "modifier les preuves", "cacher les preuves", "supprimer les messages",
+    "beweise fälschen", "beweise ändern", "beweise verbergen", "nachrichten löschen",
+    "falsificar pruebas", "alterar pruebas", "ocultar pruebas", "borrar mensajes",
 }
 
 TECHNICAL_EXPERT_TERMS = {
@@ -26,12 +32,18 @@ TECHNICAL_EXPERT_TERMS = {
     "customs classification", "regulated product", "сертификац", "лаборатор", "безопасност",
     "химический состав", "медицинское изделие", "классификация товара",
     "sertifikacija", "laboratorija", "bezbednost", "hemijski sastav", "medicinski uređaj",
+    "certification", "laboratoire", "sécurité", "composition chimique", "dispositif médical", "classement douanier",
+    "zertifizierung", "labor", "sicherheit", "chemische zusammensetzung", "medizinprodukt", "zolltarif",
+    "certificación", "laboratorio", "seguridad", "composición química", "dispositivo médico", "clasificación aduanera",
 }
 
 EVIDENCE_TERMS = {
     "invoice", "order", "contract", "message", "chat", "photo", "video", "inspection", "receipt",
     "инвойс", "заказ", "договор", "переписк", "сообщен", "фото", "видео", "инспекц", "чек",
     "faktura", "porudžbina", "ugovor", "poruka", "prepiska", "fotograf", "inspekcija",
+    "facture", "commande", "contrat", "message", "photo", "vidéo", "inspection", "reçu",
+    "rechnung", "bestellung", "vertrag", "nachricht", "foto", "video", "inspektion", "beleg",
+    "factura", "pedido", "contrato", "mensaje", "foto", "vídeo", "inspección", "recibo",
 }
 
 IN_SCOPE_ISSUES = {
@@ -87,6 +99,84 @@ _RU = {
 "Request the missing information listed by the triage result.": "Запросить недостающую информацию, указанную в результате проверки.",
 "The case was assessed against the current free-access scope and evidence indicators.": "Дело оценено с учётом текущего объёма бесплатной помощи и имеющихся признаков доказательств.",
 }
+_FR = {
+"The request may involve altering, concealing or fabricating evidence.": "La demande peut impliquer la modification, la dissimulation ou la fabrication de preuves.",
+"The description indicates an urgent legal, authority or deadline-sensitive issue.": "La description indique une question juridique urgente, une intervention des autorités ou une échéance critique.",
+"A laboratory, compliance, customs or technical specialist may be required.": "Un spécialiste de laboratoire, de conformité, des douanes ou un expert technique peut être nécessaire.",
+"The stated dispute value is high and requires human scope review.": "Le montant indiqué est élevé et nécessite une vérification humaine du périmètre.",
+"The selected issue does not clearly match the current free-access scope.": "Le problème sélectionné ne correspond pas clairement au périmètre actuel de l’accès gratuit.",
+"Supplier or company name": "Nom du fournisseur ou de l’entreprise",
+"Order number or transaction reference": "Numéro de commande ou référence de transaction",
+"Approximate amount in dispute or order value": "Montant approximatif du litige ou valeur de la commande",
+"Which written records or photographs are available": "Documents écrits ou photographies disponibles",
+"A more detailed chronology of what happened": "Chronologie plus détaillée des événements",
+"Preferred practical outcome": "Résultat pratique souhaité",
+"This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Cette demande ne peut pas être acceptée, car l’assistance sollicitée peut impliquer une manipulation inadéquate des preuves.",
+"Decline and preserve an internal audit record.": "Refuser la demande et conserver une trace d’audit interne.",
+"Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Votre description peut concerner une question juridique urgente ou une intervention des autorités. Le système automatisé d’accès gratuit ne peut pas l’évaluer de manière sûre sans vérification humaine.",
+"Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Transmettre immédiatement à un humain et recommander au demandeur de consulter un professionnel qualifié lorsque des délais peuvent s’appliquer.",
+"The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Le dossier semble potentiellement pertinent, mais sa valeur ou sa complexité technique exige une vérification humaine du périmètre.",
+"Review scope and decide whether an external specialist is required.": "Vérifier le périmètre et déterminer si un spécialiste externe est nécessaire.",
+"More information is needed to determine whether the case fits the free-access service.": "Des informations supplémentaires sont nécessaires pour déterminer si le dossier correspond au service gratuit.",
+"Request a clearer description of the supplier dispute and requested outcome.": "Demander une description plus claire du litige avec le fournisseur et du résultat souhaité.",
+"The application appears suitable for free-access review, subject to capacity and a final scope check.": "La demande semble adaptée à une analyse gratuite, sous réserve de la capacité disponible et d’une vérification finale du périmètre.",
+"Place in the free-access candidate queue and request up to five key files if selected.": "Placer la demande dans la file des candidats et demander jusqu’à cinq fichiers essentiels si elle est sélectionnée.",
+"The case may fit the free-access service, but additional information is needed before selection.": "Le dossier peut correspondre au service gratuit, mais des informations supplémentaires sont nécessaires avant la sélection.",
+"Request the missing information listed by the triage result.": "Demander les informations manquantes indiquées dans le résultat de l’analyse.",
+"The case was assessed against the current free-access scope and evidence indicators.": "Le dossier a été évalué selon le périmètre actuel de l’accès gratuit et les indices de preuve disponibles.",
+}
+_DE = {
+"The request may involve altering, concealing or fabricating evidence.": "Die Anfrage könnte das Verändern, Verbergen oder Herstellen von Beweisen betreffen.",
+"The description indicates an urgent legal, authority or deadline-sensitive issue.": "Die Beschreibung weist auf eine dringende rechtliche, behördliche oder fristgebundene Angelegenheit hin.",
+"A laboratory, compliance, customs or technical specialist may be required.": "Möglicherweise ist ein Labor-, Compliance-, Zoll- oder technischer Spezialist erforderlich.",
+"The stated dispute value is high and requires human scope review.": "Der angegebene Streitwert ist hoch und erfordert eine menschliche Prüfung des Leistungsumfangs.",
+"The selected issue does not clearly match the current free-access scope.": "Das ausgewählte Problem passt nicht eindeutig zum aktuellen Umfang des kostenlosen Zugangs.",
+"Supplier or company name": "Name des Lieferanten oder Unternehmens",
+"Order number or transaction reference": "Bestellnummer oder Transaktionsreferenz",
+"Approximate amount in dispute or order value": "Ungefährer Streitbetrag oder Bestellwert",
+"Which written records or photographs are available": "Verfügbare schriftliche Unterlagen oder Fotos",
+"A more detailed chronology of what happened": "Ausführlichere Chronologie des Geschehens",
+"Preferred practical outcome": "Gewünschtes praktisches Ergebnis",
+"This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Dieser Antrag kann nicht angenommen werden, weil die gewünschte Unterstützung einen unsachgemäßen Umgang mit Beweisen betreffen könnte.",
+"Decline and preserve an internal audit record.": "Antrag ablehnen und einen internen Prüfvermerk aufbewahren.",
+"Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Ihre Beschreibung könnte eine dringende rechtliche oder behördliche Angelegenheit betreffen. Das automatisierte kostenlose System kann sie ohne menschliche Prüfung nicht sicher bewerten.",
+"Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Sofort zur menschlichen Prüfung weiterleiten und bei möglichen Fristen zu qualifizierter Fachberatung raten.",
+"The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Der Fall scheint grundsätzlich relevant zu sein, aber sein Wert oder seine technische Komplexität erfordert eine menschliche Prüfung des Umfangs.",
+"Review scope and decide whether an external specialist is required.": "Leistungsumfang prüfen und entscheiden, ob ein externer Spezialist erforderlich ist.",
+"More information is needed to determine whether the case fits the free-access service.": "Weitere Informationen sind erforderlich, um zu beurteilen, ob der Fall zum kostenlosen Dienst passt.",
+"Request a clearer description of the supplier dispute and requested outcome.": "Eine klarere Beschreibung des Lieferantenstreits und des gewünschten Ergebnisses anfordern.",
+"The application appears suitable for free-access review, subject to capacity and a final scope check.": "Der Antrag scheint für eine kostenlose Prüfung geeignet zu sein, vorbehaltlich verfügbarer Kapazität und einer abschließenden Umfangsprüfung.",
+"Place in the free-access candidate queue and request up to five key files if selected.": "In die Kandidatenliste für den kostenlosen Zugang aufnehmen und bei Auswahl bis zu fünf zentrale Dateien anfordern.",
+"The case may fit the free-access service, but additional information is needed before selection.": "Der Fall könnte zum kostenlosen Dienst passen, vor der Auswahl sind jedoch zusätzliche Informationen erforderlich.",
+"Request the missing information listed by the triage result.": "Die im Prüfergebnis aufgeführten fehlenden Informationen anfordern.",
+"The case was assessed against the current free-access scope and evidence indicators.": "Der Fall wurde anhand des aktuellen Umfangs des kostenlosen Zugangs und der vorhandenen Beweisindikatoren bewertet.",
+}
+_ES = {
+"The request may involve altering, concealing or fabricating evidence.": "La solicitud puede implicar la alteración, ocultación o fabricación de pruebas.",
+"The description indicates an urgent legal, authority or deadline-sensitive issue.": "La descripción indica un asunto jurídico urgente, relacionado con autoridades o sujeto a un plazo crítico.",
+"A laboratory, compliance, customs or technical specialist may be required.": "Puede ser necesario un especialista de laboratorio, cumplimiento, aduanas o un experto técnico.",
+"The stated dispute value is high and requires human scope review.": "El valor indicado de la disputa es elevado y requiere una revisión humana del alcance.",
+"The selected issue does not clearly match the current free-access scope.": "El problema seleccionado no coincide claramente con el alcance actual del acceso gratuito.",
+"Supplier or company name": "Nombre del proveedor o de la empresa",
+"Order number or transaction reference": "Número de pedido o referencia de la transacción",
+"Approximate amount in dispute or order value": "Importe aproximado en disputa o valor del pedido",
+"Which written records or photographs are available": "Documentos escritos o fotografías disponibles",
+"A more detailed chronology of what happened": "Cronología más detallada de lo ocurrido",
+"Preferred practical outcome": "Resultado práctico deseado",
+"This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Esta solicitud no puede aceptarse porque la ayuda solicitada puede implicar un manejo inadecuado de las pruebas.",
+"Decline and preserve an internal audit record.": "Rechazar la solicitud y conservar un registro interno de auditoría.",
+"Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Su descripción puede referirse a un asunto jurídico urgente o relacionado con autoridades. El sistema automatizado de acceso gratuito no puede evaluarlo de forma segura sin revisión humana.",
+"Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Escalar inmediatamente y recomendar al solicitante que consulte a un profesional cualificado cuando puedan aplicarse plazos.",
+"The case appears potentially relevant, but its value or technical complexity requires human scope review.": "El caso parece potencialmente relevante, pero su valor o complejidad técnica requiere una revisión humana del alcance.",
+"Review scope and decide whether an external specialist is required.": "Revisar el alcance y decidir si es necesario un especialista externo.",
+"More information is needed to determine whether the case fits the free-access service.": "Se necesita más información para determinar si el caso encaja en el servicio gratuito.",
+"Request a clearer description of the supplier dispute and requested outcome.": "Solicitar una descripción más clara de la disputa con el proveedor y del resultado deseado.",
+"The application appears suitable for free-access review, subject to capacity and a final scope check.": "La solicitud parece adecuada para una revisión gratuita, sujeta a la capacidad disponible y a una comprobación final del alcance.",
+"Place in the free-access candidate queue and request up to five key files if selected.": "Colocar la solicitud en la cola de candidatos y pedir hasta cinco archivos clave si se selecciona.",
+"The case may fit the free-access service, but additional information is needed before selection.": "El caso puede encajar en el servicio gratuito, pero se necesita información adicional antes de la selección.",
+"Request the missing information listed by the triage result.": "Solicitar la información faltante indicada en el resultado de la evaluación.",
+"The case was assessed against the current free-access scope and evidence indicators.": "El caso se evaluó conforme al alcance actual del acceso gratuito y a los indicios de prueba disponibles.",
+}
 _SR = {
 "Supplier or company name":"Naziv dobavljača ili kompanije", "Order number or transaction reference":"Broj porudžbine ili oznaka transakcije", "Approximate amount in dispute or order value":"Približan iznos spora ili vrednost porudžbine", "Which written records or photographs are available":"Koji pisani dokazi ili fotografije postoje", "A more detailed chronology of what happened":"Detaljnija hronologija događaja", "Preferred practical outcome":"Željeni praktični ishod",
 "The case may fit the free-access service, but additional information is needed before selection.":"Slučaj može odgovarati besplatnoj usluzi, ali su potrebne dodatne informacije pre izbora.",
@@ -95,7 +185,7 @@ _SR = {
 }
 
 def _localize_result(result: TriageResult, language: str) -> TriageResult:
-    mapping = _RU if language == "Russian" else _SR if language == "Serbian" else None
+    mapping = {"Russian": _RU, "Serbian": _SR, "French": _FR, "German": _DE, "Spanish": _ES}.get(language)
     if not mapping:
         return result
     return result.model_copy(update={

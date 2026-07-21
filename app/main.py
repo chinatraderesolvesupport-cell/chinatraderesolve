@@ -39,7 +39,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="1.7.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="2.0.0")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -104,7 +104,7 @@ STATUS_LABELS = {
     "declined": "Отклонено", "accepted": "Принято", "closed": "Закрыто",
 }
 RISK_LABELS = {"critical": "Критический", "high": "Высокий", "medium": "Средний", "low": "Низкий"}
-LANGUAGE_LABELS = {"English": "Английский", "Russian": "Русский", "Serbian": "Сербский"}
+LANGUAGE_LABELS = {"English": "Английский", "French": "Французский", "German": "Немецкий", "Spanish": "Испанский", "Russian": "Русский", "Serbian": "Сербский"}
 ACTOR_LABELS = {"system": "система", "triage": "автопроверка", "admin": "администратор", "client": "клиент"}
 EVENT_LABELS = {"application_created": "заявка создана", "triage_completed": "автопроверка завершена", "status_updated": "статус изменён", "feedback_submitted": "отзыв отправлен", "triage_recomputed": "автопроверка повторена"}
 PROBLEM_LABELS = {
@@ -123,11 +123,17 @@ RESULT_LABELS = {
 CHANNEL_LABELS = {"Direct supplier contract": "Прямой договор с поставщиком", "Other": "Другое"}
 PUBLIC_STATUS_LABELS = {
     "English": {"submitted":"Received","needs_information":"Information needed","pilot_candidate":"Free-review candidate","human_review":"Human review","declined":"Declined","accepted":"Accepted","closed":"Closed"},
+    "French": {"submitted":"Reçue","needs_information":"Informations nécessaires","pilot_candidate":"Candidate à l’analyse gratuite","human_review":"Vérification humaine","declined":"Refusée","accepted":"Acceptée","closed":"Clôturée"},
+    "German": {"submitted":"Eingegangen","needs_information":"Informationen erforderlich","pilot_candidate":"Kandidat für kostenlose Prüfung","human_review":"Menschliche Prüfung","declined":"Abgelehnt","accepted":"Angenommen","closed":"Abgeschlossen"},
+    "Spanish": {"submitted":"Recibida","needs_information":"Se necesita información","pilot_candidate":"Candidato a revisión gratuita","human_review":"Revisión humana","declined":"Rechazada","accepted":"Aceptada","closed":"Cerrada"},
     "Russian": STATUS_LABELS,
     "Serbian": {"submitted":"Primljeno","needs_information":"Potrebne informacije","pilot_candidate":"Kandidat za besplatni pregled","human_review":"Ljudski pregled","declined":"Odbijeno","accepted":"Prihvaćeno","closed":"Zatvoreno"},
 }
 PUBLIC_RISK_LABELS = {
     "English": {"critical":"Critical","high":"High","medium":"Medium","low":"Low"},
+    "French": {"critical":"Critique","high":"Élevé","medium":"Moyen","low":"Faible"},
+    "German": {"critical":"Kritisch","high":"Hoch","medium":"Mittel","low":"Niedrig"},
+    "Spanish": {"critical":"Crítico","high":"Alto","medium":"Medio","low":"Bajo"},
     "Russian": RISK_LABELS,
     "Serbian": {"critical":"Kritičan","high":"Visok","medium":"Srednji","low":"Nizak"},
 }
@@ -186,6 +192,60 @@ STATUS_COPY = {
         "support_text": "ChinaTradeResolve je trenutno besplatan. Dobrovoljna podrška nije plaćanje usluge i ne utiče na prihvatanje, prioritet, pregled ili ishod.",
         "support_button": "Podržite projekat",
         "not_ready": "Dobrovoljna podrška još nije povezana.",
+    },
+    "French": {
+        "title": "Statut du dossier",
+        "info_heading": "Informations susceptibles d’être demandées",
+        "return": "Retour au site",
+        "notice": "Aucun paiement ni téléchargement de fichier n’est requis au stade de la demande. Cette page contient une classification préliminaire automatisée, et non un conseil juridique ou une prévision du résultat.",
+        "feedback_heading": "Aidez-nous à améliorer le service gratuit",
+        "feedback_intro": "Laissez un avis sincère après avoir reçu de l’aide. N’indiquez pas le nom du fournisseur, le numéro de commande ni d’autres informations confidentielles.",
+        "rating": "Note",
+        "feedback": "Votre avis",
+        "display_name": "Nom à afficher avec un éventuel témoignage (facultatif)",
+        "testimonial": "Vous pouvez publier un extrait anonymisé de cet avis. La publication n’est jamais automatique.",
+        "submit_feedback": "Envoyer l’avis",
+        "thanks": "Merci. Votre avis a été enregistré.",
+        "support_heading": "Soutenir volontairement le projet",
+        "support_text": "ChinaTradeResolve est actuellement gratuit. Une contribution volontaire n’est pas le paiement d’un service et n’influence ni l’acceptation, ni la priorité, ni l’analyse, ni le résultat.",
+        "support_button": "Soutenir le projet",
+        "not_ready": "Le soutien volontaire n’est pas encore activé.",
+    },
+    "German": {
+        "title": "Fallstatus",
+        "info_heading": "Möglicherweise benötigte Informationen",
+        "return": "Zur Website zurückkehren",
+        "notice": "Bei der Antragstellung sind weder Zahlung noch Datei-Upload erforderlich. Diese Seite enthält eine automatisierte vorläufige Einstufung, keine Rechtsberatung und keine Prognose des Ergebnisses.",
+        "feedback_heading": "Helfen Sie uns, den kostenlosen Dienst zu verbessern",
+        "feedback_intro": "Geben Sie nach erhaltener Unterstützung eine ehrliche Rückmeldung. Nennen Sie keine Lieferantennamen, Bestellnummern oder andere vertrauliche Angaben.",
+        "rating": "Bewertung",
+        "feedback": "Ihre Rückmeldung",
+        "display_name": "Name für eine mögliche Veröffentlichung (optional)",
+        "testimonial": "Ein anonymisierter Auszug dieser Rückmeldung darf veröffentlicht werden. Eine Veröffentlichung erfolgt nie automatisch.",
+        "submit_feedback": "Rückmeldung senden",
+        "thanks": "Vielen Dank. Ihre Rückmeldung wurde gespeichert.",
+        "support_heading": "Projekt freiwillig unterstützen",
+        "support_text": "ChinaTradeResolve ist derzeit kostenlos. Eine freiwillige Unterstützung ist keine Bezahlung für eine Leistung und beeinflusst weder Annahme, Priorität, Prüfung noch Ergebnis.",
+        "support_button": "Projekt unterstützen",
+        "not_ready": "Freiwillige Unterstützung ist noch nicht eingerichtet.",
+    },
+    "Spanish": {
+        "title": "Estado del caso",
+        "info_heading": "Información que puede solicitarse",
+        "return": "Volver al sitio web",
+        "notice": "En la fase de solicitud no se requiere pago ni carga de archivos. Esta página contiene una clasificación preliminar automatizada, no asesoramiento jurídico ni una predicción del resultado.",
+        "feedback_heading": "Ayúdenos a mejorar el servicio gratuito",
+        "feedback_intro": "Comparta una opinión sincera después de recibir ayuda. No incluya nombres de proveedores, números de pedido ni otros datos confidenciales.",
+        "rating": "Valoración",
+        "feedback": "Su opinión",
+        "display_name": "Nombre para un posible testimonio (opcional)",
+        "testimonial": "Puede publicarse un extracto anonimizado de esta opinión. La publicación nunca es automática.",
+        "submit_feedback": "Enviar opinión",
+        "thanks": "Gracias. Su opinión ha sido registrada.",
+        "support_heading": "Apoyar voluntariamente el proyecto",
+        "support_text": "ChinaTradeResolve es actualmente gratuito. Una contribución voluntaria no es el pago de un servicio y no afecta la aceptación, prioridad, revisión ni resultado.",
+        "support_button": "Apoyar el proyecto",
+        "not_ready": "El apoyo voluntario aún no está habilitado.",
     },
 }
 
@@ -287,7 +347,7 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "support_url": safe_support_url(),
             "status_label": PUBLIC_STATUS_LABELS.get(language, PUBLIC_STATUS_LABELS["English"]).get(case["status"], case["status"]),
             "risk_label": PUBLIC_RISK_LABELS.get(language, PUBLIC_RISK_LABELS["English"]).get(case["risk_level"], case["risk_level"]),
-            "page_language": {"Russian": "ru", "Serbian": "sr"}.get(language, "en"),
+            "page_language": {"English": "en", "French": "fr", "German": "de", "Spanish": "es", "Russian": "ru", "Serbian": "sr"}.get(language, "en"),
         },
     )
 

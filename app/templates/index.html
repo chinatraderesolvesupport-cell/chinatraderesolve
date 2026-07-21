@@ -148,7 +148,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 <div class="actions">
 <select aria-label="Язык" class="lang" id="langSelect">
-<option selected="" value="ru">Русский</option><option value="en">English</option><option value="sr">Srpski</option>
+<option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
 <a class="btn primary" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
 <button aria-controls="mobilePanel" aria-expanded="false" aria-label="Открыть меню" class="menu-btn" id="menuBtn">☰</button>
@@ -157,7 +157,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="mobile-panel" id="mobilePanel">
 <span class="mobile-lang-label" data-i18n="language_label">Язык</span>
 <select aria-label="Язык" class="lang" id="mobileLangSelect">
-<option selected="" value="ru">Русский</option><option value="en">English</option><option value="sr">Srpski</option>
+<option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
 <a data-i18n="nav_services" href="#services">Услуги</a>
 <a data-i18n="nav_process" href="#process">Как это работает</a>
@@ -183,7 +183,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <span data-i18n="trust_marker2">Конфиденциальный подход</span>
 <span data-i18n="trust_marker3">Без гарантии результата</span>
 </div>
-<div class="note" data-i18n="languages_note">Заявку можно подать на английском, русском или сербском языке. Ключевые документы запрашиваются только после отбора.</div>
+<div class="note" data-i18n="languages_note">Заявку можно подать на английском, французском, немецком, испанском, русском или сербском языке. Ключевые документы запрашиваются только после отбора.</div>
 </div>
 <aside class="hero-card">
 <div class="eyebrow" data-i18n="example_case">Пример обзора дела</div>
@@ -349,7 +349,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">Электронная почта</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
 <div class="field"><label data-i18n="country" for="country">Страна</label><input autocomplete="country-name" id="country" name="country"/></div>
-<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_russian" selected="" value="Russian">Русский</option><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
+<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">English</option><option data-i18n="opt_french" value="French">French</option><option data-i18n="opt_german" value="German">German</option><option data-i18n="opt_spanish" value="Spanish">Spanish</option><option data-i18n="opt_russian" value="Russian">Russian</option><option data-i18n="opt_serbian" value="Serbian">Serbian</option></select></div>
 <div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
 <div class="field"><label data-i18n="amount" for="amountDispute">Сумма спора</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
 <div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option></select></div>
@@ -456,6 +456,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </footer>
 <a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
+<script src="/static/translations-v2.js"></script>
 <script>
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
@@ -507,7 +508,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const submitButton=form.querySelector('button[type="submit"]');
   submitButton.disabled=true;
   statusBox.className='submit-status loading-state';
-  statusBox.textContent=({ru:'Заявка отправляется и проходит автоматическую проверку…',sr:'Prijava se šalje i automatski pregleda…'}[document.documentElement.lang]||'Submitting and screening the application…');
+  statusBox.textContent=(languageUi[document.documentElement.lang]||languageUi.en).submitting;
   const data=new FormData(form);
   const payload={};
   data.forEach((value,key)=>{payload[key]=value});
@@ -522,27 +523,21 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     const result=await response.json().catch(()=>({}));
     if(!response.ok){
       const lang=document.documentElement.lang;
-      const fallbacks={ru:'Проверьте заполненные поля и попробуйте ещё раз.',sr:'Proverite popunjena polja i pokušajte ponovo.',en:'Please check the form fields and try again.'};
-      const labels={
-        ru:{full_name:'Имя и фамилия',email:'Электронная почта',description:'Краткое описание',free_access_terms:'Условия бесплатного доступа',sharing_authority:'Право передавать информацию',no_guarantee:'Подтверждение отсутствия гарантии'},
-        sr:{full_name:'Ime i prezime',email:'Email adresa',description:'Kratak opis',free_access_terms:'Uslovi besplatnog pristupa',sharing_authority:'Pravo na deljenje informacija',no_guarantee:'Potvrda bez garancije'},
-        en:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}
-      };
+      const ui=languageUi[lang]||languageUi.en;
       let message='';
       if(Array.isArray(result.detail)){
         const fieldNames=[...new Set(result.detail.map(item=>{
           const loc=Array.isArray(item&&item.loc)?item.loc:[];
           const field=loc.length?loc[loc.length-1]:'';
-          return (labels[lang]||labels.en)[field]||'';
+          return ui.fields[field]||'';
         }).filter(Boolean))];
         if(fieldNames.length){
-          const prefixes={ru:'Проверьте поля: ',sr:'Proverite polja: ',en:'Check these fields: '};
-          message=(prefixes[lang]||prefixes.en)+fieldNames.join(', ')+'.';
+          message=ui.prefix+fieldNames.join(', ')+'.';
         }
       }else if(typeof result.detail==='string'){
         message=result.detail;
       }
-      throw new Error(message||(fallbacks[lang]||fallbacks.en));
+      throw new Error(message||ui.fallback);
     }
     form.style.display='none';
     document.getElementById('confirmation').style.display='block';
@@ -555,80 +550,74 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     }
   }catch(error){
     statusBox.className='submit-status error-state';
-    statusBox.textContent=error.message||({ru:'Не удалось отправить заявку.',sr:'Prijava nije mogla da se pošalje.'}[document.documentElement.lang]||'Unable to submit the application.');
+    statusBox.textContent=error.message||(languageUi[document.documentElement.lang]||languageUi.en).unable;
     submitButton.disabled=false;
   }
 });
 
-const translations={
-en:{},
-ru:{
-prototype:"Этап бесплатного доступа — без платы за услуги. Добровольная поддержка не влияет на приоритет.",
-nav_services:"Услуги",nav_process:"Как это работает",nav_pricing:"Бесплатный доступ",nav_about:"О проекте",nav_faq:"FAQ",nav_support:"Поддержать",submit_case:"Отправить бесплатную заявку",
-pilot_eyebrow:"Этап бесплатного доступа",pilot_title:"Используйте ChinaTradeResolve бесплатно, пока мы проверяем жизнеспособность проекта",pilot_intro:"Фиксированной даты окончания нет. Сервис остаётся бесплатным, пока ChinaTradeResolve заранее не объявит об изменении модели.",pilot_badge:"Бесплатный доступ · приём с учётом доступной мощности",pilot_receive_title:"Что могут получить пользователи",pilot_receive1:"Предварительный анализ одной основной проблемы спора",pilot_receive2:"Краткая письменная оценка сильных и слабых сторон и недостающих доказательств",pilot_receive3:"Чек-лист рекомендуемых следующих действий",pilot_receive4:"Один короткий раунд уточнений после выдачи результата",pilot_limits_title:"Границы бесплатного доступа",pilot_limit1:"Плата за услуги не взимается",pilot_limit2:"Нет общения с поставщиком или площадкой от имени участника",pilot_limit3:"Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками",pilot_limit4:"Без больших архивов: сначала только описание, после отбора — до 5 ключевых файлов",pilot_limit5:"Заявки принимаются с учётом профиля дела, доказательств и доступной мощности",pilot_selection:"Бесплатный доступ не ограничен сроком, но отдельное дело может быть отклонено, если оно вне компетенции, срочное или превышает доступную мощность.",pilot_feedback:"Пользователь может оставить честный отзыв. Разрешение на публикацию запрашивается отдельно, добровольно и не приводит к автоматической публикации.",pilot_consent:"Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а платная модель может быть введена только после предварительного уведомления.",trust_marker1:"Проверяется человеком",trust_marker2:"Конфиденциальный подход",trust_marker3:"Без гарантии результата",hero_eyebrow:"Помощь в спорах с китайскими поставщиками",hero_title:"Мы превращаем хаос в понятное дело.",hero_text:"ChinaTradeResolve помогает покупателям и компаниям систематизировать доказательства, находить противоречия и готовить структурированные претензии в спорах с китайскими поставщиками и маркетплейсами.",
-free_assessment:"Отправить бесплатную заявку",how_it_works:"Как это работает",languages_note:"Заявку можно подать на английском, русском или сербском языке. Ключевые документы запрашиваются только после отбора.",
-example_case:"Пример обзора дела",issue:"Проблема",issue_value:"Товар не соответствует спецификации",evidence:"Доказательства",status:"Статус",status_value:"Идёт анализ доказательств",next_step:"Следующий шаг",next_step_value:"Подготовка формальной претензии",
-choose_situation:"Выберите ситуацию",what_happened:"Что произошло?",choose_text:"Выберите вариант, который лучше всего соответствует вашему делу.",
-s1_title:"Спор уже открыт",s1_text:"Поставщик отказывается решать проблему или площадка отклонила претензию.",s2_title:"Товар не доставлен",s2_text:"Отгрузка задержана, отменена или поставщик перестал отвечать.",s3_title:"Проблема качества или спецификации",s3_text:"Товар неисправен, неполный или отличается от заказа.",s4_title:"Проверка до оплаты",s4_text:"Вы хотите снизить риск до отправки денег.",
-services_eyebrow:"Направление полного сервиса",services_title:"Что должен предоставлять полноценный сервис",services_note:"Участники пилота получают только ограниченный результат, описанный в разделе пилота.",receive1:"Понятная оценка дела",receive1_text:"Основные факты, возможные нарушения, сильные и слабые стороны.",receive2:"Организованный пакет доказательств",receive2_text:"Хронология, индекс доказательств, приложения и краткое резюме.",receive3:"Профессиональные документы",receive3_text:"Претензия, апелляция, ответ поставщику или запрос возврата.",receive4:"Практический план действий",receive4_text:"Что, куда и как отправлять, чего не хватает и чего избегать.",
-pricing_eyebrow:"Услуги во время бесплатного доступа",pricing_title:"Понятный объём. Понятный результат.",pricing_note:"Во время текущего этапа плата за услуги не взимается. Доступность и объём помощи зависят от сложности дела и доступной мощности.",currently_free:"Сейчас бесплатно",best_for:"Лучше всего подходит",best1:"Чтобы понять, подтверждают ли доказательства убедительную позицию.",best2:"Когда основные документы уже собраны, но претензии не хватает структуры.",best3:"Для продолжающегося спора, где нужны последовательные ответы и стратегия.",best4:"Для проверки неясных условий и рисков до отправки денег.",
-p1:"Анализ дела",p1a:"Анализ доказательств",p1b:"Сильные и слабые стороны",p1c:"Недостающие доказательства",p1d:"План действий",
-p2:"Подготовка претензии",from390:"от €390",p2a:"Формальная претензия",p2b:"Подробная хронология",p2c:"Приложение с доказательствами",p2d:"Одна редакция",
-p3:"Полное сопровождение",from750:"от €750",p3a:"Анализ ответов",p3b:"Подготовка возражений",p3c:"Обновление доказательств",p3d:"Стратегическая поддержка",
-p4:"Проверка до оплаты",from190:"от €190",p4a:"Проверка инвойса",p4b:"Проверка спецификации",p4c:"Вопросы поставщику",p4d:"Чек-лист рисков",
-process_eyebrow:"Как это работает",process_title:"От разрозненных файлов к ясной позиции",step1:"Заявка",step1_text:"Отправьте базовую информацию и ключевые файлы.",step2:"Проверка объёма",step2_text:"Мы определяем подходящую услугу.",step3:"Анализ доказательств",step3_text:"Мы систематизируем факты и противоречия.",step4:"Подготовка",step4_text:"Готовим оценку или претензию.",step5:"Утверждение",step5_text:"Вы проверяете документ до отправки.",
-trust_eyebrow:"Доверие и прозрачность",trust_title:"Вы должны знать, кто работает с вашим делом",operator_title:"Команда по разбору дел ChinaTradeResolve",operator_text:"Независимая коммерческая помощь в спорах. Работа ведётся из Сербии. Проект находится на этапе ограниченного бесплатного доступа; юридические и платёжные реквизиты будут опубликованы до подключения платных функций.",operator_placeholder:"Статус прототипа: данные юридического исполнителя ещё не утверждены. Через этот прототип не принимаются платежи и документы.",sample_title:"Пример оценки дела",sample_sub:"Обезличенный пример результата",sample_status:"Проверено человеком",sample_tag1:"Хронология",sample_tag2:"Индекс доказательств",sample_tag3:"Анализ рисков",table_issue:"Проблема",table_evidence:"Доказательства",table_risk:"Риск",table_row1:"Неверный материал",table_row2:"EX-03 заказ + EX-07 сообщение поставщика",table_row3:"Терминология может оспариваться",table_row4:"Недостающий компонент",table_row5:"EX-02 инвойс + EX-11 фотографии",table_row6:"Нужно подтвердить финальную спецификацию",view_sample:"Открыть пример отчёта",
-ai_eyebrow:"ИИ помогает. Человек контролирует.",ai_title:"ИИ помогает организовать материалы. Результат контролирует человек.",ai_text:"ИИ может систематизировать большие объёмы файлов и подготовить первичное сравнение. Финальные выводы и исходящие документы проверяет человек.",ai_quote:"Достоверная претензия сильнее преувеличенной.",
-about_eyebrow:"О ChinaTradeResolve",about_title:"Создано на основе реального опыта",about_text:"У покупателей часто есть сильные доказательства, но они разбросаны по сообщениям, инвойсам, скриншотам и материалам платформ. Мы превращаем их в понятное дело.",about1:"Доказательства важнее эмоций",about1_text:"Претензии строятся на документах, датах и письменных заявлениях.",about2:"Честная оценка",about2_text:"Слабые места и контраргументы не скрываются.",about3:"Контроль клиента",about3_text:"Ни один важный документ не отправляется без одобрения.",
-form_eyebrow:"Бесплатная заявка",form_title:"Отправьте дело на бесплатный анализ",form_intro:"Начните с краткого описания. Ключевые документы будут запрошены только после принятия дела на анализ.",form_speed:"Около 2 минут · Без платы за услуги · Без больших загрузок",form_stage1:"Основные данные",form_stage2:"Информация о деле",email_label:"Электронная почта",language_label:"Язык",full_name:"Имя и фамилия",country:"Страна",preferred_lang:"Предпочитаемый язык",channel:"Канал покупки",amount:"Сумма спора",main_problem:"Основная проблема",form_error:"Укажите имя и корректный email.",continue:"Продолжить",supplier_name:"Поставщик или компания",order_number:"Номер заказа",order_value:"Общая стоимость заказа",requested_result:"Желаемый результат",description:"Краткое описание",description_hint:"Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.",description_ph:"Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь.",amount_ph:"например, EUR 4 000",upload:"На этапе заявки документы не требуются",upload_hint:"После отбора мы запросим не более 5 ключевых файлов для первичного анализа.",consent1:"Я подтверждаю, что имею право передавать указанную информацию и документы.",consent2:"Я добровольно согласен на использование ИИ-инструментов для анализа дела при обязательной человеческой проверке. Без согласия заявка будет обработана встроенными правилами и, при необходимости, вручную.",consent3:"Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.",back:"Назад",submit_review:"Отправить бесплатную заявку",received:"Бесплатная заявка сохранена",received_text:"Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.",view_case_status:"Посмотреть статус дела",
-contact_eyebrow:"Контакты и доступность",contact_title:"Понятные способы связи",contact_details:"Команда по разбору дел ChinaTradeResolve",contact_intro:"Независимая коммерческая помощь в спорах, работающая из Сербии.",contact_placeholder:"Используйте этот адрес для общих вопросов. Заявки по делам лучше подавать через структурированную форму.",hours:"Часы работы",hours_text:"Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.",
-final_eyebrow:"Начните с доказательств",final_title:"Ваши доказательства могут быть сильнее, чем текущая претензия.",final_text:"Отправьте основные факты и получите понятную рекомендацию по следующему шагу.",final_button:"Отправить бесплатную заявку",support_eyebrow:"Добровольная поддержка",support_title:"Если ChinaTradeResolve помог вам, можно поддержать развитие проекта",support_text:"Сервис сейчас бесплатный. Финансовая поддержка полностью добровольна и не является оплатой анализа дела.",support_button:"Поддержать проект",support_rules_title:"Поддержка ничего не меняет в обслуживании",support_rule1:"Она не влияет на принятие дела или приоритет.",support_rule2:"Она не покупает результат, возврат средств или благоприятную оценку.",support_rule3:"Это только добровольный способ помочь покрыть расходы проекта.",support_notice:"Платёжный сервис подключается одной настройкой сервера, без изменения кода.",faq_eyebrow:"Часто задаваемые вопросы",faq_title:"Важные вопросы",faq1:"Вы гарантируете возврат?",faq1_text:"Нет. Результат зависит от доказательств, договора, способа оплаты, правил площадки и ответа поставщика.",faq2:"Вы работаете только с Alibaba?",faq2_text:"Нет. Дела могут касаться Alibaba, AliExpress, Made-in-China или прямых договоров.",faq3:"Вы юридическая фирма?",faq3_text:"Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.",faq4:"Как используется ИИ?",faq4_text:"ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.",opt_english:"Английский",opt_russian:"Русский",opt_serbian:"Сербский",opt_direct:"Прямой договор с поставщиком",opt_other:"Другое",opt_problem1:"Товар не доставлен",opt_problem2:"Низкое качество или дефекты",opt_problem3:"Неверный материал или спецификация",opt_problem4:"Сомнительные документы",opt_problem5:"Поставщик отказывается возвращать деньги",opt_problem6:"Площадка отклонила претензию",opt_result1:"Полный возврат",opt_result2:"Частичный возврат",opt_result3:"Замена",opt_result4:"Завершение исполнения заказа",opt_result5:"Согласованное урегулирование",opt_result6:"Пока не уверен",legal_privacy:"Конфиденциальность",legal_terms:"Условия",legal_payment:"Политика оплаты",legal_ai:"Уведомление об ИИ",legal_disclaimer:"Ограничение ответственности",footer_text:"Коммерческая помощь покупателям, работающим с китайскими поставщиками."
-},
-sr:{
-prototype:"Faza besplatnog pristupa — bez naknade za uslugu. Dobrovoljna podrška ne utiče na prioritet.",
-nav_services:"Usluge",nav_process:"Kako funkcioniše",nav_pricing:"Besplatan pristup",nav_about:"O nama",nav_faq:"FAQ",nav_support:"Podrška",submit_case:"Pošaljite besplatnu prijavu",
-pilot_eyebrow:"Faza besplatnog pristupa",pilot_title:"Koristite ChinaTradeResolve besplatno dok proveravamo održivost projekta",pilot_intro:"Nema unapred određenog datuma završetka. Usluga ostaje besplatna dok ChinaTradeResolve unapred ne najavi promenu modela.",pilot_badge:"Besplatan pristup · prihvatanje prema raspoloživom kapacitetu",pilot_receive_title:"Šta korisnici mogu dobiti",pilot_receive1:"Preliminarni pregled jednog glavnog pitanja spora",pilot_receive2:"Kratku pisanu procenu prednosti, slabosti i dokaza koji nedostaju",pilot_receive3:"Kontrolnu listu preporučenih sledećih koraka",pilot_receive4:"Jedan kratak krug pojašnjenja nakon isporuke",pilot_limits_title:"Granice besplatnog pristupa",pilot_limit1:"Naknada za uslugu se ne naplaćuje",pilot_limit2:"Nema kontakta sa dobavljačem ili platformom u ime učesnika",pilot_limit3:"Ne primaju se hitni sudski, arbitražni ili rokovi zastarelosti",pilot_limit4:"Bez velikih arhiva: prvo samo sažetak, a nakon izbora do 5 ključnih fajlova",pilot_limit5:"Prijave se prihvataju prema obimu, dokazima i raspoloživom kapacitetu",pilot_selection:"Besplatan pristup nije vremenski ograničen, ali pojedinačni slučaj može biti odbijen ako je van obima, hitan ili prelazi raspoloživi kapacitet.",pilot_feedback:"Korisnici mogu ostaviti iskrenu povratnu informaciju. Dozvola za objavu je odvojena, dobrovoljna i nikada automatska.",pilot_consent:"Razumem da je usluga trenutno besplatna, da prihvatanje zavisi od obima i kapaciteta i da se plaćeni model može uvesti samo uz prethodno obaveštenje.",trust_marker1:"Ljudska provera",trust_marker2:"Poverljiv pristup",trust_marker3:"Bez garantovanog ishoda",hero_eyebrow:"Podrška u sporovima sa kineskim dobavljačima",hero_title:"Pretvaramo konfuziju u jasan slučaj.",hero_text:"ChinaTradeResolve pomaže kupcima i kompanijama da organizuju dokaze, uoče kontradikcije i pripreme strukturirane zahteve u sporovima sa kineskim dobavljačima i platformama.",
-free_assessment:"Pošaljite besplatnu prijavu",how_it_works:"Kako funkcioniše",languages_note:"Prijava se može poslati na engleskom, ruskom ili srpskom jeziku. Ključni dokumenti se traže tek nakon izbora.",
-example_case:"Primer pregleda slučaja",issue:"Problem",issue_value:"Proizvod ne odgovara specifikaciji",evidence:"Dokazi",status:"Status",status_value:"Pregled dokaza je u toku",next_step:"Sledeći korak",next_step_value:"Priprema formalnog zahteva",
-choose_situation:"Izaberite situaciju",what_happened:"Šta se dogodilo?",choose_text:"Izaberite opciju koja najbolje odgovara vašem slučaju.",
-s1_title:"Već imam spor",s1_text:"Dobavljač odbija da reši problem ili je platforma odbila zahtev.",s2_title:"Roba nije isporučena",s2_text:"Isporuka kasni, otkazana je ili dobavljač više ne odgovara.",s3_title:"Problem kvaliteta ili specifikacije",s3_text:"Roba je neispravna, nepotpuna ili drugačija od naručene.",s4_title:"Provera pre plaćanja",s4_text:"Želite da smanjite rizik pre slanja novca.",
-services_eyebrow:"Pravac pune usluge",services_title:"Šta je kompletna usluga namenjena da pruži",services_note:"Učesnici pilota dobijaju samo ograničene rezultate opisane u pilot odeljku.",receive1:"Jasna procena slučaja",receive1_text:"Glavne činjenice, moguće povrede, prednosti, slabosti i realne opcije.",receive2:"Organizovan paket dokaza",receive2_text:"Hronologija, indeks dokaza, označeni prilozi i sažetak.",receive3:"Profesionalna dokumenta",receive3_text:"Formalni zahtev, žalba platformi, odgovor dobavljaču ili zahtev za povraćaj.",receive4:"Praktičan plan",receive4_text:"Šta poslati, gde poslati, šta nedostaje i šta izbegavati.",
-pricing_eyebrow:"Usluge tokom besplatnog pristupa",pricing_title:"Jasan obim. Jasni rezultati.",pricing_note:"Tokom trenutne faze ne naplaćuje se naknada za uslugu. Dostupnost i obim zavise od složenosti i kapaciteta.",currently_free:"Trenutno besplatno",best_for:"Najbolje za",best1:"Razumevanje da li dokazi podržavaju verodostojan stav.",best2:"Slučajeve gde ključna dokumenta postoje, ali zahtevu nedostaje struktura.",best3:"Aktivne sporove koji zahtevaju stalne odgovore i doslednu strategiju.",best4:"Proveru nejasnih uslova i rizika pre slanja novca.",
-p1:"Pregled slučaja",p1a:"Pregled dokaza",p1b:"Prednosti i slabosti",p1c:"Dokazi koji nedostaju",p1d:"Plan aktivnosti",
-p2:"Priprema zahteva",from390:"od €390",p2a:"Formalni zahtev",p2b:"Detaljna hronologija",p2c:"Prilog sa dokazima",p2d:"Jedna revizija",
-p3:"Puna podrška u sporu",from750:"od €750",p3a:"Analiza odgovora",p3b:"Dalji prigovori",p3c:"Ažuriranje dokaza",p3d:"Strateška podrška",
-p4:"Provera pre plaćanja",from190:"od €190",p4a:"Provera fakture",p4b:"Provera specifikacije",p4c:"Pitanja dobavljaču",p4d:"Kontrolna lista rizika",
-process_eyebrow:"Kako funkcioniše",process_title:"Od rasutih fajlova do jasnog stava",step1:"Pošaljite",step1_text:"Pošaljite osnovne informacije i ključne fajlove.",step2:"Provera obima",step2_text:"Određujemo odgovarajuću uslugu.",step3:"Pregled dokaza",step3_text:"Organizujemo činjenice i kontradikcije.",step4:"Priprema",step4_text:"Pripremamo procenu ili zahtev.",step5:"Odobrenje",step5_text:"Vi pregledate dokument pre slanja.",
-trust_eyebrow:"Poverenje i transparentnost",trust_title:"Znajte ko obrađuje vaš slučaj",operator_title:"Tim za pregled slučajeva ChinaTradeResolve",operator_text:"Nezavisna komercijalna podrška u sporovima iz Srbije. Projekat je u fazi ograničenog besplatnog pristupa; pravni i platni podaci biće objavljeni pre uvođenja plaćenih funkcija.",operator_placeholder:"Status prototipa: podaci pravnog pružaoca još nisu konačni. Ovaj prototip ne prima uplate ni dokumenta.",sample_title:"Primer procene slučaja",sample_sub:"Anonimizovan primer rezultata",sample_status:"Ljudski pregledano",sample_tag1:"Hronologija",sample_tag2:"Indeks dokaza",sample_tag3:"Analiza rizika",table_issue:"Problem",table_evidence:"Dokazi",table_risk:"Rizik",table_row1:"Pogrešan materijal",table_row2:"EX-03 porudžbina + EX-07 poruka dobavljača",table_row3:"Terminologija može biti sporna",table_row4:"Nedostajuća komponenta",table_row5:"EX-02 faktura + EX-11 fotografije",table_row6:"Konačna specifikacija mora biti potvrđena",view_sample:"Pogledajte primer izveštaja",
-ai_eyebrow:"AI pomaže. Čovek kontroliše.",ai_title:"AI pomaže u organizaciji. Ljudska provera kontroliše ishod.",ai_text:"AI može organizovati velike količine fajlova i pripremiti početna poređenja. Konačne zaključke i izlazna dokumenta pregleda čovek.",ai_quote:"Verodostojan zahtev je jači od preuveličanog.",
-about_eyebrow:"O ChinaTradeResolve",about_title:"Nastalo iz stvarnog iskustva",about_text:"Kupci često imaju snažne dokaze, ali su oni rasuti po porukama, fakturama, snimcima ekrana i zapisima platforme. Mi ih pretvaramo u jasan slučaj.",about1:"Dokazi pre emocija",about1_text:"Zahtevi se zasnivaju na dokumentima, datumima i pisanim izjavama.",about2:"Iskrena procena",about2_text:"Slabosti i mogući kontraargumenti se ne skrivaju.",about3:"Kontrola klijenta",about3_text:"Nijedan važan dokument se ne šalje bez odobrenja.",
-form_eyebrow:"Besplatna prijava",form_title:"Pošaljite slučaj na besplatan pregled",form_intro:"Počnite kratkim sažetkom. Ključna dokumenta će biti zatražena samo ako slučaj bude prihvaćen.",form_speed:"Oko 2 minuta · Bez naknade · Bez velikih otpremanja",form_stage1:"Osnovni podaci",form_stage2:"Informacije o slučaju",email_label:"Email adresa",language_label:"Jezik",full_name:"Ime i prezime",country:"Država",preferred_lang:"Željeni jezik",channel:"Kanal kupovine",amount:"Iznos spora",main_problem:"Glavni problem",form_error:"Unesite ime i ispravnu email adresu.",continue:"Nastavi",supplier_name:"Dobavljač ili kompanija",order_number:"Broj porudžbine",order_value:"Ukupna vrednost porudžbine",requested_result:"Željeni rezultat",description:"Kratak opis",description_hint:"Opišite situaciju u najmanje 50 znakova kako bi prijava mogla odgovorno da se pregleda.",description_ph:"Datum porudžbine, plaćeni iznos, obećanja dobavljača, šta je pošlo naopako i koji rezultat tražite.",amount_ph:"na primer, EUR 4.000",upload:"Dokumenti nisu potrebni u fazi prijave",upload_hint:"Ako budete izabrani, tražićemo najviše 5 ključnih fajlova za početni pregled.",consent1:"Potvrđujem da imam pravo da podelim dostavljene informacije i dokumente.",consent2:"Dobrovoljno pristajem na korišćenje AI alata uz obaveznu ljudsku proveru. Bez saglasnosti prijava se obrađuje pravilima i, po potrebi, ručno.",consent3:"Razumem da ChinaTradeResolve ne garantuje povraćaj novca niti određeni ishod.",back:"Nazad",submit_review:"Pošaljite besplatnu prijavu",received:"Besplatna prijava je sačuvana",received_text:"Prijava je sačuvana i automatski pregledana. Sačuvajte broj slučaja ispod.",view_case_status:"Pogledajte status slučaja",
-contact_eyebrow:"Kontakt i dostupnost",contact_title:"Jasni načini kontakta",contact_details:"Tim za pregled slučajeva ChinaTradeResolve",contact_intro:"Nezavisna komercijalna podrška u sporovima, vođena iz Srbije.",contact_placeholder:"Koristite ovu adresu za opšta pitanja. Prijave slučajeva treba slati kroz strukturisani obrazac.",hours:"Radno vreme",hours_text:"Ponedeljak–petak, 09:00–17:00 po vremenu u Beogradu (CET/CEST). Prvi odgovor u roku od 2 radna dana.",
-final_eyebrow:"Počnite od dokaza",final_title:"Vaši dokazi mogu biti jači od trenutnog zahteva.",final_text:"Pošaljite osnovne činjenice i dobijte jasnu preporuku za sledeći korak.",final_button:"Pošaljite besplatnu prijavu",support_eyebrow:"Dobrovoljna podrška",support_title:"Ako vam je ChinaTradeResolve pomogao, možete podržati razvoj projekta",support_text:"Usluga je trenutno besplatna. Finansijska podrška je potpuno dobrovoljna i nije plaćanje pregleda slučaja.",support_button:"Podržite projekat",support_rules_title:"Podrška ne menja uslugu",support_rule1:"Ne utiče na prihvatanje ili prioritet slučaja.",support_rule2:"Ne kupuje ishod, povraćaj ili povoljnu procenu.",support_rule3:"To je samo dobrovoljan način da se pomognu troškovi projekta.",support_notice:"Servis za podršku se povezuje jednom serverskom postavkom, bez promene koda.",faq_eyebrow:"Česta pitanja",faq_title:"Važna pitanja",faq1:"Da li garantujete povraćaj novca?",faq1_text:"Ne. Ishod zavisi od dokaza, ugovora, načina plaćanja, pravila platforme i odgovora dobavljača.",faq2:"Da li radite samo sa Alibaba sporovima?",faq2_text:"Ne. Slučajevi mogu uključivati Alibaba, AliExpress, Made-in-China ili direktne ugovore.",faq3:"Da li ste advokatska kancelarija?",faq3_text:"Ne. ChinaTradeResolve pruža komercijalnu podršku, analizu dokumenata, pripremu zahteva i pomoć u komunikaciji.",faq4:"Kako se koristi AI?",faq4_text:"AI može pomoći u organizovanju i poređenju materijala. Važni zaključci i izlazni dokumenti zahtevaju ljudsku proveru.",opt_english:"Engleski",opt_russian:"Ruski",opt_serbian:"Srpski",opt_direct:"Direktan ugovor sa dobavljačem",opt_other:"Drugo",opt_problem1:"Roba nije isporučena",opt_problem2:"Loš kvalitet ili nedostaci",opt_problem3:"Pogrešan materijal ili specifikacija",opt_problem4:"Sumnjiva dokumenta",opt_problem5:"Dobavljač odbija povraćaj",opt_problem6:"Platforma je odbila zahtev",opt_result1:"Pun povraćaj",opt_result2:"Delimičan povraćaj",opt_result3:"Zamena",opt_result4:"Završetak porudžbine",opt_result5:"Dogovoreno poravnanje",opt_result6:"Nisam siguran",legal_privacy:"Privatnost",legal_terms:"Uslovi",legal_payment:"Politika plaćanja",legal_ai:"AI obaveštenje",legal_disclaimer:"Odricanje odgovornosti",footer_text:"Komercijalna podrška kupcima koji rade sa kineskim dobavljačima."
-}
+const translations=window.CTR_TRANSLATIONS||{};
+const supportedLanguages=['en','fr','de','es','ru','sr'];
+const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};
+const pageMeta={
+  en:{title:'ChinaTradeResolve — free help with supplier disputes',description:'Submit a free application about a dispute with a Chinese supplier. No payment or large document upload is required at the application stage.'},
+  fr:{title:'ChinaTradeResolve — aide gratuite pour les litiges fournisseurs',description:'Envoyez une demande gratuite concernant un litige avec un fournisseur chinois. Aucun paiement ni téléchargement volumineux n’est requis au stade de la demande.'},
+  de:{title:'ChinaTradeResolve — kostenlose Hilfe bei Lieferantenstreitigkeiten',description:'Reichen Sie kostenlos einen Fall zu einer Streitigkeit mit einem chinesischen Lieferanten ein. Bei der Antragstellung sind weder Zahlung noch große Datei-Uploads erforderlich.'},
+  es:{title:'ChinaTradeResolve — ayuda gratuita en disputas con proveedores',description:'Envíe una solicitud gratuita sobre una disputa con un proveedor chino. En la fase de solicitud no se requiere pago ni carga de archivos grandes.'},
+  ru:{title:'ChinaTradeResolve — бесплатная помощь в спорах с поставщиками',description:'Подайте бесплатную заявку по спору с китайским поставщиком. На этапе заявки не требуется оплата или загрузка большого архива документов.'},
+  sr:{title:'ChinaTradeResolve — besplatna pomoć u sporovima sa dobavljačima',description:'Pošaljite besplatnu prijavu za spor sa kineskim dobavljačem. U fazi prijave nisu potrebni plaćanje ni veliki fajlovi.'}
 };
-
-const enBase={}; document.querySelectorAll('[data-i18n]').forEach(el=>enBase[el.dataset.i18n]=el.textContent);
-const enPlaceholderBase={}; document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>enPlaceholderBase[el.dataset.i18nPlaceholder]=el.placeholder);
-translations.en=enBase;
-function setLang(lang){
+const languageUi={
+  en:{submitting:'Submitting and screening the application…',fallback:'Please check the form fields and try again.',prefix:'Check these fields: ',unable:'Unable to submit the application.',fields:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free-access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}},
+  fr:{submitting:'Envoi et analyse automatique de la demande…',fallback:'Vérifiez les champs du formulaire et réessayez.',prefix:'Vérifiez les champs suivants : ',unable:'Impossible d’envoyer la demande.',fields:{full_name:'Nom complet',email:'Adresse e-mail',description:'Brève description',free_access_terms:'Conditions de l’accès gratuit',sharing_authority:'Droit de partager les informations',no_guarantee:'Confirmation d’absence de garantie'}},
+  de:{submitting:'Der Antrag wird gesendet und automatisch geprüft…',fallback:'Prüfen Sie die Formularfelder und versuchen Sie es erneut.',prefix:'Prüfen Sie diese Felder: ',unable:'Der Antrag konnte nicht gesendet werden.',fields:{full_name:'Vollständiger Name',email:'E-Mail',description:'Kurze Beschreibung',free_access_terms:'Bedingungen des kostenlosen Zugangs',sharing_authority:'Berechtigung zur Weitergabe',no_guarantee:'Bestätigung ohne Garantie'}},
+  es:{submitting:'Enviando y revisando automáticamente la solicitud…',fallback:'Revise los campos del formulario e inténtelo de nuevo.',prefix:'Revise estos campos: ',unable:'No se pudo enviar la solicitud.',fields:{full_name:'Nombre completo',email:'Correo electrónico',description:'Breve descripción',free_access_terms:'Condiciones del acceso gratuito',sharing_authority:'Autorización para compartir información',no_guarantee:'Confirmación sin garantía'}},
+  ru:{submitting:'Заявка отправляется и проходит автоматическую проверку…',fallback:'Проверьте заполненные поля и попробуйте ещё раз.',prefix:'Проверьте поля: ',unable:'Не удалось отправить заявку.',fields:{full_name:'Имя и фамилия',email:'Электронная почта',description:'Краткое описание',free_access_terms:'Условия бесплатного доступа',sharing_authority:'Право передавать информацию',no_guarantee:'Подтверждение отсутствия гарантии'}},
+  sr:{submitting:'Prijava se šalje i automatski pregleda…',fallback:'Proverite popunjena polja i pokušajte ponovo.',prefix:'Proverite polja: ',unable:'Prijava nije mogla da se pošalje.',fields:{full_name:'Ime i prezime',email:'Email adresa',description:'Kratak opis',free_access_terms:'Uslovi besplatnog pristupa',sharing_authority:'Pravo na deljenje informacija',no_guarantee:'Potvrda bez garancije'}}
+};
+function normalizeLanguage(value){
+  const code=String(value||'').toLowerCase().split('-')[0];
+  return supportedLanguages.includes(code)?code:'en';
+}
+function currentCopy(){return translations[document.documentElement.lang]||translations.en||{};}
+function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
+  lang=normalizeLanguage(lang);
+  const copy=translations[lang]||translations.en||{};
   document.documentElement.lang=lang;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(translations[lang]&&translations[lang][key])el.textContent=translations[lang][key]});
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const key=el.dataset.i18nPlaceholder;const value=lang==='en'?enPlaceholderBase[key]:(translations[lang]&&translations[lang][key]);if(value)el.placeholder=value});
-  try{localStorage.setItem('ctr_lang_v17',lang)}catch(_e){}
+  document.documentElement.dir='ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const value=copy[el.dataset.i18n];if(value)el.textContent=value});
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const value=copy[el.dataset.i18nPlaceholder];if(value)el.placeholder=value});
+  const meta=pageMeta[lang]||pageMeta.en;
+  document.title=meta.title;
+  const description=document.querySelector('meta[name="description"]');
+  if(description)description.setAttribute('content',meta.description);
+  const preferred=document.getElementById('preferred');
+  if(preferred&&syncPreferred&&!preferred.dataset.userChanged)preferred.value=preferredLanguageValues[lang];
+  try{localStorage.setItem('ctr_lang_v20',lang)}catch(_e){}
+  if(updateUrl){
+    try{
+      const url=new URL(window.location.href);
+      url.searchParams.set('lang',lang);
+      history.replaceState(null,'',url.pathname+url.search+url.hash);
+    }catch(_e){}
+  }
 }
 const langSelect=document.getElementById('langSelect');
 const mobileLangSelect=document.getElementById('mobileLangSelect');
-function chooseLanguage(lang){
+function chooseLanguage(lang,options={}){
+  lang=normalizeLanguage(lang);
   langSelect.value=lang;
   mobileLangSelect.value=lang;
-  setLang(lang);
+  setLang(lang,options);
 }
 langSelect.addEventListener('change',e=>chooseLanguage(e.target.value));
 mobileLangSelect.addEventListener('change',e=>{chooseLanguage(e.target.value);closeMobileMenu()});
-let saved='ru';
-try{saved=localStorage.getItem('ctr_lang_v17')||'ru'}catch(_e){saved='ru'}
-chooseLanguage(saved);
+const preferredSelect=document.getElementById('preferred');
+preferredSelect.addEventListener('change',()=>{preferredSelect.dataset.userChanged='true'});
+let initialLanguage='';
+const queryLanguage=new URLSearchParams(window.location.search).get('lang');
+try{initialLanguage=queryLanguage||localStorage.getItem('ctr_lang_v20')||localStorage.getItem('ctr_lang_v17')||''}catch(_e){initialLanguage=queryLanguage||''}
+if(!initialLanguage){initialLanguage=(navigator.languages&&navigator.languages[0])||navigator.language||'en'}
+chooseLanguage(initialLanguage,{updateUrl:!queryLanguage});
 </script>
 </body>
 </html>

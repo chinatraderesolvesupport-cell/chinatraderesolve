@@ -1,4 +1,4 @@
-ChinaTradeResolve AI Assistant v3.0
+ChinaTradeResolve AI Assistant v3.1
 
 Staging package with six interface languages, a public multilingual AI information assistant, application triage, case status pages and voluntary crypto support.
 

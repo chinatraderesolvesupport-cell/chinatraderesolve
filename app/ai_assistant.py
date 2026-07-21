@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from typing import Any
 
 import httpx
@@ -87,6 +88,27 @@ def _extract_output_text(data: dict[str, Any]) -> str:
             ):
                 return content["text"].strip()
     raise AssistantProviderError("No output text was returned")
+
+
+def _is_unicode_noncharacter(codepoint: int) -> bool:
+    return 0xFDD0 <= codepoint <= 0xFDEF or (codepoint & 0xFFFF) in {0xFFFE, 0xFFFF}
+
+
+def _clean_output_text(text: str) -> str:
+    """Remove provider artefacts while preserving normal multilingual punctuation and line breaks."""
+    cleaned: list[str] = []
+    for char in text.replace("\r\n", "\n").replace("\r", "\n"):
+        codepoint = ord(char)
+        if char == "\uFFFD" or _is_unicode_noncharacter(codepoint):
+            continue
+        category = unicodedata.category(char)
+        if category in {"Cc", "Cs", "Co", "Cn"} and char not in {"\n", "\t"}:
+            continue
+        cleaned.append(char)
+    result = "".join(cleaned)
+    while "\n\n\n" in result:
+        result = result.replace("\n\n\n", "\n\n")
+    return result.strip()
 
 
 def _developer_prompt(language: str) -> str:
@@ -189,5 +211,8 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
     except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         raise AssistantProviderError("AI provider request failed") from exc
 
-    # Keep accidental provider verbosity under control even if a model ignores the prompt.
-    return answer[:5000].strip()
+    # Keep accidental provider verbosity under control and remove invalid Unicode artefacts.
+    cleaned_answer = _clean_output_text(answer[:5000])
+    if not cleaned_answer:
+        raise AssistantProviderError("AI provider returned only invalid output")
+    return cleaned_answer

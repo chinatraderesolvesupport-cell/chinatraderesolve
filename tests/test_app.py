@@ -418,6 +418,9 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert 'id="aiChatRoot"' in home.text
     assert 'id="aiChatPanel"' in home.text
     assert "fetch('/api/assistant'" in home.text
+    assert "ctr:language-changed" in home.text
+    assert "resetAiChatForLanguageChange" in home.text
+    assert "aiChatAbortController.abort()" in home.text
     assert "maxlength=\"1500\"" in home.text
     # The widget remains hidden until the server-side API key/model are configured.
     assert 'data-enabled="false" hidden' in home.text
@@ -457,6 +460,14 @@ def test_ai_assistant_request_validation():
         },
     )
     assert too_long.status_code == 422
+
+
+def test_ai_assistant_output_removes_unicode_noncharacters():
+    from app.ai_assistant import _clean_output_text
+
+    assert _clean_output_text("Bonjour.\U0008ffff") == "Bonjour."
+    assert _clean_output_text("Line one\n\n\nLine two") == "Line one\n\nLine two"
+    assert _clean_output_text("Normal français, Deutsch, русский, srpski.") == "Normal français, Deutsch, русский, srpski."
 
 
 def test_ai_assistant_responses_api_mock(monkeypatch):

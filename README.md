@@ -1,4 +1,4 @@
-# ChinaTradeResolve AI Assistant v3.0
+# ChinaTradeResolve AI Assistant v3.1
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -18,7 +18,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - automated tests and Docker packaging.
 
 
-## Public AI assistant v3.0
+## Public AI assistant v3.1
 
 The main page now contains a multilingual AI information assistant for English, French, German, Spanish, Russian and Serbian. The widget remains hidden until the server is configured with an API key and model.
 
@@ -40,6 +40,8 @@ Safety and privacy controls:
 - a narrow moderation check blocks the most sensitive prohibited category while allowing legitimate dispute descriptions to receive safe guidance.
 
 The assistant cannot read case records, status links, email, uploaded documents or the admin database. Case-specific automation is intentionally left for a later controlled phase.
+
+Version 3.1 also resets the active chat whenever the visitor changes the site language, aborts any in-flight request from the previous language, and removes invalid Unicode/noncharacter artefacts from provider output before displaying it.
 
 ## Multilingual foundation
 
@@ -120,7 +122,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_AI_Assistant_v3.0
+cd ChinaTradeResolve_AI_Assistant_v3.1
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

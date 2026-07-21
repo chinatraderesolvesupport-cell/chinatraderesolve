@@ -644,9 +644,13 @@ const langSelect=document.getElementById('langSelect');
 const mobileLangSelect=document.getElementById('mobileLangSelect');
 function chooseLanguage(lang,options={}){
   lang=normalizeLanguage(lang);
+  const previousLanguage=normalizeLanguage(document.documentElement.lang);
   langSelect.value=lang;
   mobileLangSelect.value=lang;
   setLang(lang,options);
+  if(previousLanguage!==lang){
+    document.dispatchEvent(new CustomEvent('ctr:language-changed',{detail:{language:lang}}));
+  }
 }
 langSelect.addEventListener('change',e=>chooseLanguage(e.target.value));
 mobileLangSelect.addEventListener('change',e=>{chooseLanguage(e.target.value);closeMobileMenu()});
@@ -670,6 +674,7 @@ if(aiChatRoot){
   const aiChatSend=document.getElementById('aiChatSend');
   let aiChatHistory=[];
   let aiChatBusy=false;
+  let aiChatAbortController=null;
 
   function openAiChat(){
     aiChatPanel.hidden=false;
@@ -693,6 +698,20 @@ if(aiChatRoot){
     const copy=currentCopy();
     return copy[key]||(translations.en&&translations.en[key])||'';
   }
+  function resetAiChatForLanguageChange(){
+    if(aiChatAbortController){
+      aiChatAbortController.abort();
+      aiChatAbortController=null;
+    }
+    aiChatHistory=[];
+    aiChatBusy=false;
+    aiChatInput.disabled=false;
+    aiChatSend.disabled=false;
+    aiChatInput.value='';
+    aiChatMessages.replaceChildren();
+    appendAiMessage('assistant',aiCopy('ai_chat_welcome'));
+    aiChatQuick.hidden=false;
+  }
   async function sendAiMessage(rawText){
     const text=String(rawText||'').trim();
     if(!text||aiChatBusy)return;
@@ -705,11 +724,14 @@ if(aiChatRoot){
     aiChatInput.disabled=true;
     aiChatSend.disabled=true;
     const thinking=appendAiMessage('assistant',aiCopy('ai_chat_thinking'),'thinking');
+    const controller=new AbortController();
+    aiChatAbortController=controller;
     try{
       const response=await fetch('/api/assistant',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         credentials:'same-origin',
+        signal:controller.signal,
         body:JSON.stringify({language:document.documentElement.lang,messages:aiChatHistory})
       });
       const result=await response.json().catch(()=>({}));
@@ -724,16 +746,20 @@ if(aiChatRoot){
       appendAiMessage('assistant',reply);
       aiChatHistory.push({role:'assistant',content:reply});
       aiChatHistory=aiChatHistory.slice(-8);
-    }catch(_error){
+    }catch(error){
       if(thinking.isConnected)thinking.remove();
-      appendAiMessage('assistant',aiCopy('ai_chat_error'));
+      if(error.name!=='AbortError')appendAiMessage('assistant',aiCopy('ai_chat_error'));
     }finally{
-      aiChatBusy=false;
-      aiChatInput.disabled=false;
-      aiChatSend.disabled=false;
-      aiChatInput.focus();
+      if(aiChatAbortController===controller){
+        aiChatAbortController=null;
+        aiChatBusy=false;
+        aiChatInput.disabled=false;
+        aiChatSend.disabled=false;
+        aiChatInput.focus();
+      }
     }
   }
+  document.addEventListener('ctr:language-changed',resetAiChatForLanguageChange);
   aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat());
   aiChatClose.addEventListener('click',closeAiChat);
   aiChatQuick.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>sendAiMessage(button.textContent)));

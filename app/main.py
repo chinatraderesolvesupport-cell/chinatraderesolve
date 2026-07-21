@@ -53,7 +53,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="3.0.0")
+app = FastAPI(title="ChinaTradeResolve Free Access", version="3.1.0")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,

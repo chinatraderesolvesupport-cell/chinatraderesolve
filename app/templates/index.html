@@ -44,9 +44,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;font-weight:850;border:1px solid #475569;cursor:pointer;transition:.18s ease;background:transparent;color:var(--text)}
 .btn.primary{background:var(--teal);color:#042f2e;border-color:var(--teal)}
 .btn:hover{transform:translateY(-1px)}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
 .lang{background:#0b1220;color:#e5e7eb;border:1px solid #475569;border-radius:9px;padding:10px}
 .menu-btn{display:none;background:transparent;color:#fff;border:1px solid #475569;border-radius:9px;padding:9px 11px;cursor:pointer}
-.hero{padding:88px 0 70px;background:radial-gradient(circle at 84% 22%,rgba(20,184,166,.20),transparent 34%),linear-gradient(180deg,#0f172a,#111c31)}
+.hero{padding:76px 0 58px;background:radial-gradient(circle at 84% 22%,rgba(20,184,166,.20),transparent 34%),linear-gradient(180deg,#0f172a,#111c31)}
 .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:50px;align-items:center}
 .eyebrow{color:var(--teal);font-weight:900;text-transform:uppercase;letter-spacing:.12em;font-size:13px}
 h1{font-size:clamp(44px,6vw,72px);line-height:1.03;margin:14px 0 22px;letter-spacing:-.035em}
@@ -62,7 +63,7 @@ h3{line-height:1.25}
 .hero-card{box-shadow:0 30px 80px rgba(0,0,0,.38)}
 .row{padding:14px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
 .label{font-size:12px;color:var(--muted2)}.value{font-weight:800}.status{color:#6ee7b7}
-section{padding:54px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
+section{padding:44px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
 .grid{display:grid;gap:20px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
 .light .card{background:#fff;border-color:#e2e8f0;color:var(--ink);box-shadow:0 8px 26px rgba(15,23,42,.05)}.light .intro{color:#475569}
 .card h3{margin:0 0 9px}.card p{color:#cbd5e1}.light .card p{color:#475569}
@@ -157,8 +158,11 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-send:disabled,.ai-chat-form textarea:disabled{opacity:.55;cursor:not-allowed}
 .ai-chat-privacy{padding:0 13px 11px;background:#fff;color:#64748b;font-size:10px;line-height:1.4}
 @media(max-width:700px){.ai-chat-launcher{right:4%;bottom:96px;max-width:92%}.ai-chat-launcher span:last-child{max-width:210px}.ai-chat-panel{right:4%;bottom:151px;width:92%;max-height:calc(100vh - 175px)}}
+.ai-chat-launcher.is-compact{width:52px;height:52px;padding:0;justify-content:center}
+.ai-chat-launcher.is-compact .launcher-label{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.ai-chat-launcher.is-compact .spark{width:30px;height:30px}
 @media(max-width:980px){.links{display:none}.menu-btn{display:block}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active{grid-template-columns:1fr}.full{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:14px;z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:58px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}}
+@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active{grid-template-columns:1fr}.full{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:14px;z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:4%;bottom:20px;max-width:52px}}
 
 .anchor-alias{display:block;position:relative;top:-130px;visibility:hidden}
 .service-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:24px;align-items:start;margin-top:26px}
@@ -171,10 +175,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
 .consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
+#faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
 #confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
 .private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
 @media(max-width:900px){.service-layout{grid-template-columns:1fr}}
 @media(max-width:560px){.private-link-row{grid-template-columns:1fr}.private-link-row .btn{width:100%}}
+@media(max-width:700px){ #faq .wrap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 </style>
@@ -204,7 +210,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
 </div>
 <div class="actions">
-<select aria-label="Язык" class="lang" id="langSelect">
+<select aria-label="Язык" class="lang" data-i18n-aria-label="language_label" id="langSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
 <a class="btn primary" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
@@ -213,7 +219,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </nav>
 <div class="mobile-panel" id="mobilePanel">
 <span class="mobile-lang-label" data-i18n="language_label">Язык</span>
-<select aria-label="Язык" class="lang" id="mobileLangSelect">
+<select aria-label="Язык" class="lang" data-i18n-aria-label="language_label" id="mobileLangSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
 <a data-i18n="nav_services" href="#situations">Подходит ли вам</a>
@@ -256,7 +262,6 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="wrap">
 <div class="eyebrow" data-i18n="choose_situation">Выберите ситуацию</div>
 <h2 data-i18n="what_happened">Что произошло?</h2>
-<p class="intro" data-i18n="choose_text">Выберите вариант, который лучше всего соответствует вашему делу.</p>
 <div class="grid g4">
 <div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">Спор уже открыт</h3><p data-i18n="s1_text">Поставщик отказывается решать проблему или площадка отклонила претензию.</p></div>
 <div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">Товар не доставлен</h3><p data-i18n="s2_text">Отгрузка задержана, отменена или поставщик перестал отвечать.</p></div>
@@ -380,7 +385,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 {% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="cf-turnstile-response"></div></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
-<div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button class="btn primary" data-i18n="submit_review" type="submit">Отправить бесплатную заявку</button></div>
+<div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">Отправить бесплатную заявку</button></div>
 </div>
 </form>
 <div id="confirmation" style="display:none" tabindex="-1">
@@ -451,13 +456,13 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
 
 <div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
-<button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
+<button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
 <section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">Не вставляйте конфиденциальные имена, номера заказов, пароли, приватные ключи или полные документы. Помощник даёт общую информацию, а не юридическую консультацию.</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
 <div class="ai-chat-quick" id="aiChatQuick"><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
-<form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" id="aiChatSend" type="submit">Отправить</button></form>
+<form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" id="aiChatSend" type="submit">Отправить</button></form>
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе ChinaTradeResolve. Последние сообщения передаются ИИ‑провайдеру только для ответа в этой беседе.</div>
 </section>
 </div>
@@ -466,10 +471,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <script>
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
+const aiLauncherButton=document.getElementById('aiChatLauncher');
 let formInView=false;
 function updateMobileCta(){
   const menuOpen=mobilePanel.classList.contains('open');
   mobileCta.classList.toggle('is-hidden',menuOpen||formInView);
+  if(aiLauncherButton)aiLauncherButton.classList.toggle('is-compact',formInView);
 }
 function closeMobileMenu(){
   mobilePanel.classList.remove('open');
@@ -496,8 +503,19 @@ if('IntersectionObserver' in window){
 
 const descriptionField=document.getElementById('description');
 const descriptionCount=document.getElementById('descriptionCount');
-function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`}
+const formSubmitButton=document.getElementById('submitBtn');
+const requiredConsentInputs=[...caseFormElement.querySelectorAll('input[name="free_access_terms"],input[name="sharing_authority"],input[name="no_guarantee"]')];
+function applicationReady(){
+  return descriptionField.value.trim().length>=50&&requiredConsentInputs.every(input=>input.checked);
+}
+function updateSubmitAvailability(){
+  const ready=applicationReady();
+  formSubmitButton.disabled=!ready;
+  formSubmitButton.setAttribute('aria-disabled',ready?'false':'true');
+}
+function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`;updateSubmitAvailability()}
 descriptionField.addEventListener('input',updateDescriptionCount);
+caseFormElement.addEventListener('change',updateSubmitAvailability);
 updateDescriptionCount();
 
 const privateAccessCopy={
@@ -528,7 +546,7 @@ nextButton.addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
   const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
   if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
-  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');window.location.hash='submit'}
+  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.location.hash='submit'}
 });
 stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
 document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active')});
@@ -547,6 +565,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   }
   const submitButton=form.querySelector('button[type="submit"]');
   submitButton.disabled=true;
+  submitButton.setAttribute('aria-disabled','true');
   statusBox.className='submit-status loading-state';
   statusBox.textContent=(languageUi[document.documentElement.lang]||languageUi.en).submitting;
   const data=new FormData(form);
@@ -605,7 +624,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
     statusBox.textContent=error.name==='AbortError'?ui.timeout:(error.message||ui.unable);
-    submitButton.disabled=false;
+    updateSubmitAvailability();
   }finally{
     window.clearTimeout(timeoutId);
   }

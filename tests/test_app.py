@@ -697,6 +697,8 @@ def test_v33_home_structure_and_translation_completeness():
     assert 'id="contact"' not in home.text
     assert "descriptionCount" in home.text
     assert 'maxlength="8000"' in home.text
+    assert 'data-i18n-aria-label="language_label"' in home.text
+    assert 'data-i18n-aria-label="ai_chat_message_label"' in home.text
 
     base = Path(__file__).resolve().parents[1]
     translations = json.loads((base / "app/static/translations-v2.json").read_text(encoding="utf-8"))
@@ -1063,9 +1065,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.3"
+    assert health.json()["version"] == "3.7.4"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.3"
+    assert health.headers["x-app-version"] == "3.7.4"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -3467,6 +3469,17 @@ def test_targeted_landing_copy_is_shorter_precise_and_transparent():
     assert 'id="submitSummaryTitle"' in response.text
     assert "Документы на этом шаге не передаются" in response.text
     assert "в течение 2 рабочих дней" in response.text
+    assert 'data-i18n="choose_text"' not in response.text
+    assert '#faq .wrap{display:grid;grid-template-columns:1fr 1fr' in response.text
+
+    assert 'id="submitBtn" type="submit"' in response.text
+    assert 'aria-disabled="true"' in response.text
+    assert 'function applicationReady()' in response.text
+    assert "descriptionField.value.trim().length>=50" in response.text
+    assert "requiredConsentInputs.every(input=>input.checked)" in response.text
+
+    assert "aiLauncherButton.classList.toggle('is-compact',formInView)" in response.text
+    assert '.ai-chat-launcher.is-compact{width:52px;height:52px' in response.text
 
     sample = client.get("/static/sample_case_assessment.html")
     assert sample.status_code == 200

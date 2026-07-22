@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.3
+# ChinaTradeResolve Document AI v3.7.4
 
-Version 3.7.3 serialises PostgreSQL schema initialization with a transaction-scoped advisory lock, preventing startup DDL deadlocks during overlapping zero-downtime deployments. The v3.7.2 database readiness checks and CI pipeline remain in place.
+Version 3.7.4 improves the public application experience: the final submit button remains disabled until the description and mandatory consents are complete, the AI launcher no longer covers form controls, accessibility labels follow the selected language, and the landing page is more compact. The v3.7.3 PostgreSQL startup-lock protection remains in place.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -288,7 +288,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.3
+cd ChinaTradeResolve_Document_AI_v3.7.4
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

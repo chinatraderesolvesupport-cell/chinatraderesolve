@@ -1003,9 +1003,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.5.8"
+    assert health.json()["version"] == "3.5.9"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.5.8"
+    assert health.headers["x-app-version"] == "3.5.9"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2555,3 +2555,143 @@ def test_document_processing_concurrency_is_bounded(monkeypatch):
     assert len(prepared) == 6
     assert maximum_active <= documents.MAX_CONCURRENT_DOCUMENT_PROCESSORS
     assert maximum_active >= 1
+
+
+def test_gpt5_document_analysis_uses_low_reasoning_and_sufficient_budget(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 50, "summary": "Summary", "document_inventory": [],
+        "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
+        "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    captured = {}
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def raise_for_status(self): return None
+        def json(self):
+            return {"id": "resp-ok", "status": "completed", "output": [{"content": [{"type": "output_text", "text": json.dumps(expected)}]}]}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        async def post(self, url, headers, json):
+            captured["body"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True, openai_api_key="test-key",
+        openai_document_model="gpt-5-mini", document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=3000,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    case = valid_payload(); case["case_reference"] = "CTR-GPT5"
+    result = asyncio.run(module.analyse_case_documents(case, [{
+        "original_name": "chat.png", "content_type": "image/png", "content_blob": _make_png_bytes(),
+    }]))
+    assert result["readiness_score"] == 50
+    assert captured["body"]["reasoning"] == {"effort": "low"}
+    assert captured["body"]["text"]["verbosity"] == "low"
+    assert captured["body"]["max_output_tokens"] >= 6000
+
+
+def test_document_analysis_retries_incomplete_or_truncated_structured_output(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 61, "summary": "Summary", "document_inventory": [],
+        "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
+        "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    bodies = []
+    calls = {"n": 0}
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def __init__(self, payload): self.payload = payload
+        def raise_for_status(self): return None
+        def json(self): return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        async def post(self, url, headers, json):
+            bodies.append(json)
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return FakeResponse({
+                    "id": "resp-truncated", "status": "incomplete",
+                    "incomplete_details": {"reason": "max_output_tokens"},
+                    "output": [{"content": [{"type": "output_text", "text": '{"readiness_score": 61'}]}],
+                })
+            return FakeResponse({
+                "id": "resp-complete", "status": "completed",
+                "output": [{"content": [{"type": "output_text", "text": json_module.dumps(expected)}]}],
+            })
+
+    # Avoid shadowing the imported json module with the FakeClient argument.
+    json_module = json
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True, openai_api_key="test-key",
+        openai_document_model="gpt-5-mini", document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=3000,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    case = valid_payload(); case["case_reference"] = "CTR-INCOMPLETE"
+    result = asyncio.run(module.analyse_case_documents(case, [{
+        "original_name": "chat.png", "content_type": "image/png", "content_blob": _make_png_bytes(),
+    }]))
+    assert result["readiness_score"] == 61
+    assert calls["n"] == 2
+    assert bodies[1]["max_output_tokens"] > bodies[0]["max_output_tokens"]
+
+
+def test_document_analysis_reports_content_filter_and_refusal(monkeypatch):
+    import asyncio
+    from types import SimpleNamespace
+    import pytest
+    import app.document_analysis as module
+
+    payloads = [
+        {"id": "resp-filter", "status": "incomplete", "incomplete_details": {"reason": "content_filter"}, "output": []},
+        {"id": "resp-refusal", "status": "completed", "output": [{"content": [{"type": "refusal", "refusal": "Cannot comply"}]}]},
+    ]
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def __init__(self, payload): self.payload = payload
+        def raise_for_status(self): return None
+        def json(self): return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        async def post(self, *args, **kwargs): return FakeResponse(payloads.pop(0))
+
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True, openai_api_key="test-key",
+        openai_document_model="gpt-5-mini", document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=6000,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    case = valid_payload(); case["case_reference"] = "CTR-REFUSAL"
+    docs = [{"original_name": "chat.png", "content_type": "image/png", "content_blob": _make_png_bytes()}]
+    with pytest.raises(module.DocumentAnalysisProviderError, match="content filter"):
+        asyncio.run(module.analyse_case_documents(case, docs))
+    with pytest.raises(module.DocumentAnalysisProviderError, match="declined"):
+        asyncio.run(module.analyse_case_documents(case, docs))

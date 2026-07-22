@@ -129,7 +129,7 @@ class Settings:
     openai_assistant_model: str | None = os.getenv("OPENAI_ASSISTANT_MODEL") or os.getenv("OPENAI_MODEL")
     enable_document_analysis: bool = _env_bool("ENABLE_DOCUMENT_ANALYSIS")
     openai_document_model: str | None = os.getenv("OPENAI_DOCUMENT_MODEL") or os.getenv("OPENAI_MODEL")
-    document_analysis_max_output_tokens: int = _env_int("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", 3000, minimum=500, maximum=6000)
+    document_analysis_max_output_tokens: int = _env_int("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", 6000, minimum=1000, maximum=12000)
     document_analysis_timeout_seconds: float = _env_float("DOCUMENT_ANALYSIS_TIMEOUT_SECONDS", 90, minimum=10, maximum=300)
     openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
     ai_assistant_max_output_tokens: int = _env_int("AI_ASSISTANT_MAX_OUTPUT_TOKENS", 500, minimum=100, maximum=5000)

@@ -21,6 +21,76 @@ class DocumentAnalysisProviderError(RuntimeError):
     pass
 
 
+class _RetryableStructuredResponseError(RuntimeError):
+    """A 200 response that should be regenerated once with a larger budget."""
+
+
+def _is_reasoning_model(model: str | None) -> bool:
+    value = (model or "").strip().lower()
+    return value.startswith(("gpt-5", "o1", "o3", "o4"))
+
+
+def _is_gpt5_model(model: str | None) -> bool:
+    return (model or "").strip().lower().startswith("gpt-5")
+
+
+def _response_reference(data: dict[str, Any]) -> str:
+    response_id = str(data.get("id") or "").strip()
+    return f" (response {response_id[:120]})" if response_id else ""
+
+
+def _extract_refusal(data: dict[str, Any]) -> str | None:
+    for item in data.get("output", []):
+        if not isinstance(item, dict):
+            continue
+        for content in item.get("content", []):
+            if not isinstance(content, dict) or content.get("type") != "refusal":
+                continue
+            refusal = str(content.get("refusal") or "").strip()
+            if refusal:
+                return refusal
+    return None
+
+
+def _parse_structured_response(data: dict[str, Any]) -> dict[str, Any]:
+    status = str(data.get("status") or "completed").strip().lower()
+    reference = _response_reference(data)
+    if status == "incomplete":
+        details = data.get("incomplete_details") or {}
+        reason = str(details.get("reason") or "unknown").strip().lower()
+        if reason in {"max_output_tokens", "max_tokens"}:
+            raise _RetryableStructuredResponseError(
+                "OpenAI document analysis reached the output-token limit" + reference
+            )
+        if reason in {"content_filter", "content_filtered"}:
+            raise DocumentAnalysisProviderError(
+                "OpenAI document analysis was stopped by a content filter" + reference
+            )
+        raise DocumentAnalysisProviderError(
+            f"OpenAI document analysis was incomplete ({reason})" + reference
+        )
+    if status == "failed":
+        error = data.get("error") or {}
+        code = str(error.get("code") or "provider_error").strip()
+        raise DocumentAnalysisProviderError(
+            f"OpenAI document analysis failed ({code})" + reference
+        )
+    refusal = _extract_refusal(data)
+    if refusal:
+        raise DocumentAnalysisProviderError(
+            "OpenAI declined to analyse the supplied document content" + reference
+        )
+    try:
+        return json.loads(_extract_output_text(data))
+    except json.JSONDecodeError as exc:
+        # A truncated Structured Output can still contain a partial output_text.
+        # Regenerate it once with a larger token budget rather than reporting a
+        # vague JSON error immediately.
+        raise _RetryableStructuredResponseError(
+            "OpenAI returned truncated or malformed structured output" + reference
+        ) from exc
+
+
 DOCUMENT_ANALYSIS_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -160,51 +230,85 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                 "file_data": f"data:{document['content_type']};base64,{encoded}",
             })
 
+    # max_output_tokens includes both visible JSON and reasoning tokens. GPT-5
+    # models default to medium reasoning, so the previous 3000-token budget could
+    # be exhausted before a complete JSON object was emitted.
     output_token_budget = min(
-        6000,
-        max(2400, settings.document_analysis_max_output_tokens)
-        + max(0, len(documents) - 5) * 200,
+        12000,
+        max(6000, settings.document_analysis_max_output_tokens)
+        + max(0, len(documents) - 5) * 300,
     )
 
-    body = {
+    text_config: dict[str, Any] = {
+        "format": {
+            "type": "json_schema",
+            "name": "china_trade_resolve_document_analysis",
+            "description": "Structured evidence organisation for supplier-dispute documents",
+            "strict": True,
+            "schema": DOCUMENT_ANALYSIS_SCHEMA,
+        }
+    }
+    if _is_gpt5_model(settings.openai_document_model):
+        text_config["verbosity"] = "low"
+
+    body: dict[str, Any] = {
         "model": settings.openai_document_model,
         "store": False,
         "input": [
             {"role": "developer", "content": [{"type": "input_text", "text": _developer_prompt(case.get("preferred_language", "English"))}]},
             {"role": "user", "content": content},
         ],
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "china_trade_resolve_document_analysis",
-                "description": "Structured evidence organisation for supplier-dispute documents",
-                "strict": True,
-                "schema": DOCUMENT_ANALYSIS_SCHEMA,
-            }
-        },
+        "text": text_config,
         "max_output_tokens": output_token_budget,
     }
+    if _is_reasoning_model(settings.openai_document_model):
+        body["reasoning"] = {"effort": "low"}
+
     headers = {"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"}
     try:
         async with httpx.AsyncClient(timeout=settings.document_analysis_timeout_seconds) as client:
-            response = None
-            for attempt in range(3):
-                response = await client.post(
-                    "https://api.openai.com/v1/responses",
-                    headers=headers,
-                    json=body,
-                )
-                if response.status_code not in RETRYABLE_STATUS_CODES or attempt == 2:
-                    break
-                retry_after = response.headers.get("retry-after", "").strip()
+            structured_error: _RetryableStructuredResponseError | None = None
+            parsed: dict[str, Any] | None = None
+            for generation_attempt in range(2):
+                request_body = dict(body)
+                if generation_attempt:
+                    request_body["max_output_tokens"] = min(
+                        12000, max(8000, int(body["max_output_tokens"]) * 2)
+                    )
+                response = None
+                for attempt in range(3):
+                    response = await client.post(
+                        "https://api.openai.com/v1/responses",
+                        headers=headers,
+                        json=request_body,
+                    )
+                    if response.status_code not in RETRYABLE_STATUS_CODES or attempt == 2:
+                        break
+                    retry_after = response.headers.get("retry-after", "").strip()
+                    try:
+                        delay = min(8.0, max(0.5, float(retry_after))) if retry_after else float(2 ** attempt)
+                    except ValueError:
+                        delay = float(2 ** attempt)
+                    await asyncio.sleep(delay)
+                assert response is not None
+                response.raise_for_status()
+                response_data = response.json()
+                if not isinstance(response_data, dict):
+                    raise DocumentAnalysisProviderError(
+                        "OpenAI returned a non-object document-analysis response"
+                    )
                 try:
-                    delay = min(8.0, max(0.5, float(retry_after))) if retry_after else float(2 ** attempt)
-                except ValueError:
-                    delay = float(2 ** attempt)
-                await asyncio.sleep(delay)
-            assert response is not None
-            response.raise_for_status()
-            parsed = json.loads(_extract_output_text(response.json()))
+                    parsed = _parse_structured_response(response_data)
+                    break
+                except _RetryableStructuredResponseError as exc:
+                    structured_error = exc
+                    if generation_attempt == 0:
+                        continue
+                    raise DocumentAnalysisProviderError(str(exc)) from exc
+            if parsed is None:
+                raise DocumentAnalysisProviderError(
+                    str(structured_error or "OpenAI returned no document-analysis result")
+                )
     except DocumentAnalysisProviderError:
         raise
     except httpx.TimeoutException as exc:

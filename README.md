@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.5.8
+# ChinaTradeResolve Document AI v3.5.9
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -38,7 +38,11 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 
 
 
-## Upload responsiveness and bounded image processing in v3.5.8
+## Structured-output reliability in v3.5.9
+
+Document analysis now checks the Responses API `status` before parsing JSON, distinguishes refusals and content filtering from truncation, uses low reasoning/verbosity for GPT-5 models, allocates at least 6000 output tokens, and retries a token-truncated structured response once with a larger budget. This prevents a partial JSON object from being reported only as an opaque “invalid response”.
+
+## Upload responsiveness and bounded image processing in v3.5.9
 
 - image/PDF validation and image re-encoding run outside the main ASGI event loop, so large screenshots do not pause unrelated requests;
 - document processing is globally limited to two concurrent CPU-heavy jobs per web process, preventing several 30-megapixel images from exhausting a small Render instance;
@@ -109,7 +113,7 @@ Enable it with:
 ENABLE_DOCUMENT_ANALYSIS=true
 OPENAI_API_KEY=...
 OPENAI_DOCUMENT_MODEL=<vision and PDF capable model>
-DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=3000
+DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=6000
 DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 ```
 
@@ -218,7 +222,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.5.8
+cd ChinaTradeResolve_Document_AI_v3.5.9
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

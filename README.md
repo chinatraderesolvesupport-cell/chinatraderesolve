@@ -1,4 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.1
+# ChinaTradeResolve Document AI v3.7.2
+
+Version 3.7.2 makes deployment readiness depend on a live database connection while keeping `/health` usable as a liveness endpoint. It also adds a GitHub Actions pipeline for dependency consistency, compilation, tests, and runtime dependency auditing.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -286,7 +288,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.1
+cd ChinaTradeResolve_Document_AI_v3.7.2
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

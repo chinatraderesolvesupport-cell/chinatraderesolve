@@ -39,6 +39,7 @@ from .config import admin_token_is_secure, app_secret_is_secure, settings
 from .db import (
     add_case_documents,
     claim_document_analysis,
+    connect,
     create_case,
     dashboard_counts,
     DailyAnalysisLimitError,
@@ -95,7 +96,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.1"
+APP_VERSION = "3.7.2"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -294,6 +295,24 @@ def privacy_configuration_is_complete() -> bool:
     )
 
 
+def database_is_available() -> bool:
+    """Return whether the configured database accepts a minimal query.
+
+    Readiness must include the application's persistent store. Configuration-only
+    checks can otherwise advertise an instance as ready during a database outage.
+    """
+    try:
+        conn = connect()
+        try:
+            conn.execute("SELECT 1").fetchone()
+        finally:
+            conn.close()
+        return True
+    except Exception:
+        logger.exception("Database readiness check failed")
+        return False
+
+
 def launch_readiness_checks() -> dict[str, bool]:
     """Expose non-secret pre-launch requirements in one auditable place."""
     return {
@@ -302,6 +321,7 @@ def launch_readiness_checks() -> dict[str, bool]:
         "https_public_url": settings.public_base_url.startswith("https://"),
         "email_delivery": email_delivery_is_configured(),
         "bot_protection": turnstile_is_enabled(),
+        "database_storage": database_is_available(),
     }
 
 
@@ -964,6 +984,7 @@ def home(request: Request) -> HTMLResponse:
 @app.get("/health")
 def health() -> dict[str, Any]:
     readiness = launch_readiness_checks()
+    database_available = readiness["database_storage"]
     return {
         "status": "ok",
         "version": APP_VERSION,
@@ -979,7 +1000,7 @@ def health() -> dict[str, Any]:
         "ai_assistant_enabled": assistant_is_enabled(),
         "document_analysis_enabled": document_analysis_is_enabled(),
         "document_analysis_daily_limit": settings.max_daily_document_analyses,
-        "document_analysis_used_today": get_daily_analysis_usage(),
+        "document_analysis_used_today": get_daily_analysis_usage() if database_available else None,
         "secure_configuration": admin_configuration_is_secure(),
         "public_url_https": settings.public_base_url.startswith("https://"),
         "email_delivery_configured": email_delivery_is_configured(),

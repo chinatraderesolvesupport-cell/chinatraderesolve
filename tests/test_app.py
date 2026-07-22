@@ -1063,9 +1063,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.1"
+    assert health.json()["version"] == "3.7.2"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.1"
+    assert health.headers["x-app-version"] == "3.7.2"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -3352,10 +3352,33 @@ def test_launch_readiness_endpoint_returns_200_when_all_checks_pass(monkeypatch)
         "https_public_url": True,
         "email_delivery": True,
         "bot_protection": True,
+        "database_storage": True,
     })
     response = client.get("/ready")
     assert response.status_code == 200
     assert response.json()["status"] == "ready"
+
+
+def test_launch_readiness_fails_closed_when_database_is_unavailable(monkeypatch):
+    import app.main as module
+
+    def unavailable():
+        raise OSError("database unavailable")
+
+    monkeypatch.setattr(module, "connect", unavailable)
+    response = client.get("/ready")
+    assert response.status_code == 503
+    assert response.json()["checks"]["database_storage"] is False
+
+
+def test_health_remains_live_when_database_is_unavailable(monkeypatch):
+    import app.main as module
+
+    monkeypatch.setattr(module, "database_is_available", lambda: False)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["readiness_checks"]["database_storage"] is False
+    assert response.json()["document_analysis_used_today"] is None
 
 
 def test_public_launch_mode_blocks_incomplete_site_without_leaking_config(monkeypatch):

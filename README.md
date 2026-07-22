@@ -1,4 +1,4 @@
-# ChinaTradeResolve AI Assistant v3.1
+# ChinaTradeResolve Audit Fix v3.2
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -18,7 +18,20 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - automated tests and Docker packaging.
 
 
-## Public AI assistant v3.1
+
+## Audit fixes in v3.2
+
+- removed internal launch notes and contradictory paid-service promises from the public page;
+- clarified the exact free-review scope and the two amount fields;
+- requests a short description first and up to five key files only after selection;
+- added visible desktop form validation, request timeout handling and safer error focus;
+- translated evidence labels, language options and legal navigation consistently;
+- replaced draft legal pages with dated multilingual versions;
+- disabled voluntary support and every QR route by default;
+- applies retention anonymisation at application startup;
+- preserves the multilingual AI assistant and existing case-management workflow.
+
+## Public AI assistant
 
 The main page now contains a multilingual AI information assistant for English, French, German, Spanish, Russian and Serbian. The widget remains hidden until the server is configured with an API key and model.
 
@@ -41,7 +54,7 @@ Safety and privacy controls:
 
 The assistant cannot read case records, status links, email, uploaded documents or the admin database. Case-specific automation is intentionally left for a later controlled phase.
 
-Version 3.1 also resets the active chat whenever the visitor changes the site language, aborts any in-flight request from the previous language, and removes invalid Unicode/noncharacter artefacts from provider output before displaying it.
+The assistant also resets the active chat whenever the visitor changes the site language, aborts any in-flight request from the previous language, and removes invalid Unicode/noncharacter artefacts from provider output before displaying it.
 
 ## Multilingual foundation
 
@@ -54,7 +67,7 @@ Version 3.1 also resets the active chat whenever the visitor changes the site la
 - keeps the v1.8 form-error fix and never renders validation objects as `[object Object]`;
 - does not include Telegram or WhatsApp integrations.
 
-The public staging pages retain `noindex` until the operator is ready for search-engine indexing.
+The main public page is indexable. The optional support page remains `noindex,nofollow`, and it is unavailable unless voluntary support is deliberately enabled.
 
 ## Financial model
 
@@ -67,25 +80,20 @@ The public staging pages retain `noindex` until the operator is ready for search
 
 ## Voluntary support
 
-The multilingual support page includes four direct cryptocurrency options:
+Voluntary support is **disabled by default**. Keep it disabled until the service operator has confirmed the legal, tax, accounting and refund handling requirements for receiving contributions.
 
-- Bitcoin (`BTC`) on the Bitcoin network;
-- Ether (`ETH`) on Ethereum Mainnet;
-- Tether (`USDT`) on TRON (`TRC20`);
-- Solana (`SOL`) on the Solana network.
-
-The public wallet addresses are configured through environment variables and can be hidden by leaving a value empty:
+To enable it deliberately, set `ENABLE_VOLUNTARY_SUPPORT=true` and configure either a verified external support URL or one or more public wallet addresses:
 
 ```env
-BTC_ADDRESS=1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4
-ETH_ADDRESS=0x2F8a2773F8254d061ef286Bac8BF922344a2A494
-USDT_TRC20_ADDRESS=TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R
-SOL_ADDRESS=AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm
+ENABLE_VOLUNTARY_SUPPORT=false
+SUPPORT_URL=
+BTC_ADDRESS=
+ETH_ADDRESS=
+USDT_TRC20_ADDRESS=
+SOL_ADDRESS=
 ```
 
-The page provides local QR images, copy-address controls, exact network warnings and a reminder that support is optional and never affects case handling. Public wallet addresses are not secrets, but private keys, recovery phrases and passwords must never be placed in the project or environment file.
-
-An optional external support provider can still be added with `SUPPORT_URL`; it is hidden when the variable is empty. Before public launch, confirm the legal operator, provider terms, tax treatment, accounting process and final wording with a qualified adviser.
+When disabled, the support section, navigation link, public page and QR routes are unavailable. Public wallet addresses are not secrets, but private keys, recovery phrases and passwords must never be placed in the project or environment file.
 
 ## Feedback and testimonials
 
@@ -122,7 +130,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_AI_Assistant_v3.1
+cd ChinaTradeResolve_Audit_Fix_v3.2
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -133,7 +141,7 @@ Open:
 
 - public site: `http://127.0.0.1:8000`
 - admin: `http://127.0.0.1:8000/admin/login`
-- support page: `http://127.0.0.1:8000/support`
+- support page, only when explicitly enabled: `http://127.0.0.1:8000/support`
 - health: `http://127.0.0.1:8000/health`
 
 ## Enable the public AI assistant

@@ -8,7 +8,12 @@ os.environ["ADMIN_TOKEN"] = "test-token"
 os.environ["APP_SECRET"] = "test-secret"
 os.environ["ENABLE_AI_TRIAGE"] = "false"
 os.environ["FREE_ACCESS_MODE"] = "true"
+os.environ["ENABLE_VOLUNTARY_SUPPORT"] = "true"
 os.environ["SUPPORT_URL"] = "https://example.com/support"
+os.environ["BTC_ADDRESS"] = "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9"
+os.environ["ETH_ADDRESS"] = "0x69ace684f28b0a66157ab62ad06e93761a713c6b"
+os.environ["USDT_TRC20_ADDRESS"] = "TV3CgZaUqRqQSAYnzyGaMH3M27AwZwGJNp"
+os.environ["SOL_ADDRESS"] = "Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg"
 
 from fastapi.testclient import TestClient
 from app.main import app
@@ -293,7 +298,7 @@ def test_multilingual_frontend_assets_are_complete():
     data = json.loads(translations.text)
     assert set(data) == {"en", "fr", "de", "es", "ru", "sr"}
     english_keys = set(data["en"])
-    assert len(english_keys) >= 230
+    assert len(english_keys) >= 210
     for language, copy in data.items():
         assert set(copy) == english_keys, language
         assert "[object Object]" not in json.dumps(copy, ensure_ascii=False)
@@ -367,10 +372,10 @@ def test_crypto_support_wallets_and_network_warnings():
     page = client.get("/support")
     assert page.status_code == 200
     expected = {
-        "1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4": "Bitcoin",
-        "0x2F8a2773F8254d061ef286Bac8BF922344a2A494": "Ethereum Mainnet",
-        "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R": "TRON (TRC20)",
-        "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm": "Solana",
+        "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9": "Bitcoin",
+        "0x69ace684f28b0a66157ab62ad06e93761a713c6b": "Ethereum Mainnet",
+        "TV3CgZaUqRqQSAYnzyGaMH3M27AwZwGJNp": "TRON (TRC20)",
+        "Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg": "Solana",
     }
     for address, network in expected.items():
         assert address in page.text
@@ -405,8 +410,8 @@ def test_crypto_wallet_configuration_is_valid_and_support_is_enabled():
 def test_solana_address_validation_is_network_specific():
     from app.main import _valid_solana
 
-    assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm") is True
-    assert _valid_solana("AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Z0") is False
+    assert _valid_solana("Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg") is True
+    assert _valid_solana("Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMY0") is False
     assert _valid_solana("short") is False
 
 

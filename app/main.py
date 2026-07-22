@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from contextlib import asynccontextmanager
 import json
 import re
 import secrets
@@ -40,6 +41,7 @@ from .db import (
     list_cases,
     replace_triage,
     save_feedback,
+    soft_delete_expired,
     update_status,
 )
 from .notifications import (
@@ -53,7 +55,16 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="ChinaTradeResolve Free Access", version="3.1.0")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Apply the configured retention policy whenever the service starts."""
+    soft_delete_expired(settings.retention_days)
+    yield
+
+
+app = FastAPI(title="ChinaTradeResolve Free Access", version="3.2.0", lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -170,7 +181,7 @@ def crypto_wallets() -> list[dict[str, str]]:
 
 
 def support_is_available() -> bool:
-    return bool(safe_support_url() or crypto_wallets())
+    return bool(settings.enable_voluntary_support and (safe_support_url() or crypto_wallets()))
 
 
 @lru_cache(maxsize=16)
@@ -407,6 +418,8 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
 
 @app.get("/support", response_class=HTMLResponse)
 def support_page(request: Request) -> HTMLResponse:
+    if not support_is_available():
+        raise HTTPException(status_code=404, detail="Voluntary support is not currently available")
     return templates.TemplateResponse(
         request=request,
         name="support.html",
@@ -420,6 +433,8 @@ def support_page(request: Request) -> HTMLResponse:
 
 @app.get("/support/qr/{wallet_id}.png")
 def support_qr(wallet_id: str) -> Response:
+    if not settings.enable_voluntary_support:
+        raise HTTPException(status_code=404, detail="Support is disabled")
     wallet = next((item for item in crypto_wallets() if item["id"] == wallet_id), None)
     if not wallet:
         raise HTTPException(status_code=404, detail="Wallet not found")

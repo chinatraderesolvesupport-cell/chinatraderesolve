@@ -29,10 +29,12 @@
   {% endif %}
 </div>
 
+{% if support_available %}
 <div class="card support">
   <h2>{{ copy.support_heading }}</h2>
   <p>{{ copy.support_text }}</p>
-  {% if support_available %}<a class="btn primary" href="/support">{{ copy.support_button }}</a>{% else %}<p class="fine">{{ copy.not_ready }}</p>{% endif %}
+  <a class="btn primary" href="/support">{{ copy.support_button }}</a>
 </div>
+{% endif %}
 {% endif %}
 </div></body></html>

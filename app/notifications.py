@@ -123,21 +123,21 @@ def queue_completion_notification(case: dict) -> None:
     language = case.get("preferred_language") or "English"
     if language == "Russian":
         subject = f"ChinaTradeResolve: дело {case['case_reference']} завершено"
-        body = (f"Здравствуйте, {case['full_name']}!\n\nДело {case['case_reference']} отмечено как завершённое.\n\n" "На приватной странице статуса можно оставить необязательный отзыв. Добровольная поддержка проекта никогда не требуется и не влияет на приоритет или результат.\n\n" f"Статус и отзыв: {status_url}\n")
+        body = (f"Здравствуйте, {case['full_name']}!\n\nДело {case['case_reference']} отмечено как завершённое.\n\n" "На приватной странице статуса можно оставить необязательный отзыв.\n\n" f"Статус и отзыв: {status_url}\n")
     elif language == "French":
         subject = f"ChinaTradeResolve : dossier {case['case_reference']} clôturé"
-        body = (f"Bonjour {case['full_name']},\n\nLe dossier {case['case_reference']} a été marqué comme clôturé.\n\n" "Vous pouvez laisser un avis facultatif sur votre page de statut privée. Le soutien volontaire n’est jamais obligatoire et n’influence ni la priorité ni le résultat.\n\n" f"Statut et avis : {status_url}\n")
+        body = (f"Bonjour {case['full_name']},\n\nLe dossier {case['case_reference']} a été marqué comme clôturé.\n\n" "Vous pouvez laisser un avis facultatif sur votre page de statut privée.\n\n" f"Statut et avis : {status_url}\n")
     elif language == "German":
         subject = f"ChinaTradeResolve: Fall {case['case_reference']} abgeschlossen"
-        body = (f"Guten Tag {case['full_name']},\n\nDer Fall {case['case_reference']} wurde als abgeschlossen markiert.\n\n" "Auf Ihrer privaten Statusseite können Sie freiwillig eine Rückmeldung hinterlassen. Freiwillige Unterstützung ist nie erforderlich und beeinflusst weder Priorität noch Ergebnis.\n\n" f"Status und Rückmeldung: {status_url}\n")
+        body = (f"Guten Tag {case['full_name']},\n\nDer Fall {case['case_reference']} wurde als abgeschlossen markiert.\n\n" "Auf Ihrer privaten Statusseite können Sie freiwillig eine Rückmeldung hinterlassen.\n\n" f"Status und Rückmeldung: {status_url}\n")
     elif language == "Spanish":
         subject = f"ChinaTradeResolve: caso {case['case_reference']} cerrado"
-        body = (f"Hola {case['full_name']},\n\nEl caso {case['case_reference']} se ha marcado como cerrado.\n\n" "Puede dejar una opinión opcional en su página privada de estado. El apoyo voluntario nunca es obligatorio y no afecta la prioridad ni el resultado.\n\n" f"Estado y opinión: {status_url}\n")
+        body = (f"Hola {case['full_name']},\n\nEl caso {case['case_reference']} se ha marcado como cerrado.\n\n" "Puede dejar una opinión opcional en su página privada de estado.\n\n" f"Estado y opinión: {status_url}\n")
     elif language == "Serbian":
         subject = f"ChinaTradeResolve: slučaj {case['case_reference']} je završen"
-        body = (f"Poštovani/a {case['full_name']},\n\nSlučaj {case['case_reference']} je označen kao završen.\n\n" "Na privatnoj stranici statusa možete ostaviti opcione povratne informacije. Dobrovoljna podrška nikada nije obavezna i ne utiče na prioritet ili ishod.\n\n" f"Status i povratne informacije: {status_url}\n")
+        body = (f"Poštovani/a {case['full_name']},\n\nSlučaj {case['case_reference']} je označen kao završen.\n\n" "Na privatnoj stranici statusa možete ostaviti opcione povratne informacije.\n\n" f"Status i povratne informacije: {status_url}\n")
     else:
         subject = f"ChinaTradeResolve feedback request {case['case_reference']}"
-        body = (f"Hello {case['full_name']},\n\nYour ChinaTradeResolve case {case['case_reference']} has been marked complete.\n\n" "You can leave optional feedback on your private status page. Voluntary support is never required and never affects service priority or outcome.\n\n" f"Status and feedback page: {status_url}\n")
+        body = (f"Hello {case['full_name']},\n\nYour ChinaTradeResolve case {case['case_reference']} has been marked complete.\n\n" "You can leave optional feedback on your private status page.\n\n" f"Status and feedback page: {status_url}\n")
     queue_notification(case["id"], case["email"], subject, body)
 

@@ -6,7 +6,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>ChinaTradeResolve — бесплатная помощь в спорах с поставщиками</title>
 <meta content="Подайте бесплатную заявку по спору с китайским поставщиком. На этапе заявки не требуется оплата или загрузка большого архива документов." name="description"/>
-<meta content="noindex,nofollow" name="robots"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
 <meta content="same-origin" name="csrf-mode"/>
 <style>
 :root{
@@ -67,7 +67,7 @@ section{padding:74px 0;scroll-margin-top:130px}.light{background:var(--light);co
 .quote{font-size:26px;font-weight:900;padding:28px;border-left:4px solid var(--teal);background:rgba(20,184,166,.08);border-radius:0 14px 14px 0}
 .trust-box{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
 .operator{background:#fff;color:var(--ink);border-radius:18px;padding:24px;border:1px solid #e2e8f0}
-.operator strong{display:block;margin-bottom:6px}.placeholder{background:#fff7ed;color:#9a3412;border:1px dashed #fb923c;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
+.operator strong{display:block;margin-bottom:6px}.placeholder{background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
 .sample{display:flex;flex-direction:column;gap:10px}
 .sample-page{background:white;color:#111827;border-radius:12px;padding:18px;border:1px solid #e2e8f0}
 .sample-page .mini{font-size:12px;color:#64748b}
@@ -170,7 +170,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
-<a data-i18n="nav_support" href="#support">Поддержать</a>
+{% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
 </div>
 <div class="actions">
 <select aria-label="Язык" class="lang" id="langSelect">
@@ -190,7 +190,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
-<a data-i18n="nav_support" href="#support">Поддержать</a>
+{% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
 </div>
 </div>
 </header>
@@ -214,7 +214,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <aside class="hero-card">
 <div class="eyebrow" data-i18n="example_case">Пример обзора дела</div>
 <div class="row"><div class="label" data-i18n="issue">Проблема</div><div class="value" data-i18n="issue_value">Товар не соответствует спецификации</div></div>
-<div class="row"><div class="label" data-i18n="evidence">Доказательства</div><div class="value">Order · Invoice · Messages · Photos</div></div>
+<div class="row"><div class="label" data-i18n="evidence">Доказательства</div><div class="value" data-i18n="evidence_items">Заказ · Инвойс · Переписка · Фотографии</div></div>
 <div class="row"><div class="label" data-i18n="status">Статус</div><div class="value status" data-i18n="status_value">Идёт анализ доказательств</div></div>
 <div class="row"><div class="label" data-i18n="next_step">Следующий шаг</div><div class="value" data-i18n="next_step_value">Подготовка формальной претензии</div></div>
 </aside>
@@ -266,27 +266,14 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </section>
 <section class="light" id="services">
 <div class="wrap">
-<div class="eyebrow" data-i18n="services_eyebrow">Направление полного сервиса</div>
-<h2 data-i18n="services_title">Что должен предоставлять полноценный сервис</h2>
-<p class="intro" data-i18n="services_note">Участники пилота получают только ограниченный результат, описанный в разделе пилота.</p>
+<div class="eyebrow" data-i18n="services_eyebrow">Что входит в бесплатный анализ</div>
+<h2 data-i18n="services_title">Один понятный результат без завышенных обещаний</h2>
+<p class="intro" data-i18n="services_note">После отбора дела вы получаете ограниченный первичный анализ. Полное ведение спора и общение от вашего имени в бесплатный объём не входят.</p>
 <div class="grid g4">
-<div class="card"><h3 data-i18n="receive1">Понятная оценка дела</h3><p data-i18n="receive1_text">Основные факты, возможные нарушения, сильные и слабые стороны.</p></div>
-<div class="card"><h3 data-i18n="receive2">Организованный пакет доказательств</h3><p data-i18n="receive2_text">Хронология, индекс доказательств, приложения и краткое резюме.</p></div>
-<div class="card"><h3 data-i18n="receive3">Профессиональные документы</h3><p data-i18n="receive3_text">Претензия, апелляция, ответ поставщику или запрос возврата.</p></div>
-<div class="card"><h3 data-i18n="receive4">Практический план действий</h3><p data-i18n="receive4_text">Что, куда и как отправлять, чего не хватает и чего избегать.</p></div>
-</div>
-</div>
-</section>
-<section id="pricing">
-<div class="wrap">
-<div class="eyebrow" data-i18n="pricing_eyebrow">Услуги во время бесплатного доступа</div>
-<h2 data-i18n="pricing_title">Понятный объём. Понятный результат.</h2>
-<p class="intro" data-i18n="pricing_note">Во время текущего этапа плата за услуги не взимается. Доступность и объём помощи зависят от сложности дела и доступной мощности.</p>
-<div class="grid g4">
-<div class="card"><h3 data-i18n="p1">Анализ дела</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best1">Чтобы понять, подтверждают ли доказательства убедительную позицию.</span></div><ul><li data-i18n="p1a">Анализ доказательств</li><li data-i18n="p1b">Сильные и слабые стороны</li><li data-i18n="p1c">Недостающие доказательства</li><li data-i18n="p1d">План действий</li></ul></div>
-<div class="card highlight"><h3 data-i18n="p2">Подготовка претензии</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best2">Когда основные документы уже собраны, но претензии не хватает структуры.</span></div><ul><li data-i18n="p2a">Формальная претензия</li><li data-i18n="p2b">Подробная хронология</li><li data-i18n="p2c">Приложение с доказательствами</li><li data-i18n="p2d">Одна редакция</li></ul></div>
-<div class="card"><h3 data-i18n="p3">Полное сопровождение</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best3">Для продолжающегося спора, где нужны последовательные ответы и стратегия.</span></div><ul><li data-i18n="p3a">Анализ ответов</li><li data-i18n="p3b">Подготовка возражений</li><li data-i18n="p3c">Обновление доказательств</li><li data-i18n="p3d">Стратегическая поддержка</li></ul></div>
-<div class="card"><h3 data-i18n="p4">Проверка до оплаты</h3><div class="price" data-i18n="currently_free">Сейчас бесплатно</div><div class="best-for"><b data-i18n="best_for">Лучше всего подходит</b><span data-i18n="best4">Для проверки неясных условий и рисков до отправки денег.</span></div><ul><li data-i18n="p4a">Проверка инвойса</li><li data-i18n="p4b">Проверка спецификации</li><li data-i18n="p4c">Вопросы поставщику</li><li data-i18n="p4d">Чек-лист рисков</li></ul></div>
+<div class="card"><h3 data-i18n="receive1">Краткая оценка позиции</h3><p data-i18n="receive1_text">Основные факты, сильные и слабые стороны вашей позиции.</p></div>
+<div class="card"><h3 data-i18n="receive2">Недостающие доказательства</h3><p data-i18n="receive2_text">Что необходимо найти или уточнить до продолжения спора.</p></div>
+<div class="card"><h3 data-i18n="receive3">Рекомендуемые действия</h3><p data-i18n="receive3_text">Понятный чек-лист следующих шагов без гарантии результата.</p></div>
+<div class="card"><h3 data-i18n="receive4">Одно уточнение</h3><p data-i18n="receive4_text">Один короткий раунд вопросов после выдачи первичной оценки.</p></div>
 </div>
 </div>
 </section>
@@ -295,7 +282,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="eyebrow" data-i18n="process_eyebrow">Как это работает</div>
 <h2 data-i18n="process_title">От разрозненных файлов к ясной позиции</h2>
 <div class="steps">
-<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Отправьте базовую информацию и ключевые файлы.</p></div>
+<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Сначала отправьте краткое описание. До 5 ключевых файлов запрашиваются только после отбора.</p></div>
 <div class="step" data-n="2"><h3 data-i18n="step2">Проверка объёма</h3><p data-i18n="step2_text">Мы определяем подходящую услугу.</p></div>
 <div class="step" data-n="3"><h3 data-i18n="step3">Анализ доказательств</h3><p data-i18n="step3_text">Мы систематизируем факты и противоречия.</p></div>
 <div class="step" data-n="4"><h3 data-i18n="step4">Подготовка</h3><p data-i18n="step4_text">Готовим оценку или претензию.</p></div>
@@ -310,8 +297,8 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="trust-box">
 <div class="operator">
 <strong data-i18n="operator_title">Команда по разбору дел ChinaTradeResolve</strong>
-<p data-i18n="operator_text">Независимая коммерческая помощь в спорах. Работа ведётся из Сербии. Проект находится на этапе ограниченного бесплатного доступа; юридические и платёжные реквизиты будут опубликованы до подключения платных функций.</p>
-<div class="placeholder" data-i18n="operator_placeholder">Статус прототипа: данные юридического исполнителя ещё не утверждены. Через этот прототип не принимаются платежи и документы.</div>
+<p data-i18n="operator_text">Независимая коммерческая помощь в спорах, работающая из Сербии. Сервис сейчас бесплатный и не действует как юридическая фирма или платёжный посредник.</p>
+<div class="placeholder" data-i18n="operator_placeholder">Сервис не является юридической фирмой и не принимает оплату за анализ. Важные выводы проверяются человеком, а документы не отправляются третьим лицам без вашего одобрения.</div>
 </div>
 <div class="sample">
 <div class="sample-page">
@@ -333,7 +320,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <tr><td data-i18n="table_row4">Недостающий компонент</td><td data-i18n="table_row5">EX-02 инвойс + EX-11 фотографии</td><td data-i18n="table_row6">Нужно подтвердить финальную спецификацию</td></tr>
 </table>
 </div>
-<a class="btn dark" data-i18n="view_sample" href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
+<a class="btn dark" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
 </div>
 </div>
 </div>
@@ -375,9 +362,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">Электронная почта</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
 <div class="field"><label data-i18n="country" for="country">Страна</label><input autocomplete="country-name" id="country" name="country"/></div>
-<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">English</option><option data-i18n="opt_french" value="French">French</option><option data-i18n="opt_german" value="German">German</option><option data-i18n="opt_spanish" value="Spanish">Spanish</option><option data-i18n="opt_russian" value="Russian">Russian</option><option data-i18n="opt_serbian" value="Serbian">Serbian</option></select></div>
+<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_french" value="French">Французский</option><option data-i18n="opt_german" value="German">Немецкий</option><option data-i18n="opt_spanish" value="Spanish">Испанский</option><option data-i18n="opt_russian" value="Russian">Русский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
 <div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
-<div class="field"><label data-i18n="amount" for="amountDispute">Сумма спора</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
+<div class="field"><label data-i18n="amount" for="amountDispute">Сумма, которую вы хотите вернуть</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
 <div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option></select></div>
 <div class="field full"><div class="error" data-i18n="form_error" id="stepError">Укажите имя и корректный email.</div></div>
 <div class="field full form-actions"><span></span><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
@@ -385,7 +372,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="form-step" id="stepTwo">
 <div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
-<div class="field"><label data-i18n="order_value" for="orderValue">Общая стоимость заказа</label><input id="orderValue" name="order_value"/></div>
+<div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
 <div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea data-i18n-placeholder="description_ph" id="description" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="hint" data-i18n="description_hint">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div></div>
 <div class="field full filebox"><label data-i18n="upload">На этапе заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отбора мы запросим не более 5 ключевых файлов для первичного анализа.</div></div>
@@ -423,14 +410,14 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </div>
 </section>
-<section class="support-section" id="support">
+{% if support_enabled %}<section class="support-section" id="support">
 <div class="wrap">
 <div class="support-box">
 <div>
 <div class="eyebrow" data-i18n="support_eyebrow">Добровольная поддержка</div>
 <h2 data-i18n="support_title">Если ChinaTradeResolve помог вам, можно поддержать развитие проекта</h2>
 <p class="intro" data-i18n="support_text">Сервис сейчас бесплатный. Финансовая поддержка полностью добровольна и не является оплатой анализа дела.</p>
-<a class="btn primary" data-i18n="support_button" href="/support">Поддержать проект</a>
+<a class="btn primary" data-i18n="support_button" data-lang-link href="/support">Поддержать проект</a>
 </div>
 <div class="support-card">
 <h3 data-i18n="support_rules_title">Поддержка ничего не меняет в обслуживании</h3>
@@ -439,11 +426,11 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <li data-i18n="support_rule2">Она не покупает результат, возврат средств или благоприятную оценку.</li>
 <li data-i18n="support_rule3">Это только добровольный способ помочь покрыть расходы проекта.</li>
 </ul>
-<p class="support-note" data-i18n="support_notice">Платёжный сервис подключается одной настройкой сервера, без изменения кода.</p>
+<p class="support-note" data-i18n="support_notice">Добровольная поддержка обрабатывается отдельно и не влияет на рассмотрение дела.</p>
 </div>
 </div>
 </div>
-</section>
+</section>{% endif %}
 <section class="light" id="faq">
 <div class="wrap">
 <div class="eyebrow" data-i18n="faq_eyebrow">Часто задаваемые вопросы</div>
@@ -477,7 +464,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div><div class="small" data-i18n="footer_text">Коммерческая помощь покупателям, работающим с китайскими поставщиками.</div></div>
-<div class="legal-links small"><a data-i18n="legal_privacy" href="/static/privacy.html">Конфиденциальность</a><a data-i18n="legal_terms" href="/static/terms.html">Условия</a><a data-i18n="legal_payment" href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" href="/static/disclaimer.html">Ограничение ответственности</a><a data-i18n="nav_support" href="/support">Поддержать</a></div>
+<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/static/privacy.html">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
 <div class="small">© 2026 ChinaTradeResolve</div>
 </div>
 </footer>
@@ -531,6 +518,7 @@ const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog
 document.getElementById('nextBtn').addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
   const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
+  if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');window.location.hash='submit'}
 });
 document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active')});
@@ -540,7 +528,12 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const statusBox=document.getElementById('submitStatus');
   if(document.querySelector('.honeypot').value)return;
   if(!form.checkValidity()){
+    const ui=languageUi[document.documentElement.lang]||languageUi.en;
+    statusBox.className='submit-status error-state';
+    statusBox.textContent=ui.fallback;
     form.reportValidity();
+    const invalid=form.querySelector(':invalid');
+    if(invalid)invalid.focus();
     return;
   }
   const submitButton=form.querySelector('button[type="submit"]');
@@ -551,11 +544,14 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const payload={};
   data.forEach((value,key)=>{payload[key]=value});
   ['free_access_terms','sharing_authority','ai_consent','no_guarantee'].forEach(k=>payload[k]=data.has(k));
+  const controller=new AbortController();
+  const timeoutId=window.setTimeout(()=>controller.abort(),25000);
   try{
     const response=await fetch('/api/applications',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'same-origin',
+      signal:controller.signal,
       body:JSON.stringify(payload)
     });
     const result=await response.json().catch(()=>({}));
@@ -587,9 +583,12 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       link.style.display='inline-flex';
     }
   }catch(error){
+    const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
-    statusBox.textContent=error.message||(languageUi[document.documentElement.lang]||languageUi.en).unable;
+    statusBox.textContent=error.name==='AbortError'?ui.timeout:(error.message||ui.unable);
     submitButton.disabled=false;
+  }finally{
+    window.clearTimeout(timeoutId);
   }
 });
 
@@ -605,12 +604,12 @@ const pageMeta={
   sr:{title:'ChinaTradeResolve — besplatna pomoć u sporovima sa dobavljačima',description:'Pošaljite besplatnu prijavu za spor sa kineskim dobavljačem. U fazi prijave nisu potrebni plaćanje ni veliki fajlovi.'}
 };
 const languageUi={
-  en:{submitting:'Submitting and screening the application…',fallback:'Please check the form fields and try again.',prefix:'Check these fields: ',unable:'Unable to submit the application.',fields:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free-access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}},
-  fr:{submitting:'Envoi et analyse automatique de la demande…',fallback:'Vérifiez les champs du formulaire et réessayez.',prefix:'Vérifiez les champs suivants : ',unable:'Impossible d’envoyer la demande.',fields:{full_name:'Nom complet',email:'Adresse e-mail',description:'Brève description',free_access_terms:'Conditions de l’accès gratuit',sharing_authority:'Droit de partager les informations',no_guarantee:'Confirmation d’absence de garantie'}},
-  de:{submitting:'Der Antrag wird gesendet und automatisch geprüft…',fallback:'Prüfen Sie die Formularfelder und versuchen Sie es erneut.',prefix:'Prüfen Sie diese Felder: ',unable:'Der Antrag konnte nicht gesendet werden.',fields:{full_name:'Vollständiger Name',email:'E-Mail',description:'Kurze Beschreibung',free_access_terms:'Bedingungen des kostenlosen Zugangs',sharing_authority:'Berechtigung zur Weitergabe',no_guarantee:'Bestätigung ohne Garantie'}},
-  es:{submitting:'Enviando y revisando automáticamente la solicitud…',fallback:'Revise los campos del formulario e inténtelo de nuevo.',prefix:'Revise estos campos: ',unable:'No se pudo enviar la solicitud.',fields:{full_name:'Nombre completo',email:'Correo electrónico',description:'Breve descripción',free_access_terms:'Condiciones del acceso gratuito',sharing_authority:'Autorización para compartir información',no_guarantee:'Confirmación sin garantía'}},
-  ru:{submitting:'Заявка отправляется и проходит автоматическую проверку…',fallback:'Проверьте заполненные поля и попробуйте ещё раз.',prefix:'Проверьте поля: ',unable:'Не удалось отправить заявку.',fields:{full_name:'Имя и фамилия',email:'Электронная почта',description:'Краткое описание',free_access_terms:'Условия бесплатного доступа',sharing_authority:'Право передавать информацию',no_guarantee:'Подтверждение отсутствия гарантии'}},
-  sr:{submitting:'Prijava se šalje i automatski pregleda…',fallback:'Proverite popunjena polja i pokušajte ponovo.',prefix:'Proverite polja: ',unable:'Prijava nije mogla da se pošalje.',fields:{full_name:'Ime i prezime',email:'Email adresa',description:'Kratak opis',free_access_terms:'Uslovi besplatnog pristupa',sharing_authority:'Pravo na deljenje informacija',no_guarantee:'Potvrda bez garancije'}}
+  en:{submitting:'Submitting and screening the application…',timeout:'The server did not respond in time. Please try again.',fallback:'Please check the form fields and try again.',prefix:'Check these fields: ',unable:'Unable to submit the application.',fields:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free-access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}},
+  fr:{submitting:'Envoi et analyse automatique de la demande…',timeout:'Le serveur n’a pas répondu à temps. Veuillez réessayer.',fallback:'Vérifiez les champs du formulaire et réessayez.',prefix:'Vérifiez les champs suivants : ',unable:'Impossible d’envoyer la demande.',fields:{full_name:'Nom complet',email:'Adresse e-mail',description:'Brève description',free_access_terms:'Conditions de l’accès gratuit',sharing_authority:'Droit de partager les informations',no_guarantee:'Confirmation d’absence de garantie'}},
+  de:{submitting:'Der Antrag wird gesendet und automatisch geprüft…',timeout:'Der Server hat nicht rechtzeitig geantwortet. Bitte versuchen Sie es erneut.',fallback:'Prüfen Sie die Formularfelder und versuchen Sie es erneut.',prefix:'Prüfen Sie diese Felder: ',unable:'Der Antrag konnte nicht gesendet werden.',fields:{full_name:'Vollständiger Name',email:'E-Mail',description:'Kurze Beschreibung',free_access_terms:'Bedingungen des kostenlosen Zugangs',sharing_authority:'Berechtigung zur Weitergabe',no_guarantee:'Bestätigung ohne Garantie'}},
+  es:{submitting:'Enviando y revisando automáticamente la solicitud…',timeout:'El servidor no respondió a tiempo. Inténtelo de nuevo.',fallback:'Revise los campos del formulario e inténtelo de nuevo.',prefix:'Revise estos campos: ',unable:'No se pudo enviar la solicitud.',fields:{full_name:'Nombre completo',email:'Correo electrónico',description:'Breve descripción',free_access_terms:'Condiciones del acceso gratuito',sharing_authority:'Autorización para compartir información',no_guarantee:'Confirmación sin garantía'}},
+  ru:{submitting:'Заявка отправляется и проходит автоматическую проверку…',timeout:'Сервер не ответил вовремя. Попробуйте отправить заявку ещё раз.',fallback:'Проверьте заполненные поля и попробуйте ещё раз.',prefix:'Проверьте поля: ',unable:'Не удалось отправить заявку.',fields:{full_name:'Имя и фамилия',email:'Электронная почта',description:'Краткое описание',free_access_terms:'Условия бесплатного доступа',sharing_authority:'Право передавать информацию',no_guarantee:'Подтверждение отсутствия гарантии'}},
+  sr:{submitting:'Prijava se šalje i automatski pregleda…',timeout:'Server nije odgovorio na vreme. Pokušajte ponovo.',fallback:'Proverite popunjena polja i pokušajte ponovo.',prefix:'Proverite polja: ',unable:'Prijava nije mogla da se pošalje.',fields:{full_name:'Ime i prezime',email:'Email adresa',description:'Kratak opis',free_access_terms:'Uslovi besplatnog pristupa',sharing_authority:'Pravo na deljenje informacija',no_guarantee:'Potvrda bez garancije'}}
 };
 function normalizeLanguage(value){
   const code=String(value||'').toLowerCase().split('-')[0];
@@ -631,6 +630,9 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
   if(description)description.setAttribute('content',meta.description);
   const preferred=document.getElementById('preferred');
   if(preferred&&syncPreferred&&!preferred.dataset.userChanged)preferred.value=preferredLanguageValues[lang];
+  document.querySelectorAll('[data-lang-link]').forEach(link=>{
+    try{const url=new URL(link.getAttribute('href'),window.location.origin);url.searchParams.set('lang',lang);link.setAttribute('href',url.pathname+url.search+url.hash)}catch(_e){}
+  });
   try{localStorage.setItem('ctr_lang_v20',lang)}catch(_e){}
   if(updateUrl){
     try{

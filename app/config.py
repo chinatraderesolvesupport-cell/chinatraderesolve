@@ -34,12 +34,13 @@ class Settings:
     email_bridge_secret: str | None = os.getenv("EMAIL_BRIDGE_SECRET")
     email_bridge_timeout_seconds: float = float(os.getenv("EMAIL_BRIDGE_TIMEOUT_SECONDS", "20"))
     free_access_mode: bool = os.getenv("FREE_ACCESS_MODE", "true").lower() == "true"
+    enable_voluntary_support: bool = os.getenv("ENABLE_VOLUNTARY_SUPPORT", "false").lower() == "true"
     support_url: str | None = os.getenv("SUPPORT_URL")
     support_project_name: str = os.getenv("SUPPORT_PROJECT_NAME", "ChinaTradeResolve")
-    btc_address: str | None = os.getenv("BTC_ADDRESS", "1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4")
-    eth_address: str | None = os.getenv("ETH_ADDRESS", "0x2F8a2773F8254d061ef286Bac8BF922344a2A494")
-    usdt_trc20_address: str | None = os.getenv("USDT_TRC20_ADDRESS", "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R")
-    sol_address: str | None = os.getenv("SOL_ADDRESS", "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm")
+    btc_address: str | None = os.getenv("BTC_ADDRESS")
+    eth_address: str | None = os.getenv("ETH_ADDRESS")
+    usdt_trc20_address: str | None = os.getenv("USDT_TRC20_ADDRESS")
+    sol_address: str | None = os.getenv("SOL_ADDRESS")
 
 
 settings = Settings()

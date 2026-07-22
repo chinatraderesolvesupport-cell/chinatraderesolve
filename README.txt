@@ -1,6 +1,7 @@
-ChinaTradeResolve Document AI v3.4
+ChinaTradeResolve Document AI v3.4.5
 
-Ready-to-deploy six-language website package with secure document uploads, private case access, image metadata removal, PDF/image analysis, structured evidence reports, case management, email notifications and the optional AI assistant.
+Готовый пакет сайта с приватной загрузкой до 20 PDF/изображений, безопасным ИИ-анализом документов, админ-панелью и многоязычным интерфейсом.
 
-See README.md, README_RU.txt, DEPLOY_RU.md, DOCUMENT_AI_SETUP_RU.md and TEST_REPORT_V3_4_RU.txt.
-Never upload .env, API keys, passwords, seed phrases or private keys to GitHub.
+Основные инструкции: README.md, DEPLOY_RU.md и DOCUMENT_AI_SETUP_RU.md.
+Результат проверки: TEST_REPORT_V3_4_5_RU.txt.
+Никогда не загружайте в GitHub .env, API-ключи, пароли, seed-фразы или приватные ключи.

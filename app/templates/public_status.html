@@ -10,6 +10,7 @@
   <p class="fine">{{ document_copy.privacy }}</p>
   {% if documents_uploaded %}<p class="success">{{ document_copy.uploaded }}</p>{% endif %}
   {% if analysis_error %}<p class="error">{{ document_copy.analysis_error }}</p>{% endif %}
+  {% if analysis_started %}<p class="success">{{ document_copy.analysing }}</p>{% endif %}
   {% if analysis_not_configured %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
   {% if analysis_consent_required %}<p class="warning">{{ document_copy.analysis_consent_required }}</p>{% endif %}
 
@@ -38,7 +39,7 @@
   {% endif %}
 
   {% if documents %}
-    {% if document_analysis_enabled %}
+    {% if document_analysis_enabled and (not document_analysis or document_analysis.status == 'failed') %}
     <form id="documentAnalysisForm" method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents/analyse">
       {% if not case.ai_consent %}
       <p class="warning">{{ document_copy.analysis_consent_required }}</p>
@@ -105,13 +106,14 @@ if (uploadForm) {
     const input = document.getElementById('documentFiles');
     const files = [...(input?.files || [])];
     const existing = {{ documents|length }};
+    const existingBytes = {{ documents|sum(attribute="size_bytes") }};
     if (existing + files.length > {{ max_documents }}) {
       event.preventDefault();
       alert('Maximum {{ max_documents }} files.');
       return;
     }
     const total = files.reduce((sum, file) => sum + file.size, 0);
-    if (files.some(file => file.size > 8 * 1024 * 1024) || total > 60 * 1024 * 1024) {
+    if (files.some(file => file.size > 8 * 1024 * 1024) || existingBytes + total > 45 * 1024 * 1024) {
       event.preventDefault();
       alert('{{ document_copy.limit }}');
       return;
@@ -129,4 +131,8 @@ if (analysisForm) {
     document.getElementById('analysisLoading')?.classList.add('show');
   });
 }
-</script></body></html>
+</script>
+{% if document_analysis and document_analysis.status == 'running' %}
+<script>window.setTimeout(()=>window.location.reload(), 5000);</script>
+{% endif %}
+</body></html>

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import smtplib
+import threading
 from email.message import EmailMessage
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -52,6 +53,9 @@ def queue_case_notifications(case: dict) -> None:
         admin_body = (f"Новое дело: {case['case_reference']}\nСтатус: {_STATUS_LABELS['Russian'].get(case['status'], case['status'])}\nРиск: {_RISK_LABELS_RU.get(case['risk_level'], case['risk_level'])}\nПриоритет: {case['priority']}\n" f"Заявитель: {case['full_name']} <{case['email']}>\nПроблема: {_PROBLEM_LABELS_RU.get(case['main_problem'], case['main_problem'])}\n")
         queue_notification(case["id"], settings.admin_email, f"Новое дело ChinaTradeResolve: {case['case_reference']}", admin_body)
 
+_DELIVERY_LOCK = threading.Lock()
+
+
 
 def _deliver_via_bridge(item: dict) -> None:
     if not settings.email_bridge_url or not settings.email_bridge_secret:
@@ -97,25 +101,33 @@ def _deliver_via_smtp(item: dict) -> None:
 
 
 def deliver_pending() -> dict[str, int]:
-    pending = pending_notifications()
-    result = {"sent": 0, "failed": 0, "pending": 0}
-    bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
-    smtp_ready = bool(settings.smtp_host)
-    if not bridge_ready and not smtp_ready:
-        result["pending"] = len(pending)
+    # Multiple application requests may finish at nearly the same time.  Serialising
+    # delivery in this single-process deployment prevents the same outbox row from
+    # being sent twice before its status is updated.
+    if not _DELIVERY_LOCK.acquire(blocking=False):
+        return {"sent": 0, "failed": 0, "pending": len(pending_notifications())}
+    try:
+        pending = pending_notifications()
+        result = {"sent": 0, "failed": 0, "pending": 0}
+        bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
+        smtp_ready = bool(settings.smtp_host)
+        if not bridge_ready and not smtp_ready:
+            result["pending"] = len(pending)
+            return result
+        for item in pending:
+            try:
+                if bridge_ready:
+                    _deliver_via_bridge(item)
+                else:
+                    _deliver_via_smtp(item)
+                mark_notification(item["id"], "sent")
+                result["sent"] += 1
+            except Exception as exc:
+                mark_notification(item["id"], "failed", str(exc)[:500])
+                result["failed"] += 1
         return result
-    for item in pending:
-        try:
-            if bridge_ready:
-                _deliver_via_bridge(item)
-            else:
-                _deliver_via_smtp(item)
-            mark_notification(item["id"], "sent")
-            result["sent"] += 1
-        except Exception as exc:
-            mark_notification(item["id"], "failed", str(exc)[:500])
-            result["failed"] += 1
-    return result
+    finally:
+        _DELIVERY_LOCK.release()
 
 
 def queue_completion_notification(case: dict) -> None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 from typing import Any
@@ -7,6 +8,9 @@ from typing import Any
 import httpx
 
 from .config import settings
+
+MAX_ANALYSIS_BYTES = 45 * 1024 * 1024
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 class DocumentAnalysisConfigurationError(RuntimeError):
@@ -135,6 +139,12 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
             "text": "Case context supplied by the applicant:\n" + json.dumps(context, ensure_ascii=False),
         }
     ]
+    total_bytes = sum(len(document["content_blob"]) for document in documents)
+    if total_bytes > MAX_ANALYSIS_BYTES:
+        raise DocumentAnalysisProviderError(
+            "The selected documents exceed the 45 MB analysis limit"
+        )
+
     for document in documents:
         encoded = base64.b64encode(document["content_blob"]).decode("ascii")
         if document["content_type"].startswith("image/"):
@@ -147,8 +157,15 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
             content.append({
                 "type": "input_file",
                 "filename": document["original_name"],
-                "file_data": encoded,
+                "file_data": f"data:{document['content_type']};base64,{encoded}",
+                "detail": "auto",
             })
+
+    output_token_budget = min(
+        6000,
+        max(2400, settings.document_analysis_max_output_tokens)
+        + max(0, len(documents) - 5) * 200,
+    )
 
     body = {
         "model": settings.openai_document_model,
@@ -166,12 +183,27 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                 "schema": DOCUMENT_ANALYSIS_SCHEMA,
             }
         },
-        "max_output_tokens": settings.document_analysis_max_output_tokens,
+        "max_output_tokens": output_token_budget,
     }
     headers = {"Authorization": f"Bearer {settings.openai_api_key}", "Content-Type": "application/json"}
     try:
         async with httpx.AsyncClient(timeout=settings.document_analysis_timeout_seconds) as client:
-            response = await client.post("https://api.openai.com/v1/responses", headers=headers, json=body)
+            response = None
+            for attempt in range(3):
+                response = await client.post(
+                    "https://api.openai.com/v1/responses",
+                    headers=headers,
+                    json=body,
+                )
+                if response.status_code not in RETRYABLE_STATUS_CODES or attempt == 2:
+                    break
+                retry_after = response.headers.get("retry-after", "").strip()
+                try:
+                    delay = min(8.0, max(0.5, float(retry_after))) if retry_after else float(2 ** attempt)
+                except ValueError:
+                    delay = float(2 ** attempt)
+                await asyncio.sleep(delay)
+            assert response is not None
             response.raise_for_status()
             parsed = json.loads(_extract_output_text(response.json()))
     except DocumentAnalysisProviderError:

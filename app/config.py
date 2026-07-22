@@ -5,13 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+DEFAULT_ADMIN_TOKEN = "change-me-before-deployment"
+DEFAULT_APP_SECRET = "development-secret-change-me"
+
+
 @dataclass(frozen=True)
 class Settings:
     base_dir: Path = Path(__file__).resolve().parent.parent
     database_url: str | None = os.getenv("DATABASE_URL")
     database_path: Path = Path(os.getenv("DATABASE_PATH", str(Path(__file__).resolve().parent.parent / "data" / "ctr.db")))
-    admin_token: str = os.getenv("ADMIN_TOKEN", "change-me-before-deployment")
-    app_secret: str = os.getenv("APP_SECRET", "development-secret-change-me")
+    admin_token: str = os.getenv("ADMIN_TOKEN", DEFAULT_ADMIN_TOKEN)
+    app_secret: str = os.getenv("APP_SECRET", DEFAULT_APP_SECRET)
     public_base_url: str = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
     enable_ai_triage: bool = os.getenv("ENABLE_AI_TRIAGE", "false").lower() == "true"
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
@@ -20,7 +24,7 @@ class Settings:
     openai_assistant_model: str | None = os.getenv("OPENAI_ASSISTANT_MODEL") or os.getenv("OPENAI_MODEL")
     enable_document_analysis: bool = os.getenv("ENABLE_DOCUMENT_ANALYSIS", "false").lower() == "true"
     openai_document_model: str | None = os.getenv("OPENAI_DOCUMENT_MODEL") or os.getenv("OPENAI_MODEL")
-    document_analysis_max_output_tokens: int = int(os.getenv("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", "2200"))
+    document_analysis_max_output_tokens: int = int(os.getenv("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", "3000"))
     document_analysis_timeout_seconds: float = float(os.getenv("DOCUMENT_ANALYSIS_TIMEOUT_SECONDS", "90"))
     openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
     ai_assistant_max_output_tokens: int = int(os.getenv("AI_ASSISTANT_MAX_OUTPUT_TOKENS", "500"))

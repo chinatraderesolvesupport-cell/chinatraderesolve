@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.4.3
+# ChinaTradeResolve Document AI v3.4.5
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -35,9 +35,9 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - added a privacy FAQ explaining who may see case materials;
 - keeps voluntary support disabled by default and preserves the existing case-management and AI-assistant workflow.
 
-## Private document analysis in v3.4.3
+## Private document analysis in v3.4.5
 
-After an application is submitted, the private case page accepts up to twenty key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 60 MB total.
+After an application is submitted, the private case page accepts up to twenty key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 45 MB total.
 
 Security and privacy controls:
 
@@ -60,7 +60,7 @@ Enable it with:
 ENABLE_DOCUMENT_ANALYSIS=true
 OPENAI_API_KEY=...
 OPENAI_DOCUMENT_MODEL=<vision and PDF capable model>
-DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=2200
+DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=3000
 DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 ```
 
@@ -165,7 +165,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.4.3
+cd ChinaTradeResolve_Document_AI_v3.4.5
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

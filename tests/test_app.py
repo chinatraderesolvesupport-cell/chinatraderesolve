@@ -57,6 +57,7 @@ def test_health_and_home_free_access():
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
     assert health.json()["email_delivery_configured"] is False
+    assert health.json()["secure_configuration"] is True
 
 
 def test_submit_candidate_and_status_page():
@@ -795,6 +796,8 @@ def test_document_analysis_request_uses_multimodal_structured_output(monkeypatch
     captured = {}
 
     class FakeResponse:
+        status_code = 200
+        headers = {}
         def raise_for_status(self):
             return None
         def json(self):
@@ -834,6 +837,7 @@ def test_document_analysis_request_uses_multimodal_structured_output(monkeypatch
     assert image_part["type"] == "input_image"
     assert image_part["image_url"].startswith("data:image/png;base64,")
     base64.b64decode(image_part["image_url"].split(",", 1)[1])
+    assert captured["body"]["max_output_tokens"] >= 2400
 
 
 def test_desktop_autofill_cannot_silently_block_submission():
@@ -861,7 +865,7 @@ def test_desktop_autofill_cannot_silently_block_submission():
 def test_document_limit_is_twenty_files():
     from app.documents import MAX_DOCUMENTS_PER_CASE, MAX_TOTAL_BYTES
     assert MAX_DOCUMENTS_PER_CASE == 20
-    assert MAX_TOTAL_BYTES == 60 * 1024 * 1024
+    assert MAX_TOTAL_BYTES == 45 * 1024 * 1024
     created = client.post(
         "/api/applications",
         json=valid_payload(email="twenty-docs@example.com"),
@@ -870,7 +874,7 @@ def test_document_limit_is_twenty_files():
     page = client.get(created["status_url"])
     assert page.status_code == 200
     assert "0/20" in page.text
-    assert "60 MB" in page.text or "60 МБ" in page.text
+    assert "45 MB" in page.text or "45 МБ" in page.text
 
 
 
@@ -970,7 +974,7 @@ def test_document_analysis_failure_is_audited(monkeypatch):
     monkeypatch.setattr(main_module, "analyse_case_documents", failing_analysis)
     response = client.post(status_url + "/documents/analyse", follow_redirects=False)
     assert response.status_code == 303
-    assert "analysis_error=1" in response.headers["location"]
+    assert "analysis_started=1" in response.headers["location"]
     reference, token = status_url.rstrip("/").split("/")[-2:]
     case = get_case_by_public(reference, token)
     events = get_audit(case["id"])
@@ -979,23 +983,23 @@ def test_document_analysis_failure_is_audited(monkeypatch):
     assert "req-test" in failed["details_json"]
 
 
-def test_public_document_limit_uses_sixty_megabytes_in_javascript():
+def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
     created = client.post(
         "/api/applications",
         json=valid_payload(email="client-limit@example.com"),
         headers={"x-forwarded-for": "198.51.100.233"},
     ).json()
     page = client.get(created["status_url"])
-    assert "total > 60 * 1024 * 1024" in page.text
+    assert "total > 45 * 1024 * 1024" in page.text
     assert "total > 25 * 1024 * 1024" not in page.text
 
 
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.4.3"
+    assert health.json()["version"] == "3.4.5"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.4.3"
+    assert health.headers["x-app-version"] == "3.4.5"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -1012,3 +1016,240 @@ def test_release_metadata_and_twenty_file_copy_are_consistent():
     assert privacy_ru.status_code == 200
     legal_script = client.get("/static/legal-i18n-v2.js")
     assert "до 20 ключевых PDF" in legal_script.text
+
+
+def test_pdf_document_analysis_uses_data_url_and_auto_detail(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 55, "summary": "Summary",
+        "document_inventory": [{"filename": "invoice.pdf", "document_type": "Invoice", "language": "English", "date_or_period": "2026", "key_content": "Invoice", "readability": "clear"}],
+        "timeline": [], "key_evidence": [], "contradictions": [],
+        "missing_evidence": [], "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    captured = {}
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def raise_for_status(self):
+            return None
+        def json(self):
+            return {"output_text": json.dumps(expected)}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return None
+        async def post(self, url, headers, json):
+            captured["body"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True, openai_api_key="test-key",
+        openai_document_model="test-model", document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=3000,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    case = valid_payload(); case["case_reference"] = "CTR-PDF"
+    pdf = b"%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF"
+    asyncio.run(module.analyse_case_documents(case, [{
+        "original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": pdf,
+    }]))
+    file_part = captured["body"]["input"][1]["content"][1]
+    assert file_part["type"] == "input_file"
+    assert file_part["file_data"].startswith("data:application/pdf;base64,")
+    assert file_part["detail"] == "auto"
+
+
+def test_document_analysis_retries_temporary_provider_errors(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 50, "summary": "Summary", "document_inventory": [],
+        "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
+        "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    calls = {"n": 0}
+
+    class FakeResponse:
+        headers = {}
+        def __init__(self, status_code): self.status_code = status_code
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                request = __import__('httpx').Request('POST', 'https://api.openai.com/v1/responses')
+                response = __import__('httpx').Response(self.status_code, request=request)
+                raise __import__('httpx').HTTPStatusError('error', request=request, response=response)
+        def json(self): return {"output_text": json.dumps(expected)}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        async def post(self, *args, **kwargs):
+            calls["n"] += 1
+            return FakeResponse(503 if calls["n"] == 1 else 200)
+
+    async def no_sleep(_delay): return None
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True, openai_api_key="test-key",
+        openai_document_model="test-model", document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=3000,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    case = valid_payload(); case["case_reference"] = "CTR-RETRY"
+    result = asyncio.run(module.analyse_case_documents(case, [{
+        "original_name": "chat.png", "content_type": "image/png", "content_blob": _make_png_bytes(),
+    }]))
+    assert result["readiness_score"] == 50
+    assert calls["n"] == 2
+
+
+
+def test_public_pdf_download_is_attachment_and_image_is_inline():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="disposition@example.com"),
+        headers={"x-forwarded-for": "198.51.100.240"},
+    ).json()
+    status_url = created["status_url"]
+    pdf = b"%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF"
+    client.post(
+        status_url + "/documents",
+        files=[
+            ("files", ("invoice.pdf", pdf, "application/pdf")),
+            ("files", ("photo.png", _make_png_bytes(), "image/png")),
+        ],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+    page = client.get(status_url)
+    import re
+    ids = list(dict.fromkeys(re.findall(r'/documents/(\d+)', page.text)))
+    assert len(ids) >= 2
+    responses = [client.get(status_url + f"/documents/{doc_id}") for doc_id in ids[:2]]
+    dispositions = {response.headers["content-type"].split(";")[0]: response.headers["content-disposition"] for response in responses}
+    assert dispositions["application/pdf"].startswith("attachment;")
+    assert dispositions["image/png"].startswith("inline;")
+
+
+def test_completed_public_analysis_is_not_restarted(monkeypatch):
+    import app.main as main_module
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="single-analysis@example.com"),
+        headers={"x-forwarded-for": "198.51.100.241"},
+    ).json()
+    status_url = created["status_url"]
+    client.post(
+        status_url + "/documents",
+        files=[("files", ("invoice.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+    calls = {"n": 0}
+    expected = {
+        "readiness_score": 50, "summary": "Summary",
+        "document_inventory": [], "timeline": [], "key_evidence": [],
+        "contradictions": [], "missing_evidence": [], "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Important conclusions require human verification.",
+    }
+    async def fake_analysis(case, documents):
+        calls["n"] += 1
+        return expected
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "analyse_case_documents", fake_analysis)
+    first = client.post(status_url + "/documents/analyse", follow_redirects=False)
+    second = client.post(status_url + "/documents/analyse", follow_redirects=False)
+    assert first.status_code == second.status_code == 303
+    assert calls["n"] == 1
+    page = client.get(status_url)
+    assert 'id="documentAnalysisForm"' not in page.text
+
+
+def test_running_analysis_page_auto_refreshes():
+    from app.db import get_case_by_public, set_document_analysis_status
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="running-analysis@example.com"),
+        headers={"x-forwarded-for": "198.51.100.242"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    set_document_analysis_status(case["id"], "running", "test-model", document_count=1)
+    page = client.get(created["status_url"])
+    assert "window.setTimeout(()=>window.location.reload(), 5000)" in page.text
+
+
+
+def test_default_admin_token_disables_login():
+    import app.main as main_module
+    original = main_module.settings.admin_token
+    object.__setattr__(main_module.settings, "admin_token", "change-me-before-deployment")
+    try:
+        response = client.get("/admin/login")
+        assert response.status_code == 503
+        assert "ADMIN_TOKEN" in response.text
+    finally:
+        object.__setattr__(main_module.settings, "admin_token", original)
+
+
+
+def test_stale_running_analysis_becomes_failed():
+    from app.db import execute, get_case_by_public, set_document_analysis_status, transaction
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="stale-analysis@example.com"),
+        headers={"x-forwarded-for": "198.51.100.243"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    set_document_analysis_status(case["id"], "running", "test-model", document_count=1)
+    with transaction() as conn:
+        execute(conn, "UPDATE document_analyses SET updated_at=? WHERE case_id=?", ("2020-01-01T00:00:00+00:00", case["id"]))
+    page = client.get(created["status_url"])
+    assert "automated analysis could not be completed" in page.text.lower()
+    assert "window.setTimeout(()=>window.location.reload(), 5000)" not in page.text
+
+
+def test_completed_analysis_does_not_show_started_banner(monkeypatch):
+    import app.main as main_module
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="completed-banner@example.com"),
+        headers={"x-forwarded-for": "198.51.100.244"},
+    ).json()
+    status_url = created["status_url"]
+    client.post(
+        status_url + "/documents",
+        files=[("files", ("invoice.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+    expected = {
+        "readiness_score": 50, "summary": "Summary",
+        "document_inventory": [], "timeline": [], "key_evidence": [],
+        "contradictions": [], "missing_evidence": [], "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Important conclusions require human verification.",
+    }
+    async def fake_analysis(case, documents): return expected
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "analyse_case_documents", fake_analysis)
+    client.post(status_url + "/documents/analyse", follow_redirects=False)
+    page = client.get(status_url + "?analysis_started=1")
+    assert "The analysis has started. This page updates automatically" not in page.text
+    assert "50%" in page.text

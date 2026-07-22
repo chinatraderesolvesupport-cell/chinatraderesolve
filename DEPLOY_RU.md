@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.4.3 на Render
+# Установка ChinaTradeResolve v3.4.5 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Audit_Fix_v3.4.3.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.4.5.zip`.
 
-В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Audit_Fix_v3.4.3`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Document_AI_v3.4.5`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -34,7 +34,7 @@ ENABLE_VOLUNTARY_SUPPORT=false
 ```env
 ENABLE_DOCUMENT_ANALYSIS=true
 OPENAI_DOCUMENT_MODEL=модель_с_поддержкой_изображений_и_PDF
-DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=2200
+DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=3000
 DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 ```
 
@@ -81,3 +81,9 @@ DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 5. Проверьте тот же файл и отчёт в `/admin`.
 
 Подробности находятся в `DOCUMENT_AI_SETUP_RU.md`.
+
+## Обязательная защита администратора
+
+Задайте уникальные значения `ADMIN_TOKEN` и `APP_SECRET`. Если `ADMIN_TOKEN` оставлен стандартным, вход администратора в версии 3.4.5 блокируется. Если `APP_SECRET` оставлен стандартным, приложение использует временный случайный секрет: это безопаснее, но сессия администратора сбросится после перезапуска.
+
+Анализ документов запускается в фоне. После нажатия страница сразу возвращается, показывает статус обработки и автоматически обновляется.

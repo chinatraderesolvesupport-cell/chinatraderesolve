@@ -5,14 +5,14 @@ from contextlib import asynccontextmanager
 import json
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
 
-from fastapi import FastAPI, HTTPException, Request, Form, File, UploadFile
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -29,7 +29,7 @@ from .ai_assistant import (
     assistant_reply,
     localized_error,
 )
-from .config import settings
+from .config import DEFAULT_ADMIN_TOKEN, DEFAULT_APP_SECRET, settings
 from .db import (
     add_case_document,
     create_case,
@@ -76,7 +76,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.4.3"
+APP_VERSION = "3.4.5"
 
 
 @asynccontextmanager
@@ -87,9 +87,14 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="ChinaTradeResolve Free Access", version=APP_VERSION, lifespan=lifespan)
+_runtime_session_secret = (
+    settings.app_secret
+    if settings.app_secret and settings.app_secret != DEFAULT_APP_SECRET
+    else secrets.token_urlsafe(48)
+)
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.app_secret,
+    secret_key=_runtime_session_secret,
     same_site="lax",
     https_only=settings.public_base_url.startswith("https://"),
     max_age=3600,
@@ -401,11 +406,11 @@ DOCUMENT_COPY = {
         "consent": "I have the right to share these files and understand they may be processed by AI when AI consent was provided.",
         "upload": "Upload documents",
         "uploaded": "Documents uploaded successfully.",
-        "limit": "PDF, JPG, PNG or WebP; maximum 8 MB each and 60 MB total.",
+        "limit": "PDF, JPG, PNG or WebP; maximum 8 MB each and 45 MB total.",
         "none": "No documents uploaded yet.",
         "delete": "Delete",
         "analyse": "Analyse documents with AI",
-        "analysing": "The analysis can take up to about a minute. Keep this page open.",
+        "analysing": "The analysis has started. This page updates automatically, and you may return later.",
         "analysis_not_configured": "Automatic document analysis is temporarily unavailable. The uploaded files remain available for human review.",
         "analysis_consent_required": "To analyse these files, confirm the voluntary AI-processing consent below.",
         "analysis_consent": "I voluntarily allow these uploaded files to be processed by AI with mandatory human verification of important conclusions.",
@@ -430,11 +435,11 @@ DOCUMENT_COPY = {
         "consent": "Я имею право передавать эти файлы и понимаю, что при ранее данном согласии они могут обрабатываться ИИ.",
         "upload": "Загрузить документы",
         "uploaded": "Документы успешно загружены.",
-        "limit": "PDF, JPG, PNG или WebP; не более 8 МБ каждый и 60 МБ суммарно.",
+        "limit": "PDF, JPG, PNG или WebP; не более 8 МБ каждый и 45 МБ суммарно.",
         "none": "Документы пока не загружены.",
         "delete": "Удалить",
         "analyse": "Проанализировать документы с помощью ИИ",
-        "analysing": "Анализ может занять около минуты. Не закрывайте эту страницу.",
+        "analysing": "Анализ запущен. Страница обновится автоматически; к ней также можно вернуться позже.",
         "analysis_not_configured": "Автоматический анализ документов временно недоступен. Загруженные файлы остаются доступными для ручной проверки.",
         "analysis_consent_required": "Чтобы проанализировать эти файлы, подтвердите добровольное согласие на обработку ИИ ниже.",
         "analysis_consent": "Я добровольно разрешаю обработку загруженных файлов с помощью ИИ при обязательной проверке важных выводов человеком.",
@@ -455,8 +460,8 @@ DOCUMENT_COPY = {
         "heading": "Dodajte ključne dokumente", "intro": "Otpremite do dvadeset ključnih PDF ili slikovnih fajlova: specifikaciju, račun ili dokaz o uplati, poruke dobavljača, dokaz o isporuci ili odluku platforme.",
         "privacy": "Uklonite lozinke, privatne ključeve, pune brojeve kartica i nepotrebna lična dokumenta. Slike se ponovo kodiraju radi uklanjanja metapodataka.",
         "select": "Izaberite fajlove", "consent": "Imam pravo da podelim ove fajlove i razumem da mogu biti obrađeni AI-jem ako sam prethodno dao saglasnost.",
-        "upload": "Otpremi dokumente", "uploaded": "Dokumenti su uspešno otpremljeni.", "limit": "PDF, JPG, PNG ili WebP; najviše 8 MB po fajlu i 60 MB ukupno.",
-        "none": "Dokumenti još nisu otpremljeni.", "delete": "Obriši", "analyse": "Analiziraj dokumente pomoću AI-ja", "analysing": "Analiza može trajati oko jednog minuta. Ostavite ovu stranicu otvorenom.",
+        "upload": "Otpremi dokumente", "uploaded": "Dokumenti su uspešno otpremljeni.", "limit": "PDF, JPG, PNG ili WebP; najviše 8 MB po fajlu i 45 MB ukupno.",
+        "none": "Dokumenti još nisu otpremljeni.", "delete": "Obriši", "analyse": "Analiziraj dokumente pomoću AI-ja", "analysing": "Analiza je pokrenuta. Stranica se automatski osvežava, a možete se vratiti i kasnije.",
         "analysis_not_configured": "Automatska analiza dokumenata trenutno nije dostupna. Fajlovi ostaju dostupni za ljudski pregled.", "analysis_consent_required": "Za analizu ovih fajlova potvrdite dobrovoljnu saglasnost za AI obradu ispod.", "analysis_consent": "Dobrovoljno dozvoljavam AI obradu otpremljenih fajlova uz obaveznu ljudsku proveru važnih zaključaka.", "analysis_error": "Automatska analiza nije završena. Fajlovi ostaju dostupni za ljudski pregled.",
         "analysis_title": "Preliminarna analiza dokumenata", "analysis_notice": "Ovo je organizovanje dokaza, a ne pravni savet, potvrda autentičnosti ili prognoza uspeha. Važne zaključke mora proveriti čovek.",
         "readiness": "Spremnost dokaza", "inventory": "Pregled dokumenata", "timeline": "Hronologija", "evidence": "Ključni dokazi", "contradictions": "Moguće protivrečnosti", "missing": "Nedostajući dokazi", "risks": "Faktori rizika", "steps": "Preporučeni sledeći koraci", "download": "Otvori",
@@ -465,8 +470,8 @@ DOCUMENT_COPY = {
         "heading": "Ajouter les documents clés", "intro": "Téléversez jusqu’à vingt fichiers PDF ou images essentiels : spécifications, facture ou preuve de paiement, messages du fournisseur, preuve de livraison ou décision de la plateforme.",
         "privacy": "Supprimez les mots de passe, clés privées, numéros de carte complets et pièces d’identité inutiles. Les images sont réencodées pour supprimer les métadonnées.",
         "select": "Choisir les fichiers", "consent": "J’ai le droit de partager ces fichiers et je comprends qu’ils peuvent être traités par l’IA si j’ai déjà donné mon consentement.",
-        "upload": "Téléverser les documents", "uploaded": "Documents téléversés avec succès.", "limit": "PDF, JPG, PNG ou WebP ; 8 Mo maximum par fichier et 60 Mo au total.",
-        "none": "Aucun document téléversé.", "delete": "Supprimer", "analyse": "Analyser les documents avec l’IA", "analysing": "L’analyse peut prendre environ une minute. Gardez cette page ouverte.",
+        "upload": "Téléverser les documents", "uploaded": "Documents téléversés avec succès.", "limit": "PDF, JPG, PNG ou WebP ; 8 Mo maximum par fichier et 45 Mo au total.",
+        "none": "Aucun document téléversé.", "delete": "Supprimer", "analyse": "Analyser les documents avec l’IA", "analysing": "L’analyse a démarré. La page se met à jour automatiquement et vous pouvez revenir plus tard.",
         "analysis_not_configured": "L’analyse automatique des documents est temporairement indisponible. Les fichiers restent accessibles pour une vérification humaine.", "analysis_consent_required": "Pour analyser ces fichiers, confirmez ci-dessous votre consentement volontaire au traitement par l’IA.", "analysis_consent": "J’autorise volontairement le traitement de ces fichiers par l’IA, avec vérification humaine obligatoire des conclusions importantes.", "analysis_error": "L’analyse automatique n’a pas pu être terminée. Les fichiers restent disponibles pour une vérification humaine.",
         "analysis_title": "Analyse préliminaire des documents", "analysis_notice": "Il s’agit d’une organisation des preuves, pas d’un conseil juridique, d’une authentification ou d’une prévision de succès. Les conclusions importantes doivent être vérifiées par une personne.",
         "readiness": "Préparation des preuves", "inventory": "Inventaire des documents", "timeline": "Chronologie", "evidence": "Éléments de preuve clés", "contradictions": "Contradictions possibles", "missing": "Preuves manquantes", "risks": "Signaux de risque", "steps": "Prochaines étapes recommandées", "download": "Ouvrir",
@@ -475,8 +480,8 @@ DOCUMENT_COPY = {
         "heading": "Wichtige Dokumente hinzufügen", "intro": "Laden Sie bis zu zwanzig wichtige PDF- oder Bilddateien hoch: Spezifikation, Rechnung oder Zahlungsnachweis, Lieferantennachrichten, Liefernachweis oder Plattformentscheidung.",
         "privacy": "Entfernen Sie Passwörter, private Schlüssel, vollständige Kartennummern und unnötige Ausweisdokumente. Bilder werden neu kodiert, um Metadaten zu entfernen.",
         "select": "Dateien auswählen", "consent": "Ich darf diese Dateien weitergeben und verstehe, dass sie bei zuvor erteilter Zustimmung durch KI verarbeitet werden können.",
-        "upload": "Dokumente hochladen", "uploaded": "Dokumente erfolgreich hochgeladen.", "limit": "PDF, JPG, PNG oder WebP; höchstens 8 MB je Datei und 60 MB insgesamt.",
-        "none": "Noch keine Dokumente hochgeladen.", "delete": "Löschen", "analyse": "Dokumente mit KI analysieren", "analysing": "Die Analyse kann etwa eine Minute dauern. Lassen Sie diese Seite geöffnet.",
+        "upload": "Dokumente hochladen", "uploaded": "Dokumente erfolgreich hochgeladen.", "limit": "PDF, JPG, PNG oder WebP; höchstens 8 MB je Datei und 45 MB insgesamt.",
+        "none": "Noch keine Dokumente hochgeladen.", "delete": "Löschen", "analyse": "Dokumente mit KI analysieren", "analysing": "Die Analyse wurde gestartet. Die Seite aktualisiert sich automatisch; Sie können auch später zurückkehren.",
         "analysis_not_configured": "Die automatische Dokumentenanalyse ist vorübergehend nicht verfügbar. Die Dateien bleiben für eine menschliche Prüfung verfügbar.", "analysis_consent_required": "Bestätigen Sie unten Ihre freiwillige Einwilligung zur KI-Verarbeitung, um diese Dateien zu analysieren.", "analysis_consent": "Ich willige freiwillig in die KI-Verarbeitung dieser Dateien ein; wichtige Schlussfolgerungen müssen von einem Menschen geprüft werden.", "analysis_error": "Die automatische Analyse konnte nicht abgeschlossen werden. Die Dateien bleiben für eine menschliche Prüfung verfügbar.",
         "analysis_title": "Vorläufige Dokumentenanalyse", "analysis_notice": "Dies ist eine Beweisorganisation, keine Rechtsberatung, Echtheitsprüfung oder Erfolgsprognose. Wichtige Schlussfolgerungen müssen menschlich geprüft werden.",
         "readiness": "Beweisbereitschaft", "inventory": "Dokumentenübersicht", "timeline": "Chronologie", "evidence": "Wichtige Belege", "contradictions": "Mögliche Widersprüche", "missing": "Fehlende Belege", "risks": "Risikohinweise", "steps": "Empfohlene nächste Schritte", "download": "Öffnen",
@@ -485,8 +490,8 @@ DOCUMENT_COPY = {
         "heading": "Añadir documentos clave", "intro": "Suba hasta veinte archivos PDF o imágenes clave: especificaciones, factura o comprobante de pago, mensajes del proveedor, prueba de entrega o decisión de la plataforma.",
         "privacy": "Elimine contraseñas, claves privadas, números completos de tarjeta y documentos de identidad innecesarios. Las imágenes se recodifican para eliminar metadatos.",
         "select": "Elegir archivos", "consent": "Tengo derecho a compartir estos archivos y entiendo que pueden ser procesados por IA si ya di mi consentimiento.",
-        "upload": "Subir documentos", "uploaded": "Documentos subidos correctamente.", "limit": "PDF, JPG, PNG o WebP; máximo 8 MB por archivo y 60 MB en total.",
-        "none": "Todavía no se han subido documentos.", "delete": "Eliminar", "analyse": "Analizar documentos con IA", "analysing": "El análisis puede tardar aproximadamente un minuto. Mantenga esta página abierta.",
+        "upload": "Subir documentos", "uploaded": "Documentos subidos correctamente.", "limit": "PDF, JPG, PNG o WebP; máximo 8 MB por archivo y 45 MB en total.",
+        "none": "Todavía no se han subido documentos.", "delete": "Eliminar", "analyse": "Analizar documentos con IA", "analysing": "El análisis ha comenzado. La página se actualiza automáticamente y puede volver más tarde.",
         "analysis_not_configured": "El análisis automático de documentos no está disponible temporalmente. Los archivos siguen disponibles para revisión humana.", "analysis_consent_required": "Para analizar estos archivos, confirme abajo su consentimiento voluntario para el tratamiento con IA.", "analysis_consent": "Autorizo voluntariamente el tratamiento de estos archivos con IA, con verificación humana obligatoria de las conclusiones importantes.", "analysis_error": "No se pudo completar el análisis automático. Los archivos siguen disponibles para revisión humana.",
         "analysis_title": "Análisis preliminar de documentos", "analysis_notice": "Esto organiza pruebas; no es asesoramiento jurídico, autenticación ni una predicción de éxito. Las conclusiones importantes requieren verificación humana.",
         "readiness": "Preparación de las pruebas", "inventory": "Inventario de documentos", "timeline": "Cronología", "evidence": "Pruebas clave", "contradictions": "Posibles contradicciones", "missing": "Pruebas faltantes", "risks": "Señales de riesgo", "steps": "Próximos pasos recomendados", "download": "Abrir",
@@ -519,6 +524,10 @@ def health() -> dict[str, Any]:
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
         "document_analysis_enabled": document_analysis_is_enabled(),
+        "secure_configuration": bool(
+            settings.admin_token != DEFAULT_ADMIN_TOKEN
+            and settings.app_secret != DEFAULT_APP_SECRET
+        ),
         "email_delivery_configured": bool(
             (settings.email_bridge_url and settings.email_bridge_secret)
             or (
@@ -576,8 +585,62 @@ def support_qr(wallet_id: str) -> Response:
     )
 
 
+def _fresh_document_analysis(case_id: int) -> dict[str, Any] | None:
+    """Convert abandoned running jobs into a visible failed state."""
+    analysis = get_document_analysis(case_id)
+    if not analysis or analysis.get("status") != "running":
+        return analysis
+    try:
+        updated_at = datetime.fromisoformat(str(analysis.get("updated_at") or ""))
+        if updated_at.tzinfo is None:
+            updated_at = updated_at.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        updated_at = datetime.now(timezone.utc) - timedelta(days=1)
+    stale_after = max(300, int(settings.document_analysis_timeout_seconds * 3 + 60))
+    if datetime.now(timezone.utc) - updated_at > timedelta(seconds=stale_after):
+        set_document_analysis_status(
+            case_id, "failed", analysis.get("model") or settings.openai_document_model or "",
+            "Document analysis did not finish before the worker stopped or timed out",
+            actor="document_ai",
+        )
+        return get_document_analysis(case_id)
+    return analysis
+
+
+async def _run_document_analysis_task(case_id: int, actor: str) -> None:
+    """Run provider work after the HTTP response and persist a terminal status."""
+    case = get_case(case_id)
+    if not case:
+        return
+    documents = list_case_documents(case_id, include_content=True)
+    if not documents:
+        set_document_analysis_status(
+            case_id, "failed", settings.openai_document_model or "",
+            "No documents were available when analysis started", actor="document_ai", document_count=0,
+        )
+        return
+    try:
+        result = await analyse_case_documents(case, documents)
+        save_document_analysis(case_id, result, settings.openai_document_model or "")
+    except (DocumentAnalysisConfigurationError, DocumentAnalysisProviderError) as exc:
+        set_document_analysis_status(
+            case_id, "failed", settings.openai_document_model or "", str(exc),
+            actor="document_ai", document_count=len(documents),
+        )
+    except Exception:
+        # Keep unexpected provider/runtime details out of the public page and audit log.
+        set_document_analysis_status(
+            case_id, "failed", settings.openai_document_model or "",
+            "Unexpected document-analysis failure", actor="document_ai", document_count=len(documents),
+        )
+
+
 @app.post("/api/applications")
-async def submit_application(payload: ApplicationCreate, request: Request) -> JSONResponse:
+async def submit_application(
+    payload: ApplicationCreate,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> JSONResponse:
     if not limiter.allow(client_key(request)):
         raise HTTPException(status_code=429, detail="Too many applications from this connection. Please try later.")
 
@@ -594,7 +657,7 @@ async def submit_application(payload: ApplicationCreate, request: Request) -> JS
     public_token = secrets.token_urlsafe(24)
     case = create_case(payload.model_dump(), triage.model_dump(), reference, public_token)
     queue_case_notifications(case)
-    deliver_pending()
+    background_tasks.add_task(deliver_pending)
     status_url = f"/case/{reference}/{public_token}"
     return JSONResponse(
         {
@@ -608,7 +671,7 @@ async def submit_application(payload: ApplicationCreate, request: Request) -> JS
 
 
 @app.get("/case/{reference}/{token}", response_class=HTMLResponse)
-def public_case_status(reference: str, token: str, request: Request, feedback_saved: int = 0, documents_uploaded: int = 0, analysis_error: int = 0, analysis_unavailable: int = 0, analysis_issue: str = "") -> HTMLResponse:
+def public_case_status(reference: str, token: str, request: Request, feedback_saved: int = 0, documents_uploaded: int = 0, analysis_error: int = 0, analysis_unavailable: int = 0, analysis_started: int = 0, analysis_issue: str = "") -> HTMLResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -617,7 +680,7 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
     copy = STATUS_COPY.get(language, STATUS_COPY["English"])
     feedback = get_feedback(case["id"])
     documents = list_case_documents(case["id"])
-    document_analysis = get_document_analysis(case["id"])
+    document_analysis = _fresh_document_analysis(case["id"])
     return templates.TemplateResponse(
         request=request,
         name="public_status.html",
@@ -629,6 +692,11 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "feedback_saved": bool(feedback_saved),
             "documents_uploaded": bool(documents_uploaded),
             "analysis_error": bool(analysis_error),
+            "analysis_started": bool(
+                analysis_started
+                and document_analysis
+                and document_analysis.get("status") == "running"
+            ),
             "analysis_not_configured": bool(analysis_unavailable) or analysis_issue == "configuration",
             "analysis_consent_required": analysis_issue == "consent",
             "support_url": safe_support_url(),
@@ -679,7 +747,7 @@ async def public_upload_documents(
     existing_total = sum(int(document["size_bytes"]) for document in existing)
     new_total = sum(document.size_bytes for document in prepared)
     if existing_total + new_total > MAX_TOTAL_BYTES:
-        raise HTTPException(status_code=400, detail="The total document size for one case cannot exceed 60 MB")
+        raise HTTPException(status_code=400, detail="The total document size for one case cannot exceed 45 MB")
 
     for document in prepared:
         add_case_document(case["id"], {
@@ -706,7 +774,7 @@ def public_download_document(reference: str, token: str, document_id: int) -> Re
         media_type=document["content_type"],
         headers={
             "Cache-Control": "no-store",
-            "Content-Disposition": f"inline; filename*=UTF-8''{filename}",
+            "Content-Disposition": f"{'attachment' if document['content_type'] == 'application/pdf' else 'inline'}; filename*=UTF-8''{filename}",
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -731,11 +799,14 @@ async def public_analyse_documents(
     reference: str,
     token: str,
     request: Request,
+    background_tasks: BackgroundTasks,
     analysis_consent: bool = Form(False),
 ) -> RedirectResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
+    if case["status"] in {"declined", "closed"}:
+        raise HTTPException(status_code=409, detail="This case is no longer accepting analysis requests")
     if not document_analysis_is_enabled():
         record_audit(case["id"], "system", "document_analysis_unavailable", {
             "reason": "configuration",
@@ -749,40 +820,21 @@ async def public_analyse_documents(
         case = get_case_by_public(reference, token) or case
     if not document_analysis_limiter.allow(f"document-analysis:{case['id']}:{client_key(request)}"):
         raise HTTPException(status_code=429, detail="Document analysis was requested too often. Please try later.")
-    documents = list_case_documents(case["id"], include_content=True)
+    documents = list_case_documents(case["id"], include_content=False)
     if not documents:
         raise HTTPException(status_code=400, detail="Upload at least one document first")
+    current = _fresh_document_analysis(case["id"])
+    if current and current.get("status") in {"running", "completed"}:
+        return RedirectResponse(f"/case/{reference}/{token}#document-analysis", status_code=303)
     set_document_analysis_status(
-        case["id"],
-        "running",
-        settings.openai_document_model or "",
-        actor="client",
-        document_count=len(documents),
+        case["id"], "running", settings.openai_document_model or "",
+        actor="client", document_count=len(documents),
     )
-    try:
-        result = await analyse_case_documents(case, documents)
-        save_document_analysis(case["id"], result, settings.openai_document_model or "")
-    except DocumentAnalysisConfigurationError as exc:
-        set_document_analysis_status(
-            case["id"],
-            "failed",
-            settings.openai_document_model or "",
-            str(exc),
-            actor="document_ai",
-            document_count=len(documents),
-        )
-        return RedirectResponse(f"/case/{reference}/{token}?analysis_issue=configuration", status_code=303)
-    except DocumentAnalysisProviderError as exc:
-        set_document_analysis_status(
-            case["id"],
-            "failed",
-            settings.openai_document_model or "",
-            str(exc),
-            actor="document_ai",
-            document_count=len(documents),
-        )
-        return RedirectResponse(f"/case/{reference}/{token}?analysis_error=1", status_code=303)
-    return RedirectResponse(f"/case/{reference}/{token}#document-analysis", status_code=303)
+    background_tasks.add_task(_run_document_analysis_task, case["id"], "client")
+    return RedirectResponse(
+        f"/case/{reference}/{token}?analysis_started=1#document-analysis",
+        status_code=303,
+    )
 
 
 @app.post("/case/{reference}/{token}/feedback")
@@ -816,11 +868,23 @@ def public_case_feedback(
 
 @app.get("/admin/login", response_class=HTMLResponse)
 def admin_login_page(request: Request) -> HTMLResponse:
+    if settings.admin_token == DEFAULT_ADMIN_TOKEN:
+        return templates.TemplateResponse(
+            request=request, name="admin_login.html",
+            context={"error": "ADMIN_TOKEN не настроен. Добавьте безопасный токен в Render Environment."},
+            status_code=503,
+        )
     return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": None})
 
 
 @app.post("/admin/login", response_class=HTMLResponse)
 def admin_login(request: Request, token: str = Form(...)) -> HTMLResponse:
+    if settings.admin_token == DEFAULT_ADMIN_TOKEN:
+        return templates.TemplateResponse(
+            request=request, name="admin_login.html",
+            context={"error": "ADMIN_TOKEN не настроен. Вход администратора отключён."},
+            status_code=503,
+        )
     key = f"admin-login:{client_key(request)}"
     if not admin_login_limiter.allow(key):
         return templates.TemplateResponse(
@@ -869,6 +933,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
     case = get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
+    document_analysis = _fresh_document_analysis(case_id)
     return templates.TemplateResponse(
         request=request,
         name="admin_case.html",
@@ -878,7 +943,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),
             "documents": list_case_documents(case_id),
-            "document_analysis": get_document_analysis(case_id),
+            "document_analysis": document_analysis,
             "document_analysis_enabled": document_analysis_is_enabled(),
             "status_labels": STATUS_LABELS,
             "risk_labels": RISK_LABELS,
@@ -904,7 +969,7 @@ def admin_download_document(case_id: int, document_id: int, request: Request) ->
         media_type=document["content_type"],
         headers={
             "Cache-Control": "no-store",
-            "Content-Disposition": f"inline; filename*=UTF-8''{filename}",
+            "Content-Disposition": f"{'attachment' if document['content_type'] == 'application/pdf' else 'inline'}; filename*=UTF-8''{filename}",
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -919,7 +984,11 @@ def admin_delete_document(case_id: int, document_id: int, request: Request) -> R
 
 
 @app.post("/admin/case/{case_id}/documents/analyse")
-async def admin_analyse_documents(case_id: int, request: Request) -> RedirectResponse:
+async def admin_analyse_documents(
+    case_id: int,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> RedirectResponse:
     require_admin(request)
     case = get_case(case_id)
     if not case:
@@ -928,34 +997,28 @@ async def admin_analyse_documents(case_id: int, request: Request) -> RedirectRes
         raise HTTPException(status_code=503, detail="Document analysis is not configured")
     if not case["ai_consent"]:
         raise HTTPException(status_code=409, detail="The client has not consented to AI document analysis")
-    documents = list_case_documents(case_id, include_content=True)
+    documents = list_case_documents(case_id, include_content=False)
     if not documents:
         raise HTTPException(status_code=400, detail="No documents were uploaded")
+    current = _fresh_document_analysis(case_id)
+    if current and current.get("status") == "running":
+        return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
     set_document_analysis_status(
-        case_id,
-        "running",
-        settings.openai_document_model or "",
-        actor="admin",
-        document_count=len(documents),
+        case_id, "running", settings.openai_document_model or "",
+        actor="admin", document_count=len(documents),
     )
-    try:
-        result = await analyse_case_documents(case, documents)
-        save_document_analysis(case_id, result, settings.openai_document_model or "")
-    except (DocumentAnalysisConfigurationError, DocumentAnalysisProviderError) as exc:
-        set_document_analysis_status(
-            case_id,
-            "failed",
-            settings.openai_document_model or "",
-            str(exc),
-            actor="document_ai",
-            document_count=len(documents),
-        )
-        raise HTTPException(status_code=502, detail="Document analysis failed") from exc
+    background_tasks.add_task(_run_document_analysis_task, case_id, "admin")
     return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
 
 
 @app.post("/admin/case/{case_id}/status")
-def admin_update_status(case_id: int, request: Request, status: str = Form(...), note: str = Form("")) -> RedirectResponse:
+def admin_update_status(
+    case_id: int,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    status: str = Form(...),
+    note: str = Form(""),
+) -> RedirectResponse:
     require_admin(request)
     try:
         old_case = get_case(case_id)
@@ -964,7 +1027,7 @@ def admin_update_status(case_id: int, request: Request, status: str = Form(...),
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if old_case and old_case["status"] != "closed" and updated["status"] == "closed":
         queue_completion_notification(updated)
-        deliver_pending()
+        background_tasks.add_task(deliver_pending)
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
 
 

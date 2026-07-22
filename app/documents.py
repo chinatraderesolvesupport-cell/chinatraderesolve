@@ -12,9 +12,9 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 ALLOWED_CONTENT_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
 IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-MAX_DOCUMENTS_PER_CASE = 5
+MAX_DOCUMENTS_PER_CASE = 20
 MAX_DOCUMENT_BYTES = 8 * 1024 * 1024
-MAX_TOTAL_BYTES = 25 * 1024 * 1024
+MAX_TOTAL_BYTES = 60 * 1024 * 1024
 MAX_IMAGE_PIXELS = 30_000_000
 
 

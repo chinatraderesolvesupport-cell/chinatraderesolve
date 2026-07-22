@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.4
+# ChinaTradeResolve Document AI v3.4.3
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -11,7 +11,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - optional OpenAI structured triage;
 - exception-driven admin queue;
 - private case-status page;
-- private upload of up to five PDF/image documents per case;
+- private upload of up to twenty PDF/image documents per case;
 - optional multimodal AI document analysis with evidence inventory, chronology and contradiction detection;
 - optional feedback/testimonial collection after a case is closed;
 - optional voluntary project-support page;
@@ -35,9 +35,9 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - added a privacy FAQ explaining who may see case materials;
 - keeps voluntary support disabled by default and preserves the existing case-management and AI-assistant workflow.
 
-## Private document analysis in v3.4
+## Private document analysis in v3.4.3
 
-After an application is submitted, the private case page accepts up to five key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 25 MB total.
+After an application is submitted, the private case page accepts up to twenty key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 60 MB total.
 
 Security and privacy controls:
 
@@ -143,7 +143,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 
 ## What is automated
 
-1. Application validation and spam honeypot.
+1. Application validation and request rate limiting.
 2. Scope, urgency, risk and missing-information triage.
 3. Case reference and private status-link generation.
 4. Routing into `pilot_candidate` (internal legacy status name), `needs_information`, `human_review` or `declined`.
@@ -165,7 +165,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.4
+cd ChinaTradeResolve_Document_AI_v3.4.3
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

@@ -269,7 +269,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <ul class="pilot-list">
 <li data-i18n="pilot_limit2">Мы не общаемся с поставщиком или площадкой от вашего имени.</li>
 <li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками.</li>
-<li data-i18n="pilot_limit4">Сначала нужно только описание; после отбора — до 5 ключевых файлов.</li>
+<li data-i18n="pilot_limit4">Сначала нужно только описание; после отбора — до 20 ключевых файлов.</li>
 <li data-i18n="pilot_limit5">Принятие зависит от профиля дела, доказательств и доступной мощности.</li>
 </ul>
 <div class="pilot-limit" data-i18n="pilot_selection">Подача заявки не гарантирует принятие. Если дело вне компетенции или требует срочной юридической помощи, мы прямо сообщим об этом.</div>
@@ -283,7 +283,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <h2 data-i18n="process_title">От краткого описания к ясному плану действий</h2>
 <div class="steps">
 <div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Отправьте основные факты без загрузки документов.</p></div>
-<div class="step" data-n="2"><h3 data-i18n="step2">Отбор и документы</h3><p data-i18n="step2_text">Если дело подходит, мы запросим до 5 ключевых файлов.</p></div>
+<div class="step" data-n="2"><h3 data-i18n="step2">Отбор и документы</h3><p data-i18n="step2_text">Если дело подходит, мы запросим до 20 ключевых файлов.</p></div>
 <div class="step" data-n="3"><h3 data-i18n="step3">Разбор доказательств</h3><p data-i18n="step3_text">Сопоставим документы, даты, обещания и противоречия.</p></div>
 <div class="step" data-n="4"><h3 data-i18n="step4">Письменный результат</h3><p data-i18n="step4_text">Вы получите оценку позиции, недостающих доказательств и следующих действий.</p></div>
 </div>
@@ -331,13 +331,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="wrap">
 <div class="eyebrow" data-i18n="form_eyebrow">Бесплатная заявка</div>
 <h2 data-i18n="form_title">Отправьте дело на бесплатный анализ</h2>
-<p class="intro" data-i18n="form_intro">Начните с краткого описания. Ключевые документы будут запрошены только после принятия дела на анализ.</p>
+<p class="intro" data-i18n="form_intro">Начните с краткого описания. После отправки на закрытой странице дела можно безопасно добавить до 20 ключевых документов.</p>
 <div class="form-speed" data-i18n="form_speed">Около 2 минут · Без платы за услуги · Без больших загрузок</div>
 <div class="form-shell">
 <div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">Основные данные</span><span data-i18n="form_stage2" id="label2">Информация о деле</span></div>
 <div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
 <form id="caseForm" novalidate="">
-<input aria-hidden="true" autocomplete="off" class="honeypot" name="company_website" tabindex="-1"/>
 <div class="form-step active" id="stepOne">
 <div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">Электронная почта</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
@@ -355,7 +354,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
 <div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea aria-describedby="descriptionHelp descriptionCount" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div></div>
-<div class="field full filebox"><label data-i18n="upload">На этапе заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отбора мы запросим не более 5 ключевых файлов для первичного анализа.</div></div>
+<div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
 <div class="consent-group">
 <div class="consent-row"><label><input name="free_access_terms" required="" style="width:auto" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
 <div class="consent-row"><label><input name="sharing_authority" required="" style="width:auto" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
@@ -499,7 +498,6 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const form=e.target;
   const statusBox=document.getElementById('submitStatus');
-  if(document.querySelector('.honeypot').value)return;
   if(!form.checkValidity()){
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';

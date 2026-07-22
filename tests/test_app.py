@@ -834,3 +834,181 @@ def test_document_analysis_request_uses_multimodal_structured_output(monkeypatch
     assert image_part["type"] == "input_image"
     assert image_part["image_url"].startswith("data:image/png;base64,")
     base64.b64decode(image_part["image_url"].split(",", 1)[1])
+
+
+def test_desktop_autofill_cannot_silently_block_submission():
+    home = client.get("/")
+    assert home.status_code == 200
+    # Browser/password-manager autofill used to populate the hidden honeypot on desktop.
+    # The frontend then returned silently before making the request.
+    assert 'name="company_website"' not in home.text
+    assert "document.querySelector('.honeypot').value" not in home.text
+
+    payload = valid_payload(
+        email="desktop-autofill@example.com",
+        company_website="https://autofilled.example",
+    )
+    response = client.post(
+        "/api/applications",
+        json=payload,
+        headers={"x-forwarded-for": "198.51.100.220"},
+    )
+    assert response.status_code == 201
+    assert response.json()["case_reference"].startswith("CTR-")
+    assert response.json().get("status_url")
+
+
+def test_document_limit_is_twenty_files():
+    from app.documents import MAX_DOCUMENTS_PER_CASE, MAX_TOTAL_BYTES
+    assert MAX_DOCUMENTS_PER_CASE == 20
+    assert MAX_TOTAL_BYTES == 60 * 1024 * 1024
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="twenty-docs@example.com"),
+        headers={"x-forwarded-for": "198.51.100.221"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert page.status_code == 200
+    assert "0/20" in page.text
+    assert "60 MB" in page.text or "60 МБ" in page.text
+
+
+
+def test_document_analysis_distinguishes_consent_from_configuration(monkeypatch):
+    import app.main as main_module
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="no-ai-consent@example.com", ai_consent=False, preferred_language="Russian"),
+        headers={"x-forwarded-for": "198.51.100.230"},
+    ).json()
+    status_url = created["status_url"]
+    client.post(
+        status_url + "/documents",
+        files=[("files", ("chat.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    page = client.get(status_url)
+    assert "подтвердите добровольное согласие" in page.text
+    assert "ИИ-анализ документов не включён" not in page.text
+    assert 'name="analysis_consent"' in page.text
+
+    missing = client.post(status_url + "/documents/analyse", follow_redirects=False)
+    assert missing.status_code == 303
+    assert "analysis_issue=consent" in missing.headers["location"]
+
+
+def test_document_analysis_can_receive_consent_on_case_page(monkeypatch):
+    import app.main as main_module
+    from app.db import get_case_by_public
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="grant-ai-consent@example.com", ai_consent=False),
+        headers={"x-forwarded-for": "198.51.100.231"},
+    ).json()
+    status_url = created["status_url"]
+    client.post(
+        status_url + "/documents",
+        files=[("files", ("invoice.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+
+    expected = {
+        "readiness_score": 55,
+        "summary": "Evidence was organised.",
+        "document_inventory": [{"filename": "invoice.png", "document_type": "Invoice", "language": "English", "date_or_period": "Date not visible", "key_content": "Invoice", "readability": "clear"}],
+        "timeline": [], "key_evidence": ["Invoice"], "contradictions": [], "missing_evidence": [],
+        "risk_flags": [], "recommended_next_steps": ["Human review"],
+        "human_review_note": "Important conclusions require human verification.",
+    }
+
+    async def fake_analysis(case, documents):
+        assert case["ai_consent"] == 1
+        return expected
+
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "analyse_case_documents", fake_analysis)
+    response = client.post(
+        status_url + "/documents/analyse",
+        data={"analysis_consent": "true"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    reference, token = status_url.rstrip("/").split("/")[-2:]
+    assert get_case_by_public(reference, token)["ai_consent"] == 1
+    report = client.get(response.headers["location"])
+    assert "55%" in report.text
+
+
+def test_document_analysis_failure_is_audited(monkeypatch):
+    import app.main as main_module
+    from app.db import get_audit, get_case_by_public
+    from app.document_analysis import DocumentAnalysisProviderError
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="analysis-failure@example.com"),
+        headers={"x-forwarded-for": "198.51.100.232"},
+    ).json()
+    status_url = created["status_url"]
+    client.post(
+        status_url + "/documents",
+        files=[("files", ("chat.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+
+    async def failing_analysis(case, documents):
+        raise DocumentAnalysisProviderError("OpenAI document analysis returned HTTP 429 (request req-test)")
+
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "analyse_case_documents", failing_analysis)
+    response = client.post(status_url + "/documents/analyse", follow_redirects=False)
+    assert response.status_code == 303
+    assert "analysis_error=1" in response.headers["location"]
+    reference, token = status_url.rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    events = get_audit(case["id"])
+    failed = next(event for event in events if event["event_type"] == "document_analysis_failed")
+    assert "HTTP 429" in failed["details_json"]
+    assert "req-test" in failed["details_json"]
+
+
+def test_public_document_limit_uses_sixty_megabytes_in_javascript():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="client-limit@example.com"),
+        headers={"x-forwarded-for": "198.51.100.233"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert "total > 60 * 1024 * 1024" in page.text
+    assert "total > 25 * 1024 * 1024" not in page.text
+
+
+def test_release_metadata_and_twenty_file_copy_are_consistent():
+    health = client.get("/health")
+    assert health.status_code == 200
+    assert health.json()["version"] == "3.4.3"
+    assert health.json()["document_limit"] == 20
+    assert health.headers["x-app-version"] == "3.4.3"
+
+    base = Path(__file__).resolve().parent.parent
+    active_files = [
+        base / "app" / "ai_assistant.py",
+        base / "app" / "triage.py",
+        base / "app" / "static" / "legal-i18n-v2.js",
+        base / "app" / "templates" / "index.html",
+    ]
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in active_files).lower()
+    for stale in ("up to five", "five key", "до 5 ключевых", "не более пяти ключевых"):
+        assert stale not in combined
+
+    privacy_ru = client.get("/static/privacy.html?lang=ru")
+    assert privacy_ru.status_code == 200
+    legal_script = client.get("/static/legal-i18n-v2.js")
+    assert "до 20 ключевых PDF" in legal_script.text

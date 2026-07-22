@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.4 на Render
+# Установка ChinaTradeResolve v3.4.3 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Audit_Fix_v3.4.zip`.
+Распакуйте архив `ChinaTradeResolve_Audit_Fix_v3.4.3.zip`.
 
-В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Audit_Fix_v3.4`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Audit_Fix_v3.4.3`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 

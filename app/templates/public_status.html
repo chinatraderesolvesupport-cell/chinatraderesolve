@@ -10,7 +10,8 @@
   <p class="fine">{{ document_copy.privacy }}</p>
   {% if documents_uploaded %}<p class="success">{{ document_copy.uploaded }}</p>{% endif %}
   {% if analysis_error %}<p class="error">{{ document_copy.analysis_error }}</p>{% endif %}
-  {% if analysis_unavailable %}<p class="warning">{{ document_copy.analysis_unavailable }}</p>{% endif %}
+  {% if analysis_not_configured %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
+  {% if analysis_consent_required %}<p class="warning">{{ document_copy.analysis_consent_required }}</p>{% endif %}
 
   {% if documents %}
   <div class="file-list">
@@ -37,13 +38,17 @@
   {% endif %}
 
   {% if documents %}
-    {% if case.ai_consent and document_analysis_enabled %}
+    {% if document_analysis_enabled %}
     <form id="documentAnalysisForm" method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents/analyse">
+      {% if not case.ai_consent %}
+      <p class="warning">{{ document_copy.analysis_consent_required }}</p>
+      <label class="check"><input type="checkbox" name="analysis_consent" value="true" required><span>{{ document_copy.analysis_consent }}</span></label>
+      {% endif %}
       <button class="btn primary" type="submit">{{ document_copy.analyse }}</button>
       <p id="analysisLoading" class="loading warning">{{ document_copy.analysing }}</p>
     </form>
     {% elif not document_analysis or document_analysis.status != 'completed' %}
-      <p class="warning">{{ document_copy.analysis_unavailable }}</p>
+      <p class="warning">{{ document_copy.analysis_not_configured }}</p>
     {% endif %}
   {% endif %}
 </div>
@@ -106,7 +111,7 @@ if (uploadForm) {
       return;
     }
     const total = files.reduce((sum, file) => sum + file.size, 0);
-    if (files.some(file => file.size > 8 * 1024 * 1024) || total > 25 * 1024 * 1024) {
+    if (files.some(file => file.size > 8 * 1024 * 1024) || total > 60 * 1024 * 1024) {
       event.preventDefault();
       alert('{{ document_copy.limit }}');
       return;

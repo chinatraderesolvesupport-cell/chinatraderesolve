@@ -284,6 +284,25 @@ def add_audit(conn: Any, case_id: int, actor: str, event_type: str, details: dic
     )
 
 
+def record_audit(case_id: int, actor: str, event_type: str, details: dict[str, Any]) -> None:
+    """Append a safe audit event outside an existing transaction."""
+    with transaction() as conn:
+        add_audit(conn, case_id, actor, event_type, details)
+
+
+def grant_ai_consent(case_id: int, actor: str = "client") -> bool:
+    """Persist explicit AI consent granted from the private case page."""
+    with transaction() as conn:
+        row = execute(conn, "SELECT ai_consent FROM cases WHERE id=? AND deleted_at IS NULL", (case_id,)).fetchone()
+        if not row:
+            raise KeyError("Case not found")
+        already_granted = bool(row["ai_consent"])
+        if not already_granted:
+            execute(conn, "UPDATE cases SET ai_consent=1,updated_at=? WHERE id=?", (utcnow(), case_id))
+            add_audit(conn, case_id, actor, "ai_consent_granted", {"scope": "document_analysis"})
+        return not already_granted
+
+
 def create_case(payload: dict[str, Any], triage: dict[str, Any], reference: str, public_token: str) -> dict[str, Any]:
     now = utcnow()
     status = triage["decision"]
@@ -544,24 +563,41 @@ def delete_case_document(case_id: int, document_id: int, actor: str = "client") 
         return True
 
 
-def set_document_analysis_status(case_id: int, status: str, model: str = "", error: str = "") -> None:
+def set_document_analysis_status(
+    case_id: int,
+    status: str,
+    model: str = "",
+    error: str = "",
+    actor: str = "document_ai",
+    document_count: int | None = None,
+) -> None:
     if status not in {"pending", "running", "completed", "failed"}:
         raise ValueError("Invalid document-analysis status")
     now = utcnow()
+    safe_error = error[:1000]
     with transaction() as conn:
         existing = execute(conn, "SELECT case_id,created_at FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
         if existing:
             execute(
                 conn,
                 "UPDATE document_analyses SET updated_at=?,status=?,model=?,error=? WHERE case_id=?",
-                (now, status, model, error[:1000], case_id),
+                (now, status, model, safe_error, case_id),
             )
         else:
             execute(
                 conn,
                 "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,?,?,'{}',?)",
-                (case_id, now, now, status, model, error[:1000]),
+                (case_id, now, now, status, model, safe_error),
             )
+        details: dict[str, Any] = {"status": status, "model": model}
+        if document_count is not None:
+            details["document_count"] = int(document_count)
+        if safe_error:
+            details["error"] = safe_error
+        if status == "running":
+            add_audit(conn, case_id, actor, "document_analysis_started", details)
+        elif status == "failed":
+            add_audit(conn, case_id, actor, "document_analysis_failed", details)
 
 
 def save_document_analysis(case_id: int, result: dict[str, Any], model: str) -> dict[str, Any]:
@@ -581,7 +617,7 @@ def save_document_analysis(case_id: int, result: dict[str, Any], model: str) -> 
                 "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,'completed',?,?,'')",
                 (case_id, now, now, model, result_json),
             )
-        add_audit(conn, case_id, "triage", "documents_analysed", {
+        add_audit(conn, case_id, "document_ai", "documents_analysed", {
             "document_count": len(list_case_documents_for_connection(conn, case_id)),
             "readiness_score": result.get("readiness_score"),
             "model": model,

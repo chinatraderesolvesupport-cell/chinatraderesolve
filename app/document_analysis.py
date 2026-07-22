@@ -25,7 +25,7 @@ DOCUMENT_ANALYSIS_SCHEMA: dict[str, Any] = {
         "summary": {"type": "string"},
         "document_inventory": {
             "type": "array",
-            "maxItems": 12,
+            "maxItems": 20,
             "items": {
                 "type": "object",
                 "additionalProperties": False,
@@ -176,8 +176,18 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
             parsed = json.loads(_extract_output_text(response.json()))
     except DocumentAnalysisProviderError:
         raise
-    except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        raise DocumentAnalysisProviderError("The document-analysis provider request failed") from exc
+    except httpx.TimeoutException as exc:
+        raise DocumentAnalysisProviderError("OpenAI document analysis timed out") from exc
+    except httpx.HTTPStatusError as exc:
+        request_id = exc.response.headers.get("x-request-id", "").strip()
+        detail = f"OpenAI document analysis returned HTTP {exc.response.status_code}"
+        if request_id:
+            detail += f" (request {request_id[:120]})"
+        raise DocumentAnalysisProviderError(detail) from exc
+    except httpx.HTTPError as exc:
+        raise DocumentAnalysisProviderError("OpenAI document analysis could not connect") from exc
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        raise DocumentAnalysisProviderError("OpenAI returned an invalid document-analysis response") from exc
 
     # Validate the most important invariants even after Structured Outputs.
     score = parsed.get("readiness_score")

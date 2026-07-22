@@ -94,7 +94,7 @@ _RU = {
 "More information is needed to determine whether the case fits the free-access service.": "Нужно больше информации, чтобы определить, подходит ли дело для бесплатной помощи.",
 "Request a clearer description of the supplier dispute and requested outcome.": "Запросить более точное описание спора и желаемого результата.",
 "The application appears suitable for free-access review, subject to capacity and a final scope check.": "Заявка предварительно подходит для бесплатного рассмотрения при наличии мощности и после окончательной проверки объёма помощи.",
-"Place in the free-access candidate queue and request up to five key files if selected.": "Поместить в очередь кандидатов и при отборе запросить не более пяти ключевых файлов.",
+"Place in the free-access candidate queue and request up to twenty key files if selected.": "Поместить в очередь кандидатов и при отборе запросить не более двадцати ключевых файлов.",
 "The case may fit the free-access service, but additional information is needed before selection.": "Дело может подходить для бесплатной помощи, но до отбора требуется дополнительная информация.",
 "Request the missing information listed by the triage result.": "Запросить недостающую информацию, указанную в результате проверки.",
 "The case was assessed against the current free-access scope and evidence indicators.": "Дело оценено с учётом текущего объёма бесплатной помощи и имеющихся признаков доказательств.",
@@ -120,7 +120,7 @@ _FR = {
 "More information is needed to determine whether the case fits the free-access service.": "Des informations supplémentaires sont nécessaires pour déterminer si le dossier correspond au service gratuit.",
 "Request a clearer description of the supplier dispute and requested outcome.": "Demander une description plus claire du litige avec le fournisseur et du résultat souhaité.",
 "The application appears suitable for free-access review, subject to capacity and a final scope check.": "La demande semble adaptée à une analyse gratuite, sous réserve de la capacité disponible et d’une vérification finale du périmètre.",
-"Place in the free-access candidate queue and request up to five key files if selected.": "Placer la demande dans la file des candidats et demander jusqu’à cinq fichiers essentiels si elle est sélectionnée.",
+"Place in the free-access candidate queue and request up to twenty key files if selected.": "Placer la demande dans la file des candidats et demander jusqu’à vingt fichiers essentiels si elle est sélectionnée.",
 "The case may fit the free-access service, but additional information is needed before selection.": "Le dossier peut correspondre au service gratuit, mais des informations supplémentaires sont nécessaires avant la sélection.",
 "Request the missing information listed by the triage result.": "Demander les informations manquantes indiquées dans le résultat de l’analyse.",
 "The case was assessed against the current free-access scope and evidence indicators.": "Le dossier a été évalué selon le périmètre actuel de l’accès gratuit et les indices de preuve disponibles.",
@@ -146,7 +146,7 @@ _DE = {
 "More information is needed to determine whether the case fits the free-access service.": "Weitere Informationen sind erforderlich, um zu beurteilen, ob der Fall zum kostenlosen Dienst passt.",
 "Request a clearer description of the supplier dispute and requested outcome.": "Eine klarere Beschreibung des Lieferantenstreits und des gewünschten Ergebnisses anfordern.",
 "The application appears suitable for free-access review, subject to capacity and a final scope check.": "Der Antrag scheint für eine kostenlose Prüfung geeignet zu sein, vorbehaltlich verfügbarer Kapazität und einer abschließenden Umfangsprüfung.",
-"Place in the free-access candidate queue and request up to five key files if selected.": "In die Kandidatenliste für den kostenlosen Zugang aufnehmen und bei Auswahl bis zu fünf zentrale Dateien anfordern.",
+"Place in the free-access candidate queue and request up to twenty key files if selected.": "In die Kandidatenliste für den kostenlosen Zugang aufnehmen und bei Auswahl bis zu zwanzig zentrale Dateien anfordern.",
 "The case may fit the free-access service, but additional information is needed before selection.": "Der Fall könnte zum kostenlosen Dienst passen, vor der Auswahl sind jedoch zusätzliche Informationen erforderlich.",
 "Request the missing information listed by the triage result.": "Die im Prüfergebnis aufgeführten fehlenden Informationen anfordern.",
 "The case was assessed against the current free-access scope and evidence indicators.": "Der Fall wurde anhand des aktuellen Umfangs des kostenlosen Zugangs und der vorhandenen Beweisindikatoren bewertet.",
@@ -172,7 +172,7 @@ _ES = {
 "More information is needed to determine whether the case fits the free-access service.": "Se necesita más información para determinar si el caso encaja en el servicio gratuito.",
 "Request a clearer description of the supplier dispute and requested outcome.": "Solicitar una descripción más clara de la disputa con el proveedor y del resultado deseado.",
 "The application appears suitable for free-access review, subject to capacity and a final scope check.": "La solicitud parece adecuada para una revisión gratuita, sujeta a la capacidad disponible y a una comprobación final del alcance.",
-"Place in the free-access candidate queue and request up to five key files if selected.": "Colocar la solicitud en la cola de candidatos y pedir hasta cinco archivos clave si se selecciona.",
+"Place in the free-access candidate queue and request up to twenty key files if selected.": "Colocar la solicitud en la cola de candidatos y pedir hasta veinte archivos clave si se selecciona.",
 "The case may fit the free-access service, but additional information is needed before selection.": "El caso puede encajar en el servicio gratuito, pero se necesita información adicional antes de la selección.",
 "Request the missing information listed by the triage result.": "Solicitar la información faltante indicada en el resultado de la evaluación.",
 "The case was assessed against the current free-access scope and evidence indicators.": "El caso se evaluó conforme al alcance actual del acceso gratuito y a los indicios de prueba disponibles.",
@@ -182,6 +182,7 @@ _SR = {
 "The case may fit the free-access service, but additional information is needed before selection.":"Slučaj može odgovarati besplatnoj usluzi, ali su potrebne dodatne informacije pre izbora.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.":"Slučaj može biti relevantan, ali njegova vrednost ili tehnička složenost zahtevaju ljudsku proveru obima.",
 "The case was assessed against the current free-access scope and evidence indicators.":"Slučaj je procenjen prema trenutnom obimu besplatne usluge i pokazateljima dokaza.",
+"Place in the free-access candidate queue and request up to twenty key files if selected.":"Staviti u red kandidata za besplatan pristup i, ako bude izabran, zatražiti do dvadeset ključnih fajlova.",
 }
 
 def _localize_result(result: TriageResult, language: str) -> TriageResult:
@@ -284,7 +285,7 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
         risk = "low" if amount is None or amount < 10000 else "medium"
         strength = "supportable_for_review"
         public = "The application appears suitable for free-access review, subject to capacity and a final scope check."
-        action = "Place in the free-access candidate queue and request up to five key files if selected."
+        action = "Place in the free-access candidate queue and request up to twenty key files if selected."
     else:
         decision = "needs_information"
         risk = "medium"

@@ -1003,9 +1003,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.6.1"
+    assert health.json()["version"] == "3.6.2"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.6.1"
+    assert health.headers["x-app-version"] == "3.6.2"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2801,3 +2801,25 @@ def test_russian_status_page_localises_fixed_analysis_enums():
     assert copy["readability_labels"]["clear"] == "Хорошо читается"
     assert copy["confidence_labels"]["high"] == "Высокая уверенность"
     assert copy["readiness_factor_labels"]["payment"] == "Подтверждение оплаты"
+
+
+def test_document_date_placeholder_preserves_visible_date_with_other_missing_detail():
+    import app.document_analysis as module
+
+    value = "26 May 2026, time not visible"
+    assert module._normalise_date_placeholder(value, "English") == value
+    assert module._derive_sort_date(value) == "2026-05-26"
+
+
+def test_document_date_parser_supports_all_interface_languages():
+    import app.document_analysis as module
+
+    examples = {
+        "26 mars 2025": "2025-03-26",
+        "26 März 2025": "2025-03-26",
+        "26 marzo 2025": "2025-03-26",
+        "26 mart 2025": "2025-03-26",
+        "26 март 2025": "2025-03-26",
+    }
+    for visible, expected in examples.items():
+        assert module._derive_sort_date(visible) == expected

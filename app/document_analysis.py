@@ -207,6 +207,7 @@ DATE_NOT_VISIBLE = {
 }
 
 _MONTHS = {
+    # English and Russian
     "jan": 1, "january": 1, "янв": 1, "января": 1,
     "feb": 2, "february": 2, "фев": 2, "февраля": 2,
     "mar": 3, "march": 3, "мар": 3, "марта": 3,
@@ -219,18 +220,48 @@ _MONTHS = {
     "oct": 10, "october": 10, "окт": 10, "октября": 10,
     "nov": 11, "november": 11, "ноя": 11, "ноября": 11,
     "dec": 12, "december": 12, "дек": 12, "декабря": 12,
+    # French
+    "janv": 1, "janvier": 1, "févr": 2, "fevr": 2, "février": 2, "fevrier": 2,
+    "mars": 3, "avr": 4, "avril": 4, "mai": 5, "juin": 6,
+    "juil": 7, "juillet": 7, "août": 8, "aout": 8,
+    "septembre": 9, "octobre": 10, "novembre": 11, "déc": 12,
+    "decembre": 12, "décembre": 12,
+    # German
+    "januar": 1, "februar": 2, "mär": 3, "märz": 3, "maerz": 3,
+    "juni": 6, "juli": 7, "september": 9, "okt": 10, "oktober": 10,
+    "dez": 12, "dezember": 12,
+    # Spanish
+    "ene": 1, "enero": 1, "febrero": 2, "marzo": 3, "abr": 4,
+    "abril": 4, "mayo": 5, "junio": 6, "julio": 7, "ago": 8,
+    "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11,
+    "dic": 12, "diciembre": 12,
+    # Serbian, Latin and Cyrillic
+    "januar": 1, "februar": 2, "mart": 3, "april": 4, "maj": 5,
+    "jun": 6, "jul": 7, "avg": 8, "avgust": 8, "septembar": 9,
+    "oktobar": 10, "novembar": 11, "decembar": 12,
+    "јануар": 1, "фебруар": 2, "март": 3, "април": 4, "мај": 5,
+    "јун": 6, "јул": 7, "август": 8, "септембар": 9, "октобар": 10,
+    "новембар": 11, "децембар": 12,
 }
 
 
 def _normalise_date_placeholder(value: Any, language: str) -> str:
     text = str(value or "").strip()
-    lowered = text.casefold()
-    unknown_markers = (
-        "date not visible", "date not shown", "unknown date", "дата не видна",
-        "дата не указана", "не видно даты", "datum nije vidljiv", "date non visible",
-        "datum nicht sichtbar", "fecha no visible", "not visible",
-    )
-    if not text or any(marker in lowered for marker in unknown_markers):
+    lowered = " ".join(text.casefold().split())
+    # Only replace the whole field when the field itself says that the date is
+    # unavailable. A phrase such as "26 May 2026, time not visible" still
+    # contains a reliable date and must not be collapsed to a placeholder.
+    unknown_markers = {
+        "date not visible", "date not shown", "unknown date", "not visible",
+        "дата не видна", "дата не указана", "не видно даты",
+        "datum nije vidljiv", "date non visible", "datum nicht sichtbar",
+        "fecha no visible",
+    }
+    cleaned = lowered.strip(" .,:;—–-()[]")
+    contains_unknown_marker = any(marker in lowered for marker in unknown_markers)
+    if not text or cleaned in unknown_markers or (
+        contains_unknown_marker and _derive_sort_date(text) is None
+    ):
         return DATE_NOT_VISIBLE.get(language, DATE_NOT_VISIBLE["English"])
     return text
 
@@ -261,7 +292,7 @@ def _derive_sort_date(display_date: str) -> str | None:
             pass
     # Date ranges use their earliest visible day for chronological sorting.
     match = re.search(
-        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*[–—-]\s*(?:0?[1-9]|[12]\d|3[01])\s+([a-zа-яё.]+)\s+(20\d{2})(?!\d)",
+        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*[–—-]\s*(?:0?[1-9]|[12]\d|3[01])\s+([^\W\d_]+\.?)\s+(20\d{2})(?!\d)",
         text,
     )
     if match:
@@ -271,7 +302,7 @@ def _derive_sort_date(display_date: str) -> str | None:
                 return date(int(match.group(3)), month, int(match.group(1))).isoformat()
             except ValueError:
                 pass
-    match = re.search(r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s+([a-zа-яё.]+)\s+(20\d{2})(?!\d)", text)
+    match = re.search(r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s+([^\W\d_]+\.?)\s+(20\d{2})(?!\d)", text)
     if match:
         month = _MONTHS.get(match.group(2).rstrip("."))
         if month:
@@ -279,7 +310,7 @@ def _derive_sort_date(display_date: str) -> str | None:
                 return date(int(match.group(3)), month, int(match.group(1))).isoformat()
             except ValueError:
                 pass
-    match = re.search(r"([a-zа-яё.]+)\s*(0?[1-9]|[12]\d|3[01])\s+(20\d{2})", text)
+    match = re.search(r"([^\W\d_]+\.?)\s*(0?[1-9]|[12]\d|3[01])\s+(20\d{2})", text)
     if match:
         month = _MONTHS.get(match.group(1).rstrip("."))
         if month:

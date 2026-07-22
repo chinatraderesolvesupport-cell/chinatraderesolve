@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.6.1
+# ChinaTradeResolve Document AI v3.6.2
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -19,6 +19,13 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - retention/anonymisation script;
 - automated tests and Docker packaging.
 
+
+
+## Multilingual chronology fixes in v3.6.2
+
+- a visible date is preserved when another detail is unavailable, for example “26 May 2026, time not visible”;
+- visible month names are parsed in English, Russian, French, German, Spanish and Serbian;
+- chronology ordering no longer has to rely on the model-provided ISO helper for these interface languages.
 
 
 ## Public-site redesign retained from v3.3
@@ -218,7 +225,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.6.1
+cd ChinaTradeResolve_Document_AI_v3.6.2
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

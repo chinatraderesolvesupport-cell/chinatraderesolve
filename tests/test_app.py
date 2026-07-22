@@ -587,7 +587,7 @@ def test_ai_assistant_responses_api_mock(monkeypatch):
         SimpleNamespace(
             enable_ai_assistant=True,
             openai_api_key="test-key",
-            openai_assistant_model="test-assistant-model",
+            openai_assistant_model="gpt-5.6-luna",
             openai_moderation_model=None,
             ai_assistant_history_messages=8,
             ai_assistant_max_output_tokens=500,
@@ -607,11 +607,149 @@ def test_ai_assistant_responses_api_mock(monkeypatch):
     assert "written order" in reply
     assert captured["url"].endswith("/v1/responses")
     assert captured["body"]["store"] is False
-    assert captured["body"]["model"] == "test-assistant-model"
+    assert captured["body"]["model"] == "gpt-5.6-luna"
     assert captured["body"]["max_output_tokens"] == 500
+    assert captured["body"]["reasoning"] == {"effort": "none"}
+    assert captured["body"]["text"] == {"verbosity": "low"}
     assert captured["body"]["input"][0]["role"] == "developer"
     assert "not legal advice" in captured["body"]["input"][0]["content"][0]["text"]
     assert captured["headers"]["Authorization"] == "Bearer test-key"
+
+
+def test_ai_assistant_incomplete_response_is_logged_without_message_content(monkeypatch, caplog):
+    import asyncio
+    import logging
+    from types import SimpleNamespace
+
+    import pytest
+    import app.ai_assistant as module
+    from app.schemas import AssistantChatRequest
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "status": "incomplete",
+                "incomplete_details": {"reason": "max_output_tokens"},
+                "usage": {
+                    "input_tokens": 250,
+                    "output_tokens": 500,
+                    "output_tokens_details": {"reasoning_tokens": 500},
+                },
+                "output": [],
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, headers, json):
+            return FakeResponse()
+
+    monkeypatch.setattr(
+        module,
+        "settings",
+        SimpleNamespace(
+            enable_ai_assistant=True,
+            openai_api_key="sk-test-secret-value",
+            openai_assistant_model="gpt-5.6-luna",
+            openai_moderation_model=None,
+            ai_assistant_history_messages=8,
+            ai_assistant_max_output_tokens=500,
+            openai_timeout_seconds=7,
+        ),
+    )
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    payload = AssistantChatRequest.model_validate(
+        {
+            "language": "en",
+            "messages": [{"role": "user", "content": "PRIVATE TEST MESSAGE"}],
+        }
+    )
+    with caplog.at_level(logging.WARNING, logger="chinatraderesolve.ai_assistant"):
+        with pytest.raises(module.AssistantProviderError, match="incomplete"):
+            asyncio.run(module.assistant_reply(payload))
+    log_text = caplog.text
+    assert "reason=max_output_tokens" in log_text
+    assert "reasoning_tokens=500" in log_text
+    assert "PRIVATE TEST MESSAGE" not in log_text
+    assert "sk-test-secret-value" not in log_text
+
+
+def test_ai_assistant_http_error_logs_safe_provider_fields(monkeypatch, caplog):
+    import asyncio
+    import logging
+    from types import SimpleNamespace
+
+    import httpx
+    import pytest
+    import app.ai_assistant as module
+    from app.schemas import AssistantChatRequest
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, headers, json):
+            request = httpx.Request("POST", url)
+            return httpx.Response(
+                401,
+                request=request,
+                headers={"x-request-id": "req-safe-test"},
+                json={
+                    "error": {
+                        "type": "invalid_request_error",
+                        "code": "invalid_api_key",
+                        "param": None,
+                        "message": "Incorrect API key provided: sk-test-secret-value",
+                    }
+                },
+            )
+
+    monkeypatch.setattr(
+        module,
+        "settings",
+        SimpleNamespace(
+            enable_ai_assistant=True,
+            openai_api_key="sk-test-secret-value",
+            openai_assistant_model="gpt-5.6-luna",
+            openai_moderation_model=None,
+            ai_assistant_history_messages=8,
+            ai_assistant_max_output_tokens=500,
+            openai_timeout_seconds=7,
+        ),
+    )
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    payload = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [{"role": "user", "content": "CONFIDENTIAL USER TEXT"}],
+        }
+    )
+    with caplog.at_level(logging.ERROR, logger="chinatraderesolve.ai_assistant"):
+        with pytest.raises(module.AssistantProviderError, match="HTTP error"):
+            asyncio.run(module.assistant_reply(payload))
+    log_text = caplog.text
+    assert "status=401" in log_text
+    assert "code=invalid_api_key" in log_text
+    assert "request_id=req-safe-test" in log_text
+    assert "sk-[redacted]" in log_text
+    assert "sk-test-secret-value" not in log_text
+    assert "CONFIDENTIAL USER TEXT" not in log_text
 
 
 def test_ai_assistant_moderation_blocks_narrow_category(monkeypatch):
@@ -1065,9 +1203,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.4"
+    assert health.json()["version"] == "3.7.5"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.4"
+    assert health.headers["x-app-version"] == "3.7.5"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [

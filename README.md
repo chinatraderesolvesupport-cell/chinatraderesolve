@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.4
+# ChinaTradeResolve Document AI v3.7.5
 
-Version 3.7.4 improves the public application experience: the final submit button remains disabled until the description and mandatory consents are complete, the AI launcher no longer covers form controls, accessibility labels follow the selected language, and the landing page is more compact. The v3.7.3 PostgreSQL startup-lock protection remains in place.
+Version 3.7.5 fixes the public GPT-5.6 assistant integration: short chat requests explicitly use no reasoning, incomplete Responses API results are detected, and safe provider diagnostics reach the Render application log without API keys or user messages. The v3.7.4 form and compact-landing improvements remain in place.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -288,7 +288,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.4
+cd ChinaTradeResolve_Document_AI_v3.7.5
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -316,6 +316,8 @@ OPENAI_MODERATION_MODEL=omni-moderation-latest
 ```
 
 When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After deployment, `/health` must report `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.
+
+For GPT-5.6 models, the public assistant explicitly sends `reasoning.effort=none` and low verbosity. This preserves a fast, concise informational chat and prevents hidden reasoning tokens from consuming the short response budget. Provider failures are logged with the HTTP status, safe error fields and request ID; the log never includes the API key or the user's chat text.
 
 ## Enable AI triage
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 import unicodedata
 from typing import Any
 
@@ -8,6 +10,9 @@ import httpx
 
 from .config import settings
 from .schemas import AssistantChatRequest
+
+
+logger = logging.getLogger("chinatraderesolve.ai_assistant")
 
 
 LANGUAGE_NAMES = {
@@ -59,6 +64,51 @@ class AssistantProviderError(RuntimeError):
 
 class AssistantConfigurationError(RuntimeError):
     """Raised when the assistant has not been configured for deployment."""
+
+
+def _clip_log_value(value: Any, limit: int = 300) -> str:
+    """Keep provider diagnostics useful without leaking credentials or user content."""
+    cleaned = " ".join(str(value or "").split())
+    cleaned = re.sub(r"(?i)bearer\s+\S+", "Bearer [redacted]", cleaned)
+    cleaned = re.sub(r"\bsk-[A-Za-z0-9_-]{8,}\b", "sk-[redacted]", cleaned)
+    return cleaned[:limit]
+
+
+def _provider_error_fields(response: httpx.Response) -> dict[str, str]:
+    try:
+        payload = response.json()
+    except (json.JSONDecodeError, TypeError, ValueError):
+        payload = {}
+    error = payload.get("error", {}) if isinstance(payload, dict) else {}
+    if not isinstance(error, dict):
+        error = {}
+    return {
+        "type": _clip_log_value(error.get("type"), 100) or "unknown",
+        "code": _clip_log_value(error.get("code"), 100) or "unknown",
+        "param": _clip_log_value(error.get("param"), 100) or "none",
+        "message": _clip_log_value(error.get("message"), 300) or "not provided",
+    }
+
+
+def _apply_model_controls(body: dict[str, Any], model: str) -> None:
+    """Keep the low-latency public chat from spending its budget on hidden reasoning."""
+    if model.startswith("gpt-5.6"):
+        body["reasoning"] = {"effort": "none"}
+        body["text"] = {"verbosity": "low"}
+
+
+def _usage_fields(data: dict[str, Any]) -> tuple[int, int, int]:
+    usage = data.get("usage", {})
+    if not isinstance(usage, dict):
+        return 0, 0, 0
+    details = usage.get("output_tokens_details", {})
+    if not isinstance(details, dict):
+        details = {}
+    return (
+        max(0, int(usage.get("input_tokens") or 0)),
+        max(0, int(usage.get("output_tokens") or 0)),
+        max(0, int(details.get("reasoning_tokens") or 0)),
+    )
 
 
 def assistant_is_enabled() -> bool:
@@ -188,12 +238,14 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
             }
         )
 
-    body = {
-        "model": settings.openai_assistant_model,
+    model = str(settings.openai_assistant_model)
+    body: dict[str, Any] = {
+        "model": model,
         "store": False,
         "input": input_messages,
         "max_output_tokens": settings.ai_assistant_max_output_tokens,
     }
+    _apply_model_controls(body, model)
 
     try:
         async with httpx.AsyncClient(timeout=settings.openai_timeout_seconds) as client:
@@ -205,11 +257,72 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
                 json=body,
             )
             response.raise_for_status()
-            answer = _extract_output_text(response.json())
+            data = response.json()
+            if not isinstance(data, dict):
+                raise AssistantProviderError("OpenAI returned a non-object response")
+            if data.get("status") == "incomplete":
+                incomplete = data.get("incomplete_details", {})
+                reason = incomplete.get("reason") if isinstance(incomplete, dict) else "unknown"
+                input_tokens, output_tokens, reasoning_tokens = _usage_fields(data)
+                logger.warning(
+                    "OpenAI assistant incomplete model=%s reason=%s input_tokens=%s output_tokens=%s reasoning_tokens=%s",
+                    model,
+                    _clip_log_value(reason, 100) or "unknown",
+                    input_tokens,
+                    output_tokens,
+                    reasoning_tokens,
+                )
+                raise AssistantProviderError(f"OpenAI response incomplete: {reason or 'unknown'}")
+            try:
+                answer = _extract_output_text(data)
+            except AssistantProviderError:
+                input_tokens, output_tokens, reasoning_tokens = _usage_fields(data)
+                logger.error(
+                    "OpenAI assistant empty output model=%s status=%s input_tokens=%s output_tokens=%s reasoning_tokens=%s",
+                    model,
+                    _clip_log_value(data.get("status"), 100) or "unknown",
+                    input_tokens,
+                    output_tokens,
+                    reasoning_tokens,
+                )
+                raise
     except AssistantProviderError:
         raise
-    except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        raise AssistantProviderError("AI provider request failed") from exc
+    except httpx.TimeoutException as exc:
+        logger.error(
+            "OpenAI assistant timeout model=%s timeout_seconds=%s",
+            model,
+            settings.openai_timeout_seconds,
+        )
+        raise AssistantProviderError("AI provider request timed out") from exc
+    except httpx.HTTPStatusError as exc:
+        fields = _provider_error_fields(exc.response)
+        request_id = _clip_log_value(exc.response.headers.get("x-request-id"), 120) or "none"
+        logger.error(
+            "OpenAI assistant HTTP error model=%s status=%s type=%s code=%s param=%s request_id=%s message=%s",
+            model,
+            exc.response.status_code,
+            fields["type"],
+            fields["code"],
+            fields["param"],
+            request_id,
+            fields["message"],
+        )
+        raise AssistantProviderError("AI provider returned an HTTP error") from exc
+    except httpx.HTTPError as exc:
+        logger.error(
+            "OpenAI assistant transport error model=%s error_type=%s",
+            model,
+            type(exc).__name__,
+        )
+        raise AssistantProviderError("AI provider could not be reached") from exc
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.error(
+            "OpenAI assistant invalid response model=%s error_type=%s",
+            model,
+            type(exc).__name__,
+        )
+        raise AssistantProviderError("AI provider returned an invalid response") from exc
 
     # Keep accidental provider verbosity under control and remove invalid Unicode artefacts.
     cleaned_answer = _clean_output_text(answer[:5000])

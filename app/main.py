@@ -10,9 +10,9 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
-from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi import FastAPI, HTTPException, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -31,18 +31,37 @@ from .ai_assistant import (
 )
 from .config import settings
 from .db import (
+    add_case_document,
     create_case,
     dashboard_counts,
+    delete_case_document,
     get_audit,
     get_case,
     get_case_by_public,
+    get_case_document,
+    get_document_analysis,
     get_feedback,
     init_db,
+    list_case_documents,
     list_cases,
     replace_triage,
+    save_document_analysis,
     save_feedback,
+    set_document_analysis_status,
     soft_delete_expired,
     update_status,
+)
+from .document_analysis import (
+    DocumentAnalysisConfigurationError,
+    DocumentAnalysisProviderError,
+    analyse_case_documents,
+    document_analysis_is_enabled,
+)
+from .documents import (
+    MAX_DOCUMENTS_PER_CASE,
+    MAX_TOTAL_BYTES,
+    DocumentValidationError,
+    prepare_upload,
 )
 from .notifications import (
     deliver_pending,
@@ -64,7 +83,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="ChinaTradeResolve Free Access", version="3.3.0", lifespan=lifespan)
+app = FastAPI(title="ChinaTradeResolve Free Access", version="3.4.0", lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,
@@ -77,6 +96,8 @@ templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
+document_upload_limiter = SlidingWindowRateLimiter(limit=12, window_seconds=900)
+document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=1800)
 init_db()
 
 
@@ -223,7 +244,7 @@ STATUS_LABELS = {
 RISK_LABELS = {"critical": "Критический", "high": "Высокий", "medium": "Средний", "low": "Низкий"}
 LANGUAGE_LABELS = {"English": "Английский", "French": "Французский", "German": "Немецкий", "Spanish": "Испанский", "Russian": "Русский", "Serbian": "Сербский"}
 ACTOR_LABELS = {"system": "система", "triage": "автопроверка", "admin": "администратор", "client": "клиент"}
-EVENT_LABELS = {"application_created": "заявка создана", "triage_completed": "автопроверка завершена", "status_updated": "статус изменён", "feedback_submitted": "отзыв отправлен", "triage_recomputed": "автопроверка повторена"}
+EVENT_LABELS = {"application_created": "заявка создана", "triage_completed": "автопроверка завершена", "status_updated": "статус изменён", "feedback_submitted": "отзыв отправлен", "triage_recomputed": "автопроверка повторена", "document_uploaded": "документ загружен", "document_deleted": "документ удалён", "documents_analysed": "документы проанализированы"}
 PROBLEM_LABELS = {
     "Goods not delivered": "Товар не доставлен",
     "Poor quality or defects": "Низкое качество или дефекты",
@@ -260,7 +281,7 @@ STATUS_COPY = {
         "title": "Case status",
         "info_heading": "Information that may be requested",
         "return": "Return to website",
-        "notice": "No service fee or file upload is required at the application stage. This page contains an automated preliminary classification, not legal advice or a prediction of outcome.",
+        "notice": "No service fee is required. You may add up to five key files below. The classification and document analysis are preliminary evidence organisation, not legal advice or a prediction of outcome.",
         "feedback_heading": "Help us improve the free service",
         "feedback_intro": "Share honest feedback after the service has helped you. Do not include supplier names, order numbers or other confidential details.",
         "rating": "Rating",
@@ -278,7 +299,7 @@ STATUS_COPY = {
         "title": "Статус дела",
         "info_heading": "Информация, которая может потребоваться",
         "return": "Вернуться на сайт",
-        "notice": "На этапе заявки оплата и загрузка файлов не требуются. Эта страница содержит автоматическую предварительную классификацию, а не юридическую консультацию или прогноз результата.",
+        "notice": "Оплата не требуется. Ниже можно добавить до пяти ключевых файлов. Предварительная классификация и анализ документов систематизируют доказательства, но не являются юридической консультацией или прогнозом результата.",
         "feedback_heading": "Помогите улучшить бесплатный сервис",
         "feedback_intro": "Оставьте честный отзыв после получения помощи. Не указывайте имена поставщиков, номера заказов и другие конфиденциальные сведения.",
         "rating": "Оценка",
@@ -296,7 +317,7 @@ STATUS_COPY = {
         "title": "Status slučaja",
         "info_heading": "Informacije koje mogu biti zatražene",
         "return": "Povratak na sajt",
-        "notice": "U fazi prijave se ne traži plaćanje niti otpremanje fajlova. Ova stranica sadrži automatsku preliminarnu klasifikaciju, a ne pravni savet ili prognozu ishoda.",
+        "notice": "Plaćanje nije potrebno. Ispod možete dodati do pet ključnih fajlova. Preliminarna klasifikacija i analiza organizuju dokaze, ali nisu pravni savet niti prognoza ishoda.",
         "feedback_heading": "Pomozite nam da unapredimo besplatnu uslugu",
         "feedback_intro": "Pošaljite iskrene povratne informacije nakon pomoći. Ne unosite imena dobavljača, brojeve porudžbina ili poverljive podatke.",
         "rating": "Ocena",
@@ -314,7 +335,7 @@ STATUS_COPY = {
         "title": "Statut du dossier",
         "info_heading": "Informations susceptibles d’être demandées",
         "return": "Retour au site",
-        "notice": "Aucun paiement ni téléchargement de fichier n’est requis au stade de la demande. Cette page contient une classification préliminaire automatisée, et non un conseil juridique ou une prévision du résultat.",
+        "notice": "Aucun paiement n’est requis. Vous pouvez ajouter jusqu’à cinq fichiers clés ci-dessous. La classification et l’analyse sont une organisation préliminaire des preuves, pas un conseil juridique ni une prévision du résultat.",
         "feedback_heading": "Aidez-nous à améliorer le service gratuit",
         "feedback_intro": "Laissez un avis sincère après avoir reçu de l’aide. N’indiquez pas le nom du fournisseur, le numéro de commande ni d’autres informations confidentielles.",
         "rating": "Note",
@@ -332,7 +353,7 @@ STATUS_COPY = {
         "title": "Fallstatus",
         "info_heading": "Möglicherweise benötigte Informationen",
         "return": "Zur Website zurückkehren",
-        "notice": "Bei der Antragstellung sind weder Zahlung noch Datei-Upload erforderlich. Diese Seite enthält eine automatisierte vorläufige Einstufung, keine Rechtsberatung und keine Prognose des Ergebnisses.",
+        "notice": "Es ist keine Zahlung erforderlich. Unten können Sie bis zu fünf wichtige Dateien hinzufügen. Einstufung und Dokumentenanalyse sind eine vorläufige Beweisorganisation, keine Rechtsberatung oder Erfolgsprognose.",
         "feedback_heading": "Helfen Sie uns, den kostenlosen Dienst zu verbessern",
         "feedback_intro": "Geben Sie nach erhaltener Unterstützung eine ehrliche Rückmeldung. Nennen Sie keine Lieferantennamen, Bestellnummern oder andere vertrauliche Angaben.",
         "rating": "Bewertung",
@@ -350,7 +371,7 @@ STATUS_COPY = {
         "title": "Estado del caso",
         "info_heading": "Información que puede solicitarse",
         "return": "Volver al sitio web",
-        "notice": "En la fase de solicitud no se requiere pago ni carga de archivos. Esta página contiene una clasificación preliminar automatizada, no asesoramiento jurídico ni una predicción del resultado.",
+        "notice": "No se requiere pago. A continuación puede añadir hasta cinco archivos clave. La clasificación y el análisis son una organización preliminar de pruebas, no asesoramiento jurídico ni una predicción del resultado.",
         "feedback_heading": "Ayúdenos a mejorar el servicio gratuito",
         "feedback_intro": "Comparta una opinión sincera después de recibir ayuda. No incluya nombres de proveedores, números de pedido ni otros datos confidenciales.",
         "rating": "Valoración",
@@ -367,6 +388,104 @@ STATUS_COPY = {
 }
 
 
+DOCUMENT_COPY = {
+    "English": {
+        "heading": "Add key documents",
+        "intro": "Upload up to five key PDF or image files: specifications, invoice or payment proof, supplier messages, delivery evidence, or a marketplace decision.",
+        "privacy": "Remove passwords, private keys, full card numbers and unnecessary identity documents. Images are re-encoded to remove embedded metadata.",
+        "select": "Choose files",
+        "consent": "I have the right to share these files and understand they may be processed by AI when AI consent was provided.",
+        "upload": "Upload documents",
+        "uploaded": "Documents uploaded successfully.",
+        "limit": "PDF, JPG, PNG or WebP; maximum 8 MB each and 25 MB total.",
+        "none": "No documents uploaded yet.",
+        "delete": "Delete",
+        "analyse": "Analyse documents with AI",
+        "analysing": "The analysis can take up to about a minute. Keep this page open.",
+        "analysis_unavailable": "AI document analysis is not enabled. The uploaded files remain available for human review.",
+        "analysis_error": "The automated analysis could not be completed. The files remain available for human review.",
+        "analysis_title": "Preliminary document analysis",
+        "analysis_notice": "This is evidence organisation, not legal advice, authentication or a prediction of success. Important conclusions require human verification.",
+        "readiness": "Evidence readiness",
+        "inventory": "Document inventory",
+        "timeline": "Chronology",
+        "evidence": "Key evidence",
+        "contradictions": "Possible contradictions",
+        "missing": "Missing evidence",
+        "risks": "Risk flags",
+        "steps": "Recommended next steps",
+        "download": "Open",
+    },
+    "Russian": {
+        "heading": "Добавьте ключевые документы",
+        "intro": "Загрузите до пяти ключевых PDF или изображений: спецификацию, инвойс или подтверждение оплаты, переписку, доказательства доставки либо решение площадки.",
+        "privacy": "Удалите пароли, приватные ключи, полные номера карт и ненужные документы личности. Изображения перекодируются, чтобы удалить встроенные метаданные.",
+        "select": "Выберите файлы",
+        "consent": "Я имею право передавать эти файлы и понимаю, что при ранее данном согласии они могут обрабатываться ИИ.",
+        "upload": "Загрузить документы",
+        "uploaded": "Документы успешно загружены.",
+        "limit": "PDF, JPG, PNG или WebP; не более 8 МБ каждый и 25 МБ суммарно.",
+        "none": "Документы пока не загружены.",
+        "delete": "Удалить",
+        "analyse": "Проанализировать документы с помощью ИИ",
+        "analysing": "Анализ может занять около минуты. Не закрывайте эту страницу.",
+        "analysis_unavailable": "ИИ-анализ документов не включён. Загруженные файлы остаются доступными для ручной проверки.",
+        "analysis_error": "Автоматический анализ завершить не удалось. Файлы остаются доступными для ручной проверки.",
+        "analysis_title": "Предварительный анализ документов",
+        "analysis_notice": "Это систематизация доказательств, а не юридическая консультация, проверка подлинности или прогноз успеха. Важные выводы должен проверить человек.",
+        "readiness": "Готовность доказательств",
+        "inventory": "Состав документов",
+        "timeline": "Хронология",
+        "evidence": "Ключевые доказательства",
+        "contradictions": "Возможные противоречия",
+        "missing": "Недостающие доказательства",
+        "risks": "Факторы риска",
+        "steps": "Рекомендуемые следующие шаги",
+        "download": "Открыть",
+    },
+    "Serbian": {
+        "heading": "Dodajte ključne dokumente", "intro": "Otpremite do pet ključnih PDF ili slikovnih fajlova: specifikaciju, račun ili dokaz o uplati, poruke dobavljača, dokaz o isporuci ili odluku platforme.",
+        "privacy": "Uklonite lozinke, privatne ključeve, pune brojeve kartica i nepotrebna lična dokumenta. Slike se ponovo kodiraju radi uklanjanja metapodataka.",
+        "select": "Izaberite fajlove", "consent": "Imam pravo da podelim ove fajlove i razumem da mogu biti obrađeni AI-jem ako sam prethodno dao saglasnost.",
+        "upload": "Otpremi dokumente", "uploaded": "Dokumenti su uspešno otpremljeni.", "limit": "PDF, JPG, PNG ili WebP; najviše 8 MB po fajlu i 25 MB ukupno.",
+        "none": "Dokumenti još nisu otpremljeni.", "delete": "Obriši", "analyse": "Analiziraj dokumente pomoću AI-ja", "analysing": "Analiza može trajati oko jednog minuta. Ostavite ovu stranicu otvorenom.",
+        "analysis_unavailable": "AI analiza dokumenata nije uključena. Fajlovi ostaju dostupni za ljudski pregled.", "analysis_error": "Automatska analiza nije završena. Fajlovi ostaju dostupni za ljudski pregled.",
+        "analysis_title": "Preliminarna analiza dokumenata", "analysis_notice": "Ovo je organizovanje dokaza, a ne pravni savet, potvrda autentičnosti ili prognoza uspeha. Važne zaključke mora proveriti čovek.",
+        "readiness": "Spremnost dokaza", "inventory": "Pregled dokumenata", "timeline": "Hronologija", "evidence": "Ključni dokazi", "contradictions": "Moguće protivrečnosti", "missing": "Nedostajući dokazi", "risks": "Faktori rizika", "steps": "Preporučeni sledeći koraci", "download": "Otvori",
+    },
+    "French": {
+        "heading": "Ajouter les documents clés", "intro": "Téléversez jusqu’à cinq fichiers PDF ou images essentiels : spécifications, facture ou preuve de paiement, messages du fournisseur, preuve de livraison ou décision de la plateforme.",
+        "privacy": "Supprimez les mots de passe, clés privées, numéros de carte complets et pièces d’identité inutiles. Les images sont réencodées pour supprimer les métadonnées.",
+        "select": "Choisir les fichiers", "consent": "J’ai le droit de partager ces fichiers et je comprends qu’ils peuvent être traités par l’IA si j’ai déjà donné mon consentement.",
+        "upload": "Téléverser les documents", "uploaded": "Documents téléversés avec succès.", "limit": "PDF, JPG, PNG ou WebP ; 8 Mo maximum par fichier et 25 Mo au total.",
+        "none": "Aucun document téléversé.", "delete": "Supprimer", "analyse": "Analyser les documents avec l’IA", "analysing": "L’analyse peut prendre environ une minute. Gardez cette page ouverte.",
+        "analysis_unavailable": "L’analyse IA des documents n’est pas activée. Les fichiers restent disponibles pour une vérification humaine.", "analysis_error": "L’analyse automatique n’a pas pu être terminée. Les fichiers restent disponibles pour une vérification humaine.",
+        "analysis_title": "Analyse préliminaire des documents", "analysis_notice": "Il s’agit d’une organisation des preuves, pas d’un conseil juridique, d’une authentification ou d’une prévision de succès. Les conclusions importantes doivent être vérifiées par une personne.",
+        "readiness": "Préparation des preuves", "inventory": "Inventaire des documents", "timeline": "Chronologie", "evidence": "Éléments de preuve clés", "contradictions": "Contradictions possibles", "missing": "Preuves manquantes", "risks": "Signaux de risque", "steps": "Prochaines étapes recommandées", "download": "Ouvrir",
+    },
+    "German": {
+        "heading": "Wichtige Dokumente hinzufügen", "intro": "Laden Sie bis zu fünf wichtige PDF- oder Bilddateien hoch: Spezifikation, Rechnung oder Zahlungsnachweis, Lieferantennachrichten, Liefernachweis oder Plattformentscheidung.",
+        "privacy": "Entfernen Sie Passwörter, private Schlüssel, vollständige Kartennummern und unnötige Ausweisdokumente. Bilder werden neu kodiert, um Metadaten zu entfernen.",
+        "select": "Dateien auswählen", "consent": "Ich darf diese Dateien weitergeben und verstehe, dass sie bei zuvor erteilter Zustimmung durch KI verarbeitet werden können.",
+        "upload": "Dokumente hochladen", "uploaded": "Dokumente erfolgreich hochgeladen.", "limit": "PDF, JPG, PNG oder WebP; höchstens 8 MB je Datei und 25 MB insgesamt.",
+        "none": "Noch keine Dokumente hochgeladen.", "delete": "Löschen", "analyse": "Dokumente mit KI analysieren", "analysing": "Die Analyse kann etwa eine Minute dauern. Lassen Sie diese Seite geöffnet.",
+        "analysis_unavailable": "Die KI-Dokumentenanalyse ist nicht aktiviert. Die Dateien bleiben für eine menschliche Prüfung verfügbar.", "analysis_error": "Die automatische Analyse konnte nicht abgeschlossen werden. Die Dateien bleiben für eine menschliche Prüfung verfügbar.",
+        "analysis_title": "Vorläufige Dokumentenanalyse", "analysis_notice": "Dies ist eine Beweisorganisation, keine Rechtsberatung, Echtheitsprüfung oder Erfolgsprognose. Wichtige Schlussfolgerungen müssen menschlich geprüft werden.",
+        "readiness": "Beweisbereitschaft", "inventory": "Dokumentenübersicht", "timeline": "Chronologie", "evidence": "Wichtige Belege", "contradictions": "Mögliche Widersprüche", "missing": "Fehlende Belege", "risks": "Risikohinweise", "steps": "Empfohlene nächste Schritte", "download": "Öffnen",
+    },
+    "Spanish": {
+        "heading": "Añadir documentos clave", "intro": "Suba hasta cinco archivos PDF o imágenes clave: especificaciones, factura o comprobante de pago, mensajes del proveedor, prueba de entrega o decisión de la plataforma.",
+        "privacy": "Elimine contraseñas, claves privadas, números completos de tarjeta y documentos de identidad innecesarios. Las imágenes se recodifican para eliminar metadatos.",
+        "select": "Elegir archivos", "consent": "Tengo derecho a compartir estos archivos y entiendo que pueden ser procesados por IA si ya di mi consentimiento.",
+        "upload": "Subir documentos", "uploaded": "Documentos subidos correctamente.", "limit": "PDF, JPG, PNG o WebP; máximo 8 MB por archivo y 25 MB en total.",
+        "none": "Todavía no se han subido documentos.", "delete": "Eliminar", "analyse": "Analizar documentos con IA", "analysing": "El análisis puede tardar aproximadamente un minuto. Mantenga esta página abierta.",
+        "analysis_unavailable": "El análisis de documentos con IA no está activado. Los archivos siguen disponibles para revisión humana.", "analysis_error": "No se pudo completar el análisis automático. Los archivos siguen disponibles para revisión humana.",
+        "analysis_title": "Análisis preliminar de documentos", "analysis_notice": "Esto organiza pruebas; no es asesoramiento jurídico, autenticación ni una predicción de éxito. Las conclusiones importantes requieren verificación humana.",
+        "readiness": "Preparación de las pruebas", "inventory": "Inventario de documentos", "timeline": "Cronología", "evidence": "Pruebas clave", "contradictions": "Posibles contradicciones", "missing": "Pruebas faltantes", "risks": "Señales de riesgo", "steps": "Próximos pasos recomendados", "download": "Abrir",
+    },
+}
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -376,6 +495,7 @@ def home(request: Request) -> HTMLResponse:
             "support_enabled": support_is_available(),
             "contact_email": settings.contact_email,
             "ai_assistant_enabled": assistant_is_enabled(),
+            "document_analysis_enabled": document_analysis_is_enabled(),
         },
     )
 
@@ -388,6 +508,7 @@ def health() -> dict[str, Any]:
         "support_enabled": support_is_available(),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
+        "document_analysis_enabled": document_analysis_is_enabled(),
         "email_delivery_configured": bool(
             (settings.email_bridge_url and settings.email_bridge_secret)
             or (
@@ -479,7 +600,7 @@ async def submit_application(payload: ApplicationCreate, request: Request) -> JS
 
 
 @app.get("/case/{reference}/{token}", response_class=HTMLResponse)
-def public_case_status(reference: str, token: str, request: Request, feedback_saved: int = 0) -> HTMLResponse:
+def public_case_status(reference: str, token: str, request: Request, feedback_saved: int = 0, documents_uploaded: int = 0, analysis_error: int = 0, analysis_unavailable: int = 0) -> HTMLResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -487,6 +608,8 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
     language = case.get("preferred_language") or "English"
     copy = STATUS_COPY.get(language, STATUS_COPY["English"])
     feedback = get_feedback(case["id"])
+    documents = list_case_documents(case["id"])
+    document_analysis = get_document_analysis(case["id"])
     return templates.TemplateResponse(
         request=request,
         name="public_status.html",
@@ -496,13 +619,127 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "copy": copy,
             "feedback": feedback,
             "feedback_saved": bool(feedback_saved),
+            "documents_uploaded": bool(documents_uploaded),
+            "analysis_error": bool(analysis_error),
+            "analysis_unavailable": bool(analysis_unavailable),
             "support_url": safe_support_url(),
             "support_available": support_is_available(),
+            "documents": documents,
+            "document_analysis": document_analysis,
+            "document_analysis_enabled": document_analysis_is_enabled(),
+            "document_copy": DOCUMENT_COPY.get(language, DOCUMENT_COPY["English"]),
+            "max_documents": MAX_DOCUMENTS_PER_CASE,
             "status_label": PUBLIC_STATUS_LABELS.get(language, PUBLIC_STATUS_LABELS["English"]).get(case["status"], case["status"]),
             "risk_label": PUBLIC_RISK_LABELS.get(language, PUBLIC_RISK_LABELS["English"]).get(case["risk_level"], case["risk_level"]),
             "page_language": {"English": "en", "French": "fr", "German": "de", "Spanish": "es", "Russian": "ru", "Serbian": "sr"}.get(language, "en"),
         },
     )
+
+
+@app.post("/case/{reference}/{token}/documents")
+async def public_upload_documents(
+    reference: str,
+    token: str,
+    request: Request,
+    files: list[UploadFile] = File(...),
+    document_consent: bool = Form(False),
+) -> RedirectResponse:
+    case = get_case_by_public(reference, token)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if case["status"] in {"declined", "closed"}:
+        raise HTTPException(status_code=409, detail="This case is no longer accepting documents")
+    if not document_consent:
+        raise HTTPException(status_code=400, detail="Document-sharing consent is required")
+    if not document_upload_limiter.allow(f"documents:{client_key(request)}"):
+        raise HTTPException(status_code=429, detail="Too many document uploads. Please try later.")
+    if not files:
+        raise HTTPException(status_code=400, detail="No files were selected")
+
+    existing = list_case_documents(case["id"])
+    if len(existing) + len(files) > MAX_DOCUMENTS_PER_CASE:
+        raise HTTPException(status_code=400, detail=f"A case can contain no more than {MAX_DOCUMENTS_PER_CASE} documents")
+
+    prepared = []
+    try:
+        for upload in files:
+            prepared.append(await prepare_upload(upload))
+    except DocumentValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    existing_total = sum(int(document["size_bytes"]) for document in existing)
+    new_total = sum(document.size_bytes for document in prepared)
+    if existing_total + new_total > MAX_TOTAL_BYTES:
+        raise HTTPException(status_code=400, detail="The total document size for one case cannot exceed 25 MB")
+
+    for document in prepared:
+        add_case_document(case["id"], {
+            "original_name": document.original_name,
+            "content_type": document.content_type,
+            "size_bytes": document.size_bytes,
+            "sha256": document.sha256,
+            "content": document.content,
+        })
+    return RedirectResponse(f"/case/{reference}/{token}?documents_uploaded=1", status_code=303)
+
+
+@app.get("/case/{reference}/{token}/documents/{document_id}")
+def public_download_document(reference: str, token: str, document_id: int) -> Response:
+    case = get_case_by_public(reference, token)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    document = get_case_document(document_id, case["id"])
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    filename = quote(document["original_name"], safe="")
+    return Response(
+        content=bytes(document["content_blob"]),
+        media_type=document["content_type"],
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Disposition": f"inline; filename*=UTF-8''{filename}",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@app.post("/case/{reference}/{token}/documents/{document_id}/delete")
+def public_delete_document(reference: str, token: str, document_id: int, request: Request) -> RedirectResponse:
+    case = get_case_by_public(reference, token)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if case["status"] in {"declined", "closed"}:
+        raise HTTPException(status_code=409, detail="This case is no longer accepting changes")
+    if not document_upload_limiter.allow(f"document-delete:{client_key(request)}"):
+        raise HTTPException(status_code=429, detail="Too many document changes. Please try later.")
+    if not delete_case_document(case["id"], document_id):
+        raise HTTPException(status_code=404, detail="Document not found")
+    return RedirectResponse(f"/case/{reference}/{token}", status_code=303)
+
+
+@app.post("/case/{reference}/{token}/documents/analyse")
+async def public_analyse_documents(reference: str, token: str, request: Request) -> RedirectResponse:
+    case = get_case_by_public(reference, token)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if not case["ai_consent"] or not document_analysis_is_enabled():
+        return RedirectResponse(f"/case/{reference}/{token}?analysis_unavailable=1", status_code=303)
+    if not document_analysis_limiter.allow(f"document-analysis:{case['id']}:{client_key(request)}"):
+        raise HTTPException(status_code=429, detail="Document analysis was requested too often. Please try later.")
+    documents = list_case_documents(case["id"], include_content=True)
+    if not documents:
+        raise HTTPException(status_code=400, detail="Upload at least one document first")
+    set_document_analysis_status(case["id"], "running", settings.openai_document_model or "")
+    try:
+        result = await analyse_case_documents(case, documents)
+        save_document_analysis(case["id"], result, settings.openai_document_model or "")
+    except DocumentAnalysisConfigurationError:
+        set_document_analysis_status(case["id"], "failed", error="Document analysis is not configured")
+        return RedirectResponse(f"/case/{reference}/{token}?analysis_unavailable=1", status_code=303)
+    except DocumentAnalysisProviderError:
+        set_document_analysis_status(case["id"], "failed", settings.openai_document_model or "", "Provider request failed")
+        return RedirectResponse(f"/case/{reference}/{token}?analysis_error=1", status_code=303)
+    return RedirectResponse(f"/case/{reference}/{token}#document-analysis", status_code=303)
 
 
 @app.post("/case/{reference}/{token}/feedback")
@@ -597,6 +834,9 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "triage": json.loads(case["triage_json"]),
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),
+            "documents": list_case_documents(case_id),
+            "document_analysis": get_document_analysis(case_id),
+            "document_analysis_enabled": document_analysis_is_enabled(),
             "status_labels": STATUS_LABELS,
             "risk_labels": RISK_LABELS,
             "language_labels": LANGUAGE_LABELS,
@@ -607,6 +847,53 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "channel_labels": CHANNEL_LABELS,
         },
     )
+
+
+@app.get("/admin/case/{case_id}/documents/{document_id}")
+def admin_download_document(case_id: int, document_id: int, request: Request) -> Response:
+    require_admin(request)
+    document = get_case_document(document_id, case_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    filename = quote(document["original_name"], safe="")
+    return Response(
+        content=bytes(document["content_blob"]),
+        media_type=document["content_type"],
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Disposition": f"inline; filename*=UTF-8''{filename}",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@app.post("/admin/case/{case_id}/documents/{document_id}/delete")
+def admin_delete_document(case_id: int, document_id: int, request: Request) -> RedirectResponse:
+    require_admin(request)
+    if not delete_case_document(case_id, document_id, actor="admin"):
+        raise HTTPException(status_code=404, detail="Document not found")
+    return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
+
+
+@app.post("/admin/case/{case_id}/documents/analyse")
+async def admin_analyse_documents(case_id: int, request: Request) -> RedirectResponse:
+    require_admin(request)
+    case = get_case(case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if not document_analysis_is_enabled():
+        raise HTTPException(status_code=503, detail="Document analysis is not configured")
+    documents = list_case_documents(case_id, include_content=True)
+    if not documents:
+        raise HTTPException(status_code=400, detail="No documents were uploaded")
+    set_document_analysis_status(case_id, "running", settings.openai_document_model or "")
+    try:
+        result = await analyse_case_documents(case, documents)
+        save_document_analysis(case_id, result, settings.openai_document_model or "")
+    except (DocumentAnalysisConfigurationError, DocumentAnalysisProviderError) as exc:
+        set_document_analysis_status(case_id, "failed", settings.openai_document_model or "", str(exc))
+        raise HTTPException(status_code=502, detail="Document analysis failed") from exc
+    return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
 
 
 @app.post("/admin/case/{case_id}/status")

@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.3 на Render
+# Установка ChinaTradeResolve v3.4 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Audit_Fix_v3.3.zip`.
+Распакуйте архив `ChinaTradeResolve_Audit_Fix_v3.4.zip`.
 
-В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Audit_Fix_v3.3`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое папки** `ChinaTradeResolve_Audit_Fix_v3.4`, а не саму внешнюю папку. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -29,6 +29,17 @@
 ENABLE_VOLUNTARY_SUPPORT=false
 ```
 
+Для включения нового анализа документов добавьте:
+
+```env
+ENABLE_DOCUMENT_ANALYSIS=true
+OPENAI_DOCUMENT_MODEL=модель_с_поддержкой_изображений_и_PDF
+DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=2200
+DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
+```
+
+Также должны оставаться непустыми `OPENAI_API_KEY` и `DATABASE_URL`. Если `OPENAI_DOCUMENT_MODEL` пуст, используется `OPENAI_MODEL`.
+
 Старые `BTC_ADDRESS`, `ETH_ADDRESS`, `USDT_TRC20_ADDRESS`, `SOL_ADDRESS` и `SUPPORT_URL` можно удалить. Даже если они останутся, при `ENABLE_VOLUNTARY_SUPPORT=false` публичная страница и QR-коды не откроются.
 
 ## 4. Разверните новую версию
@@ -43,10 +54,11 @@ ENABLE_VOLUNTARY_SUPPORT=false
 - `https://chinatraderesolve.onrender.com/health`;
 - форму на компьютере и телефоне.
 
-В `/health` должно быть:
+В `/health` должны быть нужные значения:
 
 ```json
-"support_enabled": false
+"support_enabled": false,
+"document_analysis_enabled": true
 ```
 
 Адрес `/support` должен возвращать страницу 404, пока поддержка отключена.
@@ -58,3 +70,14 @@ ENABLE_VOLUNTARY_SUPPORT=false
 - база существующих заявок сохраняется, если `DATABASE_URL` остаётся прежним;
 - ключ OpenAI не нужно вставлять в код;
 - собственный домен можно подключить позднее без переделки приложения.
+
+
+## 7. Проверка документов
+
+1. Отправьте тестовую заявку с согласием на ИИ.
+2. Откройте закрытую ссылку статуса.
+3. Загрузите тестовый PNG или PDF без реальных персональных данных.
+4. Нажмите кнопку ИИ-анализа и дождитесь отчёта.
+5. Проверьте тот же файл и отчёт в `/admin`.
+
+Подробности находятся в `DOCUMENT_AI_SETUP_RU.md`.

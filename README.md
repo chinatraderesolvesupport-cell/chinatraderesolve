@@ -1,4 +1,4 @@
-# ChinaTradeResolve Audit Fix v3.3
+# ChinaTradeResolve Document AI v3.4
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -11,6 +11,8 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - optional OpenAI structured triage;
 - exception-driven admin queue;
 - private case-status page;
+- private upload of up to five PDF/image documents per case;
+- optional multimodal AI document analysis with evidence inventory, chronology and contradiction detection;
 - optional feedback/testimonial collection after a case is closed;
 - optional voluntary project-support page;
 - SMTP notification outbox;
@@ -19,7 +21,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 
 
 
-## Public-site redesign in v3.3
+## Public-site redesign retained from v3.3
 
 - shortened the public page by merging repeated free-access and service-result sections;
 - made the first screen more specific about the review result and next steps;
@@ -32,6 +34,37 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - added a description character counter, keyboard progression and accessible success focus;
 - added a privacy FAQ explaining who may see case materials;
 - keeps voluntary support disabled by default and preserves the existing case-management and AI-assistant workflow.
+
+## Private document analysis in v3.4
+
+After an application is submitted, the private case page accepts up to five key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 25 MB total.
+
+Security and privacy controls:
+
+- files are stored in PostgreSQL/SQLite with the case, not on Render's ephemeral filesystem;
+- file signatures are checked instead of trusting the browser MIME type;
+- images are decoded and re-encoded to remove EXIF and other embedded metadata;
+- obvious PDF active-content markers are rejected;
+- downloads require the private case token or an authenticated admin session;
+- adding or deleting a file invalidates the previous AI report;
+- retention cleanup deletes file blobs and analysis reports with the closed case;
+- AI requests use the Responses API, Structured Outputs and `store: false`;
+- document content is treated as untrusted and cannot override system instructions;
+- the readiness score measures evidence organisation, not legal merit or probability of success.
+
+The report includes document inventory, chronology with source filenames, key evidence, possible contradictions, missing evidence, risk flags and recommended next steps. Important conclusions still require human verification.
+
+Enable it with:
+
+```env
+ENABLE_DOCUMENT_ANALYSIS=true
+OPENAI_API_KEY=...
+OPENAI_DOCUMENT_MODEL=<vision and PDF capable model>
+DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=2200
+DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
+```
+
+See `DOCUMENT_AI_SETUP_RU.md` for the Render checklist.
 
 ## Public AI assistant
 
@@ -54,7 +87,7 @@ Safety and privacy controls:
 - the assistant is explicitly forbidden from promising outcomes, giving binding legal advice, requesting passwords/private keys or claiming access to private case data;
 - a narrow moderation check blocks the most sensitive prohibited category while allowing legitimate dispute descriptions to receive safe guidance.
 
-The assistant cannot read case records, status links, email, uploaded documents or the admin database. Case-specific automation is intentionally left for a later controlled phase.
+The public chat assistant cannot read case records, status links, email, uploaded documents or the admin database. The separate document-analysis component runs only from the private case page when enabled and consented to.
 
 The assistant also resets the active chat whenever the visitor changes the site language, aborts any in-flight request from the previous language, and removes invalid Unicode/noncharacter artefacts from provider output before displaying it.
 
@@ -121,7 +154,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 
 ## Safety boundaries
 
-- No mandatory payment or file upload at application stage.
+- No mandatory payment or file upload before the application is submitted; private upload is optional afterward.
 - No automated supplier contact.
 - No court, arbitration or authority representation.
 - Deterministic hard stops cannot be overruled by AI.
@@ -132,7 +165,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Audit_Fix_v3.3
+cd ChinaTradeResolve_Document_AI_v3.4
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -169,7 +202,7 @@ OPENAI_API_KEY=...
 OPENAI_MODEL=<model available in your OpenAI project>
 ```
 
-The application sends only structured intake fields, not files. Deterministic triage runs first; AI can add nuance but cannot lower hard-stop safety decisions.
+Application triage sends only structured intake fields, not files. Document analysis is a separate consented action from the private case page. Deterministic triage runs first; AI can add nuance but cannot lower hard-stop safety decisions.
 
 A step-by-step Render guide in Russian is included in `AI_ASSISTANT_SETUP_RU.md`.
 

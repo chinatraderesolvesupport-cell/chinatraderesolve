@@ -328,7 +328,7 @@ def test_french_german_and_spanish_status_localization():
             "La commande écrite précise le cuir. Le fournisseur l’a confirmé dans les messages, mais les photos montrent un autre matériau. Nous avons la facture, la commande, les messages et les photos.",
             '<html lang="fr">',
             "Statut du dossier",
-            "Aucun paiement ni téléchargement",
+            "Aucun paiement n’est requis",
         ),
         (
             "German",
@@ -336,7 +336,7 @@ def test_french_german_and_spanish_status_localization():
             "Die schriftliche Bestellung nennt Leder. Der Lieferant bestätigte dies in Nachrichten, aber die Fotos zeigen ein anderes Material. Wir haben Rechnung, Bestellung, Nachrichten und Fotos.",
             '<html lang="de">',
             "Fallstatus",
-            "weder Zahlung noch Datei-Upload",
+            "Es ist keine Zahlung erforderlich",
         ),
         (
             "Spanish",
@@ -344,7 +344,7 @@ def test_french_german_and_spanish_status_localization():
             "El pedido escrito especifica cuero. El proveedor lo confirmó en mensajes, pero las fotografías muestran otro material. Tenemos factura, pedido, mensajes y fotografías.",
             '<html lang="es">',
             "Estado del caso",
-            "no se requiere pago ni carga de archivos",
+            "No se requiere pago",
         ),
     ]
     for index, (language, email, description, html_lang, title, notice) in enumerate(cases, start=10):
@@ -644,3 +644,193 @@ def test_v33_home_structure_and_translation_completeness():
     for language, copy in translations.items():
         missing = sorted(required - set(copy))
         assert not missing, f"{language} is missing translation keys: {missing}"
+
+
+def _make_png_bytes() -> bytes:
+    from io import BytesIO
+    from PIL import Image
+    output = BytesIO()
+    image = Image.new("RGB", (32, 24), (245, 245, 245))
+    image.save(output, format="PNG", pnginfo=None)
+    return output.getvalue()
+
+
+def test_private_document_upload_download_delete_and_admin_visibility():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="documents@example.com", preferred_language="Russian"),
+        headers={"x-forwarded-for": "198.51.100.201"},
+    ).json()
+    status_url = created["status_url"]
+    png = _make_png_bytes()
+    upload = client.post(
+        status_url + "/documents",
+        files=[("files", ("supplier-chat.png", png, "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+    assert upload.status_code == 303
+    page = client.get(upload.headers["location"])
+    assert "supplier-chat.png" in page.text
+    assert "Документы успешно загружены" in page.text
+
+    import re
+    match = re.search(r'/documents/(\d+)" target="_blank"', page.text)
+    assert match
+    document_id = int(match.group(1))
+    download = client.get(status_url + f"/documents/{document_id}")
+    assert download.status_code == 200
+    assert download.headers["cache-control"] == "no-store"
+    assert download.headers["content-type"].startswith("image/png")
+    assert download.content.startswith(b"\x89PNG")
+
+    login = client.post("/admin/login", data={"token": "test-token"}, follow_redirects=False)
+    assert login.status_code == 303
+    dashboard = client.get("/admin")
+    case_match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), dashboard.text)
+    assert case_match
+    case_id = int(case_match.group(1))
+    admin_page = client.get(f"/admin/case/{case_id}")
+    assert "supplier-chat.png" in admin_page.text
+    admin_download = client.get(f"/admin/case/{case_id}/documents/{document_id}")
+    assert admin_download.status_code == 200
+
+    deleted = client.post(status_url + f"/documents/{document_id}/delete", follow_redirects=False)
+    assert deleted.status_code == 303
+    assert "supplier-chat.png" not in client.get(status_url).text
+
+
+def test_document_upload_rejects_unsafe_and_oversized_files():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="unsafe-docs@example.com"),
+        headers={"x-forwarded-for": "198.51.100.202"},
+    ).json()
+    status_url = created["status_url"]
+    unsafe = client.post(
+        status_url + "/documents",
+        files=[("files", ("payload.html", b"<script>alert(1)</script>", "text/html"))],
+        data={"document_consent": "true"},
+    )
+    assert unsafe.status_code == 400
+    assert "Only PDF, JPG, PNG and WebP" in unsafe.text
+
+    oversized = client.post(
+        status_url + "/documents",
+        files=[("files", ("large.png", b"\x89PNG\r\n\x1a\n" + b"x" * (8 * 1024 * 1024), "image/png"))],
+        data={"document_consent": "true"},
+    )
+    assert oversized.status_code == 400
+    assert "8 MB" in oversized.text
+
+
+def test_document_analysis_mock_and_public_report(monkeypatch):
+    import app.main as main_module
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="analysis@example.com", preferred_language="English"),
+        headers={"x-forwarded-for": "198.51.100.203"},
+    ).json()
+    status_url = created["status_url"]
+    upload = client.post(
+        status_url + "/documents",
+        files=[("files", ("invoice.png", _make_png_bytes(), "image/png"))],
+        data={"document_consent": "true"},
+        follow_redirects=False,
+    )
+    assert upload.status_code == 303
+
+    expected = {
+        "readiness_score": 72,
+        "summary": "The invoice is readable, but payment and delivery evidence are still missing.",
+        "document_inventory": [{
+            "filename": "invoice.png", "document_type": "Invoice", "language": "English",
+            "date_or_period": "2026-01-10", "key_content": "Order value EUR 12,000", "readability": "clear",
+        }],
+        "timeline": [{
+            "date": "2026-01-10", "event": "Invoice issued", "source_files": ["invoice.png"], "confidence": "high",
+        }],
+        "key_evidence": ["Invoice identifies the order value."],
+        "contradictions": [],
+        "missing_evidence": ["Payment proof", "Delivery photographs"],
+        "risk_flags": ["Only one document supplied"],
+        "recommended_next_steps": ["Upload payment proof."],
+        "human_review_note": "Important conclusions require human verification.",
+        "model": "test-model",
+    }
+
+    async def fake_analysis(case, documents):
+        assert case["case_reference"] == created["case_reference"]
+        assert documents[0]["original_name"] == "invoice.png"
+        return expected
+
+    monkeypatch.setattr(main_module, "document_analysis_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "analyse_case_documents", fake_analysis)
+    analyse = client.post(status_url + "/documents/analyse", follow_redirects=False)
+    assert analyse.status_code == 303
+    report = client.get(analyse.headers["location"])
+    assert "Preliminary document analysis" in report.text
+    assert "72%" in report.text
+    assert "Payment proof" in report.text
+    assert "Invoice issued" in report.text
+
+
+def test_document_analysis_request_uses_multimodal_structured_output(monkeypatch):
+    import asyncio
+    import base64
+    import json
+    from types import SimpleNamespace
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 60,
+        "summary": "Summary",
+        "document_inventory": [{"filename": "chat.png", "document_type": "Chat", "language": "English", "date_or_period": "Date not visible", "key_content": "Supplier statement", "readability": "clear"}],
+        "timeline": [{"date": "Date not visible", "event": "Supplier made a statement", "source_files": ["chat.png"], "confidence": "medium"}],
+        "key_evidence": ["Supplier statement"], "contradictions": [], "missing_evidence": ["Invoice"],
+        "risk_flags": [], "recommended_next_steps": ["Add invoice"],
+        "human_review_note": "Human verification required.",
+    }
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+        def json(self):
+            return {"output": [{"content": [{"type": "output_text", "text": json.dumps(expected)}]}]}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            captured["timeout"] = kwargs.get("timeout")
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return None
+        async def post(self, url, headers, json):
+            captured["url"] = url
+            captured["body"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(module, "settings", SimpleNamespace(
+        enable_document_analysis=True,
+        openai_api_key="test-key",
+        openai_document_model="test-model",
+        document_analysis_timeout_seconds=30,
+        document_analysis_max_output_tokens=1200,
+    ))
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    case = valid_payload()
+    case["case_reference"] = "CTR-TEST"
+    documents = [{
+        "original_name": "chat.png", "content_type": "image/png", "content_blob": _make_png_bytes(),
+    }]
+    result = asyncio.run(module.analyse_case_documents(case, documents))
+    assert result["readiness_score"] == 60
+    assert captured["url"].endswith("/v1/responses")
+    assert captured["body"]["store"] is False
+    assert captured["body"]["text"]["format"]["strict"] is True
+    image_part = captured["body"]["input"][1]["content"][1]
+    assert image_part["type"] == "input_image"
+    assert image_part["image_url"].startswith("data:image/png;base64,")
+    base64.b64decode(image_part["image_url"].split(",", 1)[1])

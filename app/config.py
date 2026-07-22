@@ -18,6 +18,10 @@ class Settings:
     openai_model: str | None = os.getenv("OPENAI_MODEL")
     enable_ai_assistant: bool = os.getenv("ENABLE_AI_ASSISTANT", "false").lower() == "true"
     openai_assistant_model: str | None = os.getenv("OPENAI_ASSISTANT_MODEL") or os.getenv("OPENAI_MODEL")
+    enable_document_analysis: bool = os.getenv("ENABLE_DOCUMENT_ANALYSIS", "false").lower() == "true"
+    openai_document_model: str | None = os.getenv("OPENAI_DOCUMENT_MODEL") or os.getenv("OPENAI_MODEL")
+    document_analysis_max_output_tokens: int = int(os.getenv("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", "2200"))
+    document_analysis_timeout_seconds: float = float(os.getenv("DOCUMENT_ANALYSIS_TIMEOUT_SECONDS", "90"))
     openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
     ai_assistant_max_output_tokens: int = int(os.getenv("AI_ASSISTANT_MAX_OUTPUT_TOKENS", "500"))
     ai_assistant_history_messages: int = int(os.getenv("AI_ASSISTANT_HISTORY_MESSAGES", "8"))

@@ -140,9 +140,34 @@ def init_db() -> None:
                 testimonial_consent INTEGER NOT NULL DEFAULT 0
             )
             """,
+            """
+            CREATE TABLE IF NOT EXISTS case_documents (
+                id BIGSERIAL PRIMARY KEY,
+                case_id BIGINT NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+                created_at TEXT NOT NULL,
+                original_name TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                size_bytes BIGINT NOT NULL,
+                sha256 TEXT NOT NULL,
+                content_blob BYTEA NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS document_analyses (
+                case_id BIGINT PRIMARY KEY REFERENCES cases(id) ON DELETE CASCADE,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                status TEXT NOT NULL,
+                model TEXT NOT NULL DEFAULT '',
+                result_json TEXT NOT NULL DEFAULT '{}',
+                error TEXT NOT NULL DEFAULT ''
+            )
+            """,
             "CREATE INDEX IF NOT EXISTS idx_cases_status_priority ON cases(status, priority DESC, created_at DESC)",
             "CREATE INDEX IF NOT EXISTS idx_cases_email ON cases(email)",
             "CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC)",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256)",
+            "CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at)",
         ]
         with transaction() as conn:
             for statement in statements:
@@ -219,9 +244,34 @@ def init_db() -> None:
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS case_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                case_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                original_name TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                size_bytes INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                content_blob BLOB NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS document_analyses (
+                case_id INTEGER PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                status TEXT NOT NULL,
+                model TEXT NOT NULL DEFAULT '',
+                result_json TEXT NOT NULL DEFAULT '{}',
+                error TEXT NOT NULL DEFAULT '',
+                FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
+            );
+
             CREATE INDEX IF NOT EXISTS idx_cases_status_priority ON cases(status, priority DESC, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_cases_email ON cases(email);
             CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256);
+            CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at);
             """
         )
 
@@ -395,6 +445,8 @@ def soft_delete_expired(days: int) -> int:
             # Remove free-text and contact data from every related table, not only the main case row.
             execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
             execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
+            execute(conn, "DELETE FROM case_documents WHERE case_id=?", (case_id,))
+            execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
             execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))
             execute(
                 conn,
@@ -412,6 +464,151 @@ def soft_delete_expired(days: int) -> int:
             )
         return len(case_ids)
 
+
+
+def list_case_documents(case_id: int, include_content: bool = False) -> list[dict[str, Any]]:
+    columns = "*" if include_content else "id,case_id,created_at,original_name,content_type,size_bytes,sha256"
+    with transaction() as conn:
+        rows = execute(
+            conn,
+            f"SELECT {columns} FROM case_documents WHERE case_id=? ORDER BY id",
+            (case_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_case_document(document_id: int, case_id: int | None = None) -> dict[str, Any] | None:
+    query = "SELECT * FROM case_documents WHERE id=?"
+    args: list[Any] = [document_id]
+    if case_id is not None:
+        query += " AND case_id=?"
+        args.append(case_id)
+    with transaction() as conn:
+        row = execute(conn, query, args).fetchone()
+        return dict(row) if row else None
+
+
+def add_case_document(case_id: int, document: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    now = utcnow()
+    with transaction() as conn:
+        case = execute(conn, "SELECT id FROM cases WHERE id=? AND deleted_at IS NULL", (case_id,)).fetchone()
+        if not case:
+            raise KeyError("Case not found")
+        existing = execute(
+            conn,
+            "SELECT * FROM case_documents WHERE case_id=? AND sha256=?",
+            (case_id, document["sha256"]),
+        ).fetchone()
+        if existing:
+            return dict(existing), False
+        values = (
+            case_id, now, document["original_name"], document["content_type"],
+            document["size_bytes"], document["sha256"], document["content"],
+        )
+        sql = """
+            INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,sha256,content_blob)
+            VALUES (?,?,?,?,?,?,?)
+        """
+        if using_postgres():
+            row = execute(conn, sql + " RETURNING id", values).fetchone()
+            document_id = int(row["id"])
+        else:
+            cursor = execute(conn, sql, values)
+            document_id = int(cursor.lastrowid)
+        execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
+        add_audit(conn, case_id, "client", "document_uploaded", {
+            "document_id": document_id,
+            "filename": document["original_name"],
+            "content_type": document["content_type"],
+            "size_bytes": document["size_bytes"],
+        })
+        row = execute(conn, "SELECT * FROM case_documents WHERE id=?", (document_id,)).fetchone()
+        return dict(row), True
+
+
+def delete_case_document(case_id: int, document_id: int, actor: str = "client") -> bool:
+    with transaction() as conn:
+        row = execute(
+            conn,
+            "SELECT original_name FROM case_documents WHERE id=? AND case_id=?",
+            (document_id, case_id),
+        ).fetchone()
+        if not row:
+            return False
+        execute(conn, "DELETE FROM case_documents WHERE id=? AND case_id=?", (document_id, case_id))
+        execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
+        add_audit(conn, case_id, actor, "document_deleted", {
+            "document_id": document_id,
+            "filename": row["original_name"],
+        })
+        return True
+
+
+def set_document_analysis_status(case_id: int, status: str, model: str = "", error: str = "") -> None:
+    if status not in {"pending", "running", "completed", "failed"}:
+        raise ValueError("Invalid document-analysis status")
+    now = utcnow()
+    with transaction() as conn:
+        existing = execute(conn, "SELECT case_id,created_at FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
+        if existing:
+            execute(
+                conn,
+                "UPDATE document_analyses SET updated_at=?,status=?,model=?,error=? WHERE case_id=?",
+                (now, status, model, error[:1000], case_id),
+            )
+        else:
+            execute(
+                conn,
+                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,?,?,'{}',?)",
+                (case_id, now, now, status, model, error[:1000]),
+            )
+
+
+def save_document_analysis(case_id: int, result: dict[str, Any], model: str) -> dict[str, Any]:
+    now = utcnow()
+    result_json = json.dumps(result, ensure_ascii=False)
+    with transaction() as conn:
+        existing = execute(conn, "SELECT case_id FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
+        if existing:
+            execute(
+                conn,
+                "UPDATE document_analyses SET updated_at=?,status='completed',model=?,result_json=?,error='' WHERE case_id=?",
+                (now, model, result_json, case_id),
+            )
+        else:
+            execute(
+                conn,
+                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,'completed',?,?,'')",
+                (case_id, now, now, model, result_json),
+            )
+        add_audit(conn, case_id, "triage", "documents_analysed", {
+            "document_count": len(list_case_documents_for_connection(conn, case_id)),
+            "readiness_score": result.get("readiness_score"),
+            "model": model,
+        })
+        row = execute(conn, "SELECT * FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
+        return dict(row)
+
+
+def list_case_documents_for_connection(conn: Any, case_id: int) -> list[dict[str, Any]]:
+    return [dict(row) for row in execute(
+        conn,
+        "SELECT id,case_id,created_at,original_name,content_type,size_bytes,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
+        (case_id,),
+    ).fetchall()]
+
+
+def get_document_analysis(case_id: int) -> dict[str, Any] | None:
+    with transaction() as conn:
+        row = execute(conn, "SELECT * FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        try:
+            result["result"] = json.loads(result.get("result_json") or "{}")
+        except json.JSONDecodeError:
+            result["result"] = {}
+        return result
 
 def save_feedback(case_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     now = utcnow()

@@ -18,6 +18,7 @@ class ApplicationCreate(BaseModel):
     requested_result: str = Field(default="Not sure", max_length=120)
     description: str = Field(min_length=50, max_length=8000)
     company_website: str = Field(default="", max_length=200)
+    turnstile_token: str = Field(default="", max_length=2048, exclude=True)
     free_access_terms: bool
     sharing_authority: bool
     ai_consent: bool

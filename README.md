@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.6.2
+# ChinaTradeResolve Document AI v3.7.0
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -19,7 +19,68 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - retention/anonymisation script;
 - automated tests and Docker packaging.
 
+## Security, privacy and cost hardening in v3.6.8
 
+- PDF files are parsed with pikepdf, including compressed object streams; malformed, encrypted, active-content and embedded-file PDFs are rejected. Limits are 100 PDF pages per file and 200 per case.
+- Document analysis has an atomic database-backed daily budget (`MAX_DAILY_DOCUMENT_ANALYSES`), records provider token usage and sends PDFs with `detail=low` by default.
+- Triage never automatically declines a person because of an evidence-handling keyword, and monetary escalation is currency-aware for USD, EUR, GBP, CNY and RSD.
+- Cloudflare Turnstile can protect the public application form when both keys are configured.
+- The private case link supports withdrawal of future AI consent, removal of the stored AI report and immediate permanent case deletion.
+- Closed and inactive cases have separate retention periods. The dynamic privacy page exposes operator details from `DATA_CONTROLLER_NAME` and `DATA_CONTROLLER_ADDRESS`.
+- Bitcoin Bech32/Bech32m and Ethereum EIP-55 checksums are validated; non-local support URLs must use HTTPS.
+- Dependencies and the Python base image are pinned. The container runs as an unprivileged user and includes a health check.
+
+## Pre-launch readiness and user clarity in v3.7.0
+
+Version 3.7.0 adds a fail-closed public launch mode, a machine-readable `/ready` gate, explicit manual/automatic document-review availability, a stronger private-link confirmation, a four-stage case progress view, accessibility improvements, and basic canonical/social structured metadata. Set `PUBLIC_LAUNCH_MODE=true` only after `/ready` returns HTTP 200.
+
+## URL and test-environment hardening in v3.6.9
+
+- The HTTPS email bridge now rejects non-HTTP schemes, remote plain HTTP, embedded credentials and control characters before any network access.
+- External support links reject embedded credentials and malformed whitespace; plain HTTP remains limited to loopback development addresses.
+- Notification SQL uses static statements for both SQLite and PostgreSQL lease paths.
+- The development test client uses the pinned `httpx2` compatibility package required by the current Starlette release.
+
+
+
+## Embedded-PDF attachment blocking in v3.6.7
+
+- PDF validation now rejects the standard `/EmbeddedFiles` name tree used for attachments;
+- file-specification and associated-file structures (`/Filespec`, `/EF`, `/AF`, `/AFRelationship`) are rejected before storage;
+- portfolio and embedded-file navigation markers (`/Collection`, `/GoToE`) are also blocked;
+- PDF name escapes are decoded first, so obfuscated forms such as `/Embedded#46iles` cannot bypass the check.
+
+
+## Partial-date preservation in v3.6.6
+
+- visible month-and-year values such as `March 2025` are retained even when the exact day is unavailable;
+- a visible year such as `2025` is retained instead of being replaced by a generic unknown-date label;
+- partial dates receive an internal earliest-possible sorting key while the original wording remains visible;
+- month-and-year parsing supports the same six interface languages as full-date chronology parsing.
+
+
+## Cautious authenticity and legality wording in v3.6.5
+
+- unverified conclusions such as “forged certificate”, “illegal document” or “criminal conduct” are no longer displayed as established facts;
+- the same deterministic protection is applied in English, Russian, Serbian, French, German and Spanish;
+- the protection covers the summary, chronology, evidence lists, risk sections, next steps and document-inventory descriptions;
+- exact quotations inside `«…»`, `“…”` and `"…"` remain unchanged so the visible evidence is not silently rewritten;
+- the existing prompt-level caution remains, while application post-processing now enforces the boundary if a model disregards it.
+
+
+## Deterministic readiness breakdown in v3.6.4
+
+- Structured Outputs now requires exactly seven readiness-factor entries.
+- The application defensively fills any missing or duplicated factor as `missing`.
+- The displayed percentage is always recalculated from the seven factors and can no longer remain an unexplained model-provided number.
+- A report with no applicable evidence factors receives a score of 0 instead of retaining an arbitrary percentage.
+
+## Localised date formats in v3.6.3
+
+- German dates with an ordinal dot, such as `22. März 2025`, are recognised.
+- Spanish dates with `de`, such as `22 de mayo de 2025`, are recognised.
+- Serbian Latin and Cyrillic month inflections, such as `22 maja 2025` and `22. маја 2025.`, are recognised.
+- Localised date ranges use their earliest visible date for sorting.
 
 ## Multilingual chronology fixes in v3.6.2
 
@@ -225,7 +286,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.6.2
+cd ChinaTradeResolve_Document_AI_v3.7.0
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

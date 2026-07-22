@@ -10,6 +10,11 @@ from pathlib import Path
 
 from fastapi import UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
+import pikepdf
+from pikepdf import Array as PdfArray
+from pikepdf import Dictionary as PdfDictionary
+from pikepdf import Name as PdfName
+from pikepdf import Stream as PdfStream
 
 
 ALLOWED_CONTENT_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
@@ -18,6 +23,9 @@ MAX_DOCUMENTS_PER_CASE = 20
 MAX_DOCUMENT_BYTES = 8 * 1024 * 1024
 MAX_TOTAL_BYTES = 45 * 1024 * 1024
 MAX_IMAGE_PIXELS = 30_000_000
+MAX_PDF_PAGES_PER_DOCUMENT = 100
+MAX_TOTAL_PDF_PAGES_PER_CASE = 200
+MAX_PDF_OBJECTS = 20_000
 MAX_CONCURRENT_DOCUMENT_PROCESSORS = 2
 _DOCUMENT_PROCESSING_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_DOCUMENT_PROCESSORS)
 
@@ -33,6 +41,7 @@ class PreparedDocument:
     content: bytes
     size_bytes: int
     sha256: str
+    page_count: int = 0
 
 
 _FILENAME_RE = re.compile(r"[^\w.()\- ]+", re.UNICODE)
@@ -117,31 +126,94 @@ def _decode_pdf_name_escapes(data: bytes) -> bytes:
     )
 
 
-def _validate_pdf(data: bytes) -> bytes:
+_FORBIDDEN_PDF_NAMES = frozenset({
+    "/javascript", "/js", "/launch", "/openaction", "/aa", "/gotoe",
+    "/richmedia", "/xfa", "/embeddedfile", "/embeddedfiles", "/filespec",
+    "/ef", "/af", "/afrelationship", "/collection", "/acroform",
+    "/submitform", "/importdata", "/rendition", "/movie", "/sound",
+})
+
+
+def _pdf_name_is_forbidden(value: object) -> bool:
+    return isinstance(value, PdfName) and str(value).casefold() in _FORBIDDEN_PDF_NAMES
+
+
+def _inspect_direct_pdf_value(value: object, *, depth: int = 0) -> None:
+    """Inspect direct child dictionaries/arrays without following indirect cycles."""
+    if depth > 32:
+        raise DocumentValidationError("The PDF structure is too deeply nested")
+    if _pdf_name_is_forbidden(value):
+        raise DocumentValidationError("PDFs containing active or embedded content are not accepted")
+    if isinstance(value, (PdfDictionary, PdfStream)):
+        for key, child in value.items():
+            if str(key).casefold() in _FORBIDDEN_PDF_NAMES or _pdf_name_is_forbidden(child):
+                raise DocumentValidationError("PDFs containing active or embedded content are not accepted")
+            if getattr(child, "is_indirect", False):
+                continue
+            _inspect_direct_pdf_value(child, depth=depth + 1)
+    elif isinstance(value, PdfArray):
+        for child in value:
+            if getattr(child, "is_indirect", False):
+                continue
+            _inspect_direct_pdf_value(child, depth=depth + 1)
+
+
+def validate_pdf_and_count_pages(data: bytes) -> tuple[bytes, int]:
     if not data.startswith(b"%PDF-"):
         raise DocumentValidationError("The PDF signature is invalid")
-    # Reject obvious polyglot or truncated uploads while keeping validation dependency-free.
+    # Reject obvious polyglot or truncated uploads before invoking the parser.
     if b"%%EOF" not in data[-4096:]:
         raise DocumentValidationError("The PDF appears incomplete")
 
-    normalised = _decode_pdf_name_escapes(data)
-    if re.search(rb"/(Encrypt)\b", normalised, flags=re.IGNORECASE):
-        raise DocumentValidationError("Password-protected PDFs are not accepted")
-    active_names = (
-        rb"/(JavaScript|JS|Launch|OpenAction|AA|EmbeddedFile|RichMedia|XFA)\b"
-    )
-    if re.search(active_names, normalised, flags=re.IGNORECASE):
-        raise DocumentValidationError("PDFs containing active or embedded content are not accepted")
-    return data
+    try:
+        with pikepdf.Pdf.open(BytesIO(data), suppress_warnings=True) as pdf:
+            if pdf.is_encrypted:
+                raise DocumentValidationError("Password-protected PDFs are not accepted")
+            if len(pdf.objects) > MAX_PDF_OBJECTS:
+                raise DocumentValidationError("The PDF contains too many internal objects")
+            page_count = len(pdf.pages)
+            if page_count <= 0:
+                raise DocumentValidationError("The PDF contains no pages")
+            if page_count > MAX_PDF_PAGES_PER_DOCUMENT:
+                raise DocumentValidationError(
+                    f"Each PDF can contain no more than {MAX_PDF_PAGES_PER_DOCUMENT} pages"
+                )
+
+            # pikepdf expands compressed object streams before exposing objects.
+            # This closes the v3.6.7 gap where /EmbeddedFiles or /Filespec could
+            # be hidden inside /ObjStm and evade a raw-byte regular expression.
+            for pdf_object in pdf.objects:
+                if isinstance(pdf_object, (PdfDictionary, PdfStream)):
+                    for key, value in pdf_object.items():
+                        if str(key).casefold() in _FORBIDDEN_PDF_NAMES or _pdf_name_is_forbidden(value):
+                            raise DocumentValidationError(
+                                "PDFs containing active or embedded content are not accepted"
+                            )
+                        if not getattr(value, "is_indirect", False):
+                            _inspect_direct_pdf_value(value)
+    except DocumentValidationError:
+        raise
+    except pikepdf.PasswordError as exc:
+        raise DocumentValidationError("Password-protected PDFs are not accepted") from exc
+    except (pikepdf.PdfError, ValueError, OverflowError, MemoryError) as exc:
+        raise DocumentValidationError("The PDF is damaged, unsafe or unsupported") from exc
+    return data, page_count
 
 
-def _process_document_bytes_unbounded(raw: bytes, detected: str) -> tuple[bytes, str]:
+def _validate_pdf(data: bytes) -> bytes:
+    """Backward-compatible wrapper retained for scripts and existing tests."""
+    return validate_pdf_and_count_pages(data)[0]
+
+
+def _process_document_bytes_unbounded(raw: bytes, detected: str) -> tuple[bytes, str, int]:
     if detected in IMAGE_CONTENT_TYPES:
-        return _sanitise_image(raw, detected)
-    return _validate_pdf(raw), detected
+        content, content_type = _sanitise_image(raw, detected)
+        return content, content_type, 0
+    content, page_count = validate_pdf_and_count_pages(raw)
+    return content, detected, page_count
 
 
-def _process_document_bytes(raw: bytes, detected: str) -> tuple[bytes, str]:
+def _process_document_bytes(raw: bytes, detected: str) -> tuple[bytes, str, int]:
     """Perform CPU-heavy validation in a globally bounded worker section."""
     # A 30-megapixel decoded image can occupy well over 100 MB. Bounding the
     # number of concurrent decoders prevents several simultaneous uploads from
@@ -166,7 +238,13 @@ async def prepare_upload(upload: UploadFile) -> PreparedDocument:
     # that work directly in this async route would pause every request handled
     # by the same Uvicorn worker. Keep the operation sequential to bound memory,
     # but move each file's CPU work to Starlette/Python's worker thread pool.
-    content, final_type = await asyncio.to_thread(_process_document_bytes, raw, detected)
+    processed = await asyncio.to_thread(_process_document_bytes, raw, detected)
+    # Keep test/custom processors written for the pre-page-count interface compatible.
+    if len(processed) == 2:
+        content, final_type = processed
+        page_count = 0
+    else:
+        content, final_type, page_count = processed
 
     if len(content) > MAX_DOCUMENT_BYTES:
         raise DocumentValidationError("The processed file is larger than 8 MB")
@@ -187,4 +265,5 @@ async def prepare_upload(upload: UploadFile) -> PreparedDocument:
         content=content,
         size_bytes=len(content),
         sha256=hashlib.sha256(content).hexdigest(),
+        page_count=page_count,
     )

@@ -61,7 +61,7 @@ async def ai_triage(application: ApplicationCreate) -> TriageResult | None:
         "store": False,
         "input": [
             {"role": "developer", "content": [{"type": "input_text", "text": developer}]},
-            {"role": "user", "content": [{"type": "input_text", "text": json.dumps(application.model_dump(), ensure_ascii=False)}]},
+            {"role": "user", "content": [{"type": "input_text", "text": json.dumps(application.model_dump(exclude={"turnstile_token", "company_website"}), ensure_ascii=False)}]},
         ],
         "text": {
             "format": {

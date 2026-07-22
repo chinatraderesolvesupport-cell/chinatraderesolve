@@ -6,6 +6,7 @@ import smtplib
 import threading
 from email.message import EmailMessage
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from .config import settings
@@ -16,17 +17,18 @@ from .db import claim_pending_notifications, mark_notification, pending_notifica
 
 _STATUS_LABELS = {
     "Russian": {"submitted":"Получено","needs_information":"Нужна информация","pilot_candidate":"Кандидат на бесплатную помощь","human_review":"Ручная проверка","declined":"Отклонено","accepted":"Принято","closed":"Закрыто"},
-    "Serbian": {"submitted":"Primljeno","needs_information":"Potrebne informacije","pilot_candidate":"Kandidat za besplatni pregled","human_review":"Ljudski pregled","declined":"Odbijeno","accepted":"Prihvaćeno","closed":"Zatvoreno"},
-    "French": {"submitted":"Reçue","needs_information":"Informations nécessaires","pilot_candidate":"Candidate à l’analyse gratuite","human_review":"Vérification humaine","declined":"Refusée","accepted":"Acceptée","closed":"Clôturée"},
-    "German": {"submitted":"Eingegangen","needs_information":"Informationen erforderlich","pilot_candidate":"Kandidat für kostenlose Prüfung","human_review":"Menschliche Prüfung","declined":"Abgelehnt","accepted":"Angenommen","closed":"Abgeschlossen"},
-    "Spanish": {"submitted":"Recibida","needs_information":"Se necesita información","pilot_candidate":"Candidato a revisión gratuita","human_review":"Revisión humana","declined":"Rechazada","accepted":"Aceptada","closed":"Cerrada"},
-    "English": {"submitted":"Received","needs_information":"Information needed","pilot_candidate":"Free-review candidate","human_review":"Human review","declined":"Declined","accepted":"Accepted","closed":"Closed"},
+    "Serbian": {"submitted":"Primljeno","needs_information":"Potrebne informacije","pilot_candidate":"Pogodno za preliminarni pregled","human_review":"Ljudski pregled","declined":"Odbijeno","accepted":"Prihvaćeno","closed":"Zatvoreno"},
+    "French": {"submitted":"Reçue","needs_information":"Informations nécessaires","pilot_candidate":"Éligible à l’examen préliminaire","human_review":"Vérification humaine","declined":"Refusée","accepted":"Acceptée","closed":"Clôturée"},
+    "German": {"submitted":"Eingegangen","needs_information":"Informationen erforderlich","pilot_candidate":"Für die Vorprüfung geeignet","human_review":"Menschliche Prüfung","declined":"Abgelehnt","accepted":"Angenommen","closed":"Abgeschlossen"},
+    "Spanish": {"submitted":"Recibida","needs_information":"Se necesita información","pilot_candidate":"Apta para revisión preliminar","human_review":"Revisión humana","declined":"Rechazada","accepted":"Aceptada","closed":"Cerrada"},
+    "English": {"submitted":"Received","needs_information":"Information needed","pilot_candidate":"Eligible for preliminary review","human_review":"Human review","declined":"Declined","accepted":"Accepted","closed":"Closed"},
 }
 _RISK_LABELS_RU = {"critical":"Критический","high":"Высокий","medium":"Средний","low":"Низкий"}
 _PROBLEM_LABELS_RU = {
     "Goods not delivered":"Товар не доставлен","Poor quality or defects":"Низкое качество или дефекты",
     "Wrong material or specification":"Неверный материал или спецификация","Questionable documents":"Сомнительные документы",
     "Supplier refuses refund":"Поставщик отказывается возвращать деньги","Marketplace rejected the claim":"Площадка отклонила претензию",
+    "Other or multiple issues":"Другая или несколько проблем",
 }
 
 
@@ -69,8 +71,29 @@ def queue_case_notifications(case: dict) -> None:
 _DELIVERY_LOCK = threading.Lock()
 
 
+def safe_email_bridge_url() -> str | None:
+    """Return a bridge URL only when it is safe for an outbound HTTP request."""
+    raw = (settings.email_bridge_url or "").strip()
+    if not raw or any(ord(char) < 33 for char in raw):
+        return None
+    try:
+        parsed = urlparse(raw)
+        hostname = (parsed.hostname or "").casefold()
+        parsed.port
+        hostname.encode("idna")
+    except (UnicodeError, ValueError):
+        return None
+    if not parsed.netloc or not hostname or parsed.username or parsed.password:
+        return None
+    if parsed.scheme == "https":
+        return raw
+    if parsed.scheme == "http" and hostname in {"localhost", "127.0.0.1", "::1"}:
+        return raw
+    return None
+
+
 def email_delivery_is_configured() -> bool:
-    bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
+    bridge_ready = bool(safe_email_bridge_url() and settings.email_bridge_secret)
     smtp_ready = bool(
         settings.smtp_host
         and (not settings.smtp_username or settings.smtp_password)
@@ -80,7 +103,8 @@ def email_delivery_is_configured() -> bool:
 
 
 def _deliver_via_bridge(item: dict) -> None:
-    if not settings.email_bridge_url or not settings.email_bridge_secret:
+    bridge_url = safe_email_bridge_url()
+    if not bridge_url or not settings.email_bridge_secret:
         raise RuntimeError("Email bridge is not configured")
     payload = json.dumps(
         {
@@ -91,13 +115,14 @@ def _deliver_via_bridge(item: dict) -> None:
         }
     ).encode("utf-8")
     request = Request(
-        settings.email_bridge_url,
+        bridge_url,
         data=payload,
         headers={"Content-Type": "application/json; charset=utf-8"},
         method="POST",
     )
     try:
-        with urlopen(request, timeout=settings.email_bridge_timeout_seconds) as response:
+        # The URL is restricted above to HTTPS or a loopback-only HTTP endpoint.
+        with urlopen(request, timeout=settings.email_bridge_timeout_seconds) as response:  # nosec B310
             raw = response.read().decode("utf-8", errors="replace")
     except (HTTPError, URLError) as exc:
         raise RuntimeError(f"Email bridge request failed: {exc}") from exc
@@ -129,7 +154,7 @@ def deliver_pending(max_messages: int = 25) -> dict[str, int]:
         return {"sent": 0, "failed": 0, "pending": len(pending_notifications())}
     try:
         result = {"sent": 0, "failed": 0, "pending": 0}
-        bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
+        bridge_ready = bool(safe_email_bridge_url() and settings.email_bridge_secret)
         smtp_ready = bool(settings.smtp_host and (not settings.smtp_username or settings.smtp_password))
         if not bridge_ready and not smtp_ready:
             result["pending"] = len(pending_notifications())
@@ -207,4 +232,3 @@ def queue_completion_notification(case: dict) -> None:
     """Backward-compatible helper; status changes queue these transactionally."""
     for message in build_completion_notifications(case):
         queue_notification(case.get("id"), message["recipient"], message["subject"], message["body"])
-

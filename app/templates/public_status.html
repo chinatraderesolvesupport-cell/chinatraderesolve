@@ -1,18 +1,22 @@
-<!doctype html><html lang="{{ page_language }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ copy.title }} — {{ case.case_reference }}</title><style>
+<!doctype html><html lang="{{ page_language }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="icon" href="/static/favicon.svg" type="image/svg+xml"><title>{{ copy.title }} — {{ case.case_reference }}</title><style>
 :root{--bg:#0f172a;--panel:#172033;--teal:#14b8a6;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--danger:#b91c1c}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--light);color:var(--ink);line-height:1.5}a{color:#0f766e}.wrap{width:min(860px,94%);margin:28px auto}.brand{font-weight:900;font-size:22px}.brand span{color:var(--teal)}.card{background:white;border:1px solid #e2e8f0;border-radius:15px;padding:20px;margin:16px 0;box-shadow:0 8px 24px #0f172a0a}.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:9px;border:1px solid #94a3b8;background:white;color:#0f172a;font-weight:800;text-decoration:none;cursor:pointer;font:inherit}.btn.primary{background:var(--teal);border-color:var(--teal)}.btn.danger{color:var(--danger);border-color:#fecaca}.btn[disabled]{opacity:.6;cursor:wait}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800}.risk-critical,.risk-high{background:#fee2e2;color:#991b1b}.risk-medium{background:#fef3c7;color:#92400e}.risk-low{background:#d1fae5;color:#065f46}.muted{color:#64748b}.success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;border-radius:10px;padding:12px}.warning{background:#fef3c7;color:#78350f;border:1px solid #fde68a;border-radius:10px;padding:12px}.error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;padding:12px}.support{background:linear-gradient(135deg,#0f172a,#17324d);color:white}.support p{color:#cbd5e1}label{display:block;font-weight:750;margin:12px 0 6px}input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}input[type=file]{background:#f8fafc}textarea{min-height:120px}.check{display:flex;align-items:flex-start;gap:9px;font-weight:500}.check input{width:auto;margin-top:4px}.honeypot{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}.stars{display:flex;gap:8px;flex-wrap:wrap}.stars label{margin:0;padding:8px 11px;border:1px solid #cbd5e1;border-radius:8px;cursor:pointer}.stars input{width:auto}.fine{font-size:12px;color:#64748b}.file-list{display:grid;gap:9px;margin:16px 0}.file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}.file-main{min-width:0}.file-name{font-weight:800;overflow-wrap:anywhere}.file-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.analysis-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.score{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;border:9px solid #ccfbf1;background:white;font-weight:900;font-size:22px;color:#0f766e}.score-wrap{text-align:center;max-width:220px}.readiness-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 18px}.readiness-factor{border:1px solid #e2e8f0;border-radius:10px;padding:11px;background:#f8fafc}.readiness-factor-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.readiness-factor p{margin:7px 0 0}.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.subcard{border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff}.subcard h3{margin-top:0}.timeline{list-style:none;padding:0}.timeline li{border-left:3px solid #99f6e4;padding:0 0 14px 15px;margin-left:4px}.timeline strong{display:block}.inventory{width:100%;border-collapse:collapse}.inventory th,.inventory td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}.inventory th{font-size:12px;color:#64748b;text-transform:uppercase}.loading{display:none;margin-top:10px}.loading.show{display:block}@media(max-width:680px){.analysis-grid,.readiness-breakdown{grid-template-columns:1fr}.file-row{align-items:flex-start;flex-direction:column}.file-actions{width:100%}.file-actions .btn{flex:1}.inventory{display:block;overflow-x:auto}}
-</style></head><body><div class="wrap"><div class="brand">ChinaTrade<span>Resolve</span></div>
-<div class="card"><h1>{{ copy.title }}</h1><p><strong>{{ case.case_reference }}</strong></p><p><span class="badge">{{ status_label }}</span> <span class="badge risk-{{ case.risk_level }}">{{ risk_label }}</span></p><p>{{ case.public_message }}</p>{% if triage.missing_information %}<h2>{{ copy.info_heading }}</h2><ul>{% for item in triage.missing_information %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}<p class="muted">{{ copy.notice }}</p><a class="btn" href="/">{{ copy.return }}</a></div>
+</style><style>.case-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.progress{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;list-style:none;padding:0;margin:18px 0}.progress li{border:1px solid #cbd5e1;border-radius:10px;padding:12px;background:#f8fafc}.progress li.current{border-color:#0f766e;background:#ccfbf1}.progress li.done{border-color:#86efac;background:#f0fdf4}.progress-state{display:block;margin-top:8px;font-size:12px;font-weight:800;color:#475569}.next-step{border-left:5px solid var(--teal);background:#f0fdfa;padding:14px;border-radius:9px}.private-link{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link input{font-family:ui-monospace,SFMono-Regular,monospace;background:#f8fafc}.risk-note{font-size:13px;color:#64748b}.copy-result{min-height:1.5em}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:680px){.progress{grid-template-columns:1fr 1fr}.private-link{grid-template-columns:1fr}}</style></head><body><div class="wrap"><div class="brand">ChinaTrade<span>Resolve</span></div>
+<div class="card"><h1>{{ copy.title }}</h1><p><strong>{{ case.case_reference }}</strong></p><div class="case-meta"><span class="badge">{{ status_label }}</span><span class="badge risk-{{ case.risk_level }}">{{ progress_copy.attention_level }}: {{ risk_label }}</span><span class="muted">{{ progress_copy.last_updated }}: <time datetime="{{ case.updated_at }}">{{ last_updated }}</time></span></div><p class="risk-note">{{ progress_copy.attention_note }}</p><p>{{ case.public_message }}</p><h2>{{ progress_copy.progress }}</h2><ol class="progress">{% for stage in progress_stages %}<li class="{{ stage.state }}"><strong>{{ stage.label }}</strong><span class="progress-state">{{ progress_copy.get(stage.state, stage.state) }}</span></li>{% endfor %}</ol><div class="next-step"><strong>{{ progress_copy.next_action }}:</strong> {{ next_step }}<br><span class="fine">{{ progress_copy.response_target }}</span></div>{% if triage.missing_information %}<h2>{{ copy.info_heading }}</h2><ul>{% for item in triage.missing_information %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}<p class="muted">{{ copy.notice }}</p><a class="btn" href="/">{{ copy.return }}</a></div>
+
+<div class="card"><h2>{{ progress_copy.private_link }}</h2><p>{{ progress_copy.private_warning }}</p><label class="visually-hidden" for="privateStatusUrl">{{ progress_copy.private_link }}</label><div class="private-link"><input id="privateStatusUrl" value="{{ private_status_url }}" readonly><button class="btn primary" id="copyPrivateStatusUrl" type="button">{{ progress_copy.copy_link }}</button></div><p id="copyResult" class="copy-result fine" role="status" aria-live="polite"></p><a class="btn" href="/case/{{ case.case_reference }}/{{ case.public_token }}/access.txt">{{ progress_copy.download_access }}</a></div>
 
 <div class="card" id="documents">
   <h2>{{ document_copy.heading }}</h2>
   <p>{{ document_copy.intro }}</p>
   <p class="fine">{{ document_copy.privacy }}</p>
+  {% if not document_analysis_enabled and not document_analysis %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
   {% if documents_uploaded %}<p class="success">{{ document_copy.uploaded }}</p>{% endif %}
   {% if analysis_error %}<p class="error">{{ document_copy.analysis_error }}</p>{% endif %}
   {% if analysis_started %}<p class="success">{{ document_copy.analysing }}</p>{% endif %}
   {% if analysis_not_configured %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
   {% if analysis_consent_required %}<p class="warning">{{ document_copy.analysis_consent_required }}</p>{% endif %}
+  {% if analysis_budget_reached %}<p class="warning">{{ document_copy.analysis_budget }}</p>{% endif %}
   {% if document_changes_locked %}<p class="warning">{{ document_copy.analysing }}</p>{% endif %}
 
   {% if documents %}
@@ -49,8 +53,6 @@
       <button class="btn primary" type="submit">{{ document_copy.analyse }}</button>
       <p id="analysisLoading" class="loading warning">{{ document_copy.analysing }}</p>
     </form>
-    {% elif not document_analysis_enabled %}
-      <p class="warning">{{ document_copy.analysis_not_configured }}</p>
     {% endif %}
   {% endif %}
 </div>
@@ -77,6 +79,24 @@
 {% elif document_analysis and document_analysis.status == 'failed' %}
 <div class="card"><p class="error">{{ document_copy.analysis_error }}</p></div>
 {% endif %}
+
+<div class="card" id="privacy-controls">
+  <h2>{{ privacy_actions.title }}</h2>
+  {% if case.ai_consent and not document_changes_locked %}
+  <h3>{{ privacy_actions.revoke }}</h3>
+  <p class="fine">{{ privacy_actions.revoke_note }}</p>
+  <form method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/ai-consent/revoke">
+    <label class="check"><input type="checkbox" name="confirm_revoke" value="true" required><span>{{ privacy_actions.revoke_confirm }}</span></label>
+    <button class="btn" type="submit">{{ privacy_actions.submit_revoke }}</button>
+  </form>
+  {% endif %}
+  <h3>{{ privacy_actions.delete }}</h3>
+  <p class="fine">{{ privacy_actions.delete_note }}</p>
+  <form method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/delete">
+    <label class="check"><input type="checkbox" name="confirm_delete" value="true" required {% if document_changes_locked %}disabled{% endif %}><span>{{ privacy_actions.delete_confirm }}</span></label>
+    <button class="btn danger" type="submit" {% if document_changes_locked %}disabled{% endif %}>{{ privacy_actions.submit_delete }}</button>
+  </form>
+</div>
 
 {% if case.status == 'closed' %}
 <div class="card">
@@ -130,6 +150,22 @@ if (analysisForm) {
     const button = analysisForm.querySelector('button');
     if (button) button.disabled = true;
     document.getElementById('analysisLoading')?.classList.add('show');
+  });
+}
+
+const copyPrivateStatusUrl = document.getElementById('copyPrivateStatusUrl');
+if (copyPrivateStatusUrl) {
+  copyPrivateStatusUrl.addEventListener('click', async () => {
+    const field = document.getElementById('privateStatusUrl');
+    const result = document.getElementById('copyResult');
+    try {
+      await navigator.clipboard.writeText(field.value);
+      result.textContent = {{ progress_copy.copied | tojson }};
+    } catch (_) {
+      field.focus();
+      field.select();
+      result.textContent = {{ progress_copy.private_warning | tojson }};
+    }
   });
 }
 </script>

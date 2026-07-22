@@ -6,8 +6,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-DEFAULT_ADMIN_TOKEN = "change-me-before-deployment"
-DEFAULT_APP_SECRET = "development-secret-change-me"
+# Deliberately insecure sentinels: production checks recognize them and fail closed.
+DEFAULT_ADMIN_TOKEN = "change-me-before-deployment"  # nosec B105
+DEFAULT_APP_SECRET = "development-secret-change-me"  # nosec B105
 
 INSECURE_ADMIN_TOKENS = frozenset({
     "",
@@ -92,14 +93,30 @@ def _env_float(
     return value
 
 
+def _env_choice(name: str, default: str, allowed: set[str]) -> str:
+    value = (os.getenv(name) or default).strip().lower()
+    return value if value in allowed else default
+
+
 def _valid_base_url(raw: str | None) -> str | None:
     value = (raw or "").strip().rstrip("/")
-    if not value:
+    if not value or any(ord(char) < 33 for char in value):
         return None
-    parsed = urlparse(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+    try:
+        parsed = urlparse(value)
+        hostname = parsed.hostname or ""
+        parsed.port
+        hostname.encode("idna")
+    except (UnicodeError, ValueError):
         return None
-    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+    hostname_key = hostname.casefold()
+    if not parsed.netloc:
+        return None
+    if parsed.scheme != "https" and not (
+        parsed.scheme == "http" and hostname_key in {"localhost", "127.0.0.1", "::1"}
+    ):
+        return None
+    if not hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
         return None
     return value
 
@@ -122,6 +139,7 @@ class Settings:
     admin_token: str = os.getenv("ADMIN_TOKEN", DEFAULT_ADMIN_TOKEN)
     app_secret: str = os.getenv("APP_SECRET", DEFAULT_APP_SECRET)
     public_base_url: str = configured_public_base_url()
+    public_launch_mode: bool = _env_bool("PUBLIC_LAUNCH_MODE")
     enable_ai_triage: bool = _env_bool("ENABLE_AI_TRIAGE")
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str | None = os.getenv("OPENAI_MODEL")
@@ -131,6 +149,8 @@ class Settings:
     openai_document_model: str | None = os.getenv("OPENAI_DOCUMENT_MODEL") or os.getenv("OPENAI_MODEL")
     document_analysis_max_output_tokens: int = _env_int("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", 6000, minimum=1000, maximum=12000)
     document_analysis_timeout_seconds: float = _env_float("DOCUMENT_ANALYSIS_TIMEOUT_SECONDS", 90, minimum=10, maximum=300)
+    document_pdf_detail: str = _env_choice("DOCUMENT_PDF_DETAIL", "low", {"low", "high", "auto"})
+    max_daily_document_analyses: int = _env_int("MAX_DAILY_DOCUMENT_ANALYSES", 20, minimum=1, maximum=1000)
     openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
     ai_assistant_max_output_tokens: int = _env_int("AI_ASSISTANT_MAX_OUTPUT_TOKENS", 500, minimum=100, maximum=5000)
     ai_assistant_history_messages: int = _env_int("AI_ASSISTANT_HISTORY_MESSAGES", 8, minimum=1, maximum=10)
@@ -139,6 +159,7 @@ class Settings:
     maintenance_interval_seconds: int = _env_int("MAINTENANCE_INTERVAL_SECONDS", 60, minimum=60, maximum=3600)
     retention_check_interval_seconds: int = _env_int("RETENTION_CHECK_INTERVAL_SECONDS", 86400, minimum=3600, maximum=604800)
     retention_days: int = _env_int("RETENTION_DAYS", 90, minimum=1, maximum=3650)
+    inactive_retention_days: int = _env_int("INACTIVE_RETENTION_DAYS", 365, minimum=30, maximum=3650)
     contact_email: str = os.getenv("CONTACT_EMAIL", "chinatraderesolve.support@gmail.com")
     smtp_host: str | None = os.getenv("SMTP_HOST")
     smtp_port: int = _env_int("SMTP_PORT", 587, minimum=1, maximum=65535)
@@ -157,6 +178,13 @@ class Settings:
     eth_address: str | None = os.getenv("ETH_ADDRESS")
     usdt_trc20_address: str | None = os.getenv("USDT_TRC20_ADDRESS")
     sol_address: str | None = os.getenv("SOL_ADDRESS")
+    turnstile_site_key: str | None = os.getenv("TURNSTILE_SITE_KEY")
+    turnstile_secret_key: str | None = os.getenv("TURNSTILE_SECRET_KEY")
+    data_controller_name: str | None = os.getenv("DATA_CONTROLLER_NAME")
+    data_controller_address: str | None = os.getenv("DATA_CONTROLLER_ADDRESS")
+    data_controller_registration: str | None = os.getenv("DATA_CONTROLLER_REGISTRATION")
+    operator_profile: str | None = os.getenv("OPERATOR_PROFILE")
+    operator_credentials: str | None = os.getenv("OPERATOR_CREDENTIALS")
 
 
 settings = Settings()

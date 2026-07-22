@@ -26,6 +26,10 @@ class DocumentLimitError(ValueError):
     """Raised when a document batch would exceed a case storage limit."""
 
 
+class DailyAnalysisLimitError(RuntimeError):
+    """Raised when the database-backed daily OpenAI budget is exhausted."""
+
+
 def _lock_case(conn: Any, case_id: int) -> bool:
     """Serialise document mutations and analysis claims for one case."""
     if using_postgres():
@@ -142,6 +146,23 @@ def _ensure_document_analysis_run_token(conn: Any) -> None:
         execute(conn, "ALTER TABLE document_analyses ADD COLUMN run_token TEXT NOT NULL DEFAULT ''")
 
 
+def _ensure_case_document_page_count(conn: Any) -> None:
+    """Add PDF page metadata without racing an overlapping PostgreSQL deploy."""
+    if using_postgres():
+        execute(
+            conn,
+            "ALTER TABLE case_documents ADD COLUMN IF NOT EXISTS page_count INTEGER NOT NULL DEFAULT 0",
+        )
+        return
+    rows = execute(conn, "PRAGMA table_info(case_documents)").fetchall()
+    columns = {str(row["name"]) for row in rows}
+    if "page_count" not in columns:
+        execute(
+            conn,
+            "ALTER TABLE case_documents ADD COLUMN page_count INTEGER NOT NULL DEFAULT 0",
+        )
+
+
 def init_db() -> None:
     if using_postgres():
         statements = [
@@ -225,6 +246,7 @@ def init_db() -> None:
                 original_name TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 size_bytes BIGINT NOT NULL,
+                page_count INTEGER NOT NULL DEFAULT 0,
                 sha256 TEXT NOT NULL,
                 content_blob BYTEA NOT NULL
             )
@@ -241,6 +263,12 @@ def init_db() -> None:
                 run_token TEXT NOT NULL DEFAULT ''
             )
             """,
+            """
+            CREATE TABLE IF NOT EXISTS usage_counters (
+                counter_key TEXT PRIMARY KEY,
+                count INTEGER NOT NULL DEFAULT 0
+            )
+            """,
             "CREATE INDEX IF NOT EXISTS idx_cases_status_priority ON cases(status, priority DESC, created_at DESC)",
             "CREATE INDEX IF NOT EXISTS idx_cases_email ON cases(email)",
             "CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC)",
@@ -252,6 +280,7 @@ def init_db() -> None:
                 execute(conn, statement)
             _ensure_notification_retry_columns(conn)
             _ensure_document_analysis_run_token(conn)
+            _ensure_case_document_page_count(conn)
         return
 
     with transaction() as conn:
@@ -335,6 +364,7 @@ def init_db() -> None:
                 original_name TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 size_bytes INTEGER NOT NULL,
+                page_count INTEGER NOT NULL DEFAULT 0,
                 sha256 TEXT NOT NULL,
                 content_blob BLOB NOT NULL,
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
@@ -352,6 +382,11 @@ def init_db() -> None:
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS usage_counters (
+                counter_key TEXT PRIMARY KEY,
+                count INTEGER NOT NULL DEFAULT 0
+            );
+
             CREATE INDEX IF NOT EXISTS idx_cases_status_priority ON cases(status, priority DESC, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_cases_email ON cases(email);
             CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC);
@@ -361,6 +396,7 @@ def init_db() -> None:
         )
         _ensure_notification_retry_columns(conn)
         _ensure_document_analysis_run_token(conn)
+        _ensure_case_document_page_count(conn)
 
 
 def add_audit(conn: Any, case_id: int, actor: str, event_type: str, details: dict[str, Any]) -> None:
@@ -601,16 +637,26 @@ def claim_pending_notifications(
             (stale_before,),
         )
 
-        lock_clause = " FOR UPDATE SKIP LOCKED" if using_postgres() else ""
-        rows = execute(
-            conn,
-            f"""
-            SELECT id FROM notification_outbox
-            WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=?)
-            ORDER BY id LIMIT ?{lock_clause}
-            """,
-            (now, limit),
-        ).fetchall()
+        if using_postgres():
+            rows = execute(
+                conn,
+                """
+                SELECT id FROM notification_outbox
+                WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=?)
+                ORDER BY id LIMIT ? FOR UPDATE SKIP LOCKED
+                """,
+                (now, limit),
+            ).fetchall()
+        else:
+            rows = execute(
+                conn,
+                """
+                SELECT id FROM notification_outbox
+                WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=?)
+                ORDER BY id LIMIT ?
+                """,
+                (now, limit),
+            ).fetchall()
         ids = [int(row["id"]) for row in rows]
         if not ids:
             return []
@@ -657,27 +703,35 @@ def mark_notification(
     if status == "pending" and retry_delay_seconds > 0:
         next_attempt_at = (now + timedelta(seconds=retry_delay_seconds)).isoformat(timespec="seconds")
     with transaction() as conn:
-        where = "WHERE id=?"
-        params: list[Any] = [
+        params: tuple[Any, ...] = (
             status,
             error[:500],
             now.isoformat(timespec="seconds") if status == "sent" else None,
             next_attempt_at,
             notification_id,
-        ]
-        if expected_claim_token:
-            where += " AND status='sending' AND claim_token=?"
-            params.append(expected_claim_token)
-        cursor = execute(
-            conn,
-            f"""
-            UPDATE notification_outbox
-            SET status=?,error=?,sent_at=?,attempts=attempts+1,next_attempt_at=?,
-                claim_token='',claimed_at=NULL
-            {where}
-            """,
-            params,
         )
+        if expected_claim_token:
+            cursor = execute(
+                conn,
+                """
+                UPDATE notification_outbox
+                SET status=?,error=?,sent_at=?,attempts=attempts+1,next_attempt_at=?,
+                    claim_token='',claimed_at=NULL
+                WHERE id=? AND status='sending' AND claim_token=?
+                """,
+                (*params, expected_claim_token),
+            )
+        else:
+            cursor = execute(
+                conn,
+                """
+                UPDATE notification_outbox
+                SET status=?,error=?,sent_at=?,attempts=attempts+1,next_attempt_at=?,
+                    claim_token='',claimed_at=NULL
+                WHERE id=?
+                """,
+                params,
+            )
         return int(cursor.rowcount or 0) == 1
 
 
@@ -693,49 +747,107 @@ def dashboard_counts() -> dict[str, int]:
         return counts
 
 
-def soft_delete_expired(days: int) -> int:
+def _anonymize_case_for_connection(conn: Any, case_id: int, deleted_at: str) -> None:
+    """Remove related personal content and leave only a non-identifying tombstone."""
+    execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM case_documents WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))
+    execute(
+        conn,
+        """
+        UPDATE cases SET
+            deleted_at=?, updated_at=?, full_name='DELETED', email='deleted@example.invalid',
+            country='', purchasing_channel='', amount_in_dispute='', supplier_name='',
+            order_number='', order_value='', requested_result='', description='DELETED',
+            ai_consent=0, sharing_authority=0, pilot_terms=0, no_guarantee=0,
+            triage_json='{"deleted":true}', triage_source='deleted',
+            public_message='DELETED', admin_note=''
+        WHERE id=?
+        """,
+        (deleted_at, deleted_at, case_id),
+    )
+
+
+def soft_delete_expired(days: int, inactive_days: int | None = None) -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec="seconds")
+    inactive_cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=inactive_days)
+    ).isoformat(timespec="seconds") if inactive_days else None
     deleted_at = utcnow()
     with transaction() as conn:
-        rows = execute(
-            conn,
-            "SELECT id FROM cases WHERE deleted_at IS NULL AND updated_at<? AND status='closed'",
-            (cutoff,),
-        ).fetchall()
+        if inactive_cutoff:
+            rows = execute(
+                conn,
+                "SELECT id FROM cases WHERE deleted_at IS NULL AND "
+                "((status='closed' AND updated_at<?) OR updated_at<?)",
+                (cutoff, inactive_cutoff),
+            ).fetchall()
+        else:
+            rows = execute(
+                conn,
+                "SELECT id FROM cases WHERE deleted_at IS NULL AND updated_at<? AND status='closed'",
+                (cutoff,),
+            ).fetchall()
         case_ids = [int(row["id"]) for row in rows]
         for case_id in case_ids:
-            # Remove free-text and contact data from every related table, not only the main case row.
-            execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
-            execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
-            execute(conn, "DELETE FROM case_documents WHERE case_id=?", (case_id,))
-            execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
-            execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))
-            execute(
-                conn,
-                """
-                UPDATE cases SET
-                    deleted_at=?, updated_at=?, full_name='DELETED', email='deleted@example.invalid',
-                    country='', purchasing_channel='', amount_in_dispute='', supplier_name='',
-                    order_number='', order_value='', requested_result='', description='DELETED',
-                    ai_consent=0, sharing_authority=0, pilot_terms=0, no_guarantee=0,
-                    triage_json='{"deleted":true}', triage_source='deleted',
-                    public_message='DELETED', admin_note=''
-                WHERE id=?
-                """,
-                (deleted_at, deleted_at, case_id),
-            )
+            _anonymize_case_for_connection(conn, case_id, deleted_at)
         return len(case_ids)
+
+
+def delete_case_now(case_id: int) -> bool:
+    """Immediately anonymise a case after an authenticated private-link request."""
+    deleted_at = utcnow()
+    with transaction() as conn:
+        row = execute(
+            conn, "SELECT id FROM cases WHERE id=? AND deleted_at IS NULL", (case_id,)
+        ).fetchone()
+        if not row:
+            return False
+        _anonymize_case_for_connection(conn, case_id, deleted_at)
+        return True
+
+
+def revoke_ai_consent(case_id: int, actor: str = "client") -> bool:
+    """Withdraw consent for future AI work and remove any stored AI report."""
+    with transaction() as conn:
+        if not _lock_case(conn, case_id):
+            raise KeyError("Case not found")
+        analysis = execute(
+            conn, "SELECT status FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if analysis and analysis["status"] == "running":
+            raise DocumentAnalysisInProgressError(
+                "AI consent cannot be changed while analysis is running"
+            )
+        row = execute(conn, "SELECT ai_consent FROM cases WHERE id=?", (case_id,)).fetchone()
+        if not row or not bool(row["ai_consent"]):
+            return False
+        execute(conn, "UPDATE cases SET ai_consent=0,updated_at=? WHERE id=?", (utcnow(), case_id))
+        execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
+        add_audit(conn, case_id, actor, "ai_consent_revoked", {"scope": "future_ai_processing"})
+        return True
 
 
 
 def list_case_documents(case_id: int, include_content: bool = False) -> list[dict[str, Any]]:
-    columns = "*" if include_content else "id,case_id,created_at,original_name,content_type,size_bytes,sha256"
     with transaction() as conn:
-        rows = execute(
-            conn,
-            f"SELECT {columns} FROM case_documents WHERE case_id=? ORDER BY id",
-            (case_id,),
-        ).fetchall()
+        if include_content:
+            rows = execute(
+                conn,
+                "SELECT * FROM case_documents WHERE case_id=? ORDER BY id",
+                (case_id,),
+            ).fetchall()
+        else:
+            rows = execute(
+                conn,
+                """
+                SELECT id,case_id,created_at,original_name,content_type,size_bytes,page_count,sha256
+                FROM case_documents WHERE case_id=? ORDER BY id
+                """,
+                (case_id,),
+            ).fetchall()
         return [dict(row) for row in rows]
 
 
@@ -756,6 +868,7 @@ def add_case_documents(
     *,
     max_documents: int,
     max_total_bytes: int,
+    max_total_pdf_pages: int = 200,
     actor: str = "client",
 ) -> tuple[list[dict[str, Any]], int]:
     """Atomically add a prepared batch and invalidate an older report.
@@ -780,7 +893,7 @@ def add_case_documents(
 
         existing = [dict(row) for row in execute(
             conn,
-            "SELECT id,original_name,size_bytes,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
+            "SELECT id,original_name,size_bytes,page_count,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
             (case_id,),
         ).fetchall()]
         existing_hashes = {str(item["sha256"]) for item in existing}
@@ -808,16 +921,23 @@ def add_case_documents(
             raise DocumentLimitError(
                 "The total document size for one case cannot exceed 45 MB"
             )
+        existing_pages = sum(int(item.get("page_count") or 0) for item in existing)
+        new_pages = sum(int(item.get("page_count") or 0) for item in accepted)
+        if existing_pages + new_pages > max_total_pdf_pages:
+            raise DocumentLimitError(
+                f"The PDFs in one case can contain no more than {max_total_pdf_pages} pages in total"
+            )
 
         added: list[dict[str, Any]] = []
         for document in accepted:
             values = (
                 case_id, now, document["original_name"], document["content_type"],
-                document["size_bytes"], document["sha256"], document["content"],
+                document["size_bytes"], int(document.get("page_count") or 0),
+                document["sha256"], document["content"],
             )
             sql = """
-                INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,sha256,content_blob)
-                VALUES (?,?,?,?,?,?,?)
+                INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,page_count,sha256,content_blob)
+                VALUES (?,?,?,?,?,?,?,?)
             """
             if using_postgres():
                 row = execute(conn, sql + " RETURNING id", values).fetchone()
@@ -833,7 +953,7 @@ def add_case_documents(
             })
             row = execute(
                 conn,
-                "SELECT id,case_id,created_at,original_name,content_type,size_bytes,sha256 FROM case_documents WHERE id=?",
+                "SELECT id,case_id,created_at,original_name,content_type,size_bytes,page_count,sha256 FROM case_documents WHERE id=?",
                 (document_id,),
             ).fetchone()
             added.append(dict(row))
@@ -846,7 +966,8 @@ def add_case_documents(
 def add_case_document(case_id: int, document: dict[str, Any]) -> tuple[dict[str, Any], bool]:
     """Backward-compatible one-document helper used by tests and scripts."""
     added, _ = add_case_documents(
-        case_id, [document], max_documents=20, max_total_bytes=45 * 1024 * 1024
+        case_id, [document], max_documents=20, max_total_bytes=45 * 1024 * 1024,
+        max_total_pdf_pages=200,
     )
     if added:
         return added[0], True
@@ -895,6 +1016,7 @@ def claim_document_analysis(
     actor: str,
     document_count: int,
     allow_completed: bool = False,
+    max_daily_analyses: int | None = None,
 ) -> str | None:
     """Atomically claim the single analysis slot and return its unique run token."""
     now = utcnow()
@@ -915,6 +1037,20 @@ def claim_document_analysis(
             return None
         if current and current["status"] == "completed" and not allow_completed:
             return None
+        if max_daily_analyses:
+            counter_key = f"document_analysis:{datetime.now(timezone.utc).date().isoformat()}"
+            counter = execute(
+                conn,
+                """
+                INSERT INTO usage_counters(counter_key,count) VALUES (?,1)
+                ON CONFLICT(counter_key) DO UPDATE SET count=usage_counters.count+1
+                WHERE usage_counters.count<?
+                RETURNING count
+                """,
+                (counter_key, int(max_daily_analyses)),
+            ).fetchone()
+            if not counter:
+                raise DailyAnalysisLimitError("The daily document-analysis budget has been reached")
         if current:
             execute(
                 conn,
@@ -931,6 +1067,15 @@ def claim_document_analysis(
             "status": "running", "model": model, "document_count": actual_document_count,
         })
         return run_token
+
+
+def get_daily_analysis_usage() -> int:
+    counter_key = f"document_analysis:{datetime.now(timezone.utc).date().isoformat()}"
+    with transaction() as conn:
+        row = execute(
+            conn, "SELECT count FROM usage_counters WHERE counter_key=?", (counter_key,)
+        ).fetchone()
+        return int(row["count"]) if row else 0
 
 def _analysis_is_stale(updated_at: str, stale_seconds: int) -> bool:
     if stale_seconds <= 0:
@@ -1014,7 +1159,8 @@ def set_document_analysis_status(
         if status == "running" and not next_run_token:
             next_run_token = secrets.token_urlsafe(24)
         elif status != "running":
-            next_run_token = ""
+            # Empty means that no worker currently owns this analysis row.
+            next_run_token = ""  # nosec B105
         if existing:
             execute(
                 conn,
@@ -1064,10 +1210,14 @@ def save_document_analysis(
             "UPDATE document_analyses SET updated_at=?,status='completed',model=?,result_json=?,error='',run_token='' WHERE case_id=?",
             (now, model, result_json, case_id),
         )
+        usage = result.get("provider_usage") if isinstance(result.get("provider_usage"), dict) else {}
         add_audit(conn, case_id, "document_ai", "documents_analysed", {
             "document_count": len(list_case_documents_for_connection(conn, case_id)),
             "readiness_score": result.get("readiness_score"),
             "model": model,
+            "input_tokens": int(usage.get("input_tokens") or 0),
+            "output_tokens": int(usage.get("output_tokens") or 0),
+            "total_tokens": int(usage.get("total_tokens") or 0),
         })
         row = execute(conn, "SELECT * FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
         saved = dict(row)
@@ -1077,7 +1227,7 @@ def save_document_analysis(
 def list_case_documents_for_connection(conn: Any, case_id: int) -> list[dict[str, Any]]:
     return [dict(row) for row in execute(
         conn,
-        "SELECT id,case_id,created_at,original_name,content_type,size_bytes,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
+        "SELECT id,case_id,created_at,original_name,content_type,size_bytes,page_count,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
         (case_id,),
     ).fetchall()]
 

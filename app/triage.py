@@ -72,6 +72,39 @@ def _parse_amount(text: str) -> float | None:
         return None
 
 
+def _detect_currency(text: str) -> str | None:
+    value = (text or "").upper()
+    markers = (
+        ("RSD", ("RSD", "DIN", "ДИН")),
+        ("CNY", ("CNY", "RMB", "YUAN", "ЮАН", "¥")),
+        ("EUR", ("EUR", "EURO", "ЕВРО", "€")),
+        ("GBP", ("GBP", "POUND", "ФУНТ", "£")),
+        ("USD", ("USD", "US$", "DOLLAR", "ДОЛЛАР", "$")),
+    )
+    for currency, candidates in markers:
+        if any(candidate in value for candidate in candidates):
+            return currency
+    return None
+
+
+# These are conservative service-scope thresholds, not exchange-rate quotes.
+# An amount without a recognised currency is never escalated automatically.
+HIGH_VALUE_THRESHOLDS = {
+    "USD": 50_000, "EUR": 45_000, "GBP": 40_000,
+    "CNY": 350_000, "RSD": 5_300_000,
+}
+MEDIUM_VALUE_THRESHOLDS = {
+    "USD": 10_000, "EUR": 9_000, "GBP": 8_000,
+    "CNY": 70_000, "RSD": 1_050_000,
+}
+
+
+def _amount_reaches_threshold(text: str, thresholds: dict[str, float]) -> bool:
+    amount = _parse_amount(text)
+    currency = _detect_currency(text)
+    return bool(amount is not None and currency and amount >= thresholds[currency])
+
+
 
 _RU = {
 "The request may involve altering, concealing or fabricating evidence.": "Запрос может предполагать изменение, сокрытие или изготовление доказательств.",
@@ -82,11 +115,14 @@ _RU = {
 "Supplier or company name": "Название поставщика или компании",
 "Order number or transaction reference": "Номер заказа или идентификатор транзакции",
 "Approximate amount in dispute or order value": "Примерная сумма спора или стоимость заказа",
+"Currency of the disputed amount": "Валюта спорной суммы",
 "Which written records or photographs are available": "Какие письменные материалы или фотографии имеются",
 "A more detailed chronology of what happened": "Более подробная хронология событий",
 "Preferred practical outcome": "Желаемый практический результат",
 "This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Заявка не может быть принята, поскольку запрос может предполагать ненадлежащее обращение с доказательствами.",
 "Decline and preserve an internal audit record.": "Отклонить заявку и сохранить внутреннюю запись аудита.",
+"The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected.": "В описании упоминается возможное изменение, сокрытие или изготовление доказательств. Контекст требует ручной проверки; заявка не была автоматически отклонена.",
+"Review the context and speaker before making any decision; preserve the applicant's original materials.": "До принятия решения проверить контекст и автора высказывания; сохранить оригинальные материалы заявителя.",
 "Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Описание может касаться срочного юридического вопроса или действий государственных органов. Без ручной проверки автоматическая система не может безопасно оценить такую заявку.",
 "Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Немедленно передать на ручную проверку; при наличии сроков рекомендовать заявителю обратиться к квалифицированному специалисту.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Дело может соответствовать направлению сервиса, но его стоимость или техническая сложность требуют ручной проверки.",
@@ -108,11 +144,14 @@ _FR = {
 "Supplier or company name": "Nom du fournisseur ou de l’entreprise",
 "Order number or transaction reference": "Numéro de commande ou référence de transaction",
 "Approximate amount in dispute or order value": "Montant approximatif du litige ou valeur de la commande",
+"Currency of the disputed amount": "Devise du montant contesté",
 "Which written records or photographs are available": "Documents écrits ou photographies disponibles",
 "A more detailed chronology of what happened": "Chronologie plus détaillée des événements",
 "Preferred practical outcome": "Résultat pratique souhaité",
 "This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Cette demande ne peut pas être acceptée, car l’assistance sollicitée peut impliquer une manipulation inadéquate des preuves.",
 "Decline and preserve an internal audit record.": "Refuser la demande et conserver une trace d’audit interne.",
+"The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected.": "La description mentionne une possible modification, dissimulation ou fabrication de preuves. Le contexte exige une vérification humaine et la demande n’a pas été rejetée automatiquement.",
+"Review the context and speaker before making any decision; preserve the applicant's original materials.": "Vérifier le contexte et l’auteur des propos avant toute décision et conserver les éléments originaux du demandeur.",
 "Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Votre description peut concerner une question juridique urgente ou une intervention des autorités. Le système automatisé d’accès gratuit ne peut pas l’évaluer de manière sûre sans vérification humaine.",
 "Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Transmettre immédiatement à un humain et recommander au demandeur de consulter un professionnel qualifié lorsque des délais peuvent s’appliquer.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Le dossier semble potentiellement pertinent, mais sa valeur ou sa complexité technique exige une vérification humaine du périmètre.",
@@ -134,11 +173,14 @@ _DE = {
 "Supplier or company name": "Name des Lieferanten oder Unternehmens",
 "Order number or transaction reference": "Bestellnummer oder Transaktionsreferenz",
 "Approximate amount in dispute or order value": "Ungefährer Streitbetrag oder Bestellwert",
+"Currency of the disputed amount": "Währung des Streitbetrags",
 "Which written records or photographs are available": "Verfügbare schriftliche Unterlagen oder Fotos",
 "A more detailed chronology of what happened": "Ausführlichere Chronologie des Geschehens",
 "Preferred practical outcome": "Gewünschtes praktisches Ergebnis",
 "This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Dieser Antrag kann nicht angenommen werden, weil die gewünschte Unterstützung einen unsachgemäßen Umgang mit Beweisen betreffen könnte.",
 "Decline and preserve an internal audit record.": "Antrag ablehnen und einen internen Prüfvermerk aufbewahren.",
+"The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected.": "Die Beschreibung erwähnt möglicherweise die Veränderung, Verbergung oder Herstellung von Beweisen. Der Kontext muss menschlich geprüft werden; der Antrag wurde nicht automatisch abgelehnt.",
+"Review the context and speaker before making any decision; preserve the applicant's original materials.": "Vor einer Entscheidung Kontext und Sprecher prüfen und die Originalunterlagen des Antragstellers bewahren.",
 "Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Ihre Beschreibung könnte eine dringende rechtliche oder behördliche Angelegenheit betreffen. Das automatisierte kostenlose System kann sie ohne menschliche Prüfung nicht sicher bewerten.",
 "Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Sofort zur menschlichen Prüfung weiterleiten und bei möglichen Fristen zu qualifizierter Fachberatung raten.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.": "Der Fall scheint grundsätzlich relevant zu sein, aber sein Wert oder seine technische Komplexität erfordert eine menschliche Prüfung des Umfangs.",
@@ -160,11 +202,14 @@ _ES = {
 "Supplier or company name": "Nombre del proveedor o de la empresa",
 "Order number or transaction reference": "Número de pedido o referencia de la transacción",
 "Approximate amount in dispute or order value": "Importe aproximado en disputa o valor del pedido",
+"Currency of the disputed amount": "Moneda del importe en disputa",
 "Which written records or photographs are available": "Documentos escritos o fotografías disponibles",
 "A more detailed chronology of what happened": "Cronología más detallada de lo ocurrido",
 "Preferred practical outcome": "Resultado práctico deseado",
 "This application cannot be accepted because the requested assistance may involve improper handling of evidence.": "Esta solicitud no puede aceptarse porque la ayuda solicitada puede implicar un manejo inadecuado de las pruebas.",
 "Decline and preserve an internal audit record.": "Rechazar la solicitud y conservar un registro interno de auditoría.",
+"The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected.": "La descripción menciona una posible alteración, ocultación o fabricación de pruebas. El contexto requiere revisión humana y la solicitud no se ha rechazado automáticamente.",
+"Review the context and speaker before making any decision; preserve the applicant's original materials.": "Revisar el contexto y quién hizo la afirmación antes de decidir; conservar los materiales originales del solicitante.",
 "Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review.": "Su descripción puede referirse a un asunto jurídico urgente o relacionado con autoridades. El sistema automatizado de acceso gratuito no puede evaluarlo de forma segura sin revisión humana.",
 "Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply.": "Escalar inmediatamente y recomendar al solicitante que consulte a un profesional cualificado cuando puedan aplicarse plazos.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.": "El caso parece potencialmente relevante, pero su valor o complejidad técnica requiere una revisión humana del alcance.",
@@ -179,6 +224,9 @@ _ES = {
 }
 _SR = {
 "Supplier or company name":"Naziv dobavljača ili kompanije", "Order number or transaction reference":"Broj porudžbine ili oznaka transakcije", "Approximate amount in dispute or order value":"Približan iznos spora ili vrednost porudžbine", "Which written records or photographs are available":"Koji pisani dokazi ili fotografije postoje", "A more detailed chronology of what happened":"Detaljnija hronologija događaja", "Preferred practical outcome":"Željeni praktični ishod",
+"Currency of the disputed amount":"Valuta spornog iznosa",
+"The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected.":"Opis pominje moguće menjanje, skrivanje ili izradu dokaza. Kontekst zahteva ljudsku proveru i prijava nije automatski odbijena.",
+"Review the context and speaker before making any decision; preserve the applicant's original materials.":"Pre odluke proveriti kontekst i govornika i sačuvati originalne materijale podnosioca.",
 "The case may fit the free-access service, but additional information is needed before selection.":"Slučaj može odgovarati besplatnoj usluzi, ali su potrebne dodatne informacije pre izbora.",
 "The case appears potentially relevant, but its value or technical complexity requires human scope review.":"Slučaj može biti relevantan, ali njegova vrednost ili tehnička složenost zahtevaju ljudsku proveru obima.",
 "The case was assessed against the current free-access scope and evidence indicators.":"Slučaj je procenjen prema trenutnom obimu besplatne usluge i pokazateljima dokaza.",
@@ -203,7 +251,11 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
     illegal = _contains(combined, ILLEGAL_REQUEST_TERMS)
     technical = _contains(combined, TECHNICAL_EXPERT_TERMS)
     evidence_hits = _contains(combined, EVIDENCE_TERMS)
-    amount = _parse_amount(app.amount_in_dispute or app.order_value)
+    amount_text = app.amount_in_dispute or app.order_value
+    amount = _parse_amount(amount_text)
+    currency = _detect_currency(amount_text)
+    high_value = _amount_reaches_threshold(amount_text, HIGH_VALUE_THRESHOLDS)
+    medium_value = _amount_reaches_threshold(amount_text, MEDIUM_VALUE_THRESHOLDS)
 
     reasons: list[str] = []
     missing: list[str] = []
@@ -224,7 +276,7 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
         flags.append("technical_expert_may_be_required")
         reasons.append("A laboratory, compliance, customs or technical specialist may be required.")
         priority += 15
-    if amount is not None and amount >= 50000:
+    if high_value:
         flags.append("high_value_dispute")
         reasons.append("The stated dispute value is high and requires human scope review.")
         priority += 20
@@ -237,6 +289,8 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
         missing.append("Order number or transaction reference")
     if not app.amount_in_dispute and not app.order_value:
         missing.append("Approximate amount in dispute or order value")
+    elif amount is not None and not currency:
+        missing.append("Currency of the disputed amount")
     if not evidence_hits:
         missing.append("Which written records or photographs are available")
     if len(app.description) < 120:
@@ -257,18 +311,21 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
     score = max(0, min(100, score))
 
     if illegal:
-        decision = "declined"
+        # Keyword matching cannot reliably identify the speaker or a negation.
+        # A buyer reporting that a supplier requested evidence destruction must
+        # never be auto-rejected. Reserve rejection for a human administrator.
+        decision = "human_review"
         risk = "critical"
-        strength = "insufficient"
-        public = "This application cannot be accepted because the requested assistance may involve improper handling of evidence."
-        action = "Decline and preserve an internal audit record."
+        strength = "unclear"
+        public = "The description mentions possible alteration, concealment or fabrication of evidence. The context requires human review and the application has not been automatically rejected."
+        action = "Review the context and speaker before making any decision; preserve the applicant's original materials."
     elif urgent:
         decision = "human_review"
         risk = "critical"
         strength = "unclear"
         public = "Your description may involve an urgent legal or authority matter. The automated free-access system cannot safely assess it without human review."
         action = "Escalate immediately; advise the applicant to seek a qualified professional where deadlines may apply."
-    elif technical or (amount is not None and amount >= 50000):
+    elif technical or high_value:
         decision = "human_review"
         risk = "high"
         strength = "potentially_supportable" if evidence_hits else "unclear"
@@ -282,7 +339,7 @@ def rules_triage(app: ApplicationCreate) -> TriageResult:
         action = "Request a clearer description of the supplier dispute and requested outcome."
     elif score >= 65 and len(missing) <= 2:
         decision = "pilot_candidate"
-        risk = "low" if amount is None or amount < 10000 else "medium"
+        risk = "medium" if medium_value else "low"
         strength = "supportable_for_review"
         public = "The application appears suitable for free-access review, subject to capacity and a final scope check."
         action = "Place in the free-access candidate queue and request up to twenty key files if selected."
@@ -328,6 +385,10 @@ def merge_triage(rule_result: TriageResult, ai_result: TriageResult | None) -> T
     risk_rank = {"low": 1, "medium": 2, "high": 3, "critical": 4}
     risk = ai_result.risk_level if risk_rank[ai_result.risk_level] >= risk_rank[rule_result.risk_level] else rule_result.risk_level
     decision = ai_result.decision
+    # No model-generated classification may reject a person automatically.
+    # Human administrators retain the explicit declined status in the dashboard.
+    if decision == "declined":
+        decision = "human_review"
     if rule_result.decision == "human_review" and decision == "pilot_candidate":
         decision = "human_review"
     combined_reasons = list(dict.fromkeys(rule_result.reasons + ai_result.reasons))[:12]

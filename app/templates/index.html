@@ -8,6 +8,13 @@
 <meta content="Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий." name="description"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
 <meta content="same-origin" name="csrf-mode"/>
+<link rel="canonical" href="{{ canonical_url }}"/>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="ChinaTradeResolve — разбор споров с китайскими поставщиками"/>
+<meta property="og:description" content="Предварительная оценка позиции, доказательств и следующих действий без завышенных обещаний."/>
+<meta property="og:url" content="{{ canonical_url }}"/>
+<meta name="twitter:card" content="summary"/>
 <style>
 :root{
   --bg:#0f172a;--panel:#172033;--panel2:#132238;--navy:#17324D;--teal:#14B8A6;
@@ -19,6 +26,8 @@ html{scroll-behavior:smooth}
 body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
 a{text-decoration:none;color:inherit}
 button,input,select,textarea{font:inherit}
+.skip-link{position:fixed;left:12px;top:12px;z-index:200;transform:translateY(-160%);padding:10px 14px;border-radius:9px;background:#fff;color:#0f172a;font-weight:900}.skip-link:focus{transform:translateY(0)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
 .wrap{width:min(1160px,92%);margin:auto}
 .prototype-banner{background:#fde68a;color:#422006;text-align:center;padding:8px 12px;font-weight:800;font-size:13px}
 header{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
@@ -83,6 +92,7 @@ section{padding:64px 0;scroll-margin-top:130px}.light{background:var(--light);co
 .progress-labels span:last-child{text-align:right}
 .progress{display:flex;gap:8px;margin-bottom:22px}.progress span{height:7px;flex:1;border-radius:999px;background:#e2e8f0}.progress span.active{background:var(--teal)}
 .form-speed{display:inline-flex;align-items:center;gap:8px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:8px 11px;border-radius:10px;font-weight:800;font-size:13px;margin:0 0 16px}
+.feature-status{margin:0 0 16px;padding:12px 14px;border-radius:11px;font-size:14px}.feature-status.available{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.feature-status.manual{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
 .form-step{display:none}.form-step.active{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .field{display:flex;flex-direction:column;gap:7px;min-width:0}.full{grid-column:1/-1}
 input,select,textarea{width:100%;min-width:0;padding:13px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
@@ -161,11 +171,16 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
 #confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
+.private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
 @media(max-width:900px){.service-layout{grid-template-columns:1fr}}
+@media(max-width:560px){.private-link-row{grid-template-columns:1fr}.private-link-row .btn{width:100%}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 </style>
-</head>
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"Service","name":"ChinaTradeResolve","url":canonical_url,"description":"Commercial support for buyers in disputes with Chinese suppliers.","provider":{"@type":"Organization","name":"ChinaTradeResolve","email":contact_email}}|tojson }}</script>
+{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
 <body>
+<a class="skip-link" href="#main-content" data-i18n="skip_content">Перейти к содержанию</a>
 <div class="prototype-banner" data-i18n="prototype">Заявки рассматриваются бесплатно. Приём зависит от профиля дела и доступной мощности.</div>
 <header>
 <div class="wrap">
@@ -209,6 +224,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </div>
 </header>
+<main id="main-content">
 <section class="hero">
 <div class="wrap hero-grid">
 <div>
@@ -297,8 +313,11 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="operator">
 <strong data-i18n="operator_title">Независимый сервис ChinaTradeResolve</strong>
 <p data-i18n="operator_text">Проект работает из Сербии и помогает структурировать коммерческие споры с китайскими поставщиками. ChinaTradeResolve не является юридической фирмой и не представляет клиентов в суде.</p>
+{% if operator_profile %}<p class="operator-profile">{{ operator_profile }}</p>{% endif %}
 <ul class="operator-facts">
 <li><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></li>
+{% if operator_credentials %}<li>{{ operator_credentials }}</li>{% endif %}
+{% if operator_registration %}<li>{{ operator_registration }}</li>{% endif %}
 <li data-i18n="hours_text">Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.</li>
 <li data-i18n="operator_placeholder">Важные выводы проверяются человеком. Никакие документы не отправляются поставщику, площадке или другой третьей стороне без согласованного с вами действия.</li>
 </ul>
@@ -333,6 +352,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <h2 data-i18n="form_title">Отправьте дело на бесплатный анализ</h2>
 <p class="intro" data-i18n="form_intro">Начните с краткого описания. После отправки на закрытой странице дела можно безопасно добавить до 20 ключевых документов.</p>
 <div class="form-speed" data-i18n="form_speed">Около 2 минут · Без платы за услуги · Без больших загрузок</div>
+{% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">Автоматическая систематизация документов доступна после загрузки и отдельного согласия.</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">Сейчас документы проверяются вручную; автоматический анализ не подключён.</div>{% endif %}
 <div class="form-shell">
 <div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">Основные данные</span><span data-i18n="form_stage2" id="label2">Информация о деле</span></div>
 <div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
@@ -344,7 +364,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_french" value="French">Французский</option><option data-i18n="opt_german" value="German">Немецкий</option><option data-i18n="opt_spanish" value="Spanish">Испанский</option><option data-i18n="opt_russian" value="Russian">Русский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
 <div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
 <div class="field"><label data-i18n="amount" for="amountDispute">Сумма, которую вы хотите вернуть</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
-<div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option></select></div>
+<div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option><option data-i18n="opt_problem_other" value="Other or multiple issues">Другая или несколько проблем</option></select></div>
 <div class="field full"><div class="error" data-i18n="form_error" id="stepError">Укажите имя и корректный email.</div></div>
 <div class="field full form-actions"><span></span><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
 </div>
@@ -361,14 +381,24 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="consent-row"><label><input name="ai_consent" style="width:auto" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
 <div class="consent-row"><label><input name="no_guarantee" required="" style="width:auto" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
 </div>
+{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="cf-turnstile-response"></div></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button class="btn primary" data-i18n="submit_review" type="submit">Отправить бесплатную заявку</button></div>
 </div>
 </form>
 <div id="confirmation" style="display:none" tabindex="-1">
 <h3 data-i18n="received">Бесплатная заявка сохранена</h3>
-<p data-i18n="received_text">Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.</p>
-<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div><div style="margin-top:10px"><a class="btn" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div></div>
+<p data-i18n="received_text">Заявка сохранена и автоматически проверена.</p>
+<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div></div>
+<div class="private-access">
+  <strong data-i18n="private_link_title">Сохраните приватную ссылку</strong>
+  <p data-i18n="private_link_warning">Без этой ссылки нельзя повторно открыть дело и документы. Не пересылайте её посторонним.</p>
+  <label for="privateStatusUrl" data-i18n="private_link_label">Приватная ссылка дела</label>
+  <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">Скопировать ссылку</button></div>
+  <div class="copy-result" id="copyResult" role="status" aria-live="polite"></div>
+  <p class="email-state" id="emailDeliveryState"></p>
+  <div style="margin-top:10px"><a class="btn" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div>
+</div>
 </div>
 </div>
 </div>
@@ -417,6 +447,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </div>
 </section>
+</main>
 <footer>
 <div class="wrap foot">
 <div><div class="brand">
@@ -428,7 +459,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div><div class="small" data-i18n="footer_text">Коммерческая помощь покупателям, работающим с китайскими поставщиками.</div></div>
-<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/static/privacy.html">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
+<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
 <div class="small">© 2026 ChinaTradeResolve</div>
 </div>
 </footer>
@@ -436,7 +467,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 
 <div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
 <button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
-<section aria-labelledby="aiChatTitle" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
+<section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">Не вставляйте конфиденциальные имена, номера заказов, пароли, приватные ключи или полные документы. Помощник даёт общую информацию, а не юридическую консультацию.</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
@@ -446,6 +477,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </section>
 </div>
 <script src="/static/translations-v2.js"></script>
+<script src="/static/launch-i18n-v3.js"></script>
 <script>
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
@@ -483,6 +515,27 @@ function updateDescriptionCount(){descriptionCount.textContent=`${descriptionFie
 descriptionField.addEventListener('input',updateDescriptionCount);
 updateDescriptionCount();
 
+const privateAccessCopy={
+  en:{copied:'Private link copied.',copy_failed:'Copy was not available. Select the link and copy it manually.',email_on:'A confirmation email has been queued. Save this link as a backup.',email_off:'Email delivery is unavailable. This private link is the only way to reopen the case.'},
+  ru:{copied:'Приватная ссылка скопирована.',copy_failed:'Автоматическое копирование недоступно. Выделите и скопируйте ссылку вручную.',email_on:'Письмо с подтверждением поставлено в очередь. Всё равно сохраните эту ссылку.',email_off:'Отправка писем недоступна. Эта приватная ссылка — единственный способ снова открыть дело.'},
+  sr:{copied:'Privatni link je kopiran.',copy_failed:'Automatsko kopiranje nije dostupno. Izaberite i ručno kopirajte link.',email_on:'Email potvrda je stavljena u red. Sačuvajte ovaj link kao rezervu.',email_off:'Slanje emaila nije dostupno. Ovaj privatni link je jedini način da ponovo otvorite slučaj.'},
+  fr:{copied:'Lien privé copié.',copy_failed:'La copie automatique est indisponible. Sélectionnez et copiez le lien manuellement.',email_on:'Un e-mail de confirmation a été mis en file d’attente. Conservez quand même ce lien.',email_off:'L’envoi d’e-mails est indisponible. Ce lien privé est le seul moyen de rouvrir le dossier.'},
+  de:{copied:'Privater Link kopiert.',copy_failed:'Automatisches Kopieren ist nicht verfügbar. Markieren und kopieren Sie den Link manuell.',email_on:'Eine Bestätigungs-E-Mail wurde vorgemerkt. Speichern Sie diesen Link trotzdem.',email_off:'E-Mail-Versand ist nicht verfügbar. Nur mit diesem privaten Link können Sie den Fall erneut öffnen.'},
+  es:{copied:'Enlace privado copiado.',copy_failed:'La copia automática no está disponible. Seleccione y copie el enlace manualmente.',email_on:'El correo de confirmación se ha puesto en cola. Guarde también este enlace.',email_off:'El envío de correo no está disponible. Este enlace privado es la única forma de volver a abrir el caso.'}
+};
+document.getElementById('copyStatusLink').addEventListener('click',async()=>{
+  const field=document.getElementById('privateStatusUrl');
+  const result=document.getElementById('copyResult');
+  const copy=privateAccessCopy[document.documentElement.lang]||privateAccessCopy.en;
+  try{
+    await navigator.clipboard.writeText(field.value);
+    result.textContent=copy.copied;
+  }catch(_error){
+    field.focus();field.select();
+    result.textContent=copy.copy_failed;
+  }
+});
+
 const stepOne=document.getElementById('stepOne'),stepTwo=document.getElementById('stepTwo');
 const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog2'),label1=document.getElementById('label1'),label2=document.getElementById('label2');
 const nextButton=document.getElementById('nextBtn');
@@ -515,6 +568,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const payload={};
   data.forEach((value,key)=>{payload[key]=value});
   ['free_access_terms','sharing_authority','ai_consent','no_guarantee'].forEach(k=>payload[k]=data.has(k));
+  payload.turnstile_token=String(data.get('cf-turnstile-response')||'');
   const controller=new AbortController();
   const timeoutId=window.setTimeout(()=>controller.abort(),25000);
   try{
@@ -550,9 +604,15 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     document.getElementById('caseNumber').textContent=result.case_reference;
     document.getElementById('caseDecision').textContent=result.public_message||'';
     if(result.status_url){
+      const absoluteStatusUrl=new URL(result.status_url,window.location.origin).href;
       const link=document.getElementById('statusLink');
       link.href=result.status_url;
       link.style.display='inline-flex';
+      document.getElementById('privateStatusUrl').value=absoluteStatusUrl;
+      const accessCopy=privateAccessCopy[document.documentElement.lang]||privateAccessCopy.en;
+      const emailState=document.getElementById('emailDeliveryState');
+      emailState.dataset.configured=result.email_delivery_configured?'true':'false';
+      emailState.textContent=result.email_delivery_configured?accessCopy.email_on:accessCopy.email_off;
     }
     confirmation.focus();
     confirmation.scrollIntoView({behavior:'smooth',block:'start'});
@@ -598,6 +658,11 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
   document.querySelectorAll('[data-i18n]').forEach(el=>{const value=copy[el.dataset.i18n];if(value)el.textContent=value});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const value=copy[el.dataset.i18nPlaceholder];if(value)el.placeholder=value});
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el=>{const value=copy[el.dataset.i18nAriaLabel];if(value)el.setAttribute('aria-label',value)});
+  const emailState=document.getElementById('emailDeliveryState');
+  if(emailState&&emailState.dataset.configured){
+    const accessCopy=privateAccessCopy[lang]||privateAccessCopy.en;
+    emailState.textContent=emailState.dataset.configured==='true'?accessCopy.email_on:accessCopy.email_off;
+  }
   const meta=pageMeta[lang]||pageMeta.en;
   document.title=meta.title;
   const description=document.querySelector('meta[name="description"]');
@@ -743,7 +808,17 @@ if(aiChatRoot){
   aiChatInput.addEventListener('keydown',event=>{
     if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage(aiChatInput.value)}
   });
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!aiChatPanel.hidden)closeAiChat()});
+  document.addEventListener('keydown',event=>{
+    if(aiChatPanel.hidden)return;
+    if(event.key==='Escape'){closeAiChat();return;}
+    if(event.key==='Tab'){
+      const focusable=[...aiChatPanel.querySelectorAll('button:not([disabled]),textarea:not([disabled])')];
+      if(!focusable.length)return;
+      const first=focusable[0],last=focusable[focusable.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
 }
 
 </script>

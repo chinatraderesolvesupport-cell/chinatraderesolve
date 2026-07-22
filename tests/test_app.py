@@ -12,7 +12,7 @@ os.environ["RENDER"] = "true"
 os.environ["ENABLE_VOLUNTARY_SUPPORT"] = "true"
 os.environ["SUPPORT_URL"] = "https://example.com/support"
 os.environ["BTC_ADDRESS"] = "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9"
-os.environ["ETH_ADDRESS"] = "0x69ace684f28b0a66157ab62ad06e93761a713c6b"
+os.environ["ETH_ADDRESS"] = "0x69ACE684f28B0A66157aB62aD06e93761a713c6b"
 os.environ["USDT_TRC20_ADDRESS"] = "TV3CgZaUqRqQSAYnzyGaMH3M27AwZwGJNp"
 os.environ["SOL_ADDRESS"] = "Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg"
 
@@ -45,6 +45,62 @@ def valid_payload(**overrides):
     }
     data.update(overrides)
     return data
+
+
+READINESS_FACTOR_NAMES = [
+    "parties",
+    "transaction",
+    "specification",
+    "payment",
+    "communications",
+    "delivery",
+    "problem_evidence",
+]
+
+
+def readiness_factors(*statuses):
+    assert len(statuses) == len(READINESS_FACTOR_NAMES)
+    return [
+        {
+            "factor": factor,
+            "status": status,
+            "explanation": f"{factor}: {status}",
+        }
+        for factor, status in zip(READINESS_FACTOR_NAMES, statuses)
+    ]
+
+
+def _make_pdf_bytes(page_count: int = 1) -> bytes:
+    from io import BytesIO
+    import pikepdf
+
+    output = BytesIO()
+    with pikepdf.Pdf.new() as pdf:
+        for _ in range(page_count):
+            pdf.add_blank_page(page_size=(595, 842))
+        pdf.save(output)
+    return output.getvalue()
+
+
+def _make_unsafe_pdf_bytes(kind: str) -> bytes:
+    from io import BytesIO
+    import pikepdf
+
+    output = BytesIO()
+    with pikepdf.Pdf.new() as pdf:
+        pdf.add_blank_page(page_size=(595, 842))
+        if kind == "javascript":
+            action = pikepdf.Dictionary(
+                S=pikepdf.Name.JavaScript,
+                JS=pikepdf.String("app.alert('unsafe')"),
+            )
+            pdf.Root.OpenAction = pdf.make_indirect(action)
+        elif kind == "attachment":
+            pdf.attachments["payload.txt"] = b"embedded payload"
+        else:
+            raise ValueError(kind)
+        pdf.save(output, object_stream_mode=pikepdf.ObjectStreamMode.generate)
+    return output.getvalue()
 
 
 def test_health_and_home_free_access():
@@ -380,7 +436,7 @@ def test_crypto_support_wallets_and_network_warnings():
     assert page.status_code == 200
     expected = {
         "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9": "Bitcoin",
-        "0x69ace684f28b0a66157ab62ad06e93761a713c6b": "Ethereum Mainnet",
+        "0x69ACE684f28B0A66157aB62aD06e93761a713c6b": "Ethereum Mainnet",
         "TV3CgZaUqRqQSAYnzyGaMH3M27AwZwGJNp": "TRON (TRC20)",
         "Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg": "Solana",
     }
@@ -792,6 +848,10 @@ def test_document_analysis_request_uses_multimodal_structured_output(monkeypatch
 
     expected = {
         "readiness_score": 60,
+        "readiness_factors": readiness_factors(
+            "missing", "missing", "missing", "complete",
+            "complete", "complete", "complete",
+        ),
         "summary": "Summary",
         "document_inventory": [{"filename": "chat.png", "document_type": "Chat", "language": "English", "date_or_period": "Date not visible", "key_content": "Supplier statement", "readability": "clear"}],
         "timeline": [{"date": "Date not visible", "event": "Supplier made a statement", "source_files": ["chat.png"], "confidence": "medium"}],
@@ -1003,9 +1063,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.6.2"
+    assert health.json()["version"] == "3.7.0"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.6.2"
+    assert health.headers["x-app-version"] == "3.7.0"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -1018,7 +1078,7 @@ def test_release_metadata_and_twenty_file_copy_are_consistent():
     for stale in ("up to five", "five key", "до 5 ключевых", "не более пяти ключевых"):
         assert stale not in combined
 
-    privacy_ru = client.get("/static/privacy.html?lang=ru")
+    privacy_ru = client.get("/privacy?lang=ru")
     assert privacy_ru.status_code == 200
     legal_script = client.get("/static/legal-i18n-v2.js")
     assert "до 20 ключевых PDF" in legal_script.text
@@ -1048,7 +1108,7 @@ def test_image_dimensions_checked_before_pixel_decode(monkeypatch):
     assert calls["load"] >= 1
 
 
-def test_pdf_document_analysis_uses_data_url_without_image_detail(monkeypatch):
+def test_pdf_document_analysis_uses_low_detail_data_url(monkeypatch):
     import asyncio
     import json
     from types import SimpleNamespace
@@ -1085,18 +1145,18 @@ def test_pdf_document_analysis_uses_data_url_without_image_detail(monkeypatch):
     monkeypatch.setattr(module, "settings", SimpleNamespace(
         enable_document_analysis=True, openai_api_key="test-key",
         openai_document_model="test-model", document_analysis_timeout_seconds=30,
-        document_analysis_max_output_tokens=3000,
+        document_analysis_max_output_tokens=3000, document_pdf_detail="low",
     ))
     monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
     case = valid_payload(); case["case_reference"] = "CTR-PDF"
-    pdf = b"%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF"
+    pdf = _make_pdf_bytes()
     asyncio.run(module.analyse_case_documents(case, [{
         "original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": pdf,
     }]))
     file_part = captured["body"]["input"][1]["content"][1]
     assert file_part["type"] == "input_file"
     assert file_part["file_data"].startswith("data:application/pdf;base64,")
-    assert "detail" not in file_part
+    assert file_part["detail"] == "low"
 
 
 def test_document_analysis_retries_temporary_provider_errors(monkeypatch):
@@ -1107,6 +1167,10 @@ def test_document_analysis_retries_temporary_provider_errors(monkeypatch):
 
     expected = {
         "readiness_score": 50, "summary": "Summary", "document_inventory": [],
+        "readiness_factors": readiness_factors(
+            "partial", "missing", "missing", "missing",
+            "complete", "complete", "complete",
+        ),
         "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
         "risk_flags": [], "recommended_next_steps": [],
         "human_review_note": "Human verification required.",
@@ -1155,7 +1219,7 @@ def test_public_pdf_download_is_attachment_and_image_is_inline():
         headers={"x-forwarded-for": "198.51.100.240"},
     ).json()
     status_url = created["status_url"]
-    pdf = b"%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF"
+    pdf = _make_pdf_bytes()
     client.post(
         status_url + "/documents",
         files=[
@@ -1531,7 +1595,7 @@ def test_analysis_claim_is_atomic_and_blocks_evidence_changes():
 
     page = client.get(created["status_url"])
     assert 'id="documentUploadForm"' not in page.text
-    assert "/delete" not in page.text
+    assert f"/documents/{documents[0]['id']}/delete" not in page.text
     set_document_analysis_status(case["id"], "failed", "test-model", "test cleanup")
 
 
@@ -1661,13 +1725,25 @@ def test_pdf_validation_rejects_encryption_and_obfuscated_active_content():
     from io import BytesIO
     from app.documents import DocumentValidationError, prepare_upload
 
-    encrypted = b"%PDF-1.4\n1 0 obj<< /Encrypt 2 0 R >>endobj\n%%EOF"
+    import pikepdf
+    encrypted_output = BytesIO()
+    with pikepdf.Pdf.new() as encrypted_pdf:
+        encrypted_pdf.add_blank_page(page_size=(595, 842))
+        encrypted_pdf.save(
+            encrypted_output,
+            encryption=pikepdf.Encryption(user="secret", owner="owner-secret", R=6),
+        )
+    encrypted = encrypted_output.getvalue()
     with pytest.raises(DocumentValidationError, match="Password-protected"):
         asyncio.run(prepare_upload(UploadFile(BytesIO(encrypted), filename="encrypted.pdf")))
 
-    obfuscated = b"%PDF-1.4\n1 0 obj<< /Java#53cript 2 0 R >>endobj\n%%EOF"
-    with pytest.raises(DocumentValidationError, match="active or embedded"):
-        asyncio.run(prepare_upload(UploadFile(BytesIO(obfuscated), filename="active.pdf")))
+    unsafe_pdfs = {
+        "active.pdf": _make_unsafe_pdf_bytes("javascript"),
+        "compressed-attachment.pdf": _make_unsafe_pdf_bytes("attachment"),
+    }
+    for filename, unsafe_pdf in unsafe_pdfs.items():
+        with pytest.raises(DocumentValidationError, match="active or embedded"):
+            asyncio.run(prepare_upload(UploadFile(BytesIO(unsafe_pdf), filename=filename)))
 
 
 
@@ -1788,7 +1864,7 @@ def test_document_analysis_drops_invented_evidence_filenames(monkeypatch):
     try:
         result = asyncio.run(module.analyse_case_documents(
             {"case_reference": "CTR-TEST", "preferred_language": "English"},
-            [{"original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": b"%PDF-1.4\n%%EOF"}],
+            [{"original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": _make_pdf_bytes()}],
         ))
     finally:
         object.__setattr__(module.settings, "enable_document_analysis", original_enabled)
@@ -1878,6 +1954,14 @@ def test_invalid_numeric_environment_values_use_safe_defaults(monkeypatch):
     monkeypatch.setenv("PUBLIC_BASE_URL", "javascript:alert(1)")
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://safe-example.onrender.com")
     assert configured_public_base_url() == "https://safe-example.onrender.com"
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://[::1")
+    assert configured_public_base_url() == "https://safe-example.onrender.com"
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://example.com:bad")
+    assert configured_public_base_url() == "https://safe-example.onrender.com"
+    monkeypatch.setenv("PUBLIC_BASE_URL", "http://remote-example.test")
+    assert configured_public_base_url() == "https://safe-example.onrender.com"
+    monkeypatch.setenv("PUBLIC_BASE_URL", "http://localhost:8000/")
+    assert configured_public_base_url() == "http://localhost:8000"
 
 
 def test_document_analysis_drops_timeline_events_without_real_sources(monkeypatch):
@@ -2300,6 +2384,107 @@ def test_deliver_pending_claims_each_email_immediately_before_sending(monkeypatc
     assert claim_limits == [1, 1, 1]
 
 
+def test_email_bridge_accepts_https_and_loopback_http_only():
+    import app.notifications as notifications
+
+    original = notifications.settings.email_bridge_url
+    try:
+        for value in (
+            "https://bridge.example.test/send?channel=email",
+            "http://localhost:8080/send",
+            "http://127.0.0.1:8080/send",
+            "http://[::1]:8080/send",
+        ):
+            object.__setattr__(notifications.settings, "email_bridge_url", value)
+            assert notifications.safe_email_bridge_url() == value
+
+        for value in (
+            "file:///etc/passwd",
+            "http://bridge.example.test/send",
+            "https://user:password@bridge.example.test/send",
+            "javascript:alert(1)",
+            "https://[::1",
+            "https://bridge.example.test:bad/send",
+            "https://bridge.example.test/send\nX-Test: injected",
+        ):
+            object.__setattr__(notifications.settings, "email_bridge_url", value)
+            assert notifications.safe_email_bridge_url() is None
+    finally:
+        object.__setattr__(notifications.settings, "email_bridge_url", original)
+
+
+def test_invalid_email_bridge_is_not_reported_as_configured():
+    import app.notifications as notifications
+
+    original_url = notifications.settings.email_bridge_url
+    original_secret = notifications.settings.email_bridge_secret
+    original_host = notifications.settings.smtp_host
+    try:
+        object.__setattr__(notifications.settings, "email_bridge_url", "file:///etc/passwd")
+        object.__setattr__(notifications.settings, "email_bridge_secret", "configured-secret")
+        object.__setattr__(notifications.settings, "smtp_host", None)
+        assert notifications.email_delivery_is_configured() is False
+    finally:
+        object.__setattr__(notifications.settings, "email_bridge_url", original_url)
+        object.__setattr__(notifications.settings, "email_bridge_secret", original_secret)
+        object.__setattr__(notifications.settings, "smtp_host", original_host)
+
+
+def test_invalid_email_bridge_is_rejected_before_network_access(monkeypatch):
+    import pytest
+    import app.notifications as notifications
+
+    original_url = notifications.settings.email_bridge_url
+    original_secret = notifications.settings.email_bridge_secret
+    called = False
+
+    def unexpected_network_access(*_args, **_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("urlopen must not be called for an unsafe URL")
+
+    monkeypatch.setattr(notifications, "urlopen", unexpected_network_access)
+    object.__setattr__(notifications.settings, "email_bridge_url", "file:///etc/passwd")
+    object.__setattr__(notifications.settings, "email_bridge_secret", "configured-secret")
+    try:
+        with pytest.raises(RuntimeError, match="not configured"):
+            notifications._deliver_via_bridge(
+                {"recipient": "test@example.com", "subject": "Test", "body": "Body"}
+            )
+    finally:
+        object.__setattr__(notifications.settings, "email_bridge_url", original_url)
+        object.__setattr__(notifications.settings, "email_bridge_secret", original_secret)
+    assert called is False
+
+
+def test_support_url_rejects_credentials_unsafe_schemes_and_whitespace():
+    import app.main as module
+
+    original = module.settings.support_url
+    try:
+        for value in (
+            "https://example.com/support",
+            "http://localhost:8000/support",
+            "http://127.0.0.1:8000/support",
+            "http://[::1]:8000/support",
+        ):
+            object.__setattr__(module.settings, "support_url", value)
+            assert module.safe_support_url() == value
+
+        for value in (
+            "http://example.com/support",
+            "file:///etc/passwd",
+            "https://user:password@example.com/support",
+            "https://[::1",
+            "https://example.com:bad/support",
+            "https://example.com/sup port",
+        ):
+            object.__setattr__(module.settings, "support_url", value)
+            assert module.safe_support_url() is None
+    finally:
+        object.__setattr__(module.settings, "support_url", original)
+
+
 def test_feedback_is_rejected_before_case_is_closed():
     created = client.post(
         "/api/applications",
@@ -2565,6 +2750,10 @@ def test_gpt5_document_analysis_uses_low_reasoning_and_sufficient_budget(monkeyp
 
     expected = {
         "readiness_score": 50, "summary": "Summary", "document_inventory": [],
+        "readiness_factors": readiness_factors(
+            "partial", "missing", "missing", "missing",
+            "complete", "complete", "complete",
+        ),
         "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
         "risk_flags": [], "recommended_next_steps": [],
         "human_review_note": "Human verification required.",
@@ -2610,6 +2799,10 @@ def test_document_analysis_retries_incomplete_or_truncated_structured_output(mon
 
     expected = {
         "readiness_score": 61, "summary": "Summary", "document_inventory": [],
+        "readiness_factors": readiness_factors(
+            "partial", "missing", "partial", "complete",
+            "complete", "not_applicable", "not_applicable",
+        ),
         "timeline": [], "key_evidence": [], "contradictions": [], "missing_evidence": [],
         "risk_flags": [], "recommended_next_steps": [],
         "human_review_note": "Human verification required.",
@@ -2738,6 +2931,65 @@ def test_document_report_postprocessing_sorts_dates_and_explains_score():
     assert result["readiness_factors"][0]["earned_points"] == 10
 
 
+def test_document_report_always_explains_score_with_all_seven_factors():
+    import app.document_analysis as module
+
+    parsed = {
+        "readiness_score": 87,
+        "readiness_factors": [],
+        "summary": "Резюме.",
+        "document_inventory": [],
+        "timeline": [],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Проверка человеком.",
+    }
+
+    result = module._postprocess_report(parsed, "Russian")
+
+    assert result["readiness_score"] == 0
+    assert len(result["readiness_factors"]) == 7
+    assert {item["factor"] for item in result["readiness_factors"]} == set(
+        module.READINESS_FACTOR_WEIGHTS
+    )
+    assert all(item["status"] == "missing" for item in result["readiness_factors"])
+    assert module.DOCUMENT_ANALYSIS_SCHEMA["properties"]["readiness_factors"]["minItems"] == 7
+    assert module.DOCUMENT_ANALYSIS_SCHEMA["properties"]["readiness_factors"]["maxItems"] == 7
+
+
+def test_document_report_all_not_applicable_factors_have_zero_score():
+    import app.document_analysis as module
+
+    parsed = {
+        "readiness_score": 99,
+        "readiness_factors": [
+            {
+                "factor": factor,
+                "status": "not_applicable",
+                "explanation": "Не применимо.",
+            }
+            for factor in module.READINESS_FACTOR_WEIGHTS
+        ],
+        "summary": "Резюме.",
+        "document_inventory": [],
+        "timeline": [],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Проверка человеком.",
+    }
+
+    result = module._postprocess_report(parsed, "Russian")
+
+    assert result["readiness_score"] == 0
+    assert len(result["readiness_factors"]) == 7
+
+
 
 def test_document_report_deduplication_preserves_opposite_statements():
     import app.document_analysis as module
@@ -2749,6 +3001,75 @@ def test_document_report_deduplication_preserves_opposite_statements():
         "Поставщик не подтвердил натуральную кожу.",
     ]
     assert module._dedupe_text_items(values, 8) == values
+
+
+def test_document_report_softens_unverified_authenticity_and_illegality_claims_in_all_languages():
+    import app.document_analysis as module
+
+    examples = {
+        "Russian": [
+            ("Поддельный сертификат", "Документ с неподтверждённой подлинностью"),
+            ("Незаконный документ", "Материал или действие, правовой статус которого требует проверки"),
+        ],
+        "English": [
+            ("Forged certificate", "Document of unverified authenticity"),
+            ("Illegal document", "Matter whose legal status requires verification"),
+        ],
+        "French": [
+            ("Faux certificat", "Document dont l’authenticité n’est pas vérifiée"),
+            ("Document illégal", "Élément dont le statut juridique doit être vérifié"),
+        ],
+        "German": [
+            ("Gefälschtes Zertifikat", "Dokument mit ungeprüfter Echtheit"),
+            ("Illegales Dokument", "Sachverhalt, dessen rechtlicher Status geprüft werden muss"),
+        ],
+        "Spanish": [
+            ("Certificado falsificado", "Documento cuya autenticidad no está verificada"),
+            ("Documento ilegal", "Asunto cuya situación jurídica requiere verificación"),
+        ],
+        "Serbian": [
+            ("Falsifikovan sertifikat", "Dokument čija autentičnost nije potvrđena"),
+            ("Nezakonit dokument", "Pitanje čiji pravni status zahteva proveru"),
+        ],
+    }
+    for language, pairs in examples.items():
+        for source, expected in pairs:
+            assert module._soften_unverified_claims(source, language) == expected
+
+
+def test_document_report_softens_inventory_prose_but_preserves_exact_quotations():
+    import app.document_analysis as module
+
+    quoted = 'Поставщик написал: «Это поддельный сертификат»; поддельный документ не подтверждён экспертизой.'
+    softened = module._soften_unverified_claims(quoted, "Russian")
+    assert '«Это поддельный сертификат»' in softened
+    assert 'документ с неподтверждённой подлинностью не подтверждён экспертизой' in softened
+
+    parsed = {
+        "readiness_score": 0,
+        "readiness_factors": [],
+        "summary": "Резюме.",
+        "document_inventory": [{
+            "filename": "certificate.png",
+            "document_type": "Поддельный сертификат",
+            "language": "Russian",
+            "date_or_period": "Дата не видна",
+            "key_content": 'Продавец написал: “This is a fake certificate”; поддельный документ не проверен.',
+            "readability": "clear",
+        }],
+        "timeline": [],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Проверка человеком.",
+    }
+    result = module._postprocess_report(parsed, "Russian")
+    inventory = result["document_inventory"][0]
+    assert inventory["document_type"] == "Документ с неподтверждённой подлинностью"
+    assert '“This is a fake certificate”' in inventory["key_content"]
+    assert "документ с неподтверждённой подлинностью не проверен" in inventory["key_content"]
 
 
 def test_document_report_date_range_uses_earliest_visible_day_and_not_wrong_model_hint():
@@ -2811,6 +3132,40 @@ def test_document_date_placeholder_preserves_visible_date_with_other_missing_det
     assert module._derive_sort_date(value) == "2026-05-26"
 
 
+def test_document_date_placeholder_preserves_partial_month_or_year():
+    import app.document_analysis as module
+
+    examples = [
+        ("March 2025, day not visible", "English", "2025-03-01"),
+        ("2025, exact date not visible", "English", "2025-01-01"),
+        ("март 2025, точная дата не указана", "Russian", "2025-03-01"),
+        ("mars 2025", "French", "2025-03-01"),
+        ("März 2025", "German", "2025-03-01"),
+        ("mayo de 2025", "Spanish", "2025-05-01"),
+        ("maj 2025", "Serbian", "2025-05-01"),
+        ("мај 2025", "Serbian", "2025-05-01"),
+        ("2025-03", "English", "2025-03-01"),
+        ("03/2025", "English", "2025-03-01"),
+    ]
+    for visible, language, expected_sort_date in examples:
+        assert module._normalise_date_placeholder(visible, language) == visible
+        assert module._derive_sort_date(visible) == expected_sort_date
+
+
+def test_document_date_parser_supports_real_localised_formats():
+    import app.document_analysis as module
+
+    examples = {
+        "22. März 2025": "2025-03-22",
+        "22 de mayo de 2025": "2025-05-22",
+        "22 maja 2025": "2025-05-22",
+        "22. маја 2025.": "2025-05-22",
+        "16.–17. Mai 2025": "2025-05-16",
+        "16–17 de mayo de 2025": "2025-05-16",
+    }
+    for visible, expected in examples.items():
+        assert module._derive_sort_date(visible) == expected
+
 def test_document_date_parser_supports_all_interface_languages():
     import app.document_analysis as module
 
@@ -2823,3 +3178,267 @@ def test_document_date_parser_supports_all_interface_languages():
     }
     for visible, expected in examples.items():
         assert module._derive_sort_date(visible) == expected
+
+
+def test_triage_never_auto_declines_reported_evidence_misconduct():
+    from app.schemas import ApplicationCreate
+    from app.triage import rules_triage
+
+    payload = ApplicationCreate(**valid_payload(
+        preferred_language="Russian",
+        description=(
+            "Я отказался подделывать доказательства. Продавец просил удалить переписку, "
+            "но я сохранил оригинальный договор, инвойс, сообщения и фотографии товара."
+        ),
+    ))
+    result = rules_triage(payload)
+    assert result.decision == "human_review"
+    assert result.decision != "declined"
+    assert "автоматически отклонена" in result.public_message
+
+
+def test_triage_amount_thresholds_are_currency_aware():
+    from app.schemas import ApplicationCreate
+    from app.triage import rules_triage
+
+    description = (
+        "The written order and invoice specify leather. Supplier messages confirm it, "
+        "but delivery photographs show another material and we request a partial refund."
+    )
+    rsd = rules_triage(ApplicationCreate(**valid_payload(
+        amount_in_dispute="50,000 RSD", order_value="50,000 RSD", description=description,
+    )))
+    usd = rules_triage(ApplicationCreate(**valid_payload(
+        amount_in_dispute="50,000 USD", order_value="50,000 USD", description=description,
+    )))
+    assert "high_value_dispute" not in rsd.risk_flags
+    assert "high_value_dispute" in usd.risk_flags
+    assert usd.decision == "human_review"
+
+
+def test_wallet_checksum_validation_rejects_shape_only_addresses():
+    from app.main import _valid_bitcoin_bech32, _valid_eth
+
+    assert _valid_bitcoin_bech32("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh") is True
+    assert _valid_bitcoin_bech32("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wla") is False
+    assert _valid_eth("0x69ACE684f28B0A66157aB62aD06e93761a713c6b") is True
+    assert _valid_eth("0x69ace684f28b0a66157ab62ad06e93761a713c6b") is False
+
+
+def test_daily_document_analysis_budget_is_database_backed():
+    import pytest
+    from app.db import (
+        DailyAnalysisLimitError,
+        claim_document_analysis,
+        get_case_by_public,
+        get_daily_analysis_usage,
+        set_document_analysis_status,
+    )
+
+    cases = []
+    for index in range(2):
+        created = client.post(
+            "/api/applications",
+            json=valid_payload(email=f"budget-{index}@example.com"),
+            headers={"x-forwarded-for": f"203.0.113.{180 + index}"},
+        ).json()
+        upload = client.post(
+            created["status_url"] + "/documents",
+            data={"document_consent": "true"},
+            files=[("files", (f"evidence-{index}.png", _make_png_bytes(), "image/png"))],
+            headers={"x-forwarded-for": f"203.0.113.{180 + index}"},
+            follow_redirects=False,
+        )
+        assert upload.status_code == 303
+        reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+        cases.append(get_case_by_public(reference, token))
+
+    baseline = get_daily_analysis_usage()
+    run_token = claim_document_analysis(
+        cases[0]["id"], "test-model", actor="test", document_count=1,
+        max_daily_analyses=baseline + 1,
+    )
+    assert run_token
+    set_document_analysis_status(
+        cases[0]["id"], "failed", "test-model", "test cleanup",
+        expected_run_token=run_token,
+    )
+    with pytest.raises(DailyAnalysisLimitError):
+        claim_document_analysis(
+            cases[1]["id"], "test-model", actor="test", document_count=1,
+            max_daily_analyses=baseline + 1,
+        )
+
+
+def test_private_link_can_revoke_ai_consent_and_delete_case():
+    from app.db import get_case_by_public, list_case_documents
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="privacy-controls@example.com"),
+        headers={"x-forwarded-for": "203.0.113.190"},
+    ).json()
+    status_url = created["status_url"]
+    upload = client.post(
+        status_url + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("privacy.png", _make_png_bytes(), "image/png"))],
+        headers={"x-forwarded-for": "203.0.113.190"},
+        follow_redirects=False,
+    )
+    assert upload.status_code == 303
+    revoke = client.post(
+        status_url + "/ai-consent/revoke",
+        data={"confirm_revoke": "true"},
+        headers={"x-forwarded-for": "203.0.113.190"},
+        follow_redirects=False,
+    )
+    assert revoke.status_code == 303
+    reference, token = status_url.rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    assert case["ai_consent"] == 0
+    assert len(list_case_documents(case["id"])) == 1
+
+    deleted = client.post(
+        status_url + "/delete",
+        data={"confirm_delete": "true"},
+        headers={"x-forwarded-for": "203.0.113.190"},
+        follow_redirects=False,
+    )
+    assert deleted.status_code == 303
+    assert client.get(status_url).status_code == 404
+    assert get_case_by_public(reference, token) is None
+
+
+def test_turnstile_failure_blocks_application_before_storage(monkeypatch):
+    import app.main as module
+
+    async def reject(_token, _request):
+        return False
+
+    monkeypatch.setattr(module, "verify_turnstile", reject)
+    response = client.post(
+        "/api/applications",
+        json=valid_payload(email="turnstile-blocked@example.com"),
+        headers={"x-forwarded-for": "203.0.113.191"},
+    )
+    assert response.status_code == 400
+
+
+def test_privacy_route_exposes_configuration_status():
+    response = client.get("/privacy?lang=en")
+    assert response.status_code == 200
+    assert "DATA_CONTROLLER_ADDRESS" not in response.text
+    assert "This local preview is not accepting public applications" in response.text
+    health = client.get("/health").json()
+    assert health["privacy_configuration_complete"] is False
+
+
+def test_launch_readiness_endpoint_is_fail_closed_by_default():
+    response = client.get("/ready")
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["status"] == "not_ready"
+    assert payload["checks"]["administrator_security"] is True
+    assert payload["checks"]["privacy_identity"] is False
+
+
+def test_launch_readiness_endpoint_returns_200_when_all_checks_pass(monkeypatch):
+    import app.main as module
+
+    monkeypatch.setattr(module, "launch_readiness_checks", lambda: {
+        "administrator_security": True,
+        "privacy_identity": True,
+        "https_public_url": True,
+        "email_delivery": True,
+        "bot_protection": True,
+    })
+    response = client.get("/ready")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+
+
+def test_public_launch_mode_blocks_incomplete_site_without_leaking_config(monkeypatch):
+    import app.main as module
+
+    original = module.settings.public_launch_mode
+    object.__setattr__(module.settings, "public_launch_mode", True)
+    monkeypatch.setattr(module, "public_launch_is_ready", lambda: False)
+    try:
+        home = client.get("/")
+        privacy = client.get("/privacy")
+        submission = client.post(
+            "/api/applications",
+            json=valid_payload(email="blocked-launch@example.com"),
+            headers={"x-forwarded-for": "192.0.2.240"},
+        )
+        assert home.status_code == privacy.status_code == submission.status_code == 503
+        assert "DATA_CONTROLLER" not in home.text
+        assert "TURNSTILE" not in home.text
+    finally:
+        object.__setattr__(module.settings, "public_launch_mode", original)
+
+
+def test_home_exposes_truthful_features_accessibility_and_private_link_ui():
+    response = client.get("/")
+    assert response.status_code == 200
+    for expected in (
+        'href="#main-content"',
+        '<main id="main-content">',
+        'rel="canonical"',
+        'rel="icon"',
+        'application/ld+json',
+        'value="Other or multiple issues"',
+        'id="privateStatusUrl"',
+        'id="copyStatusLink"',
+        'aria-modal="true"',
+    ):
+        assert expected in response.text
+
+
+def test_case_status_explains_progress_attention_and_private_access():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="progress-page@example.com", preferred_language="Russian"),
+        headers={"x-forwarded-for": "192.0.2.241"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert page.status_code == 200
+    for expected in (
+        "Ход рассмотрения",
+        "Уровень внимания",
+        "а не вероятность успеха",
+        "Ваш следующий шаг",
+        "Последнее обновление",
+        "Приватная ссылка дела",
+        "Скачать памятку доступа",
+        'name="robots" content="noindex,nofollow"',
+    ):
+        assert expected in page.text
+
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    note = client.get(f"/case/{reference}/{token}/access.txt")
+    assert note.status_code == 200
+    assert "attachment" in note.headers["content-disposition"]
+    assert created["status_url"] in note.text
+    assert client.get(f"/case/{reference}/wrong-token/access.txt").status_code == 404
+
+
+def test_disabled_document_analysis_is_disclosed_before_upload():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="manual-review-disclosure@example.com"),
+        headers={"x-forwarded-for": "192.0.2.242"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert "Automatic document analysis is temporarily unavailable" in page.text
+
+
+def test_application_response_reports_email_delivery_capability():
+    response = client.post(
+        "/api/applications",
+        json=valid_payload(email="email-capability@example.com"),
+        headers={"x-forwarded-for": "192.0.2.243"},
+    )
+    assert response.status_code == 201
+    assert response.json()["email_delivery_configured"] is False

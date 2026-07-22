@@ -11,6 +11,11 @@ from typing import Any
 import httpx
 
 from .config import settings
+from .documents import (
+    DocumentValidationError,
+    MAX_TOTAL_PDF_PAGES_PER_CASE,
+    validate_pdf_and_count_pages,
+)
 
 MAX_ANALYSIS_BYTES = 45 * 1024 * 1024
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
@@ -101,6 +106,7 @@ DOCUMENT_ANALYSIS_SCHEMA: dict[str, Any] = {
         "readiness_score": {"type": "integer", "minimum": 0, "maximum": 100},
         "readiness_factors": {
             "type": "array",
+            "minItems": 7,
             "maxItems": 7,
             "items": {
                 "type": "object",
@@ -236,12 +242,18 @@ _MONTHS = {
     "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11,
     "dic": 12, "diciembre": 12,
     # Serbian, Latin and Cyrillic
-    "januar": 1, "februar": 2, "mart": 3, "april": 4, "maj": 5,
-    "jun": 6, "jul": 7, "avg": 8, "avgust": 8, "septembar": 9,
-    "oktobar": 10, "novembar": 11, "decembar": 12,
-    "јануар": 1, "фебруар": 2, "март": 3, "април": 4, "мај": 5,
-    "јун": 6, "јул": 7, "август": 8, "септембар": 9, "октобар": 10,
-    "новембар": 11, "децембар": 12,
+    "januar": 1, "januara": 1, "februar": 2, "februara": 2,
+    "mart": 3, "marta": 3, "april": 4, "aprila": 4, "maj": 5, "maja": 5,
+    "jun": 6, "juna": 6, "jul": 7, "jula": 7, "avg": 8, "avgust": 8,
+    "avgusta": 8, "septembar": 9, "septembra": 9, "oktobar": 10,
+    "oktobra": 10, "novembar": 11, "novembra": 11, "decembar": 12,
+    "decembra": 12,
+    "јануар": 1, "јануара": 1, "фебруар": 2, "фебруара": 2,
+    "март": 3, "марта": 3, "април": 4, "априла": 4, "мај": 5,
+    "маја": 5, "јун": 6, "јуна": 6, "јул": 7, "јула": 7,
+    "август": 8, "августа": 8, "септембар": 9, "септембра": 9,
+    "октобар": 10, "октобра": 10, "новембар": 11, "новембра": 11,
+    "децембар": 12, "децембра": 12,
 }
 
 
@@ -292,7 +304,9 @@ def _derive_sort_date(display_date: str) -> str | None:
             pass
     # Date ranges use their earliest visible day for chronological sorting.
     match = re.search(
-        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*[–—-]\s*(?:0?[1-9]|[12]\d|3[01])\s+([^\W\d_]+\.?)\s+(20\d{2})(?!\d)",
+        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*\.?\s*[–—-]\s*"
+        r"(?:0?[1-9]|[12]\d|3[01])\s*\.?\s+"
+        r"(?:de\s+)?([^\W\d_]+\.?)\s+(?:de\s+)?(20\d{2})(?!\d)",
         text,
     )
     if match:
@@ -302,7 +316,11 @@ def _derive_sort_date(display_date: str) -> str | None:
                 return date(int(match.group(3)), month, int(match.group(1))).isoformat()
             except ValueError:
                 pass
-    match = re.search(r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s+([^\W\d_]+\.?)\s+(20\d{2})(?!\d)", text)
+    match = re.search(
+        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*\.?\s+"
+        r"(?:de\s+)?([^\W\d_]+\.?)\s+(?:de\s+)?(20\d{2})(?!\d)",
+        text,
+    )
     if match:
         month = _MONTHS.get(match.group(2).rstrip("."))
         if month:
@@ -318,6 +336,28 @@ def _derive_sort_date(display_date: str) -> str | None:
                 return date(int(match.group(3)), month, int(match.group(2))).isoformat()
             except ValueError:
                 pass
+
+    # Partial dates are still useful evidence. Use the earliest possible date
+    # only as an internal sorting key while preserving the original visible
+    # wording in the report. This also prevents phrases such as
+    # "March 2025, day not visible" from being collapsed to "Date not visible".
+    match = re.search(r"(?<!\d)(20\d{2})[-/.](0?[1-9]|1[0-2])(?![-/.\d])", text)
+    if match:
+        return date(int(match.group(1)), int(match.group(2)), 1).isoformat()
+    match = re.search(
+        r"(?<![\w])([^\W\d_]+\.?)\s+(?:de\s+)?(20\d{2})(?!\d)",
+        text,
+    )
+    if match:
+        month = _MONTHS.get(match.group(1).rstrip("."))
+        if month:
+            return date(int(match.group(2)), month, 1).isoformat()
+    match = re.search(r"(?<!\d)(0?[1-9]|1[0-2])[-/.](20\d{2})(?!\d)", text)
+    if match:
+        return date(int(match.group(2)), int(match.group(1)), 1).isoformat()
+    match = re.search(r"(?<!\d)(20\d{2})(?!\d)", text)
+    if match:
+        return date(int(match.group(1)), 1, 1).isoformat()
     return None
 
 
@@ -386,6 +426,19 @@ def _dedupe_text_items(values: Any, limit: int, against: list[str] | None = None
 def _soften_unverified_claims(text: str, language: str) -> str:
     replacements: dict[str, list[tuple[str, str]]] = {
         "Russian": [
+            (
+                r"\b(?:поддельн\w*|фальшив\w*|сфальсифицированн\w*)\s+"
+                r"(?:ce[- ]?)?(?:сертификат\w*|документ\w*|доказательств\w*)\b",
+                "документ с неподтверждённой подлинностью",
+            ),
+            (
+                r"\bнезаконн\w*\s+(?:документ\w*|действи\w*|поведени\w*)\b",
+                "материал или действие, правовой статус которого требует проверки",
+            ),
+            (
+                r"\bпреступн\w*\s+(?:действи\w*|поведени\w*|схем\w*)\b",
+                "действия, требующие отдельной правовой оценки",
+            ),
             (r"\bриск мошенничества\b", "риск возможного введения в заблуждение или использования несоответствующего документа"),
             (r"\bпризнаки мошенничества\b", "признаки возможного введения в заблуждение"),
             (r"\bмошенничество\b", "возможное введение в заблуждение"),
@@ -393,6 +446,19 @@ def _soften_unverified_claims(text: str, language: str) -> str:
             (r"\bфакт (?:неотгрузки|непоставки)\b", "отсутствие подтверждения отгрузки или доставки в загруженных материалах"),
         ],
         "English": [
+            (
+                r"\b(?:forged|fake|counterfeit|falsified)\s+"
+                r"(?:certificate|document|evidence)\b",
+                "document of unverified authenticity",
+            ),
+            (
+                r"\billegal\s+(?:document|conduct|activity|action)\b",
+                "matter whose legal status requires verification",
+            ),
+            (
+                r"\bcriminal\s+(?:conduct|activity|scheme|action)\b",
+                "conduct requiring separate legal review",
+            ),
             (r"\brisk of fraud\b", "risk of possible misrepresentation or use of a mismatched document"),
             (r"\bsigns of fraud\b", "signs of possible misrepresentation"),
             (r"\bfraudulent\b", "potentially misleading or mismatched"),
@@ -400,20 +466,51 @@ def _soften_unverified_claims(text: str, language: str) -> str:
             (r"\bproof of non-payment\b", "absence of payment evidence in the uploaded materials"),
             (r"\bproof of non-delivery\b", "absence of delivery evidence in the uploaded materials"),
         ],
-        "French": [(r"\bfraude\b", "possible présentation trompeuse")],
-        "German": [(r"\bBetrug\b", "mögliche irreführende Darstellung")],
-        "Spanish": [(r"\bfraude\b", "posible representación engañosa")],
-        "Serbian": [(r"\bprevara\b", "moguće obmanjujuće predstavljanje")],
+        "French": [
+            (r"\b(?:faux|fausse)\s+(?:certificat|document|preuve)\b", "document dont l’authenticité n’est pas vérifiée"),
+            (r"\b(?:certificat|document|preuve)\s+falsifi\w*\b", "document dont l’authenticité n’est pas vérifiée"),
+            (r"\b(?:document|comportement|acte)\s+illégal\w*\b", "élément dont le statut juridique doit être vérifié"),
+            (r"\bcomportement criminel\b", "comportement nécessitant une analyse juridique distincte"),
+            (r"\bfraude\b", "possible présentation trompeuse"),
+        ],
+        "German": [
+            (r"\bgefälscht\w*\s+(?:zertifikat|dokument|beweis\w*)\b", "Dokument mit ungeprüfter Echtheit"),
+            (r"\billegal\w*\s+(?:dokument|handlung|verhalten)\b", "Sachverhalt, dessen rechtlicher Status geprüft werden muss"),
+            (r"\bkriminell\w*\s+(?:verhalten|handlung)\b", "Verhalten, das einer gesonderten rechtlichen Prüfung bedarf"),
+            (r"\bBetrug\b", "mögliche irreführende Darstellung"),
+        ],
+        "Spanish": [
+            (r"\b(?:certificado|documento|prueba)\s+(?:falsificad\w*|fals\w*)\b", "documento cuya autenticidad no está verificada"),
+            (r"\b(?:fals\w*)\s+(?:certificado|documento|prueba)\b", "documento cuya autenticidad no está verificada"),
+            (r"\b(?:documento|conducta|acción)\s+ilegal\w*\b", "asunto cuya situación jurídica requiere verificación"),
+            (r"\bconducta criminal\b", "conducta que requiere una evaluación jurídica separada"),
+            (r"\bfraude\b", "posible representación engañosa"),
+        ],
+        "Serbian": [
+            (r"\b(?:falsifikovan\w*|lažn\w*)\s+(?:sertifikat\w*|dokument\w*|dokaz\w*)\b", "dokument čija autentičnost nije potvrđena"),
+            (r"\bnezakonit\w*\s+(?:dokument\w*|postup\w*|ponašanj\w*)\b", "pitanje čiji pravni status zahteva proveru"),
+            (r"\bkriminaln\w*\s+(?:ponašanj\w*|postup\w*)\b", "ponašanje koje zahteva posebnu pravnu procenu"),
+            (r"\bprevara\b", "moguće obmanjujuće predstavljanje"),
+        ],
     }
-    result = text
-    for pattern, replacement in replacements.get(language, replacements["English"]):
-        def preserve_case(match: re.Match[str], value: str = replacement) -> str:
-            matched = match.group(0)
-            if matched and matched[0].isupper():
-                return value[:1].upper() + value[1:]
-            return value
-        result = re.sub(pattern, preserve_case, result, flags=re.IGNORECASE)
-    return result
+    def soften_segment(segment: str) -> str:
+        result = segment
+        for pattern, replacement in replacements.get(language, replacements["English"]):
+            def preserve_case(match: re.Match[str], value: str = replacement) -> str:
+                matched = match.group(0)
+                if matched and matched[0].isupper():
+                    return value[:1].upper() + value[1:]
+                return value
+            result = re.sub(pattern, preserve_case, result, flags=re.IGNORECASE)
+        return result
+
+    # Preserve exact quotations from the evidence. Cautious report wording must
+    # not silently rewrite what a buyer or supplier visibly wrote.
+    parts = re.split(r'(".*?"|“.*?”|«.*?»)', text, flags=re.DOTALL)
+    return "".join(
+        part if re.fullmatch(r'(".*?"|“.*?”|«.*?»)', part, flags=re.DOTALL) else soften_segment(part)
+        for part in parts
+    )
 
 
 def _postprocess_report(parsed: dict[str, Any], language: str) -> dict[str, Any]:
@@ -431,12 +528,9 @@ def _postprocess_report(parsed: dict[str, Any], language: str) -> dict[str, Any]
     ordered_factors: list[dict[str, Any]] = []
     earned_total = 0.0
     possible_total = 0
-    has_factor_output = bool(parsed.get("readiness_factors"))
     for factor, weight in READINESS_FACTOR_WEIGHTS.items():
         item = factors_by_name.get(factor)
         if not item:
-            if not has_factor_output:
-                continue
             item = {
                 "factor": factor,
                 "status": "missing",
@@ -451,13 +545,23 @@ def _postprocess_report(parsed: dict[str, Any], language: str) -> dict[str, Any]
         item["earned_points"] = earned
         item["explanation"] = _soften_unverified_claims(str(item.get("explanation") or "").strip(), language)
         ordered_factors.append(item)
-    if ordered_factors and possible_total:
-        parsed["readiness_score"] = round(earned_total / possible_total * 100)
+    if ordered_factors:
+        parsed["readiness_score"] = (
+            round(earned_total / possible_total * 100)
+            if possible_total
+            else 0
+        )
     parsed["readiness_factors"] = ordered_factors
 
     parsed["summary"] = _soften_unverified_claims(str(parsed.get("summary") or "").strip(), language)
     for item in parsed.get("document_inventory", []):
         if isinstance(item, dict):
+            item["document_type"] = _soften_unverified_claims(
+                str(item.get("document_type") or "").strip(), language
+            )
+            item["key_content"] = _soften_unverified_claims(
+                str(item.get("key_content") or "").strip(), language
+            )
             item["date_or_period"] = _normalise_date_placeholder(item.get("date_or_period"), language)
 
     timeline: list[tuple[int, str, dict[str, Any]]] = []
@@ -581,6 +685,25 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
             "The selected documents exceed the 45 MB analysis limit"
         )
 
+    total_pdf_pages = 0
+    for document in documents:
+        if document["content_type"] != "application/pdf":
+            continue
+        try:
+            _, page_count = await asyncio.to_thread(
+                validate_pdf_and_count_pages,
+                bytes(document["content_blob"]),
+            )
+        except DocumentValidationError as exc:
+            raise DocumentAnalysisProviderError(
+                f"A stored PDF no longer passes the safety check: {document['original_name']}"
+            ) from exc
+        total_pdf_pages += page_count
+        if total_pdf_pages > MAX_TOTAL_PDF_PAGES_PER_CASE:
+            raise DocumentAnalysisProviderError(
+                f"The PDFs in one case can contain no more than {MAX_TOTAL_PDF_PAGES_PER_CASE} pages in total"
+            )
+
     for document in documents:
         encoded = base64.b64encode(document["content_blob"]).decode("ascii")
         if document["content_type"].startswith("image/"):
@@ -594,6 +717,7 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                 "type": "input_file",
                 "filename": document["original_name"],
                 "file_data": f"data:{document['content_type']};base64,{encoded}",
+                "detail": getattr(settings, "document_pdf_detail", "low"),
             })
 
     # max_output_tokens includes both visible JSON and reasoning tokens. GPT-5
@@ -635,6 +759,7 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
         async with httpx.AsyncClient(timeout=settings.document_analysis_timeout_seconds) as client:
             structured_error: _RetryableStructuredResponseError | None = None
             parsed: dict[str, Any] | None = None
+            response_data: dict[str, Any] | None = None
             for generation_attempt in range(2):
                 request_body = dict(body)
                 if generation_attempt:
@@ -656,7 +781,10 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                     except ValueError:
                         delay = float(2 ** attempt)
                     await asyncio.sleep(delay)
-                assert response is not None
+                if response is None:
+                    raise DocumentAnalysisProviderError(
+                        "OpenAI document analysis returned no response"
+                    )
                 response.raise_for_status()
                 response_data = response.json()
                 if not isinstance(response_data, dict):
@@ -675,6 +803,12 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                 raise DocumentAnalysisProviderError(
                     str(structured_error or "OpenAI returned no document-analysis result")
                 )
+            usage = response_data.get("usage", {}) if response_data else {}
+            if isinstance(usage, dict):
+                parsed["provider_usage"] = {
+                    key: max(0, int(usage.get(key) or 0))
+                    for key in ("input_tokens", "output_tokens", "total_tokens")
+                }
     except DocumentAnalysisProviderError:
         raise
     except httpx.TimeoutException as exc:

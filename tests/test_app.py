@@ -4,10 +4,11 @@ import tempfile
 
 _tmp = tempfile.TemporaryDirectory()
 os.environ["DATABASE_PATH"] = str(Path(_tmp.name) / "test.db")
-os.environ["ADMIN_TOKEN"] = "test-token"
-os.environ["APP_SECRET"] = "test-secret"
+os.environ["ADMIN_TOKEN"] = "test-admin-token-abcdefghijklmnopqrstuvwxyz"
+os.environ["APP_SECRET"] = "test-app-secret-abcdefghijklmnopqrstuvwxyz-0123456789"
 os.environ["ENABLE_AI_TRIAGE"] = "false"
 os.environ["FREE_ACCESS_MODE"] = "true"
+os.environ["RENDER"] = "true"
 os.environ["ENABLE_VOLUNTARY_SUPPORT"] = "true"
 os.environ["SUPPORT_URL"] = "https://example.com/support"
 os.environ["BTC_ADDRESS"] = "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9"
@@ -99,18 +100,23 @@ def test_support_page_is_optional_and_non_priority():
 
 def test_admin_auth_queue_close_and_feedback():
     created = client.post("/api/applications", json=valid_payload(email="feedback@example.com")).json()
-    login = client.post("/admin/login", data={"token": "test-token"}, follow_redirects=False)
+    login = client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"}, follow_redirects=False)
     assert login.status_code == 303
     dashboard = client.get("/admin")
     assert dashboard.status_code == 200
     assert "Очередь дел, требующих внимания" in dashboard.text
 
-    # Find the case id from the queue link.
+    # Find the case id and the per-session administrator form token.
     import re
     match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), dashboard.text)
-    assert match
+    csrf_match = re.search(r'name="csrf_token" value="([^"]+)"', dashboard.text)
+    assert match and csrf_match
     case_id = int(match.group(1))
-    close = client.post(f"/admin/case/{case_id}/status", data={"status": "closed", "note": "Review completed"}, follow_redirects=False)
+    close = client.post(
+        f"/admin/case/{case_id}/status",
+        data={"status": "closed", "note": "Review completed", "csrf_token": csrf_match.group(1)},
+        follow_redirects=False,
+    )
     assert close.status_code == 303
 
     status_page = client.get(created["status_url"])
@@ -261,7 +267,7 @@ def test_retention_removes_related_confidential_data():
         "testimonial_consent": True,
     })
     with transaction() as conn:
-        execute(conn, "UPDATE cases SET created_at='2000-01-01T00:00:00+00:00' WHERE id=?", (case_id,))
+        execute(conn, "UPDATE cases SET created_at='2000-01-01T00:00:00+00:00', updated_at='2000-01-01T00:00:00+00:00' WHERE id=?", (case_id,))
 
     assert soft_delete_expired(90) >= 1
     with transaction() as conn:
@@ -685,7 +691,7 @@ def test_private_document_upload_download_delete_and_admin_visibility():
     assert download.headers["content-type"].startswith("image/png")
     assert download.content.startswith(b"\x89PNG")
 
-    login = client.post("/admin/login", data={"token": "test-token"}, follow_redirects=False)
+    login = client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"}, follow_redirects=False)
     assert login.status_code == 303
     dashboard = client.get("/admin")
     case_match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), dashboard.text)
@@ -997,9 +1003,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.4.5"
+    assert health.json()["version"] == "3.5.8"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.4.5"
+    assert health.headers["x-app-version"] == "3.5.8"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -1018,7 +1024,31 @@ def test_release_metadata_and_twenty_file_copy_are_consistent():
     assert "до 20 ключевых PDF" in legal_script.text
 
 
-def test_pdf_document_analysis_uses_data_url_and_auto_detail(monkeypatch):
+
+def test_image_dimensions_checked_before_pixel_decode(monkeypatch):
+    from io import BytesIO
+    from PIL import Image
+    import app.documents as module
+
+    image = Image.new("RGB", (64, 64), "white")
+    output = BytesIO()
+    image.save(output, format="PNG")
+    raw = output.getvalue()
+
+    opened = Image.open(BytesIO(raw))
+    original_load = type(opened).load
+    calls = {"load": 0}
+
+    def guarded_load(self, *args, **kwargs):
+        calls["load"] += 1
+        return original_load(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(opened), "load", guarded_load)
+    module._sanitise_image(raw, "image/png")
+    assert calls["load"] >= 1
+
+
+def test_pdf_document_analysis_uses_data_url_without_image_detail(monkeypatch):
     import asyncio
     import json
     from types import SimpleNamespace
@@ -1066,7 +1096,7 @@ def test_pdf_document_analysis_uses_data_url_and_auto_detail(monkeypatch):
     file_part = captured["body"]["input"][1]["content"][1]
     assert file_part["type"] == "input_file"
     assert file_part["file_data"].startswith("data:application/pdf;base64,")
-    assert file_part["detail"] == "auto"
+    assert "detail" not in file_part
 
 
 def test_document_analysis_retries_temporary_provider_errors(monkeypatch):
@@ -1192,6 +1222,7 @@ def test_running_analysis_page_auto_refreshes():
     set_document_analysis_status(case["id"], "running", "test-model", document_count=1)
     page = client.get(created["status_url"])
     assert "window.setTimeout(()=>window.location.reload(), 5000)" in page.text
+    assert "Automatic document analysis is temporarily unavailable" not in page.text
 
 
 
@@ -1253,3 +1284,1274 @@ def test_completed_analysis_does_not_show_started_banner(monkeypatch):
     page = client.get(status_url + "?analysis_started=1")
     assert "The analysis has started. This page updates automatically" not in page.text
     assert "50%" in page.text
+
+
+def test_known_placeholder_secrets_are_not_treated_as_secure():
+    import app.main as main_module
+
+    original_admin = main_module.settings.admin_token
+    original_secret = main_module.settings.app_secret
+    object.__setattr__(main_module.settings, "admin_token", "replace-with-a-long-random-token")
+    object.__setattr__(main_module.settings, "app_secret", "replace-with-a-long-random-secret")
+    try:
+        health = client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["secure_configuration"] is False
+        login = client.get("/admin/login")
+        assert login.status_code == 503
+    finally:
+        object.__setattr__(main_module.settings, "admin_token", original_admin)
+        object.__setattr__(main_module.settings, "app_secret", original_secret)
+
+
+def test_render_external_url_is_used_when_public_base_url_is_missing(monkeypatch):
+    from app.config import configured_public_base_url
+
+    monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://example-service.onrender.com/")
+    assert configured_public_base_url() == "https://example-service.onrender.com"
+
+
+def test_feedback_form_has_no_autofill_prone_honeypot():
+    template = (Path(__file__).resolve().parents[1] / "app" / "templates" / "public_status.html").read_text()
+    assert 'name="company_website"' not in template
+
+
+def test_private_case_pages_are_not_indexable():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="noindex@example.com"),
+        headers={"x-forwarded-for": "198.51.100.250"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert page.status_code == 200
+    assert page.headers["x-robots-tag"] == "noindex, nofollow, noarchive"
+    assert page.headers["cache-control"] == "no-store"
+
+
+def test_docker_does_not_access_log_private_status_tokens():
+    dockerfile = (Path(__file__).resolve().parents[1] / "Dockerfile").read_text()
+    assert "--no-access-log" in dockerfile
+
+
+def test_duplicate_document_names_are_made_unique():
+    from io import BytesIO
+    from PIL import Image
+    from app.db import get_case_by_public, list_case_documents
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="duplicate-names@example.com"),
+        headers={"x-forwarded-for": "198.51.100.40"},
+    ).json()
+
+    def image_bytes(colour: str) -> bytes:
+        output = BytesIO()
+        Image.new("RGB", (2, 2), colour).save(output, format="PNG")
+        return output.getvalue()
+
+    uploaded = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[
+            ("files", ("screenshot.png", image_bytes("red"), "image/png")),
+            ("files", ("screenshot.png", image_bytes("blue"), "image/png")),
+        ],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.40"},
+    )
+    assert uploaded.status_code == 303
+
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    names = [item["original_name"] for item in list_case_documents(case["id"])]
+    assert names == ["screenshot.png", "screenshot (2).png"]
+
+
+def test_client_key_uses_render_first_forwarded_address(monkeypatch):
+    from starlette.requests import Request
+    from app.security import client_key
+
+    monkeypatch.setenv("RENDER", "true")
+    request = Request({
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "headers": [(b"x-forwarded-for", b"198.51.100.250, 203.0.113.17")],
+        "client": ("10.0.0.10", 12345),
+        "server": ("testserver", 80),
+        "scheme": "http",
+        "query_string": b"",
+    })
+    assert client_key(request) == "198.51.100.250"
+
+
+def test_client_key_ignores_forwarded_header_outside_trusted_proxy(monkeypatch):
+    from starlette.requests import Request
+    from app.security import client_key
+
+    monkeypatch.delenv("RENDER", raising=False)
+    monkeypatch.delenv("TRUST_PROXY_HEADERS", raising=False)
+    request = Request({
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "headers": [(b"x-forwarded-for", b"198.51.100.250")],
+        "client": ("203.0.113.22", 12345),
+        "server": ("testserver", 80),
+        "scheme": "http",
+        "query_string": b"",
+    })
+    assert client_key(request) == "203.0.113.22"
+
+
+def test_rate_limiter_bounds_invented_client_keys():
+    from app.security import SlidingWindowRateLimiter
+
+    limiter = SlidingWindowRateLimiter(limit=2, window_seconds=600, max_keys=3)
+    for index in range(100):
+        limiter.allow(f"invented-{index}")
+    assert len(limiter.events) <= 4  # three normal buckets plus one shared overflow bucket
+
+
+def test_decompression_bomb_error_becomes_validation_error(monkeypatch):
+    from PIL import Image
+    from app.documents import DocumentValidationError, _sanitise_image
+
+    def explode(*_args, **_kwargs):
+        raise Image.DecompressionBombError("too many pixels")
+
+    monkeypatch.setattr(Image, "open", explode)
+    try:
+        _sanitise_image(b"not-used", "image/png")
+    except DocumentValidationError as exc:
+        assert "damaged or unsupported" in str(exc)
+    else:
+        raise AssertionError("Expected DocumentValidationError")
+
+
+def test_short_secrets_are_not_treated_as_secure():
+    from app.config import admin_token_is_secure, app_secret_is_secure
+
+    assert admin_token_is_secure("123456") is False
+    assert admin_token_is_secure("short-but-not-a-placeholder") is False
+    assert app_secret_is_secure("short") is False
+    assert app_secret_is_secure("not-a-placeholder-but-too-short") is False
+    assert admin_token_is_secure("a" * 32) is False
+    assert admin_token_is_secure("admin-token-0123456789-ABCDEFGHIJ") is True
+    assert app_secret_is_secure("b" * 32) is False
+    assert app_secret_is_secure("app-secret-0123456789-ABCDEFGHIJKL") is True
+
+
+def test_public_api_documentation_is_disabled():
+    assert client.get("/docs").status_code == 404
+    assert client.get("/redoc").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
+def test_document_inventory_headers_are_localized():
+    import app.main as main_module
+    from pathlib import Path
+
+    expected = {
+        "English": ("File", "Type", "Date", "Readability"),
+        "Russian": ("Файл", "Тип", "Дата", "Читаемость"),
+        "Serbian": ("Fajl", "Vrsta", "Datum", "Čitljivost"),
+        "French": ("Fichier", "Type", "Date", "Lisibilité"),
+        "German": ("Datei", "Typ", "Datum", "Lesbarkeit"),
+        "Spanish": ("Archivo", "Tipo", "Fecha", "Legibilidad"),
+    }
+    for language, labels in expected.items():
+        copy = main_module.DOCUMENT_COPY[language]
+        assert (
+            copy["table_file"],
+            copy["table_type"],
+            copy["table_date"],
+            copy["table_readability"],
+        ) == labels
+
+    template = (Path(__file__).resolve().parents[1] / "app" / "templates" / "public_status.html").read_text()
+    assert "{{ document_copy.table_file }}" in template
+    assert "<th>File</th><th>Type</th><th>Date</th><th>Readability</th>" not in template
+
+
+
+def test_analysis_claim_is_atomic_and_blocks_evidence_changes():
+    from app.db import (
+        DocumentAnalysisInProgressError,
+        claim_document_analysis,
+        delete_case_document,
+        get_case_by_public,
+        list_case_documents,
+        set_document_analysis_status,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="atomic-analysis@example.com"),
+        headers={"x-forwarded-for": "198.51.100.61"},
+    ).json()
+    upload = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("evidence.png", _make_png_bytes(), "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.61"},
+    )
+    assert upload.status_code == 303
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    documents = list_case_documents(case["id"])
+    assert len(documents) == 1
+
+    run_token = claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1
+    )
+    assert isinstance(run_token, str) and run_token
+    assert claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1
+    ) is None
+
+    blocked_upload = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("second.png", _make_png_bytes(), "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.62"},
+    )
+    assert blocked_upload.status_code == 409
+    blocked_delete = client.post(
+        created["status_url"] + f"/documents/{documents[0]['id']}/delete",
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.62"},
+    )
+    assert blocked_delete.status_code == 409
+    with __import__("pytest").raises(DocumentAnalysisInProgressError):
+        delete_case_document(case["id"], documents[0]["id"])
+
+    page = client.get(created["status_url"])
+    assert 'id="documentUploadForm"' not in page.text
+    assert "/delete" not in page.text
+    set_document_analysis_status(case["id"], "failed", "test-model", "test cleanup")
+
+
+def test_document_batch_limit_is_atomic_without_partial_inserts():
+    import hashlib
+    import pytest
+    from app.db import DocumentLimitError, add_case_documents, get_case_by_public, list_case_documents
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="atomic-batch@example.com"),
+        headers={"x-forwarded-for": "198.51.100.63"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    one = _make_png_bytes()
+    two = one + b"different"
+    batch = [
+        {"original_name": "one.png", "content_type": "image/png", "size_bytes": len(one), "sha256": hashlib.sha256(one).hexdigest(), "content": one},
+        {"original_name": "two.png", "content_type": "image/png", "size_bytes": len(two), "sha256": hashlib.sha256(two).hexdigest(), "content": two},
+    ]
+    with pytest.raises(DocumentLimitError):
+        add_case_documents(case["id"], batch, max_documents=1, max_total_bytes=1024 * 1024)
+    assert list_case_documents(case["id"]) == []
+
+
+def test_interrupted_running_analysis_is_failed_on_process_startup():
+    from app.db import (
+        fail_running_document_analyses_on_startup,
+        get_case_by_public,
+        get_document_analysis,
+        set_document_analysis_status,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="startup-recovery@example.com"),
+        headers={"x-forwarded-for": "198.51.100.64"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    set_document_analysis_status(case["id"], "running", "test-model", document_count=1)
+    assert fail_running_document_analyses_on_startup() >= 1
+    analysis = get_document_analysis(case["id"])
+    assert analysis["status"] == "failed"
+    assert "worker stopped or timed out" in analysis["error"]
+
+
+def test_late_provider_result_does_not_overwrite_failed_claim():
+    from app.db import (
+        get_case_by_public,
+        save_document_analysis,
+        set_document_analysis_status,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="late-result@example.com"),
+        headers={"x-forwarded-for": "198.51.100.65"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    set_document_analysis_status(case["id"], "running", "test-model", document_count=1)
+    set_document_analysis_status(case["id"], "failed", "test-model", "worker stopped")
+    result = {
+        "readiness_score": 50,
+        "summary": "Late result",
+        "document_inventory": [],
+        "timeline": [],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    assert save_document_analysis(case["id"], result, "test-model", "obsolete-run") is None
+
+
+
+def test_admin_state_changes_require_csrf_token():
+    import re
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="admin-csrf@example.com"),
+        headers={"x-forwarded-for": "198.51.100.66"},
+    ).json()
+    login = client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.66"},
+    )
+    assert login.status_code == 303
+    dashboard = client.get("/admin")
+    case_match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), dashboard.text)
+    csrf_match = re.search(r'name="csrf_token" value="([^"]+)"', dashboard.text)
+    assert case_match and csrf_match
+    case_id = int(case_match.group(1))
+
+    missing = client.post(
+        f"/admin/case/{case_id}/status",
+        data={"status": "closed", "note": "should fail"},
+        follow_redirects=False,
+    )
+    assert missing.status_code == 422
+    wrong = client.post(
+        f"/admin/case/{case_id}/status",
+        data={"status": "closed", "note": "should fail", "csrf_token": "wrong"},
+        follow_redirects=False,
+    )
+    assert wrong.status_code == 403
+    valid = client.post(
+        f"/admin/case/{case_id}/status",
+        data={"status": "closed", "note": "approved", "csrf_token": csrf_match.group(1)},
+        follow_redirects=False,
+    )
+    assert valid.status_code == 303
+
+
+
+def test_pdf_validation_rejects_encryption_and_obfuscated_active_content():
+    import asyncio
+    import pytest
+    from starlette.datastructures import UploadFile
+    from io import BytesIO
+    from app.documents import DocumentValidationError, prepare_upload
+
+    encrypted = b"%PDF-1.4\n1 0 obj<< /Encrypt 2 0 R >>endobj\n%%EOF"
+    with pytest.raises(DocumentValidationError, match="Password-protected"):
+        asyncio.run(prepare_upload(UploadFile(BytesIO(encrypted), filename="encrypted.pdf")))
+
+    obfuscated = b"%PDF-1.4\n1 0 obj<< /Java#53cript 2 0 R >>endobj\n%%EOF"
+    with pytest.raises(DocumentValidationError, match="active or embedded"):
+        asyncio.run(prepare_upload(UploadFile(BytesIO(obfuscated), filename="active.pdf")))
+
+
+
+def test_application_ai_triage_has_short_response_budget(monkeypatch):
+    import asyncio
+    import time
+    import app.main as module
+
+    async def slow_triage(_payload):
+        await asyncio.sleep(0.2)
+        raise AssertionError("slow triage should be cancelled by the response budget")
+
+    monkeypatch.setattr(module, "ai_triage", slow_triage)
+    original = module.settings.application_triage_timeout_seconds
+    object.__setattr__(module.settings, "application_triage_timeout_seconds", 0.01)
+    try:
+        started = time.monotonic()
+        response = client.post(
+            "/api/applications",
+            json=valid_payload(email="bounded-triage@example.com"),
+            headers={"x-forwarded-for": "198.51.100.81"},
+        )
+        elapsed = time.monotonic() - started
+    finally:
+        object.__setattr__(module.settings, "application_triage_timeout_seconds", original)
+    assert response.status_code == 201
+    assert elapsed < 0.15
+    reference, token = response.json()["status_url"].rstrip("/").split("/")[-2:]
+    from app.db import get_case_by_public
+    case = get_case_by_public(reference, token)
+    assert case["triage_source"] == "rules"
+
+
+def test_failed_email_is_rescheduled_and_eventually_stops(monkeypatch):
+    import app.notifications as notifications
+    from app.db import execute, pending_notifications, queue_notification, transaction
+
+    original_host = notifications.settings.smtp_host
+    original_username = notifications.settings.smtp_username
+    original_password = notifications.settings.smtp_password
+    object.__setattr__(notifications.settings, "smtp_host", "smtp.example.test")
+    object.__setattr__(notifications.settings, "smtp_username", None)
+    object.__setattr__(notifications.settings, "smtp_password", None)
+    monkeypatch.setattr(
+        notifications,
+        "_deliver_via_smtp",
+        lambda _item: (_ for _ in ()).throw(RuntimeError("temporary smtp outage")),
+    )
+    try:
+        with transaction() as conn:
+            execute(conn, "UPDATE notification_outbox SET status='sent',sent_at=? WHERE status='pending'", (__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(timespec='seconds'),))
+        queue_notification(None, "retry@example.com", "Retry", "Body")
+        result = notifications.deliver_pending()
+        assert result["pending"] == 1
+        with transaction() as conn:
+            row = execute(
+                conn,
+                "SELECT * FROM notification_outbox WHERE recipient=? ORDER BY id DESC LIMIT 1",
+                ("retry@example.com",),
+            ).fetchone()
+            assert row["status"] == "pending"
+            assert row["attempts"] == 1
+            assert row["next_attempt_at"]
+            execute(
+                conn,
+                "UPDATE notification_outbox SET attempts=4,next_attempt_at=NULL WHERE id=?",
+                (row["id"],),
+            )
+        result = notifications.deliver_pending()
+        assert result["failed"] == 1
+        with transaction() as conn:
+            final = execute(conn, "SELECT * FROM notification_outbox WHERE id=?", (row["id"],)).fetchone()
+            assert final["status"] == "failed"
+            assert final["attempts"] == 5
+        assert all(item["recipient"] != "retry@example.com" for item in pending_notifications())
+    finally:
+        object.__setattr__(notifications.settings, "smtp_host", original_host)
+        object.__setattr__(notifications.settings, "smtp_username", original_username)
+        object.__setattr__(notifications.settings, "smtp_password", original_password)
+
+
+def test_document_analysis_drops_invented_evidence_filenames(monkeypatch):
+    import asyncio
+    import json
+    import app.document_analysis as module
+
+    expected = {
+        "readiness_score": 60,
+        "summary": "Summary",
+        "document_inventory": [
+            {"filename": "INVOICE.PDF", "document_type": "Invoice", "language": "English", "date_or_period": "2026", "key_content": "Known", "readability": "clear"},
+            {"filename": "invented.pdf", "document_type": "Other", "language": "English", "date_or_period": "2026", "key_content": "Invented", "readability": "clear"},
+        ],
+        "timeline": [{"date": "2026", "event": "Paid", "source_files": ["invoice.pdf", "invented.pdf", "INVOICE.PDF"], "confidence": "high"}],
+        "key_evidence": [], "contradictions": [], "missing_evidence": [], "risk_flags": [],
+        "recommended_next_steps": [], "human_review_note": "Human verification required.",
+    }
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def raise_for_status(self): return None
+        def json(self): return {"output_text": json.dumps(expected)}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        async def post(self, *args, **kwargs): return FakeResponse()
+
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    original_enabled = module.settings.enable_document_analysis
+    original_key = module.settings.openai_api_key
+    original_model = module.settings.openai_document_model
+    object.__setattr__(module.settings, "enable_document_analysis", True)
+    object.__setattr__(module.settings, "openai_api_key", "test-key")
+    object.__setattr__(module.settings, "openai_document_model", "test-model")
+    try:
+        result = asyncio.run(module.analyse_case_documents(
+            {"case_reference": "CTR-TEST", "preferred_language": "English"},
+            [{"original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": b"%PDF-1.4\n%%EOF"}],
+        ))
+    finally:
+        object.__setattr__(module.settings, "enable_document_analysis", original_enabled)
+        object.__setattr__(module.settings, "openai_api_key", original_key)
+        object.__setattr__(module.settings, "openai_document_model", original_model)
+    assert [item["filename"] for item in result["document_inventory"]] == ["invoice.pdf"]
+    assert result["timeline"][0]["source_files"] == ["invoice.pdf"]
+
+
+
+def test_retention_starts_when_case_is_closed_not_when_created():
+    from app.db import execute, get_case_by_public, soft_delete_expired, transaction, update_status
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="old-open-case@example.com"),
+        headers={"x-forwarded-for": "198.51.100.170"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    with transaction() as conn:
+        execute(
+            conn,
+            "UPDATE cases SET created_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+            (case["id"],),
+        )
+    update_status(case["id"], "closed", "closed today")
+
+    assert soft_delete_expired(90) == 0
+    with transaction() as conn:
+        row = execute(conn, "SELECT deleted_at FROM cases WHERE id=?", (case["id"],)).fetchone()
+        assert row["deleted_at"] is None
+
+
+def test_admin_retriage_uses_short_ai_timeout(monkeypatch):
+    import asyncio
+    import re
+    import app.main as module
+    from app.db import get_case_by_public
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="admin-retriage-timeout@example.com"),
+        headers={"x-forwarded-for": "198.51.100.171"},
+    ).json()
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+
+    async def slow_triage(_payload):
+        await asyncio.sleep(0.2)
+        raise AssertionError("retriage should have been cancelled")
+
+    monkeypatch.setattr(module, "ai_triage", slow_triage)
+    monkeypatch.setattr(
+        module,
+        "settings",
+        module.settings.__class__(**{
+            **module.settings.__dict__,
+            "application_triage_timeout_seconds": 0.01,
+        }),
+    )
+    login = client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.171"},
+    )
+    assert login.status_code == 303
+    page = client.get(f"/admin/case/{case['id']}")
+    csrf_match = re.search(r'name="csrf_token" value="([^"]+)"', page.text)
+    assert csrf_match
+    response = client.post(
+        f"/admin/case/{case['id']}/retriage",
+        data={"csrf_token": csrf_match.group(1)},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+
+def test_invalid_numeric_environment_values_use_safe_defaults(monkeypatch):
+    from app.config import _env_float, _env_int, configured_public_base_url
+
+    monkeypatch.setenv("BROKEN_INTEGER", "not-a-number")
+    monkeypatch.setenv("BROKEN_FLOAT", "")
+    assert _env_int("BROKEN_INTEGER", 60, minimum=10, maximum=100) == 60
+    assert _env_float("BROKEN_FLOAT", 8.0, minimum=1.0, maximum=30.0) == 8.0
+    monkeypatch.setenv("PUBLIC_BASE_URL", "javascript:alert(1)")
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://safe-example.onrender.com")
+    assert configured_public_base_url() == "https://safe-example.onrender.com"
+
+
+def test_document_analysis_drops_timeline_events_without_real_sources(monkeypatch):
+    import asyncio
+    import json
+    import app.document_analysis as module
+
+    payload = {
+        "readiness_score": 50,
+        "summary": "Summary",
+        "document_inventory": [{
+            "filename": "invoice.png",
+            "document_type": "invoice",
+            "language": "English",
+            "date_or_period": "2026-01-01",
+            "key_content": "Invoice",
+            "readability": "clear",
+        }],
+        "timeline": [
+            {"date": "2026-01-01", "event": "Supported", "source_files": ["invoice.png"], "confidence": "high"},
+            {"date": "2026-01-02", "event": "Invented", "source_files": ["missing.png"], "confidence": "low"},
+        ],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+        def raise_for_status(self):
+            return None
+        def json(self):
+            return {"output_text": json.dumps(payload)}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+        async def post(self, *args, **kwargs):
+            return FakeResponse()
+
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    monkeypatch.setattr(
+        module,
+        "settings",
+        module.settings.__class__(**{
+            **module.settings.__dict__,
+            "enable_document_analysis": True,
+            "openai_api_key": "test-key",
+            "openai_document_model": "test-model",
+        }),
+    )
+    result = asyncio.run(module.analyse_case_documents(
+        {
+            "case_reference": "CTR-TEST",
+            "preferred_language": "English",
+            "main_problem": "Wrong specification",
+            "requested_result": "Refund",
+            "amount_in_dispute": "1000",
+            "description": "Description",
+        },
+        [{
+            "original_name": "invoice.png",
+            "content_type": "image/png",
+            "content_blob": b"png",
+        }],
+    ))
+    assert [item["event"] for item in result["timeline"]] == ["Supported"]
+
+
+def test_late_result_from_previous_run_cannot_overwrite_new_claim():
+    from app.db import (
+        add_case_document, claim_document_analysis, create_case, get_document_analysis,
+        save_document_analysis, set_document_analysis_status,
+    )
+    import hashlib
+
+    payload = valid_payload(email="run-token-race@example.com")
+    triage = {
+        "decision": "needs_information", "risk_level": "medium", "priority": 50,
+        "confidence": 0.5, "position_strength": "unclear", "in_scope": True,
+        "hard_stop": False, "reasons": [], "missing_information": [], "risk_flags": [],
+        "recommended_action": "Review", "public_message": "Review", "source": "rules",
+    }
+    case = create_case(payload, triage, "CTR-2026-RUNTOKEN", "run-token-public")
+    content = _make_png_bytes()
+    add_case_document(case["id"], {
+        "original_name": "evidence.png", "content_type": "image/png",
+        "size_bytes": len(content), "sha256": hashlib.sha256(content).hexdigest(),
+        "content": content,
+    })
+    first_token = claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1
+    )
+    assert first_token
+    set_document_analysis_status(case["id"], "failed", "test-model", "stale worker")
+    second_token = claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1, allow_completed=True
+    )
+    assert second_token and second_token != first_token
+
+    old_result = {
+        "readiness_score": 1, "summary": "OLD RUN", "document_inventory": [],
+        "timeline": [], "key_evidence": [], "contradictions": [],
+        "missing_evidence": [], "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    assert save_document_analysis(case["id"], old_result, "test-model", first_token) is None
+    current = get_document_analysis(case["id"])
+    assert current["status"] == "running"
+    assert current["result"].get("summary") != "OLD RUN"
+
+    new_result = dict(old_result, readiness_score=80, summary="NEW RUN")
+    assert save_document_analysis(case["id"], new_result, "test-model", second_token) is not None
+    assert get_document_analysis(case["id"])["result"]["summary"] == "NEW RUN"
+
+
+def test_overlapping_deploy_does_not_fail_fresh_analysis():
+    from app.db import (
+        claim_document_analysis, fail_running_document_analyses_on_startup,
+        get_case_by_public, get_document_analysis,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="fresh-deploy-analysis@example.com"),
+        headers={"x-forwarded-for": "198.51.100.90"},
+    ).json()
+    client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("fresh.png", _make_png_bytes(), "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.90"},
+    )
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    run_token = claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1
+    )
+    assert run_token
+    assert fail_running_document_analyses_on_startup(stale_seconds=300) == 0
+    assert get_document_analysis(case["id"])["status"] == "running"
+
+
+def test_stale_failure_does_not_overwrite_just_completed_result():
+    from app.db import (
+        claim_document_analysis, fail_stale_document_analysis, get_case_by_public,
+        get_document_analysis, save_document_analysis,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="stale-completion-race@example.com"),
+        headers={"x-forwarded-for": "198.51.100.91"},
+    ).json()
+    client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("race.png", _make_png_bytes(), "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.91"},
+    )
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    run_token = claim_document_analysis(
+        case["id"], "test-model", actor="client", document_count=1
+    )
+    result = {
+        "readiness_score": 90, "summary": "Completed safely", "document_inventory": [],
+        "timeline": [], "key_evidence": [], "contradictions": [],
+        "missing_evidence": [], "risk_flags": [], "recommended_next_steps": [],
+        "human_review_note": "Human verification required.",
+    }
+    assert save_document_analysis(case["id"], result, "test-model", run_token) is not None
+    assert fail_stale_document_analysis(case["id"], stale_seconds=0) is False
+    analysis = get_document_analysis(case["id"])
+    assert analysis["status"] == "completed"
+    assert analysis["result"]["summary"] == "Completed safely"
+
+
+def test_existing_document_analysis_table_gets_run_token_migration(tmp_path):
+    import sqlite3
+    from app.db import _ensure_document_analysis_run_token
+
+    path = tmp_path / "legacy.db"
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        """
+        CREATE TABLE document_analyses (
+            case_id INTEGER PRIMARY KEY,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            model TEXT NOT NULL DEFAULT '',
+            result_json TEXT NOT NULL DEFAULT '{}',
+            error TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    _ensure_document_analysis_run_token(conn)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(document_analyses)")}
+    assert "run_token" in columns
+    conn.close()
+
+
+def test_notification_outbox_claim_prevents_cross_process_duplicate_delivery():
+    from app.db import (
+        claim_pending_notifications,
+        execute,
+        mark_notification,
+        queue_notification,
+        transaction,
+    )
+
+    with transaction() as conn:
+        execute(
+            conn,
+            "UPDATE notification_outbox SET status='sent',sent_at=? WHERE status IN ('pending','sending')",
+            (__import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(timespec="seconds"),),
+        )
+    queue_notification(None, "lease@example.com", "Lease", "Body")
+
+    first = claim_pending_notifications(limit=10)
+    assert len(first) == 1
+    assert first[0]["recipient"] == "lease@example.com"
+    assert first[0]["status"] == "sending"
+    assert first[0]["claim_token"]
+
+    # A second process must not see the already leased row.
+    assert claim_pending_notifications(limit=10) == []
+
+    # A worker that does not own the lease cannot change its state.
+    assert mark_notification(
+        first[0]["id"], "sent", expected_claim_token="wrong-token"
+    ) is False
+    assert mark_notification(
+        first[0]["id"], "sent", expected_claim_token=first[0]["claim_token"]
+    ) is True
+
+
+
+def test_notification_outbox_recovers_abandoned_lease():
+    from app.db import (
+        claim_pending_notifications,
+        execute,
+        mark_notification,
+        queue_notification,
+        transaction,
+    )
+
+    with transaction() as conn:
+        execute(
+            conn,
+            "UPDATE notification_outbox SET status='sent',sent_at=? WHERE status IN ('pending','sending')",
+            (__import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(timespec="seconds"),),
+        )
+    queue_notification(None, "stale-lease@example.com", "Lease", "Body")
+    first = claim_pending_notifications(limit=10, lease_seconds=60)
+    assert len(first) == 1
+
+    old = (
+        __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        - __import__("datetime").timedelta(minutes=10)
+    ).isoformat(timespec="seconds")
+    with transaction() as conn:
+        execute(
+            conn,
+            "UPDATE notification_outbox SET claimed_at=? WHERE id=?",
+            (old, first[0]["id"]),
+        )
+
+    recovered = claim_pending_notifications(limit=10, lease_seconds=60)
+    assert len(recovered) == 1
+    assert recovered[0]["id"] == first[0]["id"]
+    assert recovered[0]["claim_token"] != first[0]["claim_token"]
+    assert mark_notification(
+        recovered[0]["id"], "sent",
+        expected_claim_token=recovered[0]["claim_token"],
+    ) is True
+
+
+
+def test_fresh_postgres_audit_schema_has_one_created_at_column(monkeypatch):
+    from contextlib import contextmanager
+    import app.db as db
+
+    statements = []
+
+    class Cursor:
+        rowcount = 0
+        def fetchall(self):
+            return []
+
+    @contextmanager
+    def fake_transaction():
+        yield object()
+
+    def fake_execute(_conn, query, _params=()):
+        statements.append(query)
+        return Cursor()
+
+    monkeypatch.setattr(db, "using_postgres", lambda: True)
+    monkeypatch.setattr(db, "transaction", fake_transaction)
+    monkeypatch.setattr(db, "execute", fake_execute)
+    monkeypatch.setattr(db, "_ensure_notification_retry_columns", lambda _conn: None)
+    monkeypatch.setattr(db, "_ensure_document_analysis_run_token", lambda _conn: None)
+
+    db.init_db()
+    audit_statement = next(
+        statement for statement in statements
+        if "CREATE TABLE IF NOT EXISTS audit_log" in statement
+    )
+    assert audit_statement.lower().count("created_at text not null") == 1
+
+
+def test_existing_sqlite_outbox_migrates_database_lease_columns(tmp_path):
+    import sqlite3
+    import app.db as db
+
+    old_path = db.settings.database_path
+    migrated_path = tmp_path / "old-outbox.db"
+    conn = sqlite3.connect(migrated_path)
+    conn.execute(
+        """
+        CREATE TABLE notification_outbox (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            case_id INTEGER,
+            recipient TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            error TEXT NOT NULL DEFAULT '',
+            sent_at TEXT,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            next_attempt_at TEXT
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+    object.__setattr__(db.settings, "database_path", migrated_path)
+    try:
+        db.init_db()
+        check = sqlite3.connect(migrated_path)
+        columns = {row[1] for row in check.execute("PRAGMA table_info(notification_outbox)")}
+        check.close()
+        assert {"claim_token", "claimed_at"}.issubset(columns)
+    finally:
+        object.__setattr__(db.settings, "database_path", old_path)
+
+
+
+def test_application_and_initial_notifications_commit_atomically():
+    """A failure while inserting the outbox must roll back the case too."""
+    import sqlite3
+    from app.db import create_case, get_case_by_public
+    from app.triage import rules_triage
+    from app.schemas import ApplicationCreate
+
+    payload = ApplicationCreate(**valid_payload(email="atomic-outbox@example.com"))
+    triage = rules_triage(payload).model_dump()
+    reference = "CTR-ATOMIC-ROLLBACK"
+    token = "atomic-token"
+    try:
+        create_case(
+            payload.model_dump(),
+            triage,
+            reference,
+            token,
+            notifications=[{"subject": "Broken", "body": "Broken"}],
+        )
+    except (sqlite3.IntegrityError, TypeError, KeyError):
+        pass
+    else:
+        raise AssertionError("The invalid outbox row should fail the transaction")
+    assert get_case_by_public(reference, token) is None
+
+
+def test_deliver_pending_claims_each_email_immediately_before_sending(monkeypatch):
+    import app.notifications as notifications
+
+    items = [
+        {"id": 101, "recipient": "one@example.com", "subject": "One", "body": "Body", "attempts": 0, "claim_token": "a"},
+        {"id": 102, "recipient": "two@example.com", "subject": "Two", "body": "Body", "attempts": 0, "claim_token": "b"},
+    ]
+    claim_limits = []
+
+    def fake_claim(*, limit=100, lease_seconds=300):
+        claim_limits.append(limit)
+        return [items.pop(0)] if items else []
+
+    monkeypatch.setattr(notifications, "claim_pending_notifications", fake_claim)
+    monkeypatch.setattr(notifications, "pending_notifications", lambda: [])
+    monkeypatch.setattr(notifications, "mark_notification", lambda *args, **kwargs: True)
+    monkeypatch.setattr(notifications, "_deliver_via_smtp", lambda _item: None)
+    original_host = notifications.settings.smtp_host
+    original_username = notifications.settings.smtp_username
+    original_password = notifications.settings.smtp_password
+    object.__setattr__(notifications.settings, "smtp_host", "smtp.example.test")
+    object.__setattr__(notifications.settings, "smtp_username", None)
+    object.__setattr__(notifications.settings, "smtp_password", None)
+    try:
+        result = notifications.deliver_pending(max_messages=10)
+    finally:
+        object.__setattr__(notifications.settings, "smtp_host", original_host)
+        object.__setattr__(notifications.settings, "smtp_username", original_username)
+        object.__setattr__(notifications.settings, "smtp_password", original_password)
+    assert result["sent"] == 2
+    assert claim_limits == [1, 1, 1]
+
+
+def test_feedback_is_rejected_before_case_is_closed():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="early-feedback@example.com"),
+        headers={"x-forwarded-for": "198.51.100.199"},
+    ).json()
+    response = client.post(
+        created["status_url"] + "/feedback",
+        data={"rating": 5, "feedback_text": "This should not be accepted yet.", "display_name": "", "testimonial_consent": "false"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 409
+
+
+def test_repeated_close_does_not_queue_duplicate_completion_email():
+    from app.db import create_case, execute, transaction, update_status
+    from app.notifications import build_completion_notifications
+    from app.schemas import ApplicationCreate
+    from app.triage import rules_triage
+
+    payload = ApplicationCreate(**valid_payload(email="single-close@example.com"))
+    triage = rules_triage(payload).model_dump()
+    triage["decision"] = "accepted"
+    case = create_case(payload.model_dump(), triage, "CTR-SINGLE-CLOSE", "single-close-token")
+    messages = build_completion_notifications(case)
+    update_status(case["id"], "closed", "done", close_notifications=messages)
+    update_status(case["id"], "closed", "done again", close_notifications=messages)
+    with transaction() as conn:
+        row = execute(
+            conn,
+            "SELECT COUNT(*) AS n FROM notification_outbox WHERE case_id=? AND recipient=?",
+            (case["id"], case["email"]),
+        ).fetchone()
+    assert int(row["n"]) == 1
+
+
+def test_close_status_and_completion_notification_commit_atomically():
+    from app.db import create_case, get_case, update_status
+    from app.schemas import ApplicationCreate
+    from app.triage import rules_triage
+
+    payload = ApplicationCreate(**valid_payload(email="atomic-close@example.com"))
+    triage = rules_triage(payload).model_dump()
+    triage["decision"] = "accepted"
+    case = create_case(payload.model_dump(), triage, "CTR-ATOMIC-CLOSE", "atomic-close-token")
+    try:
+        update_status(
+            case["id"],
+            "closed",
+            "must roll back",
+            close_notifications=[{"subject": "Broken", "body": "Broken"}],
+        )
+    except KeyError:
+        pass
+    else:
+        raise AssertionError("The invalid completion notification should fail the transaction")
+    assert get_case(case["id"])["status"] == "accepted"
+
+
+def test_oversized_json_body_is_rejected_before_validation():
+    from app.main import STANDARD_REQUEST_BODY_BYTES
+
+    response = client.post(
+        "/api/applications",
+        content=b"x" * (STANDARD_REQUEST_BODY_BYTES + 1),
+        headers={"content-type": "application/json"},
+    )
+    assert response.status_code == 413
+    assert response.json()["detail"] == "Request body is too large"
+
+
+def test_oversized_document_content_length_is_rejected_before_body_read():
+    import asyncio
+    from app.main import DOCUMENT_UPLOAD_REQUEST_BODY_BYTES, RequestBodyLimitMiddleware
+
+    called = False
+    received = False
+    messages = []
+
+    async def downstream(scope, receive, send):
+        nonlocal called
+        called = True
+
+    async def receive():
+        nonlocal received
+        received = True
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        messages.append(message)
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/case/CTR-2026-ABC/token/documents",
+        "headers": [
+            (b"content-length", str(DOCUMENT_UPLOAD_REQUEST_BODY_BYTES + 1).encode("ascii")),
+            (b"content-type", b"multipart/form-data; boundary=test"),
+        ],
+    }
+    asyncio.run(RequestBodyLimitMiddleware(downstream)(scope, receive, send))
+
+    assert called is False
+    assert received is False
+    assert messages[0]["status"] == 413
+
+
+def test_chunked_body_is_capped_without_content_length():
+    import asyncio
+    from app.main import RequestBodyLimitMiddleware, STANDARD_REQUEST_BODY_BYTES
+
+    messages = []
+    chunks = iter([
+        {"type": "http.request", "body": b"a" * (STANDARD_REQUEST_BODY_BYTES // 2 + 1), "more_body": True},
+        {"type": "http.request", "body": b"b" * (STANDARD_REQUEST_BODY_BYTES // 2 + 1), "more_body": False},
+    ])
+
+    async def receive():
+        return next(chunks)
+
+    async def send(message):
+        messages.append(message)
+
+    async def downstream(scope, receive, send):
+        while True:
+            message = await receive()
+            if not message.get("more_body"):
+                break
+        await send({"type": "http.response.start", "status": 204, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/api/applications",
+        "headers": [(b"transfer-encoding", b"chunked")],
+    }
+    asyncio.run(RequestBodyLimitMiddleware(downstream)(scope, receive, send))
+
+    assert messages[0]["status"] == 413
+
+
+def test_health_exposes_request_body_limits():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["standard_request_limit_mb"] == 1
+    assert response.json()["document_upload_request_limit_mb"] == 50
+    assert response.json()["document_processing_workers"] == 2
+
+
+def test_admin_login_requires_secure_app_secret_even_with_secure_admin_token():
+    """A per-process fallback secret must never enable unstable admin sessions."""
+    import app.main as main_module
+
+    original_admin = main_module.settings.admin_token
+    original_secret = main_module.settings.app_secret
+    object.__setattr__(
+        main_module.settings,
+        "admin_token",
+        "secure-admin-token-0123456789-ABCDEFGHIJKL",
+    )
+    object.__setattr__(main_module.settings, "app_secret", "development-secret-change-me")
+    try:
+        health = client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["secure_configuration"] is False
+
+        page = client.get("/admin/login")
+        assert page.status_code == 503
+        assert "APP_SECRET" in page.text
+
+        login = client.post(
+            "/admin/login",
+            data={"token": "secure-admin-token-0123456789-ABCDEFGHIJKL"},
+            follow_redirects=False,
+        )
+        assert login.status_code == 503
+        assert "APP_SECRET" in login.text
+    finally:
+        object.__setattr__(main_module.settings, "admin_token", original_admin)
+        object.__setattr__(main_module.settings, "app_secret", original_secret)
+
+
+def test_prepare_upload_offloads_cpu_processing_from_event_loop(monkeypatch):
+    """Large-image re-encoding must not freeze unrelated async requests."""
+    import asyncio
+    import time
+    from io import BytesIO
+    from starlette.datastructures import UploadFile
+    import app.documents as documents
+
+    def slow_processor(raw: bytes, detected: str):
+        time.sleep(0.18)
+        return raw, detected
+
+    monkeypatch.setattr(documents, "_process_document_bytes", slow_processor)
+
+    async def scenario():
+        upload = UploadFile(
+            filename="large.png",
+            file=BytesIO(b"\x89PNG\r\n\x1a\nplaceholder"),
+        )
+        task = asyncio.create_task(documents.prepare_upload(upload))
+        started = time.perf_counter()
+        await asyncio.sleep(0.02)
+        heartbeat_elapsed = time.perf_counter() - started
+        prepared = await task
+        return heartbeat_elapsed, prepared
+
+    heartbeat_elapsed, prepared = asyncio.run(scenario())
+    assert heartbeat_elapsed < 0.10
+    assert prepared.original_name == "large.png"
+
+
+def test_document_processing_concurrency_is_bounded(monkeypatch):
+    """Concurrent large uploads must not create an unbounded image-decoder spike."""
+    import asyncio
+    import threading
+    import time
+    from io import BytesIO
+    from starlette.datastructures import UploadFile
+    import app.documents as documents
+
+    active = 0
+    maximum_active = 0
+    state_lock = threading.Lock()
+
+    def slow_unbounded(raw: bytes, detected: str):
+        nonlocal active, maximum_active
+        with state_lock:
+            active += 1
+            maximum_active = max(maximum_active, active)
+        try:
+            time.sleep(0.10)
+            return raw, detected
+        finally:
+            with state_lock:
+                active -= 1
+
+    monkeypatch.setattr(documents, "_process_document_bytes_unbounded", slow_unbounded)
+
+    async def scenario():
+        uploads = [
+            UploadFile(
+                filename=f"large-{index}.png",
+                file=BytesIO(b"\x89PNG\r\n\x1a\nplaceholder"),
+            )
+            for index in range(6)
+        ]
+        return await asyncio.gather(*(documents.prepare_upload(upload) for upload in uploads))
+
+    prepared = asyncio.run(scenario())
+    assert len(prepared) == 6
+    assert maximum_active <= documents.MAX_CONCURRENT_DOCUMENT_PROCESSORS
+    assert maximum_active >= 1

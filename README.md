@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.4.5
+# ChinaTradeResolve Document AI v3.5.8
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -35,16 +35,65 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - added a privacy FAQ explaining who may see case materials;
 - keeps voluntary support disabled by default and preserves the existing case-management and AI-assistant workflow.
 
-## Private document analysis in v3.4.5
 
-After an application is submitted, the private case page accepts up to twenty key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 45 MB total.
+
+
+## Upload responsiveness and bounded image processing in v3.5.8
+
+- image/PDF validation and image re-encoding run outside the main ASGI event loop, so large screenshots do not pause unrelated requests;
+- document processing is globally limited to two concurrent CPU-heavy jobs per web process, preventing several 30-megapixel images from exhausting a small Render instance;
+- files within one upload remain sequential to keep peak memory predictable;
+- `.env.example` is included again with secrets and external integrations disabled by default.
+
+## Administrator-session safety fix in v3.5.7
+
+Administrator login now requires both `ADMIN_TOKEN` and `APP_SECRET` to pass the production safety checks. Previously, a secure admin token could still enable login while an insecure app secret caused each process to generate its own temporary session key. On overlapping Render deploys or restarts, that made administrator sessions unstable. Public case submission remains available when these secrets are incomplete, but the administrator login is intentionally disabled until both are configured.
+
+## Transactional notification and workflow fixes in v3.5.6
+
+- initial applicant and administrator notifications are inserted in the same database transaction as the new case, so a process interruption cannot save the case while losing its outbox messages;
+- the completion notification is inserted in the same locked transaction as the transition to `closed`;
+- repeated or concurrent close requests cannot create duplicate completion-email rows;
+- the mail worker claims one message immediately before sending instead of leasing a large batch whose later leases could expire;
+- public feedback is accepted only after the case is actually closed;
+- administrator notes are capped at the documented 1,000-character limit.
+
+## PostgreSQL and notification reliability fixes in v3.5.4
+
+- fixed the fresh PostgreSQL schema for `audit_log`: the previous SQL declared `created_at` twice and could fail on a brand-new database;
+- email outbox rows are now claimed with a database-backed lease before delivery;
+- overlapping old and new Render instances cannot concurrently send the same pending message;
+- abandoned email leases are automatically recovered after a bounded timeout;
+- notification lease columns are added automatically to existing PostgreSQL and SQLite databases;
+- all document-analysis run-token protections from v3.5.3 remain in place.
+
+## Reliability, concurrency and security fixes in v3.5.3
+
+- rate limiting now uses Render’s documented first `X-Forwarded-For` address only when proxy headers are trusted; local/direct deployments ignore caller-supplied forwarding headers by default;
+- closed-case retention begins from the latest case update/closure time, so an old case closed today is not anonymised immediately;
+- administrator re-triage uses the same bounded AI response budget as the public application and safely falls back to rules;
+- malformed or blank numeric environment variables no longer crash a Render deploy and are clamped to safe ranges;
+- invalid `PUBLIC_BASE_URL` values are rejected, with a valid `RENDER_EXTERNAL_URL` used as fallback;
+- unsupported AI-generated timeline events are removed unless they cite at least one real uploaded filename;
+- all reliability, concurrency and security controls introduced through v3.5.1 remain in place.
+
+## Private document analysis in v3.5.3
+
+Reliability hardening in this release:
+
+- Unique per-run claim tokens prevent stale workers from saving results or errors into a newer analysis.
+- Stale recovery uses conditional database updates and does not invalidate fresh work during an overlapping Render deploy.
+- Existing PostgreSQL and SQLite databases receive the new `run_token` column automatically at startup.
+
+
+After an application is submitted, the private case page accepts up to twenty key files in PDF, JPG, PNG or WebP format. Each file is limited to 8 MB and each case to 45 MB total. The HTTP upload request itself is capped at 50 MB including multipart overhead, before Starlette parses or spools the files. Other POST, PUT and PATCH requests are capped at 1 MB.
 
 Security and privacy controls:
 
 - files are stored in PostgreSQL/SQLite with the case, not on Render's ephemeral filesystem;
 - file signatures are checked instead of trusting the browser MIME type;
 - images are decoded and re-encoded to remove EXIF and other embedded metadata;
-- obvious PDF active-content markers are rejected;
+- encrypted PDFs and PDFs with JavaScript, launch actions, embedded files, rich media or other active-content markers are rejected;
 - downloads require the private case token or an authenticated admin session;
 - adding or deleting a file invalidates the previous AI report;
 - retention cleanup deletes file blobs and analysis reports with the closed case;
@@ -65,6 +114,10 @@ DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 ```
 
 See `DOCUMENT_AI_SETUP_RU.md` for the Render checklist.
+
+### Analysis execution model
+
+The private page responds immediately after an analysis is claimed and the provider call continues in the web process. Each run receives a unique database claim token, so a late response from an older run cannot overwrite a newer retry. Fresh work is not invalidated during Render's overlapping zero-downtime deploy; only jobs that remain running beyond the bounded stale threshold are marked failed and can be retried. This is suitable for the current low-volume deployment; sustained production load should move analysis to a durable queue and separate worker.
 
 ## Public AI assistant
 
@@ -165,7 +218,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.4.5
+cd ChinaTradeResolve_Document_AI_v3.5.8
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -199,6 +252,7 @@ When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After
 ```env
 ENABLE_AI_TRIAGE=true
 OPENAI_API_KEY=...
+APPLICATION_TRIAGE_TIMEOUT_SECONDS=8
 OPENAI_MODEL=<model available in your OpenAI project>
 ```
 
@@ -223,6 +277,7 @@ python scripts/purge_closed_cases.py
 ## Tests
 
 ```bash
+python -m pip install -r requirements-dev.txt
 pytest -q
 ```
 
@@ -245,7 +300,7 @@ The public contact and operator notification address is:
 chinatraderesolve.support@gmail.com
 ```
 
-The application is preconfigured for Gmail SMTP in `.env.example`, but the secret is intentionally empty.
+The `.env.example` template leaves SMTP disabled by default. Use `EMAIL_SETUP.md` to add Gmail SMTP settings explicitly; passwords remain intentionally absent from the repository.
 
 ### Connect Gmail safely
 
@@ -294,7 +349,7 @@ When `DATABASE_URL` is present, the app automatically creates and uses PostgreSQ
 - Docker runtime is supported.
 - The Docker command binds to Render's `PORT` variable.
 - Keep SMTP variables empty on a Free Render web service because outbound SMTP ports are blocked. Connect an HTTPS email provider later.
-- Set `APP_SECRET` and `ADMIN_TOKEN` to separate long random secrets.
+- Set `APP_SECRET` and `ADMIN_TOKEN` to separate random secrets of at least 32 characters each.
 
 
 ## HTTPS email bridge for Render Free

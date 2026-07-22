@@ -158,7 +158,6 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
                 "type": "input_file",
                 "filename": document["original_name"],
                 "file_data": f"data:{document['content_type']};base64,{encoded}",
-                "detail": "auto",
             })
 
     output_token_budget = min(
@@ -225,9 +224,36 @@ async def analyse_case_documents(case: dict[str, Any], documents: list[dict[str,
     score = parsed.get("readiness_score")
     if not isinstance(score, int) or not 0 <= score <= 100:
         raise DocumentAnalysisProviderError("The document-analysis result is invalid")
-    filenames = {document["original_name"] for document in documents}
+    filename_map = {str(document["original_name"]).casefold(): str(document["original_name"]) for document in documents}
+    seen_inventory: set[str] = set()
+    verified_inventory: list[dict[str, Any]] = []
+    for item in parsed.get("document_inventory", []):
+        if not isinstance(item, dict):
+            continue
+        actual_name = filename_map.get(str(item.get("filename") or "").strip().casefold())
+        if not actual_name or actual_name.casefold() in seen_inventory:
+            continue
+        item["filename"] = actual_name
+        seen_inventory.add(actual_name.casefold())
+        verified_inventory.append(item)
+    parsed["document_inventory"] = verified_inventory
+
+    verified_timeline: list[dict[str, Any]] = []
     for event in parsed.get("timeline", []):
+        if not isinstance(event, dict):
+            continue
         sources = event.get("source_files", [])
-        event["source_files"] = [name for name in sources if name in filenames]
+        verified_sources: list[str] = []
+        for source in sources:
+            actual_name = filename_map.get(str(source).strip().casefold())
+            if actual_name and actual_name not in verified_sources:
+                verified_sources.append(actual_name)
+        # A chronology entry without a real uploaded source is not evidence.
+        # Drop it instead of displaying an unsupported model-generated event.
+        if not verified_sources:
+            continue
+        event["source_files"] = verified_sources
+        verified_timeline.append(event)
+    parsed["timeline"] = verified_timeline
     parsed["model"] = settings.openai_document_model
     return parsed

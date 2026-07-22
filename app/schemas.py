@@ -73,7 +73,6 @@ class FeedbackCreate(BaseModel):
     feedback_text: str = Field(min_length=10, max_length=3000)
     display_name: str = Field(default="", max_length=80)
     testimonial_consent: bool = False
-    company_website: str = Field(default="", max_length=200)
 
     @field_validator("feedback_text", "display_name", mode="before")
     @classmethod

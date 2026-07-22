@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import smtplib
 import threading
 from email.message import EmailMessage
@@ -8,7 +9,10 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .config import settings
-from .db import mark_notification, pending_notifications, queue_notification
+
+logger = logging.getLogger("chinatraderesolve.notifications")
+MAX_NOTIFICATION_ATTEMPTS = 5
+from .db import claim_pending_notifications, mark_notification, pending_notifications, queue_notification
 
 _STATUS_LABELS = {
     "Russian": {"submitted":"Получено","needs_information":"Нужна информация","pilot_candidate":"Кандидат на бесплатную помощь","human_review":"Ручная проверка","declined":"Отклонено","accepted":"Принято","closed":"Закрыто"},
@@ -26,7 +30,8 @@ _PROBLEM_LABELS_RU = {
 }
 
 
-def queue_case_notifications(case: dict) -> None:
+def build_case_notifications(case: dict) -> list[dict[str, str]]:
+    messages: list[dict[str, str]] = []
     status_url = f"{settings.public_base_url}/case/{case['case_reference']}/{case['public_token']}"
     language = case.get("preferred_language") or "English"
     status_label = _STATUS_LABELS.get(language, _STATUS_LABELS["English"]).get(case["status"], case["status"])
@@ -48,12 +53,29 @@ def queue_case_notifications(case: dict) -> None:
     else:
         client_subject = f"ChinaTradeResolve application {case['case_reference']}"
         client_body = (f"Hello {case['full_name']},\n\nYour ChinaTradeResolve free-access application has been received.\n" f"Case reference: {case['case_reference']}\nCurrent automated status: {status_label}\n\n" f"Status page: {status_url}\n\nNo service fee or document upload is required at this stage.\n")
-    queue_notification(case["id"], case["email"], client_subject, client_body)
+    messages.append({"recipient": case["email"], "subject": client_subject, "body": client_body})
     if settings.admin_email:
         admin_body = (f"Новое дело: {case['case_reference']}\nСтатус: {_STATUS_LABELS['Russian'].get(case['status'], case['status'])}\nРиск: {_RISK_LABELS_RU.get(case['risk_level'], case['risk_level'])}\nПриоритет: {case['priority']}\n" f"Заявитель: {case['full_name']} <{case['email']}>\nПроблема: {_PROBLEM_LABELS_RU.get(case['main_problem'], case['main_problem'])}\n")
-        queue_notification(case["id"], settings.admin_email, f"Новое дело ChinaTradeResolve: {case['case_reference']}", admin_body)
+        messages.append({"recipient": settings.admin_email, "subject": f"Новое дело ChinaTradeResolve: {case['case_reference']}", "body": admin_body})
+    return messages
+
+
+def queue_case_notifications(case: dict) -> None:
+    """Backward-compatible helper; new applications queue these transactionally."""
+    for message in build_case_notifications(case):
+        queue_notification(case.get("id"), message["recipient"], message["subject"], message["body"])
+
 
 _DELIVERY_LOCK = threading.Lock()
+
+
+def email_delivery_is_configured() -> bool:
+    bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
+    smtp_ready = bool(
+        settings.smtp_host
+        and (not settings.smtp_username or settings.smtp_password)
+    )
+    return bridge_ready or smtp_ready
 
 
 
@@ -100,37 +122,64 @@ def _deliver_via_smtp(item: dict) -> None:
         smtp.send_message(msg)
 
 
-def deliver_pending() -> dict[str, int]:
-    # Multiple application requests may finish at nearly the same time.  Serialising
-    # delivery in this single-process deployment prevents the same outbox row from
-    # being sent twice before its status is updated.
+def deliver_pending(max_messages: int = 25) -> dict[str, int]:
+    # Claim one row immediately before delivery. Leasing a large batch up front can
+    # let later leases expire while an earlier slow message is still being sent.
     if not _DELIVERY_LOCK.acquire(blocking=False):
         return {"sent": 0, "failed": 0, "pending": len(pending_notifications())}
     try:
-        pending = pending_notifications()
         result = {"sent": 0, "failed": 0, "pending": 0}
         bridge_ready = bool(settings.email_bridge_url and settings.email_bridge_secret)
-        smtp_ready = bool(settings.smtp_host)
+        smtp_ready = bool(settings.smtp_host and (not settings.smtp_username or settings.smtp_password))
         if not bridge_ready and not smtp_ready:
-            result["pending"] = len(pending)
+            result["pending"] = len(pending_notifications())
             return result
-        for item in pending:
+
+        for _ in range(max(1, min(int(max_messages), 100))):
+            leased = claim_pending_notifications(limit=1)
+            if not leased:
+                break
+            item = leased[0]
+            claim_token = str(item.get("claim_token") or "")
+            attempt_number = int(item.get("attempts") or 0) + 1
             try:
                 if bridge_ready:
                     _deliver_via_bridge(item)
                 else:
                     _deliver_via_smtp(item)
-                mark_notification(item["id"], "sent")
-                result["sent"] += 1
+                if mark_notification(
+                    item["id"], "sent", expected_claim_token=claim_token
+                ):
+                    result["sent"] += 1
             except Exception as exc:
-                mark_notification(item["id"], "failed", str(exc)[:500])
-                result["failed"] += 1
+                logger.exception(
+                    "Email delivery failed for outbox_id=%s attempt=%s",
+                    item.get("id"), attempt_number,
+                )
+                if attempt_number >= MAX_NOTIFICATION_ATTEMPTS:
+                    saved = mark_notification(
+                        item["id"], "failed", str(exc)[:500],
+                        expected_claim_token=claim_token,
+                    )
+                    if saved:
+                        result["failed"] += 1
+                else:
+                    retry_delay = min(900, 30 * (2 ** (attempt_number - 1)))
+                    saved = mark_notification(
+                        item["id"], "pending", str(exc)[:500],
+                        retry_delay_seconds=retry_delay,
+                        expected_claim_token=claim_token,
+                    )
+                    if saved:
+                        result["pending"] += 1
+
+        result["pending"] += len(pending_notifications())
         return result
     finally:
         _DELIVERY_LOCK.release()
 
 
-def queue_completion_notification(case: dict) -> None:
+def build_completion_notifications(case: dict) -> list[dict[str, str]]:
     status_url = f"{settings.public_base_url}/case/{case['case_reference']}/{case['public_token']}"
     language = case.get("preferred_language") or "English"
     if language == "Russian":
@@ -151,5 +200,11 @@ def queue_completion_notification(case: dict) -> None:
     else:
         subject = f"ChinaTradeResolve feedback request {case['case_reference']}"
         body = (f"Hello {case['full_name']},\n\nYour ChinaTradeResolve case {case['case_reference']} has been marked complete.\n\n" "You can leave optional feedback on your private status page.\n\n" f"Status and feedback page: {status_url}\n")
-    queue_notification(case["id"], case["email"], subject, body)
+    return [{"recipient": case["email"], "subject": subject, "body": body}]
+
+
+def queue_completion_notification(case: dict) -> None:
+    """Backward-compatible helper; status changes queue these transactionally."""
+    for message in build_completion_notifications(case):
+        queue_notification(case.get("id"), message["recipient"], message["subject"], message["body"])
 

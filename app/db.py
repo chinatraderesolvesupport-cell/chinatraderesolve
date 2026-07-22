@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import secrets
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from typing import Any, Iterator
 
 from .config import settings
+from .documents import unique_display_filename
 
 try:
     import psycopg
@@ -14,6 +16,34 @@ try:
 except ImportError:  # SQLite-only local/test mode
     psycopg = None
     dict_row = None
+
+
+class DocumentAnalysisInProgressError(RuntimeError):
+    """Raised when evidence is changed while an analysis snapshot is running."""
+
+
+class DocumentLimitError(ValueError):
+    """Raised when a document batch would exceed a case storage limit."""
+
+
+def _lock_case(conn: Any, case_id: int) -> bool:
+    """Serialise document mutations and analysis claims for one case."""
+    if using_postgres():
+        row = execute(
+            conn,
+            "SELECT id FROM cases WHERE id=? AND deleted_at IS NULL FOR UPDATE",
+            (case_id,),
+        ).fetchone()
+    else:
+        # SQLite's default transaction is deferred. Taking the write lock before the
+        # read prevents two concurrent requests from both passing the same guard.
+        execute(conn, "BEGIN IMMEDIATE")
+        row = execute(
+            conn,
+            "SELECT id FROM cases WHERE id=? AND deleted_at IS NULL",
+            (case_id,),
+        ).fetchone()
+    return bool(row)
 
 
 def utcnow() -> str:
@@ -67,6 +97,49 @@ def transaction() -> Iterator[Any]:
         raise
     finally:
         conn.close()
+
+
+def _ensure_notification_retry_columns(conn: Any) -> None:
+    """Add bounded-retry and cross-process lease metadata without losing messages."""
+    if using_postgres():
+        rows = execute(
+            conn,
+            "SELECT column_name FROM information_schema.columns WHERE table_name='notification_outbox'",
+        ).fetchall()
+        columns = {str(row["column_name"]) for row in rows}
+    else:
+        rows = execute(conn, "PRAGMA table_info(notification_outbox)").fetchall()
+        columns = {str(row["name"]) for row in rows}
+    if "attempts" not in columns:
+        execute(conn, "ALTER TABLE notification_outbox ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
+    if "next_attempt_at" not in columns:
+        execute(conn, "ALTER TABLE notification_outbox ADD COLUMN next_attempt_at TEXT")
+    if "claim_token" not in columns:
+        execute(conn, "ALTER TABLE notification_outbox ADD COLUMN claim_token TEXT NOT NULL DEFAULT ''")
+    if "claimed_at" not in columns:
+        execute(conn, "ALTER TABLE notification_outbox ADD COLUMN claimed_at TEXT")
+    execute(
+        conn,
+        "CREATE INDEX IF NOT EXISTS idx_notification_outbox_due "
+        "ON notification_outbox(status,next_attempt_at,claimed_at,id)",
+    )
+
+
+
+
+def _ensure_document_analysis_run_token(conn: Any) -> None:
+    """Add a per-run claim token so late workers cannot overwrite newer analyses."""
+    if using_postgres():
+        rows = execute(
+            conn,
+            "SELECT column_name FROM information_schema.columns WHERE table_name='document_analyses'",
+        ).fetchall()
+        columns = {str(row["column_name"]) for row in rows}
+    else:
+        rows = execute(conn, "PRAGMA table_info(document_analyses)").fetchall()
+        columns = {str(row["name"]) for row in rows}
+    if "run_token" not in columns:
+        execute(conn, "ALTER TABLE document_analyses ADD COLUMN run_token TEXT NOT NULL DEFAULT ''")
 
 
 def init_db() -> None:
@@ -125,7 +198,11 @@ def init_db() -> None:
                 body TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending',
                 error TEXT NOT NULL DEFAULT '',
-                sent_at TEXT
+                sent_at TEXT,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                next_attempt_at TEXT,
+                claim_token TEXT NOT NULL DEFAULT '',
+                claimed_at TEXT
             )
             """,
             """
@@ -160,7 +237,8 @@ def init_db() -> None:
                 status TEXT NOT NULL,
                 model TEXT NOT NULL DEFAULT '',
                 result_json TEXT NOT NULL DEFAULT '{}',
-                error TEXT NOT NULL DEFAULT ''
+                error TEXT NOT NULL DEFAULT '',
+                run_token TEXT NOT NULL DEFAULT ''
             )
             """,
             "CREATE INDEX IF NOT EXISTS idx_cases_status_priority ON cases(status, priority DESC, created_at DESC)",
@@ -172,6 +250,8 @@ def init_db() -> None:
         with transaction() as conn:
             for statement in statements:
                 execute(conn, statement)
+            _ensure_notification_retry_columns(conn)
+            _ensure_document_analysis_run_token(conn)
         return
 
     with transaction() as conn:
@@ -229,6 +309,10 @@ def init_db() -> None:
                 status TEXT NOT NULL DEFAULT 'pending',
                 error TEXT NOT NULL DEFAULT '',
                 sent_at TEXT,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                next_attempt_at TEXT,
+                claim_token TEXT NOT NULL DEFAULT '',
+                claimed_at TEXT,
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE SET NULL
             );
 
@@ -264,6 +348,7 @@ def init_db() -> None:
                 model TEXT NOT NULL DEFAULT '',
                 result_json TEXT NOT NULL DEFAULT '{}',
                 error TEXT NOT NULL DEFAULT '',
+                run_token TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
             );
 
@@ -274,6 +359,8 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at);
             """
         )
+        _ensure_notification_retry_columns(conn)
+        _ensure_document_analysis_run_token(conn)
 
 
 def add_audit(conn: Any, case_id: int, actor: str, event_type: str, details: dict[str, Any]) -> None:
@@ -303,7 +390,34 @@ def grant_ai_consent(case_id: int, actor: str = "client") -> bool:
         return not already_granted
 
 
-def create_case(payload: dict[str, Any], triage: dict[str, Any], reference: str, public_token: str) -> dict[str, Any]:
+def _insert_notifications(
+    conn: Any,
+    case_id: int | None,
+    notifications: list[dict[str, str]] | None,
+) -> None:
+    """Insert outbox messages in the caller's transaction."""
+    for notification in notifications or []:
+        execute(
+            conn,
+            "INSERT INTO notification_outbox(created_at,case_id,recipient,subject,body) VALUES (?,?,?,?,?)",
+            (
+                utcnow(),
+                case_id,
+                str(notification["recipient"]),
+                str(notification["subject"]),
+                str(notification["body"]),
+            ),
+        )
+
+
+def create_case(
+    payload: dict[str, Any],
+    triage: dict[str, Any],
+    reference: str,
+    public_token: str,
+    *,
+    notifications: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
     now = utcnow()
     status = triage["decision"]
     values = (
@@ -332,6 +446,7 @@ def create_case(payload: dict[str, Any], triage: dict[str, Any], reference: str,
             case_id = int(cur.lastrowid)
         add_audit(conn, case_id, "system", "application_created", {"status": status})
         add_audit(conn, case_id, "triage", "triage_completed", triage)
+        _insert_notifications(conn, case_id, notifications)
         row = execute(conn, "SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
         return dict(row)
 
@@ -382,8 +497,17 @@ ALLOWED_TRANSITIONS = {
 }
 
 
-def update_status(case_id: int, status: str, note: str, actor: str = "admin") -> dict[str, Any]:
+def update_status(
+    case_id: int,
+    status: str,
+    note: str,
+    actor: str = "admin",
+    *,
+    close_notifications: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
     with transaction() as conn:
+        if not _lock_case(conn, case_id):
+            raise KeyError("Case not found")
         row = execute(conn, "SELECT * FROM cases WHERE id=? AND deleted_at IS NULL", (case_id,)).fetchone()
         if not row:
             raise KeyError("Case not found")
@@ -393,9 +517,11 @@ def update_status(case_id: int, status: str, note: str, actor: str = "admin") ->
         execute(
             conn,
             "UPDATE cases SET status=?,admin_note=?,updated_at=? WHERE id=?",
-            (status, note, utcnow(), case_id),
+            (status, note[:1000], utcnow(), case_id),
         )
-        add_audit(conn, case_id, actor, "status_updated", {"from": current, "to": status, "note": note})
+        add_audit(conn, case_id, actor, "status_updated", {"from": current, "to": status, "note": note[:1000]})
+        if current != "closed" and status == "closed":
+            _insert_notifications(conn, case_id, close_notifications)
         updated = execute(conn, "SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
         return dict(updated)
 
@@ -418,25 +544,142 @@ def replace_triage(case_id: int, triage: dict[str, Any], actor: str = "admin") -
 
 def queue_notification(case_id: int | None, recipient: str, subject: str, body: str) -> None:
     with transaction() as conn:
-        execute(
+        _insert_notifications(
             conn,
-            "INSERT INTO notification_outbox(created_at,case_id,recipient,subject,body) VALUES (?,?,?,?,?)",
-            (utcnow(), case_id, recipient, subject, body),
+            case_id,
+            [{"recipient": recipient, "subject": subject, "body": body}],
         )
 
 
-def pending_notifications() -> list[dict[str, Any]]:
+def pending_notifications(limit: int = 100) -> list[dict[str, Any]]:
+    """Return due, unclaimed messages for diagnostics and tests."""
+    now = utcnow()
     with transaction() as conn:
-        return [dict(r) for r in execute(conn, "SELECT * FROM notification_outbox WHERE status='pending' ORDER BY id").fetchall()]
+        return [dict(r) for r in execute(
+            conn,
+            """
+            SELECT * FROM notification_outbox
+            WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=?)
+            ORDER BY id LIMIT ?
+            """,
+            (now, max(1, min(int(limit), 500))),
+        ).fetchall()]
 
 
-def mark_notification(notification_id: int, status: str, error: str = "") -> None:
+def claim_pending_notifications(
+    limit: int = 100,
+    *,
+    lease_seconds: int = 300,
+) -> list[dict[str, Any]]:
+    """Atomically lease due outbox rows to one process.
+
+    Render can briefly run the old and new service instances at the same time
+    during a zero-downtime deploy.  A database-backed lease prevents both
+    processes from sending the same pending email concurrently.  An abandoned
+    lease is recovered after ``lease_seconds``.
+    """
+    limit = max(1, min(int(limit), 500))
+    lease_seconds = max(60, min(int(lease_seconds), 3600))
+    now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat(timespec="seconds")
+    stale_before = (now_dt - timedelta(seconds=lease_seconds)).isoformat(timespec="seconds")
+    claim_token = secrets.token_urlsafe(24)
+
     with transaction() as conn:
+        if not using_postgres():
+            # SQLite begins transactions lazily; take the write lock before
+            # selecting rows so two local workers cannot claim the same row.
+            execute(conn, "BEGIN IMMEDIATE")
+
         execute(
             conn,
-            "UPDATE notification_outbox SET status=?,error=?,sent_at=? WHERE id=?",
-            (status, error, utcnow() if status == "sent" else None, notification_id),
+            """
+            UPDATE notification_outbox
+            SET status='pending',claim_token='',claimed_at=NULL
+            WHERE status='sending' AND (claimed_at IS NULL OR claimed_at<=?)
+            """,
+            (stale_before,),
         )
+
+        lock_clause = " FOR UPDATE SKIP LOCKED" if using_postgres() else ""
+        rows = execute(
+            conn,
+            f"""
+            SELECT id FROM notification_outbox
+            WHERE status='pending' AND (next_attempt_at IS NULL OR next_attempt_at<=?)
+            ORDER BY id LIMIT ?{lock_clause}
+            """,
+            (now, limit),
+        ).fetchall()
+        ids = [int(row["id"]) for row in rows]
+        if not ids:
+            return []
+
+        claimed_ids: list[int] = []
+        for notification_id in ids:
+            cursor = execute(
+                conn,
+                """
+                UPDATE notification_outbox
+                SET status='sending',claim_token=?,claimed_at=?
+                WHERE id=? AND status='pending'
+                  AND (next_attempt_at IS NULL OR next_attempt_at<=?)
+                """,
+                (claim_token, now, notification_id, now),
+            )
+            if int(cursor.rowcount or 0) == 1:
+                claimed_ids.append(notification_id)
+
+        claimed: list[dict[str, Any]] = []
+        for notification_id in claimed_ids:
+            row = execute(
+                conn,
+                "SELECT * FROM notification_outbox WHERE id=? AND claim_token=?",
+                (notification_id, claim_token),
+            ).fetchone()
+            if row:
+                claimed.append(dict(row))
+        return claimed
+
+
+def mark_notification(
+    notification_id: int,
+    status: str,
+    error: str = "",
+    *,
+    retry_delay_seconds: int = 0,
+    expected_claim_token: str | None = None,
+) -> bool:
+    if status not in {"pending", "sent", "failed"}:
+        raise ValueError("Invalid notification status")
+    now = datetime.now(timezone.utc)
+    next_attempt_at = None
+    if status == "pending" and retry_delay_seconds > 0:
+        next_attempt_at = (now + timedelta(seconds=retry_delay_seconds)).isoformat(timespec="seconds")
+    with transaction() as conn:
+        where = "WHERE id=?"
+        params: list[Any] = [
+            status,
+            error[:500],
+            now.isoformat(timespec="seconds") if status == "sent" else None,
+            next_attempt_at,
+            notification_id,
+        ]
+        if expected_claim_token:
+            where += " AND status='sending' AND claim_token=?"
+            params.append(expected_claim_token)
+        cursor = execute(
+            conn,
+            f"""
+            UPDATE notification_outbox
+            SET status=?,error=?,sent_at=?,attempts=attempts+1,next_attempt_at=?,
+                claim_token='',claimed_at=NULL
+            {where}
+            """,
+            params,
+        )
+        return int(cursor.rowcount or 0) == 1
+
 
 
 def dashboard_counts() -> dict[str, int]:
@@ -456,7 +699,7 @@ def soft_delete_expired(days: int) -> int:
     with transaction() as conn:
         rows = execute(
             conn,
-            "SELECT id FROM cases WHERE deleted_at IS NULL AND created_at<? AND status='closed'",
+            "SELECT id FROM cases WHERE deleted_at IS NULL AND updated_at<? AND status='closed'",
             (cutoff,),
         ).fetchall()
         case_ids = [int(row["id"]) for row in rows]
@@ -507,46 +750,128 @@ def get_case_document(document_id: int, case_id: int | None = None) -> dict[str,
         return dict(row) if row else None
 
 
-def add_case_document(case_id: int, document: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+def add_case_documents(
+    case_id: int,
+    documents: list[dict[str, Any]],
+    *,
+    max_documents: int,
+    max_total_bytes: int,
+    actor: str = "client",
+) -> tuple[list[dict[str, Any]], int]:
+    """Atomically add a prepared batch and invalidate an older report.
+
+    The case-row lock makes count/size checks authoritative even when two browser
+    uploads arrive together. Evidence cannot change while an analysis is running,
+    so a completed report always describes the same document snapshot.
+    """
+    if not documents:
+        return [], 0
     now = utcnow()
     with transaction() as conn:
-        case = execute(conn, "SELECT id FROM cases WHERE id=? AND deleted_at IS NULL", (case_id,)).fetchone()
-        if not case:
+        if not _lock_case(conn, case_id):
             raise KeyError("Case not found")
+        analysis = execute(
+            conn, "SELECT status FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if analysis and analysis["status"] == "running":
+            raise DocumentAnalysisInProgressError(
+                "Documents cannot be changed while analysis is running"
+            )
+
+        existing = [dict(row) for row in execute(
+            conn,
+            "SELECT id,original_name,size_bytes,sha256 FROM case_documents WHERE case_id=? ORDER BY id",
+            (case_id,),
+        ).fetchall()]
+        existing_hashes = {str(item["sha256"]) for item in existing}
+        used_names = {str(item["original_name"]).casefold() for item in existing}
+        batch_hashes: set[str] = set()
+        accepted: list[dict[str, Any]] = []
+        for raw_document in documents:
+            document = dict(raw_document)
+            digest = str(document["sha256"])
+            if digest in existing_hashes or digest in batch_hashes:
+                continue
+            batch_hashes.add(digest)
+            document["original_name"] = unique_display_filename(
+                str(document["original_name"]), used_names
+            )
+            accepted.append(document)
+
+        if len(existing) + len(accepted) > max_documents:
+            raise DocumentLimitError(
+                f"A case can contain no more than {max_documents} documents"
+            )
+        existing_total = sum(int(item["size_bytes"]) for item in existing)
+        new_total = sum(int(item["size_bytes"]) for item in accepted)
+        if existing_total + new_total > max_total_bytes:
+            raise DocumentLimitError(
+                "The total document size for one case cannot exceed 45 MB"
+            )
+
+        added: list[dict[str, Any]] = []
+        for document in accepted:
+            values = (
+                case_id, now, document["original_name"], document["content_type"],
+                document["size_bytes"], document["sha256"], document["content"],
+            )
+            sql = """
+                INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,sha256,content_blob)
+                VALUES (?,?,?,?,?,?,?)
+            """
+            if using_postgres():
+                row = execute(conn, sql + " RETURNING id", values).fetchone()
+                document_id = int(row["id"])
+            else:
+                cursor = execute(conn, sql, values)
+                document_id = int(cursor.lastrowid)
+            add_audit(conn, case_id, actor, "document_uploaded", {
+                "document_id": document_id,
+                "filename": document["original_name"],
+                "content_type": document["content_type"],
+                "size_bytes": document["size_bytes"],
+            })
+            row = execute(
+                conn,
+                "SELECT id,case_id,created_at,original_name,content_type,size_bytes,sha256 FROM case_documents WHERE id=?",
+                (document_id,),
+            ).fetchone()
+            added.append(dict(row))
+
+        if added:
+            execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
+        return added, len(documents) - len(accepted)
+
+
+def add_case_document(case_id: int, document: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    """Backward-compatible one-document helper used by tests and scripts."""
+    added, _ = add_case_documents(
+        case_id, [document], max_documents=20, max_total_bytes=45 * 1024 * 1024
+    )
+    if added:
+        return added[0], True
+    with transaction() as conn:
         existing = execute(
             conn,
             "SELECT * FROM case_documents WHERE case_id=? AND sha256=?",
             (case_id, document["sha256"]),
         ).fetchone()
-        if existing:
-            return dict(existing), False
-        values = (
-            case_id, now, document["original_name"], document["content_type"],
-            document["size_bytes"], document["sha256"], document["content"],
-        )
-        sql = """
-            INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,sha256,content_blob)
-            VALUES (?,?,?,?,?,?,?)
-        """
-        if using_postgres():
-            row = execute(conn, sql + " RETURNING id", values).fetchone()
-            document_id = int(row["id"])
-        else:
-            cursor = execute(conn, sql, values)
-            document_id = int(cursor.lastrowid)
-        execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
-        add_audit(conn, case_id, "client", "document_uploaded", {
-            "document_id": document_id,
-            "filename": document["original_name"],
-            "content_type": document["content_type"],
-            "size_bytes": document["size_bytes"],
-        })
-        row = execute(conn, "SELECT * FROM case_documents WHERE id=?", (document_id,)).fetchone()
-        return dict(row), True
+        if not existing:
+            raise RuntimeError("Duplicate document could not be resolved")
+        return dict(existing), False
 
 
 def delete_case_document(case_id: int, document_id: int, actor: str = "client") -> bool:
     with transaction() as conn:
+        if not _lock_case(conn, case_id):
+            return False
+        analysis = execute(
+            conn, "SELECT status FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if analysis and analysis["status"] == "running":
+            raise DocumentAnalysisInProgressError(
+                "Documents cannot be changed while analysis is running"
+            )
         row = execute(
             conn,
             "SELECT original_name FROM case_documents WHERE id=? AND case_id=?",
@@ -563,6 +888,100 @@ def delete_case_document(case_id: int, document_id: int, actor: str = "client") 
         return True
 
 
+def claim_document_analysis(
+    case_id: int,
+    model: str,
+    *,
+    actor: str,
+    document_count: int,
+    allow_completed: bool = False,
+) -> str | None:
+    """Atomically claim the single analysis slot and return its unique run token."""
+    now = utcnow()
+    run_token = secrets.token_urlsafe(24)
+    with transaction() as conn:
+        if not _lock_case(conn, case_id):
+            raise KeyError("Case not found")
+        actual_count_row = execute(
+            conn, "SELECT COUNT(*) AS count FROM case_documents WHERE case_id=?", (case_id,)
+        ).fetchone()
+        actual_document_count = int(actual_count_row["count"] if actual_count_row else 0)
+        if actual_document_count == 0:
+            return None
+        current = execute(
+            conn, "SELECT status,created_at FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if current and current["status"] == "running":
+            return None
+        if current and current["status"] == "completed" and not allow_completed:
+            return None
+        if current:
+            execute(
+                conn,
+                "UPDATE document_analyses SET updated_at=?,status='running',model=?,result_json='{}',error='',run_token=? WHERE case_id=?",
+                (now, model, run_token, case_id),
+            )
+        else:
+            execute(
+                conn,
+                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error,run_token) VALUES (?,?,?,'running',?,'{}','',?)",
+                (case_id, now, now, model, run_token),
+            )
+        add_audit(conn, case_id, actor, "document_analysis_started", {
+            "status": "running", "model": model, "document_count": actual_document_count,
+        })
+        return run_token
+
+def _analysis_is_stale(updated_at: str, stale_seconds: int) -> bool:
+    if stale_seconds <= 0:
+        return True
+    try:
+        value = datetime.fromisoformat(str(updated_at or ""))
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return True
+    return datetime.now(timezone.utc) - value > timedelta(seconds=stale_seconds)
+
+
+def fail_stale_document_analysis(case_id: int, stale_seconds: int) -> bool:
+    """Fail one abandoned run only if it is still running and still stale."""
+    now = utcnow()
+    message = "Document analysis did not finish before the worker stopped or timed out"
+    with transaction() as conn:
+        row = execute(
+            conn, "SELECT status,updated_at,model FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if not row or row["status"] != "running" or not _analysis_is_stale(row["updated_at"], stale_seconds):
+            return False
+        cursor = execute(
+            conn,
+            "UPDATE document_analyses SET updated_at=?,status='failed',error=?,run_token='' "
+            "WHERE case_id=? AND status='running' AND updated_at=?",
+            (now, message, case_id, row["updated_at"]),
+        )
+        if int(cursor.rowcount or 0) != 1:
+            return False
+        add_audit(conn, case_id, "document_ai", "document_analysis_failed", {
+            "status": "failed", "model": row["model"], "error": message,
+        })
+        return True
+
+
+def fail_running_document_analyses_on_startup(stale_seconds: int = 0) -> int:
+    """Recover abandoned jobs without invalidating fresh work on an overlapping deploy."""
+    with transaction() as conn:
+        rows = execute(
+            conn, "SELECT case_id,status,updated_at,model FROM document_analyses WHERE status='running'"
+        ).fetchall()
+    recovered = 0
+    for row in rows:
+        if _analysis_is_stale(row["updated_at"], stale_seconds) and fail_stale_document_analysis(
+            int(row["case_id"]), stale_seconds
+        ):
+            recovered += 1
+    return recovered
+
 def set_document_analysis_status(
     case_id: int,
     status: str,
@@ -570,24 +989,43 @@ def set_document_analysis_status(
     error: str = "",
     actor: str = "document_ai",
     document_count: int | None = None,
-) -> None:
+    *,
+    expected_run_token: str | None = None,
+) -> bool:
+    """Set analysis state; workers may update only the run they originally claimed."""
     if status not in {"pending", "running", "completed", "failed"}:
         raise ValueError("Invalid document-analysis status")
     now = utcnow()
     safe_error = error[:1000]
     with transaction() as conn:
-        existing = execute(conn, "SELECT case_id,created_at FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
+        if not _lock_case(conn, case_id):
+            raise KeyError("Case not found")
+        existing = execute(
+            conn, "SELECT case_id,created_at,status,run_token FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if expected_run_token:
+            if (
+                not existing
+                or existing["status"] != "running"
+                or not secrets.compare_digest(str(existing["run_token"] or ""), expected_run_token)
+            ):
+                return False
+        next_run_token = str(existing["run_token"] or "") if existing else ""
+        if status == "running" and not next_run_token:
+            next_run_token = secrets.token_urlsafe(24)
+        elif status != "running":
+            next_run_token = ""
         if existing:
             execute(
                 conn,
-                "UPDATE document_analyses SET updated_at=?,status=?,model=?,error=? WHERE case_id=?",
-                (now, status, model, safe_error, case_id),
+                "UPDATE document_analyses SET updated_at=?,status=?,model=?,error=?,run_token=? WHERE case_id=?",
+                (now, status, model, safe_error, next_run_token, case_id),
             )
         else:
             execute(
                 conn,
-                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,?,?,'{}',?)",
-                (case_id, now, now, status, model, safe_error),
+                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error,run_token) VALUES (?,?,?,?,?,'{}',?,?)",
+                (case_id, now, now, status, model, safe_error, next_run_token),
             )
         details: dict[str, Any] = {"status": status, "model": model}
         if document_count is not None:
@@ -598,33 +1036,43 @@ def set_document_analysis_status(
             add_audit(conn, case_id, actor, "document_analysis_started", details)
         elif status == "failed":
             add_audit(conn, case_id, actor, "document_analysis_failed", details)
+        return True
 
-
-def save_document_analysis(case_id: int, result: dict[str, Any], model: str) -> dict[str, Any]:
+def save_document_analysis(
+    case_id: int,
+    result: dict[str, Any],
+    model: str,
+    expected_run_token: str,
+) -> dict[str, Any] | None:
+    """Persist a result only for the exact analysis run that still owns the claim."""
     now = utcnow()
     result_json = json.dumps(result, ensure_ascii=False)
     with transaction() as conn:
-        existing = execute(conn, "SELECT case_id FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
-        if existing:
-            execute(
-                conn,
-                "UPDATE document_analyses SET updated_at=?,status='completed',model=?,result_json=?,error='' WHERE case_id=?",
-                (now, model, result_json, case_id),
-            )
-        else:
-            execute(
-                conn,
-                "INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error) VALUES (?,?,?,'completed',?,?,'')",
-                (case_id, now, now, model, result_json),
-            )
+        if not _lock_case(conn, case_id):
+            return None
+        existing = execute(
+            conn, "SELECT case_id,status,run_token FROM document_analyses WHERE case_id=?", (case_id,)
+        ).fetchone()
+        if (
+            not existing
+            or existing["status"] != "running"
+            or not secrets.compare_digest(str(existing["run_token"] or ""), expected_run_token)
+        ):
+            return None
+        execute(
+            conn,
+            "UPDATE document_analyses SET updated_at=?,status='completed',model=?,result_json=?,error='',run_token='' WHERE case_id=?",
+            (now, model, result_json, case_id),
+        )
         add_audit(conn, case_id, "document_ai", "documents_analysed", {
             "document_count": len(list_case_documents_for_connection(conn, case_id)),
             "readiness_score": result.get("readiness_score"),
             "model": model,
         })
         row = execute(conn, "SELECT * FROM document_analyses WHERE case_id=?", (case_id,)).fetchone()
-        return dict(row)
-
+        saved = dict(row)
+        saved.pop("run_token", None)
+        return saved
 
 def list_case_documents_for_connection(conn: Any, case_id: int) -> list[dict[str, Any]]:
     return [dict(row) for row in execute(
@@ -640,6 +1088,7 @@ def get_document_analysis(case_id: int) -> dict[str, Any] | None:
         if not row:
             return None
         result = dict(row)
+        result.pop("run_token", None)
         try:
             result["result"] = json.loads(result.get("result_json") or "{}")
         except json.JSONDecodeError:

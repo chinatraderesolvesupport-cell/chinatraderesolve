@@ -13,6 +13,7 @@
   {% if analysis_started %}<p class="success">{{ document_copy.analysing }}</p>{% endif %}
   {% if analysis_not_configured %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
   {% if analysis_consent_required %}<p class="warning">{{ document_copy.analysis_consent_required }}</p>{% endif %}
+  {% if document_changes_locked %}<p class="warning">{{ document_copy.analysing }}</p>{% endif %}
 
   {% if documents %}
   <div class="file-list">
@@ -21,14 +22,14 @@
       <div class="file-main"><div class="file-name">{{ document.original_name }}</div><div class="fine">{{ document.content_type }} · {{ (document.size_bytes / 1024)|round(1) }} KB</div></div>
       <div class="file-actions">
         <a class="btn" href="/case/{{ case.case_reference }}/{{ case.public_token }}/documents/{{ document.id }}" target="_blank" rel="noopener">{{ document_copy.download }}</a>
-        {% if case.status not in ['declined','closed'] %}<form method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents/{{ document.id }}/delete" onsubmit="return confirm('{{ document_copy.delete }}?')"><button class="btn danger" type="submit">{{ document_copy.delete }}</button></form>{% endif %}
+        {% if case.status not in ['declined','closed'] and not document_changes_locked %}<form method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents/{{ document.id }}/delete" onsubmit="return confirm('{{ document_copy.delete }}?')"><button class="btn danger" type="submit">{{ document_copy.delete }}</button></form>{% endif %}
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}<p class="muted">{{ document_copy.none }}</p>{% endif %}
 
-  {% if case.status not in ['declined','closed'] and documents|length < max_documents %}
+  {% if case.status not in ['declined','closed'] and documents|length < max_documents and not document_changes_locked %}
   <form id="documentUploadForm" method="post" enctype="multipart/form-data" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents">
     <label for="documentFiles">{{ document_copy.select }}</label>
     <input id="documentFiles" type="file" name="files" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple required>
@@ -48,7 +49,7 @@
       <button class="btn primary" type="submit">{{ document_copy.analyse }}</button>
       <p id="analysisLoading" class="loading warning">{{ document_copy.analysing }}</p>
     </form>
-    {% elif not document_analysis or document_analysis.status != 'completed' %}
+    {% elif not document_analysis_enabled %}
       <p class="warning">{{ document_copy.analysis_not_configured }}</p>
     {% endif %}
   {% endif %}
@@ -59,7 +60,7 @@
 <div class="card" id="document-analysis">
   <div class="analysis-head"><div><h2>{{ document_copy.analysis_title }}</h2><p>{{ report.summary }}</p></div><div class="score" aria-label="{{ document_copy.readiness }}">{{ report.readiness_score }}%</div></div>
   <p class="warning">{{ document_copy.analysis_notice }}</p>
-  {% if report.document_inventory %}<h3>{{ document_copy.inventory }}</h3><table class="inventory"><thead><tr><th>File</th><th>Type</th><th>Date</th><th>Readability</th></tr></thead><tbody>{% for item in report.document_inventory %}<tr><td>{{ item.filename }}</td><td>{{ item.document_type }}<br><span class="fine">{{ item.key_content }}</span></td><td>{{ item.date_or_period }}</td><td>{{ item.readability }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+  {% if report.document_inventory %}<h3>{{ document_copy.inventory }}</h3><table class="inventory"><thead><tr><th>{{ document_copy.table_file }}</th><th>{{ document_copy.table_type }}</th><th>{{ document_copy.table_date }}</th><th>{{ document_copy.table_readability }}</th></tr></thead><tbody>{% for item in report.document_inventory %}<tr><td>{{ item.filename }}</td><td>{{ item.document_type }}<br><span class="fine">{{ item.key_content }}</span></td><td>{{ item.date_or_period }}</td><td>{{ item.readability }}</td></tr>{% endfor %}</tbody></table>{% endif %}
   {% if report.timeline %}<h3>{{ document_copy.timeline }}</h3><ul class="timeline">{% for item in report.timeline %}<li><strong>{{ item.date }}</strong>{{ item.event }}<div class="fine">{{ item.source_files|join(', ') }} · {{ item.confidence }}</div></li>{% endfor %}</ul>{% endif %}
   <div class="analysis-grid">
     <div class="subcard"><h3>{{ document_copy.evidence }}</h3><ul>{% for item in report.key_evidence %}<li>{{ item }}</li>{% else %}<li>—</li>{% endfor %}</ul></div>
@@ -86,7 +87,6 @@
     <p>{{ feedback.feedback_text }}</p>
   {% else %}
   <form method="post" action="/case/{{ case.case_reference }}/{{ case.public_token }}/feedback">
-    <input class="honeypot" name="company_website" tabindex="-1" autocomplete="off">
     <label>{{ copy.rating }}</label>
     <div class="stars">{% for n in [1,2,3,4,5] %}<label><input type="radio" name="rating" value="{{ n }}" {% if n==5 %}checked{% endif %}> {{ n }}</label>{% endfor %}</div>
     <label for="feedback_text">{{ copy.feedback }}</label><textarea id="feedback_text" name="feedback_text" minlength="10" maxlength="3000" required></textarea>

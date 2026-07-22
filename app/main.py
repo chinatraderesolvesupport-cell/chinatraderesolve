@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import logging
 from contextlib import asynccontextmanager
 import json
 import re
 import secrets
+import time
+import tempfile
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from io import BytesIO
@@ -29,17 +33,22 @@ from .ai_assistant import (
     assistant_reply,
     localized_error,
 )
-from .config import DEFAULT_ADMIN_TOKEN, DEFAULT_APP_SECRET, settings
+from .config import admin_token_is_secure, app_secret_is_secure, settings
 from .db import (
-    add_case_document,
+    add_case_documents,
+    claim_document_analysis,
     create_case,
     dashboard_counts,
     delete_case_document,
+    DocumentAnalysisInProgressError,
+    DocumentLimitError,
     get_audit,
     get_case,
     get_case_by_public,
     get_case_document,
     get_document_analysis,
+    fail_running_document_analyses_on_startup,
+    fail_stale_document_analysis,
     get_feedback,
     grant_ai_consent,
     init_db,
@@ -60,15 +69,17 @@ from .document_analysis import (
     document_analysis_is_enabled,
 )
 from .documents import (
+    MAX_CONCURRENT_DOCUMENT_PROCESSORS,
     MAX_DOCUMENTS_PER_CASE,
     MAX_TOTAL_BYTES,
     DocumentValidationError,
     prepare_upload,
 )
 from .notifications import (
+    build_case_notifications,
+    build_completion_notifications,
     deliver_pending,
-    queue_case_notifications,
-    queue_completion_notification,
+    email_delivery_is_configured,
 )
 from .schemas import ApplicationCreate, AssistantChatRequest, AssistantChatResponse, FeedbackCreate
 from .security import SlidingWindowRateLimiter, client_key
@@ -76,20 +87,167 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.4.5"
+APP_VERSION = "3.5.8"
+logger = logging.getLogger("chinatraderesolve")
+
+
+STANDARD_REQUEST_BODY_BYTES = 1 * 1024 * 1024
+DOCUMENT_UPLOAD_REQUEST_BODY_BYTES = 50 * 1024 * 1024
+
+
+class RequestBodyLimitMiddleware:
+    """Reject oversized HTTP bodies before Starlette parses JSON or multipart.
+
+    The body is copied into a bounded spooled temporary file and then replayed
+    to FastAPI. Small forms stay in memory; larger document uploads spill to
+    temporary disk. This also enforces the limit for chunked requests that do
+    not provide Content-Length.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    @staticmethod
+    def _limit(scope: dict[str, Any]) -> int | None:
+        if scope.get("type") != "http":
+            return None
+        method = str(scope.get("method") or "GET").upper()
+        if method not in {"POST", "PUT", "PATCH"}:
+            return None
+        path = str(scope.get("path") or "")
+        if path.startswith("/case/") and path.endswith("/documents"):
+            return DOCUMENT_UPLOAD_REQUEST_BODY_BYTES
+        return STANDARD_REQUEST_BODY_BYTES
+
+    async def __call__(self, scope, receive, send) -> None:
+        limit = self._limit(scope)
+        if limit is None:
+            await self.app(scope, receive, send)
+            return
+
+        headers = {key.lower(): value for key, value in scope.get("headers", [])}
+        raw_length = headers.get(b"content-length", b"").decode("ascii", errors="ignore").strip()
+        if raw_length:
+            try:
+                if int(raw_length) > limit:
+                    await self._reject(scope, receive, send)
+                    return
+            except ValueError:
+                # The bounded read below still protects malformed or absent lengths.
+                pass
+
+        spool = tempfile.SpooledTemporaryFile(max_size=1 * 1024 * 1024, mode="w+b")
+        total = 0
+        disconnected = False
+        try:
+            while True:
+                message = await receive()
+                message_type = message.get("type")
+                if message_type == "http.disconnect":
+                    disconnected = True
+                    break
+                if message_type != "http.request":
+                    continue
+                chunk = message.get("body", b"")
+                total += len(chunk)
+                if total > limit:
+                    await self._reject(scope, receive, send)
+                    return
+                if chunk:
+                    spool.write(chunk)
+                if not message.get("more_body", False):
+                    break
+
+            spool.seek(0)
+            finished = False
+
+            async def replay_receive():
+                nonlocal finished
+                if disconnected:
+                    return {"type": "http.disconnect"}
+                if finished:
+                    return {"type": "http.request", "body": b"", "more_body": False}
+                chunk = spool.read(64 * 1024)
+                if chunk:
+                    more = spool.tell() < total
+                    if not more:
+                        finished = True
+                    return {"type": "http.request", "body": chunk, "more_body": more}
+                finished = True
+                return {"type": "http.request", "body": b"", "more_body": False}
+
+            await self.app(scope, replay_receive, send)
+        finally:
+            spool.close()
+
+    @staticmethod
+    async def _reject(scope, receive, send) -> None:
+        response = JSONResponse(
+            {"detail": "Request body is too large"},
+            status_code=413,
+            headers={"Connection": "close"},
+        )
+        await response(scope, receive, send)
+
+
+def _document_analysis_stale_seconds() -> int:
+    return max(300, int(settings.document_analysis_timeout_seconds * 3 + 60))
+
+
+async def _maintenance_loop() -> None:
+    """Retry queued mail and enforce retention without relying on a redeploy."""
+    next_retention_check = time.monotonic() + settings.retention_check_interval_seconds
+    while True:
+        try:
+            if email_delivery_is_configured():
+                await asyncio.to_thread(deliver_pending)
+            recovered = await asyncio.to_thread(
+                fail_running_document_analyses_on_startup,
+                _document_analysis_stale_seconds(),
+            )
+            if recovered:
+                logger.warning("Marked %s stale document analyses as failed", recovered)
+            if time.monotonic() >= next_retention_check:
+                removed = await asyncio.to_thread(soft_delete_expired, settings.retention_days)
+                if removed:
+                    logger.info("Anonymised %s expired closed cases", removed)
+                next_retention_check = time.monotonic() + settings.retention_check_interval_seconds
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Periodic maintenance failed")
+        await asyncio.sleep(settings.maintenance_interval_seconds)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Apply the configured retention policy whenever the service starts."""
+    """Apply retention, recover abandoned jobs and start periodic maintenance."""
     soft_delete_expired(settings.retention_days)
-    yield
+    recovered = fail_running_document_analyses_on_startup(_document_analysis_stale_seconds())
+    if recovered:
+        logger.warning("Marked %s stale document analyses as failed", recovered)
+    maintenance_task = asyncio.create_task(_maintenance_loop())
+    try:
+        yield
+    finally:
+        maintenance_task.cancel()
+        try:
+            await maintenance_task
+        except asyncio.CancelledError:
+            pass
 
 
-app = FastAPI(title="ChinaTradeResolve Free Access", version=APP_VERSION, lifespan=lifespan)
+app = FastAPI(
+    title="ChinaTradeResolve Free Access",
+    version=APP_VERSION,
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
 _runtime_session_secret = (
     settings.app_secret
-    if settings.app_secret and settings.app_secret != DEFAULT_APP_SECRET
+    if app_secret_is_secure(settings.app_secret)
     else secrets.token_urlsafe(48)
 )
 app.add_middleware(
@@ -109,13 +267,38 @@ document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=180
 init_db()
 
 
+def admin_configuration_is_secure() -> bool:
+    """Require both persistent secrets before administrator sessions are enabled."""
+    return bool(
+        admin_token_is_secure(settings.admin_token)
+        and app_secret_is_secure(settings.app_secret)
+    )
+
+
 def is_admin(request: Request) -> bool:
-    return bool(request.session.get("admin"))
+    return bool(admin_configuration_is_secure() and request.session.get("admin"))
 
 
 def require_admin(request: Request) -> None:
+    if not admin_configuration_is_secure():
+        raise HTTPException(status_code=503, detail="Administrator security settings are incomplete")
     if not is_admin(request):
         raise HTTPException(status_code=401, detail="Admin authentication required")
+
+
+def admin_csrf_token(request: Request) -> str:
+    token = str(request.session.get("csrf_token") or "")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        request.session["csrf_token"] = token
+    return token
+
+
+def require_admin_csrf(request: Request, provided: str) -> None:
+    require_admin(request)
+    expected = str(request.session.get("csrf_token") or "")
+    if not expected or not secrets.compare_digest(provided or "", expected):
+        raise HTTPException(status_code=403, detail="Invalid administrator form token")
 
 
 def make_reference() -> str:
@@ -241,6 +424,7 @@ async def security_headers(request: Request, call_next):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     if request.url.path.startswith(("/admin", "/case/")):
         response.headers.setdefault("Cache-Control", "no-store")
+        response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
     return response
 
 
@@ -426,6 +610,7 @@ DOCUMENT_COPY = {
         "risks": "Risk flags",
         "steps": "Recommended next steps",
         "download": "Open",
+        "table_file": "File", "table_type": "Type", "table_date": "Date", "table_readability": "Readability",
     },
     "Russian": {
         "heading": "Добавьте ключевые документы",
@@ -455,6 +640,7 @@ DOCUMENT_COPY = {
         "risks": "Факторы риска",
         "steps": "Рекомендуемые следующие шаги",
         "download": "Открыть",
+        "table_file": "Файл", "table_type": "Тип", "table_date": "Дата", "table_readability": "Читаемость",
     },
     "Serbian": {
         "heading": "Dodajte ključne dokumente", "intro": "Otpremite do dvadeset ključnih PDF ili slikovnih fajlova: specifikaciju, račun ili dokaz o uplati, poruke dobavljača, dokaz o isporuci ili odluku platforme.",
@@ -464,7 +650,7 @@ DOCUMENT_COPY = {
         "none": "Dokumenti još nisu otpremljeni.", "delete": "Obriši", "analyse": "Analiziraj dokumente pomoću AI-ja", "analysing": "Analiza je pokrenuta. Stranica se automatski osvežava, a možete se vratiti i kasnije.",
         "analysis_not_configured": "Automatska analiza dokumenata trenutno nije dostupna. Fajlovi ostaju dostupni za ljudski pregled.", "analysis_consent_required": "Za analizu ovih fajlova potvrdite dobrovoljnu saglasnost za AI obradu ispod.", "analysis_consent": "Dobrovoljno dozvoljavam AI obradu otpremljenih fajlova uz obaveznu ljudsku proveru važnih zaključaka.", "analysis_error": "Automatska analiza nije završena. Fajlovi ostaju dostupni za ljudski pregled.",
         "analysis_title": "Preliminarna analiza dokumenata", "analysis_notice": "Ovo je organizovanje dokaza, a ne pravni savet, potvrda autentičnosti ili prognoza uspeha. Važne zaključke mora proveriti čovek.",
-        "readiness": "Spremnost dokaza", "inventory": "Pregled dokumenata", "timeline": "Hronologija", "evidence": "Ključni dokazi", "contradictions": "Moguće protivrečnosti", "missing": "Nedostajući dokazi", "risks": "Faktori rizika", "steps": "Preporučeni sledeći koraci", "download": "Otvori",
+        "readiness": "Spremnost dokaza", "inventory": "Pregled dokumenata", "timeline": "Hronologija", "evidence": "Ključni dokazi", "contradictions": "Moguće protivrečnosti", "missing": "Nedostajući dokazi", "risks": "Faktori rizika", "steps": "Preporučeni sledeći koraci", "download": "Otvori", "table_file": "Fajl", "table_type": "Vrsta", "table_date": "Datum", "table_readability": "Čitljivost",
     },
     "French": {
         "heading": "Ajouter les documents clés", "intro": "Téléversez jusqu’à vingt fichiers PDF ou images essentiels : spécifications, facture ou preuve de paiement, messages du fournisseur, preuve de livraison ou décision de la plateforme.",
@@ -474,7 +660,7 @@ DOCUMENT_COPY = {
         "none": "Aucun document téléversé.", "delete": "Supprimer", "analyse": "Analyser les documents avec l’IA", "analysing": "L’analyse a démarré. La page se met à jour automatiquement et vous pouvez revenir plus tard.",
         "analysis_not_configured": "L’analyse automatique des documents est temporairement indisponible. Les fichiers restent accessibles pour une vérification humaine.", "analysis_consent_required": "Pour analyser ces fichiers, confirmez ci-dessous votre consentement volontaire au traitement par l’IA.", "analysis_consent": "J’autorise volontairement le traitement de ces fichiers par l’IA, avec vérification humaine obligatoire des conclusions importantes.", "analysis_error": "L’analyse automatique n’a pas pu être terminée. Les fichiers restent disponibles pour une vérification humaine.",
         "analysis_title": "Analyse préliminaire des documents", "analysis_notice": "Il s’agit d’une organisation des preuves, pas d’un conseil juridique, d’une authentification ou d’une prévision de succès. Les conclusions importantes doivent être vérifiées par une personne.",
-        "readiness": "Préparation des preuves", "inventory": "Inventaire des documents", "timeline": "Chronologie", "evidence": "Éléments de preuve clés", "contradictions": "Contradictions possibles", "missing": "Preuves manquantes", "risks": "Signaux de risque", "steps": "Prochaines étapes recommandées", "download": "Ouvrir",
+        "readiness": "Préparation des preuves", "inventory": "Inventaire des documents", "timeline": "Chronologie", "evidence": "Éléments de preuve clés", "contradictions": "Contradictions possibles", "missing": "Preuves manquantes", "risks": "Signaux de risque", "steps": "Prochaines étapes recommandées", "download": "Ouvrir", "table_file": "Fichier", "table_type": "Type", "table_date": "Date", "table_readability": "Lisibilité",
     },
     "German": {
         "heading": "Wichtige Dokumente hinzufügen", "intro": "Laden Sie bis zu zwanzig wichtige PDF- oder Bilddateien hoch: Spezifikation, Rechnung oder Zahlungsnachweis, Lieferantennachrichten, Liefernachweis oder Plattformentscheidung.",
@@ -484,7 +670,7 @@ DOCUMENT_COPY = {
         "none": "Noch keine Dokumente hochgeladen.", "delete": "Löschen", "analyse": "Dokumente mit KI analysieren", "analysing": "Die Analyse wurde gestartet. Die Seite aktualisiert sich automatisch; Sie können auch später zurückkehren.",
         "analysis_not_configured": "Die automatische Dokumentenanalyse ist vorübergehend nicht verfügbar. Die Dateien bleiben für eine menschliche Prüfung verfügbar.", "analysis_consent_required": "Bestätigen Sie unten Ihre freiwillige Einwilligung zur KI-Verarbeitung, um diese Dateien zu analysieren.", "analysis_consent": "Ich willige freiwillig in die KI-Verarbeitung dieser Dateien ein; wichtige Schlussfolgerungen müssen von einem Menschen geprüft werden.", "analysis_error": "Die automatische Analyse konnte nicht abgeschlossen werden. Die Dateien bleiben für eine menschliche Prüfung verfügbar.",
         "analysis_title": "Vorläufige Dokumentenanalyse", "analysis_notice": "Dies ist eine Beweisorganisation, keine Rechtsberatung, Echtheitsprüfung oder Erfolgsprognose. Wichtige Schlussfolgerungen müssen menschlich geprüft werden.",
-        "readiness": "Beweisbereitschaft", "inventory": "Dokumentenübersicht", "timeline": "Chronologie", "evidence": "Wichtige Belege", "contradictions": "Mögliche Widersprüche", "missing": "Fehlende Belege", "risks": "Risikohinweise", "steps": "Empfohlene nächste Schritte", "download": "Öffnen",
+        "readiness": "Beweisbereitschaft", "inventory": "Dokumentenübersicht", "timeline": "Chronologie", "evidence": "Wichtige Belege", "contradictions": "Mögliche Widersprüche", "missing": "Fehlende Belege", "risks": "Risikohinweise", "steps": "Empfohlene nächste Schritte", "download": "Öffnen", "table_file": "Datei", "table_type": "Typ", "table_date": "Datum", "table_readability": "Lesbarkeit",
     },
     "Spanish": {
         "heading": "Añadir documentos clave", "intro": "Suba hasta veinte archivos PDF o imágenes clave: especificaciones, factura o comprobante de pago, mensajes del proveedor, prueba de entrega o decisión de la plataforma.",
@@ -494,7 +680,7 @@ DOCUMENT_COPY = {
         "none": "Todavía no se han subido documentos.", "delete": "Eliminar", "analyse": "Analizar documentos con IA", "analysing": "El análisis ha comenzado. La página se actualiza automáticamente y puede volver más tarde.",
         "analysis_not_configured": "El análisis automático de documentos no está disponible temporalmente. Los archivos siguen disponibles para revisión humana.", "analysis_consent_required": "Para analizar estos archivos, confirme abajo su consentimiento voluntario para el tratamiento con IA.", "analysis_consent": "Autorizo voluntariamente el tratamiento de estos archivos con IA, con verificación humana obligatoria de las conclusiones importantes.", "analysis_error": "No se pudo completar el análisis automático. Los archivos siguen disponibles para revisión humana.",
         "analysis_title": "Análisis preliminar de documentos", "analysis_notice": "Esto organiza pruebas; no es asesoramiento jurídico, autenticación ni una predicción de éxito. Las conclusiones importantes requieren verificación humana.",
-        "readiness": "Preparación de las pruebas", "inventory": "Inventario de documentos", "timeline": "Cronología", "evidence": "Pruebas clave", "contradictions": "Posibles contradicciones", "missing": "Pruebas faltantes", "risks": "Señales de riesgo", "steps": "Próximos pasos recomendados", "download": "Abrir",
+        "readiness": "Preparación de las pruebas", "inventory": "Inventario de documentos", "timeline": "Cronología", "evidence": "Pruebas clave", "contradictions": "Posibles contradicciones", "missing": "Pruebas faltantes", "risks": "Señales de riesgo", "steps": "Próximos pasos recomendados", "download": "Abrir", "table_file": "Archivo", "table_type": "Tipo", "table_date": "Fecha", "table_readability": "Legibilidad",
     },
 }
 
@@ -519,24 +705,17 @@ def health() -> dict[str, Any]:
         "status": "ok",
         "version": APP_VERSION,
         "document_limit": MAX_DOCUMENTS_PER_CASE,
+        "document_processing_workers": MAX_CONCURRENT_DOCUMENT_PROCESSORS,
+        "standard_request_limit_mb": STANDARD_REQUEST_BODY_BYTES // (1024 * 1024),
+        "document_upload_request_limit_mb": DOCUMENT_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
         "free_access_mode": settings.free_access_mode,
         "support_enabled": support_is_available(),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
         "document_analysis_enabled": document_analysis_is_enabled(),
-        "secure_configuration": bool(
-            settings.admin_token != DEFAULT_ADMIN_TOKEN
-            and settings.app_secret != DEFAULT_APP_SECRET
-        ),
-        "email_delivery_configured": bool(
-            (settings.email_bridge_url and settings.email_bridge_secret)
-            or (
-                settings.smtp_host
-                and settings.smtp_username
-                and settings.smtp_password
-                and settings.admin_email
-            )
-        ),
+        "secure_configuration": admin_configuration_is_secure(),
+        "public_url_https": settings.public_base_url.startswith("https://"),
+        "email_delivery_configured": email_delivery_is_configured(),
     }
 
 
@@ -586,28 +765,16 @@ def support_qr(wallet_id: str) -> Response:
 
 
 def _fresh_document_analysis(case_id: int) -> dict[str, Any] | None:
-    """Convert abandoned running jobs into a visible failed state."""
+    """Convert only genuinely stale running jobs into a visible failed state."""
     analysis = get_document_analysis(case_id)
     if not analysis or analysis.get("status") != "running":
         return analysis
-    try:
-        updated_at = datetime.fromisoformat(str(analysis.get("updated_at") or ""))
-        if updated_at.tzinfo is None:
-            updated_at = updated_at.replace(tzinfo=timezone.utc)
-    except (TypeError, ValueError):
-        updated_at = datetime.now(timezone.utc) - timedelta(days=1)
-    stale_after = max(300, int(settings.document_analysis_timeout_seconds * 3 + 60))
-    if datetime.now(timezone.utc) - updated_at > timedelta(seconds=stale_after):
-        set_document_analysis_status(
-            case_id, "failed", analysis.get("model") or settings.openai_document_model or "",
-            "Document analysis did not finish before the worker stopped or timed out",
-            actor="document_ai",
-        )
+    if fail_stale_document_analysis(case_id, _document_analysis_stale_seconds()):
         return get_document_analysis(case_id)
     return analysis
 
 
-async def _run_document_analysis_task(case_id: int, actor: str) -> None:
+async def _run_document_analysis_task(case_id: int, actor: str, run_token: str) -> None:
     """Run provider work after the HTTP response and persist a terminal status."""
     case = get_case(case_id)
     if not case:
@@ -617,21 +784,25 @@ async def _run_document_analysis_task(case_id: int, actor: str) -> None:
         set_document_analysis_status(
             case_id, "failed", settings.openai_document_model or "",
             "No documents were available when analysis started", actor="document_ai", document_count=0,
+            expected_run_token=run_token,
         )
         return
     try:
         result = await analyse_case_documents(case, documents)
-        save_document_analysis(case_id, result, settings.openai_document_model or "")
+        saved = save_document_analysis(case_id, result, settings.openai_document_model or "", run_token)
+        if saved is None:
+            logger.warning("Discarded document-analysis result after its claim expired for case_id=%s", case_id)
     except (DocumentAnalysisConfigurationError, DocumentAnalysisProviderError) as exc:
         set_document_analysis_status(
             case_id, "failed", settings.openai_document_model or "", str(exc),
-            actor="document_ai", document_count=len(documents),
+            actor="document_ai", document_count=len(documents), expected_run_token=run_token,
         )
     except Exception:
+        logger.exception("Unexpected document-analysis failure for case_id=%s", case_id)
         # Keep unexpected provider/runtime details out of the public page and audit log.
         set_document_analysis_status(
             case_id, "failed", settings.openai_document_model or "",
-            "Unexpected document-analysis failure", actor="document_ai", document_count=len(documents),
+            "Unexpected document-analysis failure", actor="document_ai", document_count=len(documents), expected_run_token=run_token,
         )
 
 
@@ -648,15 +819,36 @@ async def submit_application(
     ai_result = None
     if payload.ai_consent:
         try:
-            ai_result = await ai_triage(payload)
+            # The application must remain responsive even if the AI provider is slow.
+            # Rules-only triage is always available as the safe fallback.
+            ai_result = await asyncio.wait_for(
+                ai_triage(payload),
+                timeout=settings.application_triage_timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("AI triage exceeded the application response budget; using rules-only triage")
+            ai_result = None
         except Exception:
+            logger.exception("AI triage failed; falling back to rules-only triage")
             ai_result = None
     triage = merge_triage(rule_result, ai_result)
 
     reference = make_reference()
     public_token = secrets.token_urlsafe(24)
-    case = create_case(payload.model_dump(), triage.model_dump(), reference, public_token)
-    queue_case_notifications(case)
+    notification_case = {
+        **payload.model_dump(),
+        **triage.model_dump(),
+        "case_reference": reference,
+        "public_token": public_token,
+        "status": triage.decision,
+    }
+    case = create_case(
+        payload.model_dump(),
+        triage.model_dump(),
+        reference,
+        public_token,
+        notifications=build_case_notifications(notification_case),
+    )
     background_tasks.add_task(deliver_pending)
     status_url = f"/case/{reference}/{public_token}"
     return JSONResponse(
@@ -703,6 +895,7 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "support_available": support_is_available(),
             "documents": documents,
             "document_analysis": document_analysis,
+            "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "document_copy": DOCUMENT_COPY.get(language, DOCUMENT_COPY["English"]),
             "max_documents": MAX_DOCUMENTS_PER_CASE,
@@ -737,26 +930,40 @@ async def public_upload_documents(
     if len(existing) + len(files) > MAX_DOCUMENTS_PER_CASE:
         raise HTTPException(status_code=400, detail=f"A case can contain no more than {MAX_DOCUMENTS_PER_CASE} documents")
 
+    existing_total = sum(int(document["size_bytes"]) for document in existing)
     prepared = []
+    prepared_total = 0
     try:
         for upload in files:
-            prepared.append(await prepare_upload(upload))
+            document = await prepare_upload(upload)
+            prepared_total += document.size_bytes
+            if existing_total + prepared_total > MAX_TOTAL_BYTES:
+                raise DocumentValidationError("The total document size for one case cannot exceed 45 MB")
+            prepared.append(document)
     except DocumentValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    existing_total = sum(int(document["size_bytes"]) for document in existing)
-    new_total = sum(document.size_bytes for document in prepared)
-    if existing_total + new_total > MAX_TOTAL_BYTES:
-        raise HTTPException(status_code=400, detail="The total document size for one case cannot exceed 45 MB")
-
-    for document in prepared:
-        add_case_document(case["id"], {
-            "original_name": document.original_name,
-            "content_type": document.content_type,
-            "size_bytes": document.size_bytes,
-            "sha256": document.sha256,
-            "content": document.content,
-        })
+    try:
+        add_case_documents(
+            case["id"],
+            [
+                {
+                    "original_name": document.original_name,
+                    "content_type": document.content_type,
+                    "size_bytes": document.size_bytes,
+                    "sha256": document.sha256,
+                    "content": document.content,
+                }
+                for document in prepared
+            ],
+            max_documents=MAX_DOCUMENTS_PER_CASE,
+            max_total_bytes=MAX_TOTAL_BYTES,
+            actor="client",
+        )
+    except DocumentAnalysisInProgressError as exc:
+        raise HTTPException(status_code=409, detail="Wait for the current document analysis to finish before changing files") from exc
+    except DocumentLimitError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return RedirectResponse(f"/case/{reference}/{token}?documents_uploaded=1", status_code=303)
 
 
@@ -789,7 +996,11 @@ def public_delete_document(reference: str, token: str, document_id: int, request
         raise HTTPException(status_code=409, detail="This case is no longer accepting changes")
     if not document_upload_limiter.allow(f"document-delete:{client_key(request)}"):
         raise HTTPException(status_code=429, detail="Too many document changes. Please try later.")
-    if not delete_case_document(case["id"], document_id):
+    try:
+        deleted = delete_case_document(case["id"], document_id)
+    except DocumentAnalysisInProgressError as exc:
+        raise HTTPException(status_code=409, detail="Wait for the current document analysis to finish before changing files") from exc
+    if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
     return RedirectResponse(f"/case/{reference}/{token}", status_code=303)
 
@@ -823,14 +1034,17 @@ async def public_analyse_documents(
     documents = list_case_documents(case["id"], include_content=False)
     if not documents:
         raise HTTPException(status_code=400, detail="Upload at least one document first")
-    current = _fresh_document_analysis(case["id"])
-    if current and current.get("status") in {"running", "completed"}:
-        return RedirectResponse(f"/case/{reference}/{token}#document-analysis", status_code=303)
-    set_document_analysis_status(
-        case["id"], "running", settings.openai_document_model or "",
-        actor="client", document_count=len(documents),
+    _fresh_document_analysis(case["id"])
+    run_token = claim_document_analysis(
+        case["id"],
+        settings.openai_document_model or "",
+        actor="client",
+        document_count=len(documents),
+        allow_completed=False,
     )
-    background_tasks.add_task(_run_document_analysis_task, case["id"], "client")
+    if not run_token:
+        return RedirectResponse(f"/case/{reference}/{token}#document-analysis", status_code=303)
+    background_tasks.add_task(_run_document_analysis_task, case["id"], "client", run_token)
     return RedirectResponse(
         f"/case/{reference}/{token}?analysis_started=1#document-analysis",
         status_code=303,
@@ -846,13 +1060,12 @@ def public_case_feedback(
     feedback_text: str = Form(...),
     display_name: str = Form(""),
     testimonial_consent: bool = Form(False),
-    company_website: str = Form(""),
 ) -> RedirectResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    if company_website:
-        return RedirectResponse(f"/case/{reference}/{token}?feedback_saved=1", status_code=303)
+    if case["status"] != "closed":
+        raise HTTPException(status_code=409, detail="Feedback is available only after the case is closed")
     if not limiter.allow(f"feedback:{client_key(request)}"):
         raise HTTPException(status_code=429, detail="Too many feedback submissions. Please try later.")
     payload = FeedbackCreate(
@@ -860,7 +1073,6 @@ def public_case_feedback(
         feedback_text=feedback_text,
         display_name=display_name,
         testimonial_consent=testimonial_consent,
-        company_website=company_website,
     )
     save_feedback(case["id"], payload.model_dump())
     return RedirectResponse(f"/case/{reference}/{token}?feedback_saved=1", status_code=303)
@@ -868,10 +1080,10 @@ def public_case_feedback(
 
 @app.get("/admin/login", response_class=HTMLResponse)
 def admin_login_page(request: Request) -> HTMLResponse:
-    if settings.admin_token == DEFAULT_ADMIN_TOKEN:
+    if not admin_configuration_is_secure():
         return templates.TemplateResponse(
             request=request, name="admin_login.html",
-            context={"error": "ADMIN_TOKEN не настроен. Добавьте безопасный токен в Render Environment."},
+            context={"error": "ADMIN_TOKEN или APP_SECRET не настроены безопасно. Добавьте два разных случайных значения длиной не менее 32 символов в Render Environment."},
             status_code=503,
         )
     return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": None})
@@ -879,10 +1091,10 @@ def admin_login_page(request: Request) -> HTMLResponse:
 
 @app.post("/admin/login", response_class=HTMLResponse)
 def admin_login(request: Request, token: str = Form(...)) -> HTMLResponse:
-    if settings.admin_token == DEFAULT_ADMIN_TOKEN:
+    if not admin_configuration_is_secure():
         return templates.TemplateResponse(
             request=request, name="admin_login.html",
-            context={"error": "ADMIN_TOKEN не настроен. Вход администратора отключён."},
+            context={"error": "ADMIN_TOKEN или APP_SECRET не настроены безопасно. Вход администратора отключён."},
             status_code=503,
         )
     key = f"admin-login:{client_key(request)}"
@@ -897,11 +1109,13 @@ def admin_login(request: Request, token: str = Form(...)) -> HTMLResponse:
         return templates.TemplateResponse(request=request, name="admin_login.html", context={"error": "Неверный токен администратора"}, status_code=401)
     request.session.clear()
     request.session["admin"] = True
+    request.session["csrf_token"] = secrets.token_urlsafe(32)
     return RedirectResponse("/admin", status_code=303)
 
 
 @app.post("/admin/logout")
-def admin_logout(request: Request) -> RedirectResponse:
+def admin_logout(request: Request, csrf_token: str = Form(...)) -> RedirectResponse:
+    require_admin_csrf(request, csrf_token)
     request.session.clear()
     return RedirectResponse("/admin/login", status_code=303)
 
@@ -922,6 +1136,7 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
             "status_labels": STATUS_LABELS,
             "risk_labels": RISK_LABELS,
             "problem_labels": PROBLEM_LABELS,
+            "csrf_token": admin_csrf_token(request),
         },
     )
 
@@ -944,6 +1159,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "feedback": get_feedback(case_id),
             "documents": list_case_documents(case_id),
             "document_analysis": document_analysis,
+            "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "status_labels": STATUS_LABELS,
             "risk_labels": RISK_LABELS,
@@ -953,6 +1169,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "problem_labels": PROBLEM_LABELS,
             "result_labels": RESULT_LABELS,
             "channel_labels": CHANNEL_LABELS,
+            "csrf_token": admin_csrf_token(request),
         },
     )
 
@@ -976,9 +1193,15 @@ def admin_download_document(case_id: int, document_id: int, request: Request) ->
 
 
 @app.post("/admin/case/{case_id}/documents/{document_id}/delete")
-def admin_delete_document(case_id: int, document_id: int, request: Request) -> RedirectResponse:
-    require_admin(request)
-    if not delete_case_document(case_id, document_id, actor="admin"):
+def admin_delete_document(
+    case_id: int, document_id: int, request: Request, csrf_token: str = Form(...)
+) -> RedirectResponse:
+    require_admin_csrf(request, csrf_token)
+    try:
+        deleted = delete_case_document(case_id, document_id, actor="admin")
+    except DocumentAnalysisInProgressError as exc:
+        raise HTTPException(status_code=409, detail="Wait for the current document analysis to finish before changing files") from exc
+    if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
 
@@ -988,8 +1211,9 @@ async def admin_analyse_documents(
     case_id: int,
     request: Request,
     background_tasks: BackgroundTasks,
+    csrf_token: str = Form(...),
 ) -> RedirectResponse:
-    require_admin(request)
+    require_admin_csrf(request, csrf_token)
     case = get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -1000,14 +1224,17 @@ async def admin_analyse_documents(
     documents = list_case_documents(case_id, include_content=False)
     if not documents:
         raise HTTPException(status_code=400, detail="No documents were uploaded")
-    current = _fresh_document_analysis(case_id)
-    if current and current.get("status") == "running":
-        return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
-    set_document_analysis_status(
-        case_id, "running", settings.openai_document_model or "",
-        actor="admin", document_count=len(documents),
+    _fresh_document_analysis(case_id)
+    run_token = claim_document_analysis(
+        case_id,
+        settings.openai_document_model or "",
+        actor="admin",
+        document_count=len(documents),
+        allow_completed=True,
     )
-    background_tasks.add_task(_run_document_analysis_task, case_id, "admin")
+    if not run_token:
+        return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
+    background_tasks.add_task(_run_document_analysis_task, case_id, "admin", run_token)
     return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
 
 
@@ -1018,22 +1245,34 @@ def admin_update_status(
     background_tasks: BackgroundTasks,
     status: str = Form(...),
     note: str = Form(""),
+    csrf_token: str = Form(...),
 ) -> RedirectResponse:
-    require_admin(request)
+    require_admin_csrf(request, csrf_token)
     try:
         old_case = get_case(case_id)
-        updated = update_status(case_id, status, note)
+        close_notifications = (
+            build_completion_notifications(old_case)
+            if old_case and status == "closed"
+            else []
+        )
+        updated = update_status(
+            case_id,
+            status,
+            note,
+            close_notifications=close_notifications,
+        )
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if old_case and old_case["status"] != "closed" and updated["status"] == "closed":
-        queue_completion_notification(updated)
         background_tasks.add_task(deliver_pending)
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
 
 
 @app.post("/admin/case/{case_id}/retriage")
-async def admin_retriage(case_id: int, request: Request) -> RedirectResponse:
-    require_admin(request)
+async def admin_retriage(
+    case_id: int, request: Request, csrf_token: str = Form(...)
+) -> RedirectResponse:
+    require_admin_csrf(request, csrf_token)
     case = get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -1060,8 +1299,20 @@ async def admin_retriage(case_id: int, request: Request) -> RedirectResponse:
     ai = None
     if payload.ai_consent:
         try:
-            ai = await ai_triage(payload)
+            ai = await asyncio.wait_for(
+                ai_triage(payload),
+                timeout=settings.application_triage_timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("AI retriage exceeded the administrator response budget; using rules-only triage")
+            ai = None
         except Exception:
+            logger.exception("AI retriage failed; using rules-only triage")
             ai = None
     replace_triage(case_id, merge_triage(rules, ai).model_dump())
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
+# Keep the body-size guard outside FastAPI/Starlette exception handling so
+# streamed overflows reliably return HTTP 413 instead of being translated into
+# a generic body-parsing error. All route decorators above are already bound.
+fastapi_app = app
+app = RequestBodyLimitMiddleware(fastapi_app)

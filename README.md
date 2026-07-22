@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.6.0
+# ChinaTradeResolve Document AI v3.6.1
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -38,7 +38,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 
 
 
-## Upload responsiveness and bounded image processing in v3.6.0
+## Upload responsiveness and bounded image processing in v3.6.1
 
 - image/PDF validation and image re-encoding run outside the main ASGI event loop, so large screenshots do not pause unrelated requests;
 - document processing is globally limited to two concurrent CPU-heavy jobs per web process, preventing several 30-megapixel images from exhausting a small Render instance;
@@ -218,7 +218,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.6.0
+cd ChinaTradeResolve_Document_AI_v3.6.1
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

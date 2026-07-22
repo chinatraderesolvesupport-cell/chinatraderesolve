@@ -1003,9 +1003,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.6.0"
+    assert health.json()["version"] == "3.6.1"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.6.0"
+    assert health.headers["x-app-version"] == "3.6.1"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2737,6 +2737,54 @@ def test_document_report_postprocessing_sorts_dates_and_explains_score():
     assert result["readiness_factors"][0]["weight"] == 10
     assert result["readiness_factors"][0]["earned_points"] == 10
 
+
+
+def test_document_report_deduplication_preserves_opposite_statements():
+    import app.document_analysis as module
+
+    values = [
+        "Оплата подтверждена документами.",
+        "Оплата не подтверждена документами.",
+        "Поставщик подтвердил натуральную кожу.",
+        "Поставщик не подтвердил натуральную кожу.",
+    ]
+    assert module._dedupe_text_items(values, 8) == values
+
+
+def test_document_report_date_range_uses_earliest_visible_day_and_not_wrong_model_hint():
+    import app.document_analysis as module
+
+    assert module._derive_sort_date("16–17 апреля 2025") == "2025-04-16"
+    parsed = {
+        "readiness_score": 50,
+        "readiness_factors": [],
+        "summary": "Резюме.",
+        "document_inventory": [],
+        "timeline": [
+            {
+                "date": "16–17 апреля 2025",
+                "sort_date": "2025-04-17",
+                "event": "Диапазон дат",
+                "source_files": ["a.png"],
+                "confidence": "high",
+            },
+            {
+                "date": "17 апреля 2025",
+                "sort_date": "2025-04-16",
+                "event": "Следующее событие",
+                "source_files": ["a.png"],
+                "confidence": "high",
+            },
+        ],
+        "key_evidence": [],
+        "contradictions": [],
+        "missing_evidence": [],
+        "risk_flags": [],
+        "recommended_next_steps": [],
+        "human_review_note": "Проверка человеком.",
+    }
+    result = module._postprocess_report(parsed, "Russian")
+    assert [item["event"] for item in result["timeline"]] == ["Диапазон дат", "Следующее событие"]
 
 def test_document_report_prompt_requires_cautious_language_and_iso_sort_date():
     import app.document_analysis as module

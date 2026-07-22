@@ -259,6 +259,18 @@ def _derive_sort_date(display_date: str) -> str | None:
             return date(int(match.group(3)), int(match.group(2)), int(match.group(1))).isoformat()
         except ValueError:
             pass
+    # Date ranges use their earliest visible day for chronological sorting.
+    match = re.search(
+        r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s*[–—-]\s*(?:0?[1-9]|[12]\d|3[01])\s+([a-zа-яё.]+)\s+(20\d{2})(?!\d)",
+        text,
+    )
+    if match:
+        month = _MONTHS.get(match.group(2).rstrip("."))
+        if month:
+            try:
+                return date(int(match.group(3)), month, int(match.group(1))).isoformat()
+            except ValueError:
+                pass
     match = re.search(r"(?<!\d)(0?[1-9]|[12]\d|3[01])\s+([a-zа-яё.]+)\s+(20\d{2})(?!\d)", text)
     if match:
         month = _MONTHS.get(match.group(2).rstrip("."))
@@ -282,13 +294,40 @@ def _normalised_similarity_text(value: str) -> str:
     return " ".join(re.findall(r"[\w]+", value.casefold(), flags=re.UNICODE))
 
 
+_NEGATION_TOKENS = {
+    # English
+    "no", "not", "never", "without", "absent", "missing",
+    # Russian
+    "не", "нет", "без", "отсутствует", "отсутствуют", "неподтверждено", "неподтверждена",
+    # Serbian
+    "nema", "bez", "nije", "nisu",
+    # French
+    "ne", "pas", "sans", "aucun", "aucune", "absent", "absente",
+    # German
+    "nicht", "kein", "keine", "keinen", "ohne", "fehlt", "fehlen",
+    # Spanish
+    "sin", "ningún", "ninguna", "falta", "ausente",
+}
+
+
+def _negation_signature(value: str) -> frozenset[str]:
+    """Return explicit negation markers so opposite statements are not merged."""
+    tokens = _normalised_similarity_text(value).split()
+    return frozenset(token for token in tokens if token in _NEGATION_TOKENS)
+
+
 def _is_near_duplicate(candidate: str, existing: list[str]) -> bool:
     norm = _normalised_similarity_text(candidate)
     if not norm:
         return True
     candidate_tokens = set(norm.split())
+    candidate_negation = _negation_signature(candidate)
     for prior in existing:
         prior_norm = _normalised_similarity_text(prior)
+        # Statements that differ by an explicit negation can be evidentially
+        # opposite even when almost every other token is identical.
+        if candidate_negation != _negation_signature(prior):
+            continue
         if norm == prior_norm:
             return True
         if SequenceMatcher(None, norm, prior_norm).ratio() >= 0.91:
@@ -395,7 +434,9 @@ def _postprocess_report(parsed: dict[str, Any], language: str) -> dict[str, Any]
         if not isinstance(event, dict):
             continue
         display_date = _normalise_date_placeholder(event.get("date"), language)
-        sort_date = _valid_iso_date(event.get("sort_date")) or _derive_sort_date(display_date)
+        # Prefer the visible date when it can be parsed. The model-provided
+        # ISO helper remains a fallback for formats the application cannot parse.
+        sort_date = _derive_sort_date(display_date) or _valid_iso_date(event.get("sort_date"))
         event["date"] = display_date
         event["event"] = _soften_unverified_claims(str(event.get("event") or "").strip(), language)
         event.pop("sort_date", None)

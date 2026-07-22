@@ -62,7 +62,7 @@ h3{line-height:1.25}
 .hero-card{box-shadow:0 30px 80px rgba(0,0,0,.38)}
 .row{padding:14px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
 .label{font-size:12px;color:var(--muted2)}.value{font-weight:800}.status{color:#6ee7b7}
-section{padding:64px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
+section{padding:54px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
 .grid{display:grid;gap:20px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
 .light .card{background:#fff;border-color:#e2e8f0;color:var(--ink);box-shadow:0 8px 26px rgba(15,23,42,.05)}.light .intro{color:#475569}
 .card h3{margin:0 0 9px}.card p{color:#cbd5e1}.light .card p{color:#475569}
@@ -99,6 +99,7 @@ input,select,textarea{width:100%;min-width:0;padding:13px;border:1px solid #cbd5
 textarea{min-height:130px;resize:vertical}.hint{font-size:12px;color:#64748b}.error{color:#b91c1c;font-size:13px;display:none}.submit-status{display:none;margin-top:12px;padding:12px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
 .form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:8px}.btn.dark{color:#0f172a;border-color:#94a3b8}
 .filebox{border:1px dashed #94a3b8;border-radius:12px;padding:16px;background:#f8fafc}
+.submit-summary{grid-column:1/-1;border:1px solid #99f6e4;border-radius:14px;padding:16px;background:#f0fdfa;color:#134e4a}.submit-summary h3{margin:0 0 8px;font-size:17px}.submit-summary p{margin:6px 0;font-size:14px}.submit-summary p:last-child{font-weight:800}
 .honeypot{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 details{background:#fff;color:#111827;border-radius:12px;padding:16px 20px;margin:12px 0;border:1px solid #e2e8f0}
 summary{font-weight:900;cursor:pointer}
@@ -267,7 +268,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <section class="light" id="services">
 <span class="anchor-alias" id="free-access" aria-hidden="true"></span>
 <div class="wrap">
-<div class="eyebrow" data-i18n="services_eyebrow">Что входит в бесплатный анализ</div>
+<div class="eyebrow" data-i18n="services_eyebrow">Что входит в предварительную оценку материалов</div>
 <h2 data-i18n="services_title">Один понятный результат без завышенных обещаний</h2>
 <p class="intro" data-i18n="services_note">Если заявка подходит по профилю и объёму, вы получите ограниченный первичный анализ. Полное ведение спора и общение от вашего имени в бесплатный объём не входят.</p>
 <div class="service-layout">
@@ -281,7 +282,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </div>
 <aside class="scope-card">
-<h3 data-i18n="pilot_limits_title">Границы бесплатного анализа</h3>
+<h3 data-i18n="pilot_limits_title">Границы предварительной оценки</h3>
 <ul class="pilot-list">
 <li data-i18n="pilot_limit2">Мы не общаемся с поставщиком или площадкой от вашего имени.</li>
 <li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками.</li>
@@ -339,17 +340,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
 </div>
 </div>
-<div class="grid g3 trust-principles">
-<div class="card"><h3 data-i18n="about1">Человеческая проверка</h3><p data-i18n="about1_text">ИИ не принимает окончательное решение по делу и не отправляет документы самостоятельно.</p></div>
-<div class="card"><h3 data-i18n="about2">Ваш контроль</h3><p data-i18n="about2_text">Вы решаете, какие материалы передать и какие действия предпринимать после оценки.</p></div>
-<div class="card"><h3 data-i18n="about3">Понятные границы</h3><p data-i18n="about3_text">Мы прямо сообщаем, когда дело требует адвоката, срочного обращения или выходит за рамки сервиса.</p></div>
-</div>
 </div>
 </section>
 <section id="submit">
 <div class="wrap">
 <div class="eyebrow" data-i18n="form_eyebrow">Бесплатная заявка</div>
-<h2 data-i18n="form_title">Отправьте дело на бесплатный анализ</h2>
+<h2 data-i18n="form_title">Отправьте материалы на предварительную оценку</h2>
 <p class="intro" data-i18n="form_intro">Начните с краткого описания. После отправки на закрытой странице дела можно безопасно добавить до 20 ключевых документов.</p>
 <div class="form-speed" data-i18n="form_speed">Около 2 минут · Без платы за услуги · Без больших загрузок</div>
 {% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">Автоматическая систематизация документов доступна после загрузки и отдельного согласия.</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">Сейчас документы проверяются вручную; автоматический анализ не подключён.</div>{% endif %}
@@ -375,6 +371,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
 <div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea aria-describedby="descriptionHelp descriptionCount" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div></div>
 <div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
+<aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">Перед отправкой</h3><p data-i18n="submit_summary_data">Мы сохраним контактные данные, сведения о покупке и споре, описание ситуации и выбранные согласия. Документы на этом шаге не передаются; при выборе ИИ-помощи текст заявки может обрабатываться настроенным ИИ-провайдером.</p><p data-i18n="submit_summary_response">Ориентир первого ответа человека — в течение 2 рабочих дней.</p></aside>
 <div class="consent-group">
 <div class="consent-row"><label><input name="free_access_terms" required="" style="width:auto" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
 <div class="consent-row"><label><input name="sharing_authority" required="" style="width:auto" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
@@ -433,18 +430,6 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <details><summary data-i18n="faq3">Вы юридическая фирма?</summary><p data-i18n="faq3_text">Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.</p></details>
 <details><summary data-i18n="faq4">Как используется ИИ?</summary><p data-i18n="faq4_text">ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.</p></details>
 <details><summary data-i18n="faq5">Кто видит мои материалы?</summary><p data-i18n="faq5_text">На этапе заявки документы не загружаются. Если дело принято, запрашиваются только ключевые файлы; доступ к ним используется для согласованного анализа и не даёт права отправлять их третьим лицам.</p></details>
-</div>
-</section>
-<section class="final-cta">
-<div class="wrap">
-<div class="final-cta-box">
-<div>
-<div class="eyebrow" data-i18n="final_eyebrow">Начните с доказательств</div>
-<h2 data-i18n="final_title">Ваши доказательства могут быть сильнее, чем текущая претензия.</h2>
-<p data-i18n="final_text">Отправьте основные факты и получите понятную рекомендацию по следующему шагу.</p>
-</div>
-<a class="btn primary" data-i18n="final_button" href="#submit">Отправить бесплатную заявку</a>
-</div>
 </div>
 </section>
 </main>

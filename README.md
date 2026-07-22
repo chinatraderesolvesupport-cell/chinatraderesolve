@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.7.0
+# ChinaTradeResolve Document AI v3.7.1
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -286,7 +286,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.0
+cd ChinaTradeResolve_Document_AI_v3.7.1
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

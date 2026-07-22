@@ -1063,9 +1063,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.0"
+    assert health.json()["version"] == "3.7.1"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.0"
+    assert health.headers["x-app-version"] == "3.7.1"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -3394,6 +3394,26 @@ def test_home_exposes_truthful_features_accessibility_and_private_link_ui():
         'aria-modal="true"',
     ):
         assert expected in response.text
+
+
+def test_targeted_landing_copy_is_shorter_precise_and_transparent():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Что входит в предварительную оценку материалов" in response.text
+    assert "Отправьте материалы на предварительную оценку" in response.text
+    assert "Что входит в бесплатный анализ" not in response.text
+    assert "Отправьте дело на бесплатный анализ" not in response.text
+    assert 'class="final-cta"' not in response.text
+    assert 'class="grid g3 trust-principles"' not in response.text
+    assert 'id="submitSummaryTitle"' in response.text
+    assert "Документы на этом шаге не передаются" in response.text
+    assert "в течение 2 рабочих дней" in response.text
+
+    sample = client.get("/static/sample_case_assessment.html")
+    assert sample.status_code == 200
+    assert 'class="report-head"' in sample.text
+    assert 'class="summary-grid"' in sample.text
+    assert 'class="table-wrap"' in sample.text
 
 
 def test_case_status_explains_progress_attention_and_private_access():

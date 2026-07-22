@@ -1003,9 +1003,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.5.9"
+    assert health.json()["version"] == "3.6.0"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.5.9"
+    assert health.headers["x-app-version"] == "3.6.0"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2695,3 +2695,61 @@ def test_document_analysis_reports_content_filter_and_refusal(monkeypatch):
         asyncio.run(module.analyse_case_documents(case, docs))
     with pytest.raises(module.DocumentAnalysisProviderError, match="declined"):
         asyncio.run(module.analyse_case_documents(case, docs))
+
+
+
+def test_document_report_postprocessing_sorts_dates_and_explains_score():
+    import app.document_analysis as module
+
+    parsed = {
+        "readiness_score": 99,
+        "readiness_factors": [
+            {"factor": "parties", "status": "complete", "explanation": "Стороны видны."},
+            {"factor": "transaction", "status": "partial", "explanation": "Заказ указан частично."},
+            {"factor": "specification", "status": "complete", "explanation": "Спецификация подтверждена."},
+            {"factor": "payment", "status": "missing", "explanation": "Оплата не подтверждена комплектом."},
+            {"factor": "communications", "status": "complete", "explanation": "Переписка читается."},
+            {"factor": "delivery", "status": "missing", "explanation": "Доставка не подтверждена комплектом."},
+            {"factor": "problem_evidence", "status": "partial", "explanation": "Есть часть фотографий."},
+        ],
+        "summary": "Краткое резюме.",
+        "document_inventory": [
+            {"filename": "a.png", "document_type": "Переписка", "language": "Russian", "date_or_period": "Date not visible", "key_content": "Текст", "readability": "clear"},
+        ],
+        "timeline": [
+            {"date": "22 марта 2025", "sort_date": "2025-03-22", "event": "Позднее событие", "source_files": ["a.png"], "confidence": "high"},
+            {"date": "19 марта 2025", "sort_date": "2025-03-19", "event": "Раннее событие", "source_files": ["a.png"], "confidence": "high"},
+            {"date": "Дата not visible", "sort_date": "", "event": "Без даты", "source_files": ["a.png"], "confidence": "medium"},
+        ],
+        "key_evidence": ["Факт A", "Факт A"],
+        "contradictions": ["Противоречие B"],
+        "missing_evidence": ["Документ C"],
+        "risk_flags": ["Противоречие B", "Риск мошенничества из-за неподходящего сертификата"],
+        "recommended_next_steps": ["Загрузить документ C"],
+        "human_review_note": "Важные выводы должен проверить человек.",
+    }
+    result = module._postprocess_report(parsed, "Russian")
+    assert result["readiness_score"] == 55
+    assert [item["date"] for item in result["timeline"]] == ["19 марта 2025", "22 марта 2025", "Дата не видна"]
+    assert result["document_inventory"][0]["date_or_period"] == "Дата не видна"
+    assert len(result["key_evidence"]) == 1
+    assert result["risk_flags"] == ["Риск возможного введения в заблуждение или использования несоответствующего документа из-за неподходящего сертификата"]
+    assert result["readiness_factors"][0]["weight"] == 10
+    assert result["readiness_factors"][0]["earned_points"] == 10
+
+
+def test_document_report_prompt_requires_cautious_language_and_iso_sort_date():
+    import app.document_analysis as module
+    prompt = module._developer_prompt("Russian")
+    assert "sort_date" in prompt
+    assert "not evidenced in the uploaded materials" in prompt
+    assert "Never label conduct as fraud" in prompt
+    assert "Classify all seven readiness_factors exactly once" in prompt
+
+
+def test_russian_status_page_localises_fixed_analysis_enums():
+    from app.main import DOCUMENT_COPY
+    copy = DOCUMENT_COPY["Russian"]
+    assert copy["readability_labels"]["clear"] == "Хорошо читается"
+    assert copy["confidence_labels"]["high"] == "Высокая уверенность"
+    assert copy["readiness_factor_labels"]["payment"] == "Подтверждение оплаты"

@@ -87,7 +87,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.5.9"
+APP_VERSION = "3.6.0"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -611,6 +611,13 @@ DOCUMENT_COPY = {
         "steps": "Recommended next steps",
         "download": "Open",
         "table_file": "File", "table_type": "Type", "table_date": "Date", "table_readability": "Readability",
+        "readiness_breakdown": "How this score is calculated",
+        "readiness_explanation": "The percentage measures completeness of the uploaded evidence set, not legal strength or probability of success.",
+        "points": "points",
+        "readability_labels": {"clear": "Clear", "partial": "Partly readable", "unreadable": "Unreadable"},
+        "confidence_labels": {"high": "High confidence", "medium": "Medium confidence", "low": "Low confidence"},
+        "readiness_status_labels": {"complete": "Complete", "partial": "Partial", "missing": "Missing", "not_applicable": "Not applicable"},
+        "readiness_factor_labels": {"parties": "Parties and supplier", "transaction": "Order and transaction", "specification": "Agreed specification", "payment": "Payment evidence", "communications": "Written communications", "delivery": "Shipment or delivery", "problem_evidence": "Evidence of the reported problem"},
     },
     "Russian": {
         "heading": "Добавьте ключевые документы",
@@ -641,6 +648,13 @@ DOCUMENT_COPY = {
         "steps": "Рекомендуемые следующие шаги",
         "download": "Открыть",
         "table_file": "Файл", "table_type": "Тип", "table_date": "Дата", "table_readability": "Читаемость",
+        "readiness_breakdown": "Из чего складывается оценка",
+        "readiness_explanation": "Процент показывает полноту загруженного комплекта доказательств, а не юридическую силу дела и не вероятность успеха.",
+        "points": "баллов",
+        "readability_labels": {"clear": "Хорошо читается", "partial": "Читается частично", "unreadable": "Не читается"},
+        "confidence_labels": {"high": "Высокая уверенность", "medium": "Средняя уверенность", "low": "Низкая уверенность"},
+        "readiness_status_labels": {"complete": "Есть", "partial": "Частично", "missing": "Отсутствует", "not_applicable": "Не применимо"},
+        "readiness_factor_labels": {"parties": "Стороны и поставщик", "transaction": "Заказ и сделка", "specification": "Согласованная спецификация", "payment": "Подтверждение оплаты", "communications": "Письменная переписка", "delivery": "Отгрузка или доставка", "problem_evidence": "Доказательства заявленной проблемы"},
     },
     "Serbian": {
         "heading": "Dodajte ključne dokumente", "intro": "Otpremite do dvadeset ključnih PDF ili slikovnih fajlova: specifikaciju, račun ili dokaz o uplati, poruke dobavljača, dokaz o isporuci ili odluku platforme.",
@@ -651,6 +665,10 @@ DOCUMENT_COPY = {
         "analysis_not_configured": "Automatska analiza dokumenata trenutno nije dostupna. Fajlovi ostaju dostupni za ljudski pregled.", "analysis_consent_required": "Za analizu ovih fajlova potvrdite dobrovoljnu saglasnost za AI obradu ispod.", "analysis_consent": "Dobrovoljno dozvoljavam AI obradu otpremljenih fajlova uz obaveznu ljudsku proveru važnih zaključaka.", "analysis_error": "Automatska analiza nije završena. Fajlovi ostaju dostupni za ljudski pregled.",
         "analysis_title": "Preliminarna analiza dokumenata", "analysis_notice": "Ovo je organizovanje dokaza, a ne pravni savet, potvrda autentičnosti ili prognoza uspeha. Važne zaključke mora proveriti čovek.",
         "readiness": "Spremnost dokaza", "inventory": "Pregled dokumenata", "timeline": "Hronologija", "evidence": "Ključni dokazi", "contradictions": "Moguće protivrečnosti", "missing": "Nedostajući dokazi", "risks": "Faktori rizika", "steps": "Preporučeni sledeći koraci", "download": "Otvori", "table_file": "Fajl", "table_type": "Vrsta", "table_date": "Datum", "table_readability": "Čitljivost",
+        "readiness_breakdown": "Kako je ocena izračunata", "readiness_explanation": "Procenat meri potpunost otpremljenih dokaza, a ne pravnu snagu ili verovatnoću uspeha.", "points": "poena",
+        "readability_labels": {"clear": "Jasno", "partial": "Delimično čitljivo", "unreadable": "Nečitljivo"}, "confidence_labels": {"high": "Visoka pouzdanost", "medium": "Srednja pouzdanost", "low": "Niska pouzdanost"},
+        "readiness_status_labels": {"complete": "Potpuno", "partial": "Delimično", "missing": "Nedostaje", "not_applicable": "Nije primenljivo"},
+        "readiness_factor_labels": {"parties": "Strane i dobavljač", "transaction": "Porudžbina i transakcija", "specification": "Dogovorena specifikacija", "payment": "Dokaz o uplati", "communications": "Pisana komunikacija", "delivery": "Otprema ili isporuka", "problem_evidence": "Dokazi prijavljenog problema"},
     },
     "French": {
         "heading": "Ajouter les documents clés", "intro": "Téléversez jusqu’à vingt fichiers PDF ou images essentiels : spécifications, facture ou preuve de paiement, messages du fournisseur, preuve de livraison ou décision de la plateforme.",
@@ -661,6 +679,10 @@ DOCUMENT_COPY = {
         "analysis_not_configured": "L’analyse automatique des documents est temporairement indisponible. Les fichiers restent accessibles pour une vérification humaine.", "analysis_consent_required": "Pour analyser ces fichiers, confirmez ci-dessous votre consentement volontaire au traitement par l’IA.", "analysis_consent": "J’autorise volontairement le traitement de ces fichiers par l’IA, avec vérification humaine obligatoire des conclusions importantes.", "analysis_error": "L’analyse automatique n’a pas pu être terminée. Les fichiers restent disponibles pour une vérification humaine.",
         "analysis_title": "Analyse préliminaire des documents", "analysis_notice": "Il s’agit d’une organisation des preuves, pas d’un conseil juridique, d’une authentification ou d’une prévision de succès. Les conclusions importantes doivent être vérifiées par une personne.",
         "readiness": "Préparation des preuves", "inventory": "Inventaire des documents", "timeline": "Chronologie", "evidence": "Éléments de preuve clés", "contradictions": "Contradictions possibles", "missing": "Preuves manquantes", "risks": "Signaux de risque", "steps": "Prochaines étapes recommandées", "download": "Ouvrir", "table_file": "Fichier", "table_type": "Type", "table_date": "Date", "table_readability": "Lisibilité",
+        "readiness_breakdown": "Calcul de cette note", "readiness_explanation": "Le pourcentage mesure la complétude des preuves téléversées, et non la solidité juridique ni la probabilité de succès.", "points": "points",
+        "readability_labels": {"clear": "Lisible", "partial": "Partiellement lisible", "unreadable": "Illisible"}, "confidence_labels": {"high": "Confiance élevée", "medium": "Confiance moyenne", "low": "Confiance faible"},
+        "readiness_status_labels": {"complete": "Complet", "partial": "Partiel", "missing": "Manquant", "not_applicable": "Non applicable"},
+        "readiness_factor_labels": {"parties": "Parties et fournisseur", "transaction": "Commande et transaction", "specification": "Spécification convenue", "payment": "Preuve de paiement", "communications": "Communications écrites", "delivery": "Expédition ou livraison", "problem_evidence": "Preuves du problème signalé"},
     },
     "German": {
         "heading": "Wichtige Dokumente hinzufügen", "intro": "Laden Sie bis zu zwanzig wichtige PDF- oder Bilddateien hoch: Spezifikation, Rechnung oder Zahlungsnachweis, Lieferantennachrichten, Liefernachweis oder Plattformentscheidung.",
@@ -671,6 +693,10 @@ DOCUMENT_COPY = {
         "analysis_not_configured": "Die automatische Dokumentenanalyse ist vorübergehend nicht verfügbar. Die Dateien bleiben für eine menschliche Prüfung verfügbar.", "analysis_consent_required": "Bestätigen Sie unten Ihre freiwillige Einwilligung zur KI-Verarbeitung, um diese Dateien zu analysieren.", "analysis_consent": "Ich willige freiwillig in die KI-Verarbeitung dieser Dateien ein; wichtige Schlussfolgerungen müssen von einem Menschen geprüft werden.", "analysis_error": "Die automatische Analyse konnte nicht abgeschlossen werden. Die Dateien bleiben für eine menschliche Prüfung verfügbar.",
         "analysis_title": "Vorläufige Dokumentenanalyse", "analysis_notice": "Dies ist eine Beweisorganisation, keine Rechtsberatung, Echtheitsprüfung oder Erfolgsprognose. Wichtige Schlussfolgerungen müssen menschlich geprüft werden.",
         "readiness": "Beweisbereitschaft", "inventory": "Dokumentenübersicht", "timeline": "Chronologie", "evidence": "Wichtige Belege", "contradictions": "Mögliche Widersprüche", "missing": "Fehlende Belege", "risks": "Risikohinweise", "steps": "Empfohlene nächste Schritte", "download": "Öffnen", "table_file": "Datei", "table_type": "Typ", "table_date": "Datum", "table_readability": "Lesbarkeit",
+        "readiness_breakdown": "Berechnung der Bewertung", "readiness_explanation": "Der Prozentsatz misst die Vollständigkeit der hochgeladenen Belege, nicht die rechtliche Stärke oder Erfolgswahrscheinlichkeit.", "points": "Punkte",
+        "readability_labels": {"clear": "Gut lesbar", "partial": "Teilweise lesbar", "unreadable": "Unlesbar"}, "confidence_labels": {"high": "Hohe Sicherheit", "medium": "Mittlere Sicherheit", "low": "Geringe Sicherheit"},
+        "readiness_status_labels": {"complete": "Vollständig", "partial": "Teilweise", "missing": "Fehlt", "not_applicable": "Nicht anwendbar"},
+        "readiness_factor_labels": {"parties": "Parteien und Lieferant", "transaction": "Bestellung und Transaktion", "specification": "Vereinbarte Spezifikation", "payment": "Zahlungsnachweis", "communications": "Schriftliche Kommunikation", "delivery": "Versand oder Lieferung", "problem_evidence": "Nachweise des gemeldeten Problems"},
     },
     "Spanish": {
         "heading": "Añadir documentos clave", "intro": "Suba hasta veinte archivos PDF o imágenes clave: especificaciones, factura o comprobante de pago, mensajes del proveedor, prueba de entrega o decisión de la plataforma.",
@@ -681,6 +707,10 @@ DOCUMENT_COPY = {
         "analysis_not_configured": "El análisis automático de documentos no está disponible temporalmente. Los archivos siguen disponibles para revisión humana.", "analysis_consent_required": "Para analizar estos archivos, confirme abajo su consentimiento voluntario para el tratamiento con IA.", "analysis_consent": "Autorizo voluntariamente el tratamiento de estos archivos con IA, con verificación humana obligatoria de las conclusiones importantes.", "analysis_error": "No se pudo completar el análisis automático. Los archivos siguen disponibles para revisión humana.",
         "analysis_title": "Análisis preliminar de documentos", "analysis_notice": "Esto organiza pruebas; no es asesoramiento jurídico, autenticación ni una predicción de éxito. Las conclusiones importantes requieren verificación humana.",
         "readiness": "Preparación de las pruebas", "inventory": "Inventario de documentos", "timeline": "Cronología", "evidence": "Pruebas clave", "contradictions": "Posibles contradicciones", "missing": "Pruebas faltantes", "risks": "Señales de riesgo", "steps": "Próximos pasos recomendados", "download": "Abrir", "table_file": "Archivo", "table_type": "Tipo", "table_date": "Fecha", "table_readability": "Legibilidad",
+        "readiness_breakdown": "Cómo se calcula la puntuación", "readiness_explanation": "El porcentaje mide la integridad del conjunto de pruebas subido, no la fuerza jurídica ni la probabilidad de éxito.", "points": "puntos",
+        "readability_labels": {"clear": "Legible", "partial": "Parcialmente legible", "unreadable": "Ilegible"}, "confidence_labels": {"high": "Confianza alta", "medium": "Confianza media", "low": "Confianza baja"},
+        "readiness_status_labels": {"complete": "Completo", "partial": "Parcial", "missing": "Falta", "not_applicable": "No aplicable"},
+        "readiness_factor_labels": {"parties": "Partes y proveedor", "transaction": "Pedido y transacción", "specification": "Especificación acordada", "payment": "Prueba de pago", "communications": "Comunicaciones escritas", "delivery": "Envío o entrega", "problem_evidence": "Pruebas del problema comunicado"},
     },
 }
 

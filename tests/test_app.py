@@ -53,7 +53,7 @@ def test_health_and_home_free_access():
     assert health.json()["support_enabled"] is True
     home = client.get("/")
     assert home.status_code == 200
-    assert "Этап бесплатного доступа" in home.text
+    assert "Заявки рассматриваются бесплатно" in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
     assert health.json()["email_delivery_configured"] is False
@@ -199,7 +199,7 @@ def valid_payload_model():
 def test_russian_localization_and_security_headers():
     home = client.get("/")
     assert home.status_code == 200
-    assert "Команда по разбору дел ChinaTradeResolve" in home.text
+    assert "Независимый сервис ChinaTradeResolve" in home.text
     assert "ChinaTradeResolve Case Review Team" not in home.text
     assert "Электронная почта" in home.text
     assert home.headers["x-content-type-options"] == "nosniff"
@@ -618,3 +618,29 @@ def test_ai_assistant_moderation_blocks_narrow_category(monkeypatch):
     reply = asyncio.run(module.assistant_reply(payload))
     assert "не могу помочь" in reply
     assert calls == ["https://api.openai.com/v1/moderations"]
+
+
+def test_v33_home_structure_and_translation_completeness():
+    import json
+    import re
+    from pathlib import Path
+
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "Разложим спор по фактам" in home.text
+    assert "Проверка до оплаты" not in home.text
+    assert home.text.count('id="services"') == 1
+    assert home.text.count('id="about"') == 1
+    assert 'id="contact"' not in home.text
+    assert "descriptionCount" in home.text
+    assert 'maxlength="8000"' in home.text
+
+    base = Path(__file__).resolve().parents[1]
+    translations = json.loads((base / "app/static/translations-v2.json").read_text(encoding="utf-8"))
+    template = (base / "app/templates/index.html").read_text(encoding="utf-8")
+    required = set(re.findall(r'data-i18n="([^"]+)"', template))
+    required |= set(re.findall(r'data-i18n-placeholder="([^"]+)"', template))
+    required |= set(re.findall(r'data-i18n-aria-label="([^"]+)"', template))
+    for language, copy in translations.items():
+        missing = sorted(required - set(copy))
+        assert not missing, f"{language} is missing translation keys: {missing}"

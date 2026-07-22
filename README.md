@@ -1,4 +1,4 @@
-# ChinaTradeResolve Audit Fix v3.2
+# ChinaTradeResolve Audit Fix v3.3
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -19,17 +19,19 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 
 
 
-## Audit fixes in v3.2
+## Public-site redesign in v3.3
 
-- removed internal launch notes and contradictory paid-service promises from the public page;
-- clarified the exact free-review scope and the two amount fields;
-- requests a short description first and up to five key files only after selection;
-- added visible desktop form validation, request timeout handling and safer error focus;
-- translated evidence labels, language options and legal navigation consistently;
-- replaced draft legal pages with dated multilingual versions;
-- disabled voluntary support and every QR route by default;
-- applies retention anonymisation at application startup;
-- preserves the multilingual AI assistant and existing case-management workflow.
+- shortened the public page by merging repeated free-access and service-result sections;
+- made the first screen more specific about the review result and next steps;
+- replaced the inconsistent pre-payment card with an active refund-dispute scenario;
+- reduced the workflow to four steps that match the actual free-review scope;
+- consolidated trust, operator information, AI boundaries and the sample report;
+- displays a verifiable contact email, Serbia operation location, working hours and response target;
+- states clearly that the service is not a law firm and does not send documents to third parties without an agreed action;
+- improved light-background contrast and shortened desktop navigation labels;
+- added a description character counter, keyboard progression and accessible success focus;
+- added a privacy FAQ explaining who may see case materials;
+- keeps voluntary support disabled by default and preserves the existing case-management and AI-assistant workflow.
 
 ## Public AI assistant
 
@@ -130,7 +132,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Audit_Fix_v3.2
+cd ChinaTradeResolve_Audit_Fix_v3.3
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

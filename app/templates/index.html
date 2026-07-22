@@ -4,8 +4,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>ChinaTradeResolve — бесплатная помощь в спорах с поставщиками</title>
-<meta content="Подайте бесплатную заявку по спору с китайским поставщиком. На этапе заявки не требуется оплата или загрузка большого архива документов." name="description"/>
+<title>ChinaTradeResolve — разбор споров с китайскими поставщиками</title>
+<meta content="Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий." name="description"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
 <meta content="same-origin" name="csrf-mode"/>
 <style>
@@ -30,8 +30,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0
 .brand-logo .line{stroke:#94a3b8;stroke-width:1.6;stroke-linecap:round}
 .brand-logo .check{fill:none;stroke:var(--teal2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .links{display:flex;gap:22px;font-size:14px;color:#d8dee9}
-.links a:hover{color:var(--teal2)}
-.actions{display:flex;gap:10px;align-items:center}
+.links a{white-space:nowrap}.links a:hover{color:var(--teal2)}
+.actions{display:flex;gap:10px;align-items:center}.actions .primary{white-space:nowrap;font-size:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;font-weight:850;border:1px solid #475569;cursor:pointer;transition:.18s ease;background:transparent;color:var(--text)}
 .btn.primary{background:var(--teal);color:#042f2e;border-color:var(--teal)}
 .btn:hover{transform:translateY(-1px)}
@@ -53,9 +53,9 @@ h3{line-height:1.25}
 .hero-card{box-shadow:0 30px 80px rgba(0,0,0,.38)}
 .row{padding:14px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
 .label{font-size:12px;color:var(--muted2)}.value{font-weight:800}.status{color:#6ee7b7}
-section{padding:74px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
+section{padding:64px 0;scroll-margin-top:130px}.light{background:var(--light);color:var(--ink)}.navy{background:var(--navy)}
 .grid{display:grid;gap:20px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
-.light .card{background:#fff;border-color:#e2e8f0;color:var(--ink);box-shadow:0 8px 26px rgba(15,23,42,.05)}
+.light .card{background:#fff;border-color:#e2e8f0;color:var(--ink);box-shadow:0 8px 26px rgba(15,23,42,.05)}.light .intro{color:#475569}
 .card h3{margin:0 0 9px}.card p{color:#cbd5e1}.light .card p{color:#475569}
 .card ul{padding-left:20px}.card li{margin:7px 0}
 .icon{width:42px;height:42px;border-radius:12px;background:rgba(20,184,166,.14);color:var(--teal);display:grid;place-items:center;font-weight:900;margin-bottom:15px}
@@ -63,9 +63,9 @@ section{padding:74px 0;scroll-margin-top:130px}.light{background:var(--light);co
 .best-for{min-height:67px;margin:6px 0 16px;padding:11px 12px;border-radius:11px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.18);font-size:14px;color:#dbeafe}
 .best-for b{display:block;color:var(--teal2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
 .highlight{border-color:rgba(20,184,166,.75);box-shadow:0 0 0 1px rgba(20,184,166,.15)}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}.step{padding-top:48px;position:relative}.step:before{content:attr(data-n);position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:#042f2e;font-weight:900}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.step{padding-top:48px;position:relative}.step:before{content:attr(data-n);position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:#042f2e;font-weight:900}
 .quote{font-size:26px;font-weight:900;padding:28px;border-left:4px solid var(--teal);background:rgba(20,184,166,.08);border-radius:0 14px 14px 0}
-.trust-box{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+.trust-box{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:start}
 .operator{background:#fff;color:var(--ink);border-radius:18px;padding:24px;border:1px solid #e2e8f0}
 .operator strong{display:block;margin-bottom:6px}.placeholder{background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
 .sample{display:flex;flex-direction:column;gap:10px}
@@ -148,10 +148,25 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(max-width:700px){.ai-chat-launcher{right:4%;bottom:96px;max-width:92%}.ai-chat-launcher span:last-child{max-width:210px}.ai-chat-panel{right:4%;bottom:151px;width:92%;max-height:calc(100vh - 175px)}}
 @media(max-width:980px){.links{display:none}.menu-btn{display:block}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active{grid-template-columns:1fr}.full{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:14px;z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:58px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}}
+
+.anchor-alias{display:block;position:relative;top:-130px;visibility:hidden}
+.service-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:24px;align-items:start;margin-top:26px}
+.compact-grid{margin-top:16px}.compact-grid .card{padding:20px}.compact-grid .card p{margin-bottom:0}
+.scope-card{background:#0f172a;color:#f8fafc;border-radius:18px;padding:24px;box-shadow:0 18px 45px rgba(15,23,42,.14)}
+.scope-card h3{margin-top:0}.scope-card .pilot-list li{color:#dbeafe}.scope-card .pilot-limit{background:rgba(20,184,166,.10);border-color:rgba(45,212,191,.26);color:#d1fae5}
+.operator-facts{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:10px}.operator-facts li{position:relative;padding-left:25px;color:#334155}.operator-facts li:before{content:"✓";position:absolute;left:0;color:#0f766e;font-weight:900}
+.trust-principles{margin-top:22px}.trust-principles .card{background:rgba(255,255,255,.055)}
+.trust-note{margin-top:18px;padding:14px 16px;border:1px solid #99f6e4;background:#f0fdfa;border-radius:12px;color:#134e4a}
+.consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
+.consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
+.description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
+#confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
+@media(max-width:900px){.service-layout{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
-<div class="prototype-banner" data-i18n="prototype">Этап бесплатного доступа — без платы за услуги. Добровольная поддержка не влияет на приоритет.</div>
+<div class="prototype-banner" data-i18n="prototype">Заявки рассматриваются бесплатно. Приём зависит от профиля дела и доступной мощности.</div>
 <header>
 <div class="wrap">
 <nav>
@@ -165,9 +180,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div>
 <div class="links">
-<a data-i18n="nav_services" href="#services">Услуги</a>
+<a data-i18n="nav_services" href="#situations">Подходит ли вам</a>
 <a data-i18n="nav_process" href="#process">Как это работает</a>
-<a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
+<a data-i18n="nav_pricing" href="#services">Что вы получите</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
@@ -185,9 +200,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <select aria-label="Язык" class="lang" id="mobileLangSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
-<a data-i18n="nav_services" href="#services">Услуги</a>
+<a data-i18n="nav_services" href="#situations">Подходит ли вам</a>
 <a data-i18n="nav_process" href="#process">Как это работает</a>
-<a data-i18n="nav_pricing" href="#free-access">Бесплатный доступ</a>
+<a data-i18n="nav_pricing" href="#services">Что вы получите</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
@@ -198,8 +213,8 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="wrap hero-grid">
 <div>
 <div class="eyebrow" data-i18n="hero_eyebrow">Помощь в спорах с китайскими поставщиками</div>
-<h1 data-i18n="hero_title">Мы превращаем хаос в понятное дело.</h1>
-<p class="lead" data-i18n="hero_text">ChinaTradeResolve помогает покупателям и компаниям систематизировать доказательства, находить противоречия и готовить структурированные претензии в спорах с китайскими поставщиками и маркетплейсами.</p>
+<h1 data-i18n="hero_title">Разложим спор по фактам и покажем следующий шаг.</h1>
+<p class="lead" data-i18n="hero_text">Опишите ситуацию без большого архива документов. Мы проверим, подходит ли дело, обозначим сильные и слабые стороны, недостающие доказательства и практичные следующие действия.</p>
 <div class="hero-buttons">
 <a class="btn primary" data-i18n="free_assessment" href="#submit">Отправить бесплатную заявку</a>
 <a class="btn" data-i18n="how_it_works" href="#process">Как это работает</a>
@@ -216,7 +231,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="row"><div class="label" data-i18n="issue">Проблема</div><div class="value" data-i18n="issue_value">Товар не соответствует спецификации</div></div>
 <div class="row"><div class="label" data-i18n="evidence">Доказательства</div><div class="value" data-i18n="evidence_items">Заказ · Инвойс · Переписка · Фотографии</div></div>
 <div class="row"><div class="label" data-i18n="status">Статус</div><div class="value status" data-i18n="status_value">Идёт анализ доказательств</div></div>
-<div class="row"><div class="label" data-i18n="next_step">Следующий шаг</div><div class="value" data-i18n="next_step_value">Подготовка формальной претензии</div></div>
+<div class="row"><div class="label" data-i18n="next_step">Следующий шаг</div><div class="value" data-i18n="next_step_value">Письменная оценка и чек-лист действий</div></div>
 </aside>
 </div>
 </section>
@@ -229,121 +244,86 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">Спор уже открыт</h3><p data-i18n="s1_text">Поставщик отказывается решать проблему или площадка отклонила претензию.</p></div>
 <div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">Товар не доставлен</h3><p data-i18n="s2_text">Отгрузка задержана, отменена или поставщик перестал отвечать.</p></div>
 <div class="card"><div class="icon">03</div><h3 data-i18n="s3_title">Проблема качества или спецификации</h3><p data-i18n="s3_text">Товар неисправен, неполный или отличается от заказа.</p></div>
-<div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">Проверка до оплаты</h3><p data-i18n="s4_text">Вы хотите снизить риск до отправки денег.</p></div>
-</div>
-</div>
-</section>
-<section class="pilot-section" id="free-access">
-<div class="wrap">
-<div class="eyebrow" data-i18n="pilot_eyebrow">Этап бесплатного доступа</div>
-<h2 data-i18n="pilot_title">Используйте ChinaTradeResolve бесплатно, пока мы проверяем жизнеспособность проекта</h2>
-<p class="intro" data-i18n="pilot_intro">Фиксированной даты окончания нет. Сервис остаётся бесплатным, пока ChinaTradeResolve заранее не объявит об изменении модели.</p>
-<div class="pilot-box">
-<div class="pilot-card">
-<div class="pilot-badge" data-i18n="pilot_badge">Бесплатный доступ · приём с учётом доступной мощности</div>
-<h3 data-i18n="pilot_receive_title">Что могут получить пользователи</h3>
-<ul class="pilot-list">
-<li data-i18n="pilot_receive1">Предварительный анализ одной основной проблемы спора</li>
-<li data-i18n="pilot_receive2">Краткая письменная оценка сильных и слабых сторон и недостающих доказательств</li>
-<li data-i18n="pilot_receive3">Чек-лист рекомендуемых следующих действий</li>
-<li data-i18n="pilot_receive4">Один короткий раунд уточнений после выдачи результата</li>
-</ul>
-</div>
-<div class="pilot-card">
-<h3 data-i18n="pilot_limits_title">Границы бесплатного доступа</h3>
-<ul class="pilot-list">
-<li data-i18n="pilot_limit1">Плата за услуги не взимается</li>
-<li data-i18n="pilot_limit2">Нет общения с поставщиком или площадкой от имени участника</li>
-<li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками</li>
-<li data-i18n="pilot_limit4">Без больших архивов: сначала только описание, после отбора — до 5 ключевых файлов</li>
-<li data-i18n="pilot_limit5">Заявки принимаются с учётом профиля дела, доказательств и доступной мощности</li>
-</ul>
-<div class="pilot-limit" data-i18n="pilot_selection">Бесплатный доступ не ограничен сроком, но отдельное дело может быть отклонено, если оно вне компетенции, срочное или превышает доступную мощность.</div>
-<div class="pilot-limit" data-i18n="pilot_feedback">Пользователь может оставить честный отзыв. Разрешение на публикацию запрашивается отдельно, добровольно и не приводит к автоматической публикации.</div>
-</div>
+<div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">Поставщик отказывается вернуть деньги</h3><p data-i18n="s4_text">Проблема подтверждена, но поставщик затягивает решение или предлагает неприемлемые условия.</p></div>
 </div>
 </div>
 </section>
 <section class="light" id="services">
+<span class="anchor-alias" id="free-access" aria-hidden="true"></span>
 <div class="wrap">
 <div class="eyebrow" data-i18n="services_eyebrow">Что входит в бесплатный анализ</div>
 <h2 data-i18n="services_title">Один понятный результат без завышенных обещаний</h2>
-<p class="intro" data-i18n="services_note">После отбора дела вы получаете ограниченный первичный анализ. Полное ведение спора и общение от вашего имени в бесплатный объём не входят.</p>
-<div class="grid g4">
+<p class="intro" data-i18n="services_note">Если заявка подходит по профилю и объёму, вы получите ограниченный первичный анализ. Полное ведение спора и общение от вашего имени в бесплатный объём не входят.</p>
+<div class="service-layout">
+<div>
+<div class="pilot-badge" data-i18n="pilot_badge">Бесплатно · без больших загрузок · приём с учётом доступной мощности</div>
+<div class="grid g2 compact-grid">
 <div class="card"><h3 data-i18n="receive1">Краткая оценка позиции</h3><p data-i18n="receive1_text">Основные факты, сильные и слабые стороны вашей позиции.</p></div>
 <div class="card"><h3 data-i18n="receive2">Недостающие доказательства</h3><p data-i18n="receive2_text">Что необходимо найти или уточнить до продолжения спора.</p></div>
 <div class="card"><h3 data-i18n="receive3">Рекомендуемые действия</h3><p data-i18n="receive3_text">Понятный чек-лист следующих шагов без гарантии результата.</p></div>
 <div class="card"><h3 data-i18n="receive4">Одно уточнение</h3><p data-i18n="receive4_text">Один короткий раунд вопросов после выдачи первичной оценки.</p></div>
 </div>
 </div>
+<aside class="scope-card">
+<h3 data-i18n="pilot_limits_title">Границы бесплатного анализа</h3>
+<ul class="pilot-list">
+<li data-i18n="pilot_limit2">Мы не общаемся с поставщиком или площадкой от вашего имени.</li>
+<li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками.</li>
+<li data-i18n="pilot_limit4">Сначала нужно только описание; после отбора — до 5 ключевых файлов.</li>
+<li data-i18n="pilot_limit5">Принятие зависит от профиля дела, доказательств и доступной мощности.</li>
+</ul>
+<div class="pilot-limit" data-i18n="pilot_selection">Подача заявки не гарантирует принятие. Если дело вне компетенции или требует срочной юридической помощи, мы прямо сообщим об этом.</div>
+</aside>
+</div>
+</div>
 </section>
 <section class="navy" id="process">
 <div class="wrap">
 <div class="eyebrow" data-i18n="process_eyebrow">Как это работает</div>
-<h2 data-i18n="process_title">От разрозненных файлов к ясной позиции</h2>
+<h2 data-i18n="process_title">От краткого описания к ясному плану действий</h2>
 <div class="steps">
-<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Сначала отправьте краткое описание. До 5 ключевых файлов запрашиваются только после отбора.</p></div>
-<div class="step" data-n="2"><h3 data-i18n="step2">Проверка объёма</h3><p data-i18n="step2_text">Мы определяем подходящую услугу.</p></div>
-<div class="step" data-n="3"><h3 data-i18n="step3">Анализ доказательств</h3><p data-i18n="step3_text">Мы систематизируем факты и противоречия.</p></div>
-<div class="step" data-n="4"><h3 data-i18n="step4">Подготовка</h3><p data-i18n="step4_text">Готовим оценку или претензию.</p></div>
-<div class="step" data-n="5"><h3 data-i18n="step5">Утверждение</h3><p data-i18n="step5_text">Вы проверяете документ до отправки.</p></div>
+<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Отправьте основные факты без загрузки документов.</p></div>
+<div class="step" data-n="2"><h3 data-i18n="step2">Отбор и документы</h3><p data-i18n="step2_text">Если дело подходит, мы запросим до 5 ключевых файлов.</p></div>
+<div class="step" data-n="3"><h3 data-i18n="step3">Разбор доказательств</h3><p data-i18n="step3_text">Сопоставим документы, даты, обещания и противоречия.</p></div>
+<div class="step" data-n="4"><h3 data-i18n="step4">Письменный результат</h3><p data-i18n="step4_text">Вы получите оценку позиции, недостающих доказательств и следующих действий.</p></div>
 </div>
 </div>
 </section>
-<section class="light" id="trust">
+<section id="about">
 <div class="wrap">
 <div class="eyebrow" data-i18n="trust_eyebrow">Доверие и прозрачность</div>
-<h2 data-i18n="trust_title">Вы должны знать, кто работает с вашим делом</h2>
+<h2 data-i18n="trust_title">Кто и как будет работать с вашей заявкой</h2>
 <div class="trust-box">
 <div class="operator">
-<strong data-i18n="operator_title">Команда по разбору дел ChinaTradeResolve</strong>
-<p data-i18n="operator_text">Независимая коммерческая помощь в спорах, работающая из Сербии. Сервис сейчас бесплатный и не действует как юридическая фирма или платёжный посредник.</p>
-<div class="placeholder" data-i18n="operator_placeholder">Сервис не является юридической фирмой и не принимает оплату за анализ. Важные выводы проверяются человеком, а документы не отправляются третьим лицам без вашего одобрения.</div>
+<strong data-i18n="operator_title">Независимый сервис ChinaTradeResolve</strong>
+<p data-i18n="operator_text">Проект работает из Сербии и помогает структурировать коммерческие споры с китайскими поставщиками. ChinaTradeResolve не является юридической фирмой и не представляет клиентов в суде.</p>
+<ul class="operator-facts">
+<li><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></li>
+<li data-i18n="hours_text">Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.</li>
+<li data-i18n="operator_placeholder">Важные выводы проверяются человеком. Никакие документы не отправляются поставщику, площадке или другой третьей стороне без согласованного с вами действия.</li>
+</ul>
+<div class="trust-note" data-i18n="ai_text">ИИ может помогать организовывать материалы и отвечать на общие вопросы. Финальные выводы и исходящие документы требуют человеческой проверки.</div>
 </div>
 <div class="sample">
 <div class="sample-page">
 <div class="sample-header">
-<div>
-<strong data-i18n="sample_title">Пример оценки дела</strong>
-<div class="mini" data-i18n="sample_sub">Обезличенный пример результата</div>
-</div>
+<div><strong data-i18n="sample_title">Пример оценки дела</strong><div class="mini" data-i18n="sample_sub">Обезличенный пример результата</div></div>
 <div class="sample-score" data-i18n="sample_status">Проверено человеком</div>
 </div>
-<div class="sample-tags">
-<span data-i18n="sample_tag1">Хронология</span>
-<span data-i18n="sample_tag2">Индекс доказательств</span>
-<span data-i18n="sample_tag3">Анализ рисков</span>
-</div>
+<div class="sample-tags"><span data-i18n="sample_tag1">Хронология</span><span data-i18n="sample_tag2">Индекс доказательств</span><span data-i18n="sample_tag3">Анализ рисков</span></div>
 <table>
 <tr><th data-i18n="table_issue">Проблема</th><th data-i18n="table_evidence">Доказательства</th><th data-i18n="table_risk">Риск</th></tr>
 <tr><td data-i18n="table_row1">Неверный материал</td><td data-i18n="table_row2">EX-03 заказ + EX-07 сообщение поставщика</td><td data-i18n="table_row3">Терминология может оспариваться</td></tr>
 <tr><td data-i18n="table_row4">Недостающий компонент</td><td data-i18n="table_row5">EX-02 инвойс + EX-11 фотографии</td><td data-i18n="table_row6">Нужно подтвердить финальную спецификацию</td></tr>
 </table>
 </div>
-<a class="btn dark" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
+<a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
 </div>
 </div>
-</div>
-</section>
-<section id="ai">
-<div class="wrap grid g2">
-<div>
-<div class="eyebrow" data-i18n="ai_eyebrow">ИИ помогает. Человек контролирует.</div>
-<h2 data-i18n="ai_title">ИИ помогает организовать материалы. Результат контролирует человек.</h2>
-<p class="intro" data-i18n="ai_text">ИИ может систематизировать большие объёмы файлов и подготовить первичное сравнение. Финальные выводы и исходящие документы проверяет человек.</p>
-</div>
-<div class="quote" data-i18n="ai_quote">Достоверная претензия сильнее преувеличенной.</div>
-</div>
-</section>
-<section class="light" id="about">
-<div class="wrap">
-<div class="eyebrow" data-i18n="about_eyebrow">О ChinaTradeResolve</div>
-<h2 data-i18n="about_title">Создано на основе реального опыта</h2>
-<p class="intro" data-i18n="about_text">У покупателей часто есть сильные доказательства, но они разбросаны по сообщениям, инвойсам, скриншотам и материалам платформ. Мы превращаем их в понятное дело.</p>
-<div class="grid g3">
-<div class="card"><h3 data-i18n="about1">Доказательства важнее эмоций</h3><p data-i18n="about1_text">Претензии строятся на документах, датах и письменных заявлениях.</p></div>
-<div class="card"><h3 data-i18n="about2">Честная оценка</h3><p data-i18n="about2_text">Слабые места и контраргументы не скрываются.</p></div>
-<div class="card"><h3 data-i18n="about3">Контроль клиента</h3><p data-i18n="about3_text">Ни один важный документ не отправляется без одобрения.</p></div>
+<div class="grid g3 trust-principles">
+<div class="card"><h3 data-i18n="about1">Человеческая проверка</h3><p data-i18n="about1_text">ИИ не принимает окончательное решение по делу и не отправляет документы самостоятельно.</p></div>
+<div class="card"><h3 data-i18n="about2">Ваш контроль</h3><p data-i18n="about2_text">Вы решаете, какие материалы передать и какие действия предпринимать после оценки.</p></div>
+<div class="card"><h3 data-i18n="about3">Понятные границы</h3><p data-i18n="about3_text">Мы прямо сообщаем, когда дело требует адвоката, срочного обращения или выходит за рамки сервиса.</p></div>
 </div>
 </div>
 </section>
@@ -374,38 +354,22 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
-<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea data-i18n-placeholder="description_ph" id="description" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="hint" data-i18n="description_hint">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div></div>
+<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea aria-describedby="descriptionHelp descriptionCount" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div></div>
 <div class="field full filebox"><label data-i18n="upload">На этапе заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отбора мы запросим не более 5 ключевых файлов для первичного анализа.</div></div>
-<div class="field full"><label><input name="free_access_terms" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а платная модель может быть введена только после предварительного уведомления.</span></label></div>
-<div class="field full"><label><input name="sharing_authority" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
-<div class="field full"><label><input name="ai_consent" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent2">Я добровольно согласен на использование ИИ-инструментов для анализа дела при обязательной человеческой проверке. Без согласия заявка будет обработана встроенными правилами и, при необходимости, вручную.</span></label></div>
-<div class="field full"><label><input name="no_guarantee" required="" style="width:auto;margin-right:8px" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
+<div class="consent-group">
+<div class="consent-row"><label><input name="free_access_terms" required="" style="width:auto" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
+<div class="consent-row"><label><input name="sharing_authority" required="" style="width:auto" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
+<div class="consent-row"><label><input name="ai_consent" style="width:auto" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
+<div class="consent-row"><label><input name="no_guarantee" required="" style="width:auto" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
+</div>
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button class="btn primary" data-i18n="submit_review" type="submit">Отправить бесплатную заявку</button></div>
 </div>
 </form>
-<div id="confirmation" style="display:none">
+<div id="confirmation" style="display:none" tabindex="-1">
 <h3 data-i18n="received">Бесплатная заявка сохранена</h3>
 <p data-i18n="received_text">Заявка сохранена и автоматически проверена. Сохраните номер дела ниже.</p>
-<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div><div style="margin-top:10px"><a class="btn dark" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div></div>
-</div>
-</div>
-</div>
-</section>
-<section class="light" id="contact">
-<div class="wrap">
-<div class="eyebrow" data-i18n="contact_eyebrow">Контакты и доступность</div>
-<h2 data-i18n="contact_title">Понятные способы связи</h2>
-<div class="contact-grid">
-<div class="contact-card">
-<strong data-i18n="contact_details">Команда по разбору дел ChinaTradeResolve</strong>
-<p data-i18n="contact_intro">Независимая коммерческая помощь в спорах, работающая из Сербии.</p>
-<p><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
-<div class="placeholder" data-i18n="contact_placeholder">Используйте этот адрес для общих вопросов. Заявки по делам лучше подавать через структурированную форму.</div>
-</div>
-<div class="contact-card">
-<strong data-i18n="hours">Часы работы</strong>
-<p data-i18n="hours_text">Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.</p>
+<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div><div style="margin-top:10px"><a class="btn" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div></div>
 </div>
 </div>
 </div>
@@ -439,6 +403,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <details><summary data-i18n="faq2">Вы работаете только с Alibaba?</summary><p data-i18n="faq2_text">Нет. Дела могут касаться Alibaba, AliExpress, Made-in-China или прямых договоров.</p></details>
 <details><summary data-i18n="faq3">Вы юридическая фирма?</summary><p data-i18n="faq3_text">Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.</p></details>
 <details><summary data-i18n="faq4">Как используется ИИ?</summary><p data-i18n="faq4_text">ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.</p></details>
+<details><summary data-i18n="faq5">Кто видит мои материалы?</summary><p data-i18n="faq5_text">На этапе заявки документы не загружаются. Если дело принято, запрашиваются только ключевые файлы; доступ к ним используется для согласованного анализа и не даёт права отправлять их третьим лицам.</p></details>
 </div>
 </section>
 <section class="final-cta">
@@ -513,14 +478,22 @@ if('IntersectionObserver' in window){
   },{threshold:0.08}).observe(submitSection);
 }
 
+const descriptionField=document.getElementById('description');
+const descriptionCount=document.getElementById('descriptionCount');
+function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`}
+descriptionField.addEventListener('input',updateDescriptionCount);
+updateDescriptionCount();
+
 const stepOne=document.getElementById('stepOne'),stepTwo=document.getElementById('stepTwo');
 const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog2'),label1=document.getElementById('label1'),label2=document.getElementById('label2');
-document.getElementById('nextBtn').addEventListener('click',()=>{
+const nextButton=document.getElementById('nextBtn');
+nextButton.addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
   const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
   if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');window.location.hash='submit'}
 });
+stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
 document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active')});
 document.getElementById('caseForm').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -574,7 +547,8 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       throw new Error(message||ui.fallback);
     }
     form.style.display='none';
-    document.getElementById('confirmation').style.display='block';
+    const confirmation=document.getElementById('confirmation');
+    confirmation.style.display='block';
     document.getElementById('caseNumber').textContent=result.case_reference;
     document.getElementById('caseDecision').textContent=result.public_message||'';
     if(result.status_url){
@@ -582,6 +556,8 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       link.href=result.status_url;
       link.style.display='inline-flex';
     }
+    confirmation.focus();
+    confirmation.scrollIntoView({behavior:'smooth',block:'start'});
   }catch(error){
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
@@ -596,12 +572,12 @@ const translations=window.CTR_TRANSLATIONS||{};
 const supportedLanguages=['en','fr','de','es','ru','sr'];
 const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};
 const pageMeta={
-  en:{title:'ChinaTradeResolve — free help with supplier disputes',description:'Submit a free application about a dispute with a Chinese supplier. No payment or large document upload is required at the application stage.'},
-  fr:{title:'ChinaTradeResolve — aide gratuite pour les litiges fournisseurs',description:'Envoyez une demande gratuite concernant un litige avec un fournisseur chinois. Aucun paiement ni téléchargement volumineux n’est requis au stade de la demande.'},
-  de:{title:'ChinaTradeResolve — kostenlose Hilfe bei Lieferantenstreitigkeiten',description:'Reichen Sie kostenlos einen Fall zu einer Streitigkeit mit einem chinesischen Lieferanten ein. Bei der Antragstellung sind weder Zahlung noch große Datei-Uploads erforderlich.'},
-  es:{title:'ChinaTradeResolve — ayuda gratuita en disputas con proveedores',description:'Envíe una solicitud gratuita sobre una disputa con un proveedor chino. En la fase de solicitud no se requiere pago ni carga de archivos grandes.'},
-  ru:{title:'ChinaTradeResolve — бесплатная помощь в спорах с поставщиками',description:'Подайте бесплатную заявку по спору с китайским поставщиком. На этапе заявки не требуется оплата или загрузка большого архива документов.'},
-  sr:{title:'ChinaTradeResolve — besplatna pomoć u sporovima sa dobavljačima',description:'Pošaljite besplatnu prijavu za spor sa kineskim dobavljačem. U fazi prijave nisu potrebni plaćanje ni veliki fajlovi.'}
+  en:{title:'ChinaTradeResolve — review of disputes with Chinese suppliers',description:'Describe a dispute with a Chinese supplier and receive a preliminary view of your position, missing evidence and practical next steps.'},
+  fr:{title:'ChinaTradeResolve — analyse des litiges avec des fournisseurs chinois',description:'Décrivez un litige avec un fournisseur chinois et recevez une première évaluation de votre position, des preuves manquantes et des prochaines actions.'},
+  de:{title:'ChinaTradeResolve — Prüfung von Streitigkeiten mit chinesischen Lieferanten',description:'Beschreiben Sie einen Streit mit einem chinesischen Lieferanten und erhalten Sie eine erste Einschätzung Ihrer Position, fehlender Nachweise und nächster Schritte.'},
+  es:{title:'ChinaTradeResolve — revisión de disputas con proveedores chinos',description:'Describa una disputa con un proveedor chino y reciba una evaluación inicial de su posición, pruebas faltantes y próximos pasos prácticos.'},
+  ru:{title:'ChinaTradeResolve — разбор споров с китайскими поставщиками',description:'Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий.'},
+  sr:{title:'ChinaTradeResolve — pregled sporova sa kineskim dobavljačima',description:'Opišite spor sa kineskim dobavljačem i dobijte početnu procenu pozicije, dokaza koji nedostaju i praktičnih sledećih koraka.'}
 };
 const languageUi={
   en:{submitting:'Submitting and screening the application…',timeout:'The server did not respond in time. Please try again.',fallback:'Please check the form fields and try again.',prefix:'Check these fields: ',unable:'Unable to submit the application.',fields:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free-access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}},

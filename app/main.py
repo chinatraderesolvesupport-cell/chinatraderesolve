@@ -64,7 +64,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="ChinaTradeResolve Free Access", version="3.2.0", lifespan=lifespan)
+app = FastAPI(title="ChinaTradeResolve Free Access", version="3.3.0", lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,

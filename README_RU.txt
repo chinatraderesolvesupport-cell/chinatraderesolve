@@ -1,4 +1,4 @@
-ChinaTradeResolve Document AI v3.7.2
+ChinaTradeResolve Document AI v3.7.3
 
 Это готовая версия сайта на английском, французском, немецком, испанском, русском и сербском языках.
 

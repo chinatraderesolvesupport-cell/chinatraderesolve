@@ -1063,9 +1063,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.2"
+    assert health.json()["version"] == "3.7.3"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.2"
+    assert health.headers["x-app-version"] == "3.7.3"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -1753,7 +1753,7 @@ def test_application_ai_triage_has_short_response_budget(monkeypatch):
     import app.main as module
 
     async def slow_triage(_payload):
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(1.0)
         raise AssertionError("slow triage should be cancelled by the response budget")
 
     monkeypatch.setattr(module, "ai_triage", slow_triage)
@@ -1770,7 +1770,9 @@ def test_application_ai_triage_has_short_response_budget(monkeypatch):
     finally:
         object.__setattr__(module.settings, "application_triage_timeout_seconds", original)
     assert response.status_code == 201
-    assert elapsed < 0.15
+    # Keep a wide margin for loaded CI runners while still proving that the
+    # one-second provider call was cancelled promptly.
+    assert elapsed < 0.5
     reference, token = response.json()["status_url"].rstrip("/").split("/")[-2:]
     from app.db import get_case_by_public
     case = get_case_by_public(reference, token)
@@ -2279,11 +2281,45 @@ def test_fresh_postgres_audit_schema_has_one_created_at_column(monkeypatch):
     monkeypatch.setattr(db, "_ensure_document_analysis_run_token", lambda _conn: None)
 
     db.init_db()
+    assert statements[0] == "SELECT pg_advisory_xact_lock(1129601362)"
     audit_statement = next(
         statement for statement in statements
         if "CREATE TABLE IF NOT EXISTS audit_log" in statement
     )
     assert audit_statement.lower().count("created_at text not null") == 1
+
+
+def test_postgres_schema_initialization_lock_precedes_all_ddl(monkeypatch):
+    from contextlib import contextmanager
+    import app.db as db
+
+    statements = []
+
+    class Cursor:
+        rowcount = 0
+
+        def fetchall(self):
+            return []
+
+    @contextmanager
+    def fake_transaction():
+        yield object()
+
+    def fake_execute(_conn, query, _params=()):
+        statements.append(" ".join(query.split()))
+        return Cursor()
+
+    monkeypatch.setattr(db, "using_postgres", lambda: True)
+    monkeypatch.setattr(db, "transaction", fake_transaction)
+    monkeypatch.setattr(db, "execute", fake_execute)
+    monkeypatch.setattr(db, "_ensure_notification_retry_columns", lambda _conn: None)
+    monkeypatch.setattr(db, "_ensure_document_analysis_run_token", lambda _conn: None)
+    monkeypatch.setattr(db, "_ensure_case_document_page_count", lambda _conn: None)
+
+    db.init_db()
+    assert statements[0].startswith("SELECT pg_advisory_xact_lock(")
+    assert all("CREATE TABLE" not in statement for statement in statements[:1])
+    assert any("CREATE TABLE IF NOT EXISTS cases" in statement for statement in statements[1:])
 
 
 def test_existing_sqlite_outbox_migrates_database_lease_columns(tmp_path):

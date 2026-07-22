@@ -276,6 +276,12 @@ def init_db() -> None:
             "CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at)",
         ]
         with transaction() as conn:
+            # Render can briefly run the old and new service instances at the
+            # same time. PostgreSQL DDL from two startup transactions can then
+            # deadlock even when every statement uses IF NOT EXISTS. A
+            # transaction-scoped advisory lock serialises schema initialization
+            # and is released automatically on commit, rollback, or disconnect.
+            execute(conn, "SELECT pg_advisory_xact_lock(1129601362)")
             for statement in statements:
                 execute(conn, statement)
             _ensure_notification_retry_columns(conn)

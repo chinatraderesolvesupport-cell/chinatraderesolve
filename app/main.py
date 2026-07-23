@@ -43,6 +43,7 @@ from .db import (
     create_case,
     dashboard_counts,
     DailyAnalysisLimitError,
+    DailyUsageLimitError,
     delete_case_now,
     delete_case_document,
     DocumentAnalysisInProgressError,
@@ -53,6 +54,7 @@ from .db import (
     get_case_document,
     get_document_analysis,
     get_daily_analysis_usage,
+    get_daily_usage,
     fail_running_document_analyses_on_startup,
     fail_stale_document_analysis,
     get_feedback,
@@ -60,6 +62,7 @@ from .db import (
     init_db,
     list_case_documents,
     list_cases,
+    claim_daily_usage,
     replace_triage,
     record_audit,
     revoke_ai_consent,
@@ -90,18 +93,35 @@ from .notifications import (
     deliver_pending,
     email_delivery_is_configured,
 )
-from .schemas import ApplicationCreate, AssistantChatRequest, AssistantChatResponse, FeedbackCreate
+from .schemas import (
+    ApplicationCreate,
+    AssistantChatRequest,
+    AssistantChatResponse,
+    FeedbackCreate,
+    VoiceTranscriptionResponse,
+)
 from .security import SlidingWindowRateLimiter, client_key
 from .triage import merge_triage, rules_triage
+from .voice_transcription import (
+    LANGUAGE_CODES,
+    MAX_VOICE_AUDIO_BYTES,
+    VoiceConfigurationError,
+    VoiceProviderError,
+    VoiceValidationError,
+    transcribe_audio,
+    validate_voice_audio,
+    voice_input_is_enabled,
+)
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.9"
+APP_VERSION = "3.7.10"
 logger = logging.getLogger("chinatraderesolve")
 
 
 STANDARD_REQUEST_BODY_BYTES = 1 * 1024 * 1024
 DOCUMENT_UPLOAD_REQUEST_BODY_BYTES = 50 * 1024 * 1024
+VOICE_UPLOAD_REQUEST_BODY_BYTES = 5 * 1024 * 1024
 
 
 class RequestBodyLimitMiddleware:
@@ -126,6 +146,8 @@ class RequestBodyLimitMiddleware:
         path = str(scope.get("path") or "")
         if path.startswith("/case/") and path.endswith("/documents"):
             return DOCUMENT_UPLOAD_REQUEST_BODY_BYTES
+        if path == "/api/assistant/transcribe":
+            return VOICE_UPLOAD_REQUEST_BODY_BYTES
         return STANDARD_REQUEST_BODY_BYTES
 
     async def __call__(self, scope, receive, send) -> None:
@@ -275,6 +297,7 @@ templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
+voice_limiter = SlidingWindowRateLimiter(limit=6, window_seconds=1800)
 document_upload_limiter = SlidingWindowRateLimiter(limit=12, window_seconds=900)
 document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=1800)
 init_db()
@@ -1002,6 +1025,8 @@ def home(request: Request) -> HTMLResponse:
             "crypto_wallets": wallets,
             "contact_email": settings.contact_email,
             "ai_assistant_enabled": assistant_is_enabled(),
+            "voice_input_enabled": voice_input_is_enabled(),
+            "voice_max_seconds": settings.voice_max_seconds,
             "document_analysis_enabled": document_analysis_is_enabled(),
             "email_delivery_configured": email_delivery_is_configured(),
             "turnstile_site_key": settings.turnstile_site_key if turnstile_is_enabled() else "",
@@ -1033,6 +1058,13 @@ def health() -> dict[str, Any]:
         ),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
+        "ai_assistant_daily_limit": settings.max_daily_ai_assistant_requests,
+        "ai_assistant_used_today": get_daily_usage("ai_assistant") if database_available else None,
+        "voice_input_enabled": voice_input_is_enabled(),
+        "voice_upload_request_limit_mb": VOICE_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
+        "voice_max_seconds": settings.voice_max_seconds,
+        "voice_transcriptions_daily_limit": settings.max_daily_voice_transcriptions,
+        "voice_transcriptions_used_today": get_daily_usage("voice_transcription") if database_available else None,
         "document_analysis_enabled": document_analysis_is_enabled(),
         "document_analysis_daily_limit": settings.max_daily_document_analyses,
         "document_analysis_used_today": get_daily_analysis_usage() if database_available else None,
@@ -1083,6 +1115,12 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
         raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
     if not assistant_is_enabled():
         raise HTTPException(status_code=503, detail=localized_error(payload.language, "unavailable"))
+    if not await verify_turnstile(payload.turnstile_token, request):
+        raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
+    try:
+        claim_daily_usage("ai_assistant", settings.max_daily_ai_assistant_requests)
+    except DailyUsageLimitError:
+        raise HTTPException(status_code=429, detail=localized_error(payload.language, "daily"))
     try:
         reply = await assistant_reply(payload)
     except AssistantConfigurationError:
@@ -1090,6 +1128,55 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
     except AssistantProviderError:
         raise HTTPException(status_code=502, detail=localized_error(payload.language, "unavailable"))
     return AssistantChatResponse(reply=reply)
+
+
+@app.post("/api/assistant/transcribe", response_model=VoiceTranscriptionResponse)
+async def public_voice_transcription(
+    request: Request,
+    audio: UploadFile = File(...),
+    language: str = Form("en"),
+    voice_consent: bool = Form(False),
+    turnstile_token: str = Form(""),
+) -> VoiceTranscriptionResponse:
+    language_code = language if language in LANGUAGE_CODES else "en"
+    if not voice_limiter.allow(f"voice:{client_key(request)}"):
+        raise HTTPException(status_code=429, detail=localized_error(language_code, "rate"))
+    if not voice_input_is_enabled():
+        raise HTTPException(status_code=503, detail=localized_error(language_code, "unavailable"))
+    if not voice_consent:
+        raise HTTPException(status_code=422, detail=localized_error(language_code, "voice_consent"))
+    try:
+        audio_bytes = await audio.read(MAX_VOICE_AUDIO_BYTES + 1)
+    finally:
+        await audio.close()
+    try:
+        validate_voice_audio(audio_bytes, audio.content_type)
+    except VoiceValidationError as exc:
+        status_code = 413 if exc.kind == "too_large" else 415
+        raise HTTPException(status_code=status_code, detail=localized_error(language_code, "voice_invalid"))
+    if not await verify_turnstile(turnstile_token, request):
+        raise HTTPException(status_code=400, detail=localized_error(language_code, "bot"))
+    try:
+        claim_daily_usage("voice_transcription", settings.max_daily_voice_transcriptions)
+    except DailyUsageLimitError:
+        raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_daily"))
+    safety_identifier = hashlib.sha256(
+        f"{_runtime_session_secret}:{client_key(request)}".encode("utf-8")
+    ).hexdigest()
+    try:
+        transcript = await transcribe_audio(
+            audio_bytes,
+            audio.content_type,
+            language_code,
+            safety_identifier,
+        )
+    except VoiceConfigurationError:
+        raise HTTPException(status_code=503, detail=localized_error(language_code, "unavailable"))
+    except VoiceProviderError:
+        raise HTTPException(status_code=502, detail=localized_error(language_code, "unavailable"))
+    finally:
+        audio_bytes = b""
+    return VoiceTranscriptionResponse(transcript=transcript)
 
 
 @app.get("/support", response_class=HTMLResponse)

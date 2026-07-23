@@ -556,13 +556,23 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert "aiChatAbortController.abort()" in home.text
     assert "maxlength=\"1500\"" in home.text
     # The widget remains hidden until the server-side API key/model are configured.
-    assert 'data-enabled="false" hidden' in home.text
+    assert 'data-enabled="false"' in home.text
+    assert 'id="aiChatRoot"' in home.text and ' hidden' in home.text
+    assert "fetch('/api/assistant/transcribe'" in home.text
+    assert "navigator.mediaDevices.getUserMedia" in home.text
+    assert "window.MediaRecorder" in home.text
+    assert "speechSynthesis" in home.text
+    assert "turnstile_token:turnstileToken" in home.text
+    assert "aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim()" in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
     for language in ("en", "fr", "de", "es", "ru", "sr"):
         assert translations[language]["ai_chat_button"].strip()
         assert translations[language]["ai_chat_notice"].strip()
         assert translations[language]["ai_chat_welcome"].strip()
+        assert translations[language]["ai_voice_consent"].strip()
+        assert translations[language]["ai_voice_review"].strip()
+        assert translations[language]["ai_voice_listen"].strip()
 
     unavailable = client.post(
         "/api/assistant",
@@ -573,6 +583,13 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     )
     assert unavailable.status_code == 503
     assert "временно недоступен" in unavailable.json()["detail"]
+
+    voice_unavailable = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "ru", "voice_consent": "true"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+    )
+    assert voice_unavailable.status_code == 503
 
 
 def test_ai_assistant_request_validation():
@@ -601,6 +618,125 @@ def test_ai_assistant_output_removes_unicode_noncharacters():
     assert _clean_output_text("Bonjour.\U0008ffff") == "Bonjour."
     assert _clean_output_text("Line one\n\n\nLine two") == "Line one\n\nLine two"
     assert _clean_output_text("Normal français, Deutsch, русский, srpski.") == "Normal français, Deutsch, русский, srpski."
+
+
+def test_voice_transcription_api_mock(monkeypatch):
+    import app.main as main_module
+
+    captured = {}
+
+    async def fake_transcribe(audio_bytes, content_type, language, safety_identifier):
+        captured.update(
+            audio=audio_bytes,
+            content_type=content_type,
+            language=language,
+            safety_identifier=safety_identifier,
+        )
+        return "The supplier delivered a different material."
+
+    monkeypatch.setattr(main_module, "voice_input_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "transcribe_audio", fake_transcribe)
+    monkeypatch.setattr(main_module, "claim_daily_usage", lambda *_args, **_kwargs: 1)
+    no_consent = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "en"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+        headers={"x-forwarded-for": "198.51.100.244"},
+    )
+    assert no_consent.status_code == 422
+    assert "consent" in no_consent.json()["detail"].lower()
+    response = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "en", "voice_consent": "true"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+        headers={"x-forwarded-for": "198.51.100.245"},
+    )
+    assert response.status_code == 200
+    assert response.json()["transcript"].startswith("The supplier")
+    assert captured["audio"] == b"test-audio"
+    assert captured["content_type"] == "audio/webm"
+    assert captured["language"] == "en"
+    assert len(captured["safety_identifier"]) == 64
+
+
+def test_voice_transcription_provider_request_and_validation(monkeypatch):
+    import asyncio
+    from types import SimpleNamespace
+
+    import pytest
+    import app.voice_transcription as module
+
+    captured = {}
+
+    class FakeResponse:
+        headers = {"x-request-id": "req-voice-test"}
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"text": "  A clear spoken description.  "}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            captured["timeout"] = kwargs.get("timeout")
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, headers, data, files):
+            captured.update(url=url, headers=headers, data=data, files=files)
+            return FakeResponse()
+
+    monkeypatch.setattr(module, "assistant_is_enabled", lambda: True)
+    monkeypatch.setattr(
+        module,
+        "settings",
+        SimpleNamespace(
+            enable_voice_input=True,
+            openai_api_key="test-key",
+            openai_transcription_model="gpt-4o-mini-transcribe",
+            openai_timeout_seconds=7,
+        ),
+    )
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    transcript = asyncio.run(
+        module.transcribe_audio(b"voice-bytes", "audio/webm;codecs=opus", "en", "safe-id")
+    )
+    assert transcript == "A clear spoken description."
+    assert captured["url"].endswith("/v1/audio/transcriptions")
+    assert captured["headers"]["Authorization"] == "Bearer test-key"
+    assert captured["headers"]["OpenAI-Safety-Identifier"] == "safe-id"
+    assert captured["data"]["model"] == "gpt-4o-mini-transcribe"
+    assert captured["files"]["file"][1] == b"voice-bytes"
+    with pytest.raises(module.VoiceValidationError, match="invalid"):
+        module.validate_voice_audio(b"not-audio", "application/octet-stream")
+    with pytest.raises(module.VoiceValidationError, match="too_large"):
+        module.validate_voice_audio(b"x" * (module.MAX_VOICE_AUDIO_BYTES + 1), "audio/webm")
+
+
+def test_ai_assistant_requires_turnstile_when_configured(monkeypatch):
+    import app.main as main_module
+
+    async def failed_verification(_token, _request):
+        return False
+
+    monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "verify_turnstile", failed_verification)
+    response = client.post(
+        "/api/assistant",
+        json={
+            "language": "en",
+            "messages": [{"role": "user", "content": "How should I organise evidence?"}],
+            "turnstile_token": "",
+        },
+        headers={"x-forwarded-for": "198.51.100.246"},
+    )
+    assert response.status_code == 400
+    assert "bot-protection" in response.json()["detail"]
 
 
 def test_ai_assistant_responses_api_mock(monkeypatch):
@@ -1268,9 +1404,12 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.9"
+    assert health.json()["version"] == "3.7.10"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.9"
+    assert health.headers["x-app-version"] == "3.7.10"
+    assert health.json()["voice_max_seconds"] == 120
+    assert health.json()["voice_transcriptions_daily_limit"] == 20
+    assert health.json()["ai_assistant_daily_limit"] == 40
 
     base = Path(__file__).resolve().parent.parent
     active_files = [

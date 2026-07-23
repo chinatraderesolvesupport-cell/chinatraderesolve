@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.7.9 на Render
+# Установка ChinaTradeResolve v3.7.10 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.9.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.10.zip`.
 
-В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.9.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.10.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -42,6 +42,11 @@ DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS=6000
 DOCUMENT_ANALYSIS_TIMEOUT_SECONDS=90
 DOCUMENT_PDF_DETAIL=low
 MAX_DAILY_DOCUMENT_ANALYSES=20
+MAX_DAILY_AI_ASSISTANT_REQUESTS=40
+ENABLE_VOICE_INPUT=true
+OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
+VOICE_MAX_SECONDS=120
+MAX_DAILY_VOICE_TRANSCRIPTIONS=20
 APPLICATION_TRIAGE_TIMEOUT_SECONDS=8
 MAINTENANCE_INTERVAL_SECONDS=60
 RETENTION_CHECK_INTERVAL_SECONDS=86400
@@ -133,9 +138,9 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 В версии 3.6.9 секреты, публичный URL и SMTP оставлены пустыми. Не импортируйте вымышленные значения-заглушки. На Render задайте `ADMIN_TOKEN` и `APP_SECRET` вручную; `PUBLIC_BASE_URL` для стандартного домена не требуется.
 
-## Проверка после обновления до v3.7.9
+## Проверка после обновления до v3.7.10
 
-После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.9"`. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
+После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.10"`. Для голоса проверьте `voice_input_enabled: true`, `voice_max_seconds: 120` и суточные лимиты. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
 
 Откройте публичный ИИ‑помощник и отправьте вопрос без персональных данных. При ошибке найдите в Render Logs строку `OpenAI assistant`: версия 3.7.5 показывает безопасный HTTP-статус, код и `x-request-id`, не раскрывая ключ или сообщение пользователя. После проверки значение `AI_ASSISTANT_MAX_OUTPUT_TOKENS` можно вернуть к стандартному `500`, потому что GPT‑5.6 теперь явно работает с `reasoning.effort=none`.
 

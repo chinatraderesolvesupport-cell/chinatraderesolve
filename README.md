@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.9
+# ChinaTradeResolve Document AI v3.7.10
 
-Version 3.7.9 replaces the four cryptocurrency links on the landing page with one clear cryptocurrency option. On the support page it reveals the four wallet cards on demand in a 2×2 desktop grid and preserves direct wallet links. It also localizes the mobile-menu accessible name in all six languages.
+Version 3.7.10 adds opt-in voice transcription to the public AI assistant. A visitor can record up to two minutes, review the editable transcript and explicitly send it for analysis. Audio is not stored in the case database and is discarded from server memory after transcription. Chat and transcription now share Turnstile protection and have separate IP and UTC-day cost limits.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -10,6 +10,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - SQLite case database and audit log;
 - deterministic safety-first triage;
 - optional multilingual public AI assistant;
+- optional voice-to-text input with browser-native playback of assistant answers;
 - optional OpenAI structured triage;
 - exception-driven admin queue;
 - private case-status page;
@@ -207,6 +208,10 @@ Safety and privacy controls:
 - chat messages are not written to the ChinaTradeResolve case database;
 - OpenAI Responses requests use `store: false`;
 - input length, output length and request frequency are limited;
+- chat and voice requests require Cloudflare Turnstile whenever it is configured;
+- database-backed daily limits independently cap assistant replies and voice transcriptions;
+- a voice recording is limited to two minutes and 4 MB, is sent only after separate consent, and is discarded from server memory immediately after transcription;
+- the transcript remains editable and is not sent to the assistant until the visitor presses Send;
 - the assistant is explicitly forbidden from promising outcomes, giving binding legal advice, requesting passwords/private keys or claiming access to private case data;
 - a narrow moderation check blocks the most sensitive prohibited category while allowing legitimate dispute descriptions to receive safe guidance.
 
@@ -289,7 +294,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.9
+cd ChinaTradeResolve_Document_AI_v3.7.10
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -314,6 +319,11 @@ OPENAI_MODEL=<model available in your OpenAI project>
 # Optional: use a different model for the assistant.
 OPENAI_ASSISTANT_MODEL=
 OPENAI_MODERATION_MODEL=omni-moderation-latest
+MAX_DAILY_AI_ASSISTANT_REQUESTS=40
+ENABLE_VOICE_INPUT=true
+OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
+VOICE_MAX_SECONDS=120
+MAX_DAILY_VOICE_TRANSCRIPTIONS=20
 ```
 
 When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After deployment, `/health` must report `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.

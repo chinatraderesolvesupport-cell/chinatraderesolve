@@ -29,31 +29,61 @@ ERROR_COPY = {
         "unavailable": "The AI assistant is temporarily unavailable. You can still read the FAQ or submit a free application.",
         "blocked": "I cannot help with that request. I can explain the ChinaTradeResolve process, evidence preparation and general dispute-support options.",
         "rate": "Too many messages were sent from this connection. Please wait a few minutes and try again.",
+        "bot": "Please complete the bot-protection check and try again.",
+        "daily": "The AI assistant has reached its daily usage limit. Please try again tomorrow or submit a free application.",
+        "voice_daily": "The daily voice-transcription limit has been reached. Please type your message or try again tomorrow.",
+        "voice_consent": "Please consent to voice transcription before recording.",
+        "voice_invalid": "The recording format is unsupported, empty or too large. Please record again or type your message.",
     },
     "fr": {
         "unavailable": "L’assistant IA est temporairement indisponible. Vous pouvez toujours consulter la FAQ ou envoyer une demande gratuite.",
         "blocked": "Je ne peux pas aider pour cette demande. Je peux expliquer le fonctionnement de ChinaTradeResolve, la préparation des preuves et les options générales d’assistance en cas de litige.",
         "rate": "Trop de messages ont été envoyés depuis cette connexion. Veuillez patienter quelques minutes avant de réessayer.",
+        "bot": "Veuillez effectuer la vérification anti-robot puis réessayer.",
+        "daily": "L’assistant IA a atteint sa limite quotidienne. Réessayez demain ou envoyez une demande gratuite.",
+        "voice_daily": "La limite quotidienne de transcription vocale est atteinte. Saisissez votre message ou réessayez demain.",
+        "voice_consent": "Veuillez consentir à la transcription vocale avant l’enregistrement.",
+        "voice_invalid": "L’enregistrement est vide, trop volumineux ou dans un format non pris en charge. Réenregistrez-le ou saisissez votre message.",
     },
     "de": {
         "unavailable": "Der KI-Assistent ist vorübergehend nicht verfügbar. Sie können weiterhin die FAQ lesen oder einen kostenlosen Antrag einreichen.",
         "blocked": "Bei dieser Anfrage kann ich nicht helfen. Ich kann den Ablauf von ChinaTradeResolve, die Vorbereitung von Nachweisen und allgemeine Möglichkeiten der Streitunterstützung erklären.",
         "rate": "Von dieser Verbindung wurden zu viele Nachrichten gesendet. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
+        "bot": "Bitte führen Sie die Bot-Schutz-Prüfung durch und versuchen Sie es erneut.",
+        "daily": "Der KI-Assistent hat sein Tageslimit erreicht. Versuchen Sie es morgen erneut oder senden Sie einen kostenlosen Antrag.",
+        "voice_daily": "Das Tageslimit für Sprachtranskriptionen ist erreicht. Schreiben Sie Ihre Nachricht oder versuchen Sie es morgen erneut.",
+        "voice_consent": "Bitte stimmen Sie vor der Aufnahme der Sprachtranskription zu.",
+        "voice_invalid": "Die Aufnahme ist leer, zu groß oder in einem nicht unterstützten Format. Nehmen Sie erneut auf oder schreiben Sie Ihre Nachricht.",
     },
     "es": {
         "unavailable": "El asistente de IA no está disponible temporalmente. Puede consultar las preguntas frecuentes o enviar una solicitud gratuita.",
         "blocked": "No puedo ayudar con esa solicitud. Puedo explicar el proceso de ChinaTradeResolve, la preparación de pruebas y las opciones generales de apoyo en disputas.",
         "rate": "Se han enviado demasiados mensajes desde esta conexión. Espere unos minutos e inténtelo de nuevo.",
+        "bot": "Complete la verificación contra bots y vuelva a intentarlo.",
+        "daily": "El asistente de IA ha alcanzado su límite diario. Inténtelo mañana o envíe una solicitud gratuita.",
+        "voice_daily": "Se alcanzó el límite diario de transcripción de voz. Escriba su mensaje o inténtelo mañana.",
+        "voice_consent": "Acepte la transcripción de voz antes de grabar.",
+        "voice_invalid": "La grabación está vacía, es demasiado grande o usa un formato no compatible. Grabe de nuevo o escriba su mensaje.",
     },
     "ru": {
         "unavailable": "ИИ‑помощник временно недоступен. Вы по-прежнему можете прочитать FAQ или отправить бесплатную заявку.",
         "blocked": "Я не могу помочь с этим запросом. Я могу объяснить порядок работы ChinaTradeResolve, подготовку доказательств и общие варианты поддержки в споре.",
         "rate": "С этого подключения отправлено слишком много сообщений. Подождите несколько минут и попробуйте снова.",
+        "bot": "Пройдите проверку защиты от ботов и попробуйте снова.",
+        "daily": "ИИ‑помощник исчерпал суточный лимит. Попробуйте завтра или отправьте бесплатную заявку.",
+        "voice_daily": "Суточный лимит расшифровки голоса исчерпан. Напишите сообщение или попробуйте завтра.",
+        "voice_consent": "Перед записью подтвердите согласие на расшифровку голоса.",
+        "voice_invalid": "Запись пуста, слишком велика или имеет неподдерживаемый формат. Запишите снова или напишите сообщение.",
     },
     "sr": {
         "unavailable": "AI pomoćnik je privremeno nedostupan. I dalje možete pročitati FAQ ili poslati besplatnu prijavu.",
         "blocked": "Ne mogu da pomognem sa tim zahtevom. Mogu da objasnim postupak ChinaTradeResolve, pripremu dokaza i opšte mogućnosti podrške u sporu.",
         "rate": "Sa ove veze je poslato previše poruka. Sačekajte nekoliko minuta i pokušajte ponovo.",
+        "bot": "Završite proveru zaštite od botova i pokušajte ponovo.",
+        "daily": "AI pomoćnik je dostigao dnevni limit. Pokušajte sutra ili pošaljite besplatnu prijavu.",
+        "voice_daily": "Dostignut je dnevni limit glasovne transkripcije. Unesite poruku ili pokušajte sutra.",
+        "voice_consent": "Pre snimanja prihvatite saglasnost za glasovnu transkripciju.",
+        "voice_invalid": "Snimak je prazan, prevelik ili u nepodržanom formatu. Snimite ponovo ili unesite poruku.",
     },
 }
 
@@ -187,6 +217,7 @@ RULES:
 7. When useful, ask no more than one focused follow-up question.
 8. If asked how to prepare a case, prioritise: written order/specification, invoice/payment proof, supplier messages, delivery/inspection evidence, marketplace decisions, and a dated chronology.
 9. Do not provide instructions for moving cryptocurrency. You may only explain that project support is voluntary and that the user must verify the exact asset and network shown on the support page.
+10. When a user describes a dispute, briefly separate: the situation, factors that strengthen or weaken it, missing evidence and practical next steps. Never give a numerical probability or a "chance of winning"; explain that reliable prospects require the documents and human review.
 """.strip()
 
 

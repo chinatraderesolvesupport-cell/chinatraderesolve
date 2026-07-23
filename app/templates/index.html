@@ -165,10 +165,19 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-quick{display:flex;gap:7px;flex-wrap:wrap;padding:0 15px 12px;background:#f8fafc}
 .ai-chat-quick button{border:1px solid #94a3b8;background:#fff;color:#334155;border-radius:999px;padding:7px 10px;font-size:12px;cursor:pointer}
 .ai-chat-quick button:hover{border-color:#0f766e;color:#0f766e}
-.ai-chat-form{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;align-items:end}
+.ai-chat-form{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;align-items:end}
 .ai-chat-form textarea{min-height:46px;max-height:120px;resize:vertical;padding:10px 11px}
 .ai-chat-send{border:0;border-radius:10px;background:#14b8a6;color:#042f2e;font-weight:900;padding:12px 14px;cursor:pointer}
-.ai-chat-send:disabled,.ai-chat-form textarea:disabled{opacity:.55;cursor:not-allowed}
+.ai-chat-voice{width:44px;height:44px;border:1px solid #94a3b8;border-radius:10px;background:#fff;color:#0f766e;font-size:20px;cursor:pointer}
+.ai-chat-voice.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}
+.ai-chat-voice:disabled,.ai-chat-send:disabled,.ai-chat-form textarea:disabled{opacity:.55;cursor:not-allowed}
+.ai-voice-panel{padding:0 13px 10px;background:#fff;color:#475569;font-size:11px;line-height:1.4}
+.ai-voice-consent{display:flex;align-items:flex-start;gap:7px}.ai-voice-consent input{margin-top:2px}
+.ai-voice-status{min-height:16px;margin-top:5px;color:#0f766e}
+.ai-chat-turnstile{padding:0 13px 10px;background:#fff;overflow:hidden}
+.ai-message-content{display:block}
+.ai-listen{margin-top:7px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;padding:4px 7px;cursor:pointer;font-size:12px}
+@keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}
 .ai-chat-privacy{padding:0 13px 11px;background:#fff;color:#64748b;font-size:10px;line-height:1.4}
 @media(max-width:700px){.ai-chat-launcher{right:4%;bottom:96px;max-width:92%}.ai-chat-launcher span:last-child{max-width:210px}.ai-chat-panel{right:4%;bottom:151px;width:92%;max-height:calc(100vh - 175px)}}
 .ai-chat-launcher.is-compact{width:52px;height:52px;padding:0;justify-content:center}
@@ -480,15 +489,17 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </footer>
 <a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
 
-<div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
+<div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-enabled="{{ 'true' if voice_input_enabled else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
 <button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
 <section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">Не вставляйте конфиденциальные имена, номера заказов, пароли, приватные ключи или полные документы. Помощник даёт общую информацию, а не юридическую консультацию.</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
 <div class="ai-chat-quick" id="aiChatQuick"><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
-<form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" id="aiChatSend" type="submit">Отправить</button></form>
-<div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе ChinaTradeResolve. Последние сообщения передаются ИИ‑провайдеру только для ответа в этой беседе.</div>
+<form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea>{% if voice_input_enabled %}<button aria-label="Начать запись" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button">🎙</button>{% endif %}<button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">Отправить</button></form>
+{% if voice_input_enabled %}<div class="ai-voice-panel" id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span data-i18n="ai_voice_consent">Я согласен передать запись провайдеру ИИ только для расшифровки. Аудио не сохраняется в базе сайта.</span></label><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}
+{% if turnstile_site_key %}<div class="ai-chat-turnstile"><div class="cf-turnstile" data-response-field-name="ai-turnstile-response" data-sitekey="{{ turnstile_site_key }}"></div></div>{% endif %}
+<div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе дел. Последние сообщения передаются ИИ‑провайдеру; применяются его правила обработки и хранения. Голосовая запись удаляется из памяти сразу после расшифровки.</div>
 </section>
 </div>
 <script src="/static/translations-v2.js"></script>
@@ -742,9 +753,20 @@ if(aiChatRoot){
   const aiChatForm=document.getElementById('aiChatForm');
   const aiChatInput=document.getElementById('aiChatInput');
   const aiChatSend=document.getElementById('aiChatSend');
+  const aiVoiceButton=document.getElementById('aiVoiceButton');
+  const aiVoiceConsent=document.getElementById('aiVoiceConsent');
+  const aiVoiceStatus=document.getElementById('aiVoiceStatus');
+  const aiTurnstileRequired=aiChatRoot.dataset.turnstileRequired==='true';
+  const aiVoiceMaxSeconds=Math.max(15,Number(aiChatRoot.dataset.voiceMaxSeconds)||120);
   let aiChatHistory=[];
   let aiChatBusy=false;
   let aiChatAbortController=null;
+  let aiVoiceBusy=false;
+  let aiVoiceRecorder=null;
+  let aiVoiceStream=null;
+  let aiVoiceChunks=[];
+  let aiVoiceTimer=null;
+  let aiVoiceDiscard=false;
 
   function openAiChat(){
     aiChatPanel.hidden=false;
@@ -752,6 +774,8 @@ if(aiChatRoot){
     window.setTimeout(()=>aiChatInput.focus(),40);
   }
   function closeAiChat(){
+    stopVoiceRecording(true);
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatPanel.hidden=true;
     aiChatLauncher.setAttribute('aria-expanded','false');
     aiChatLauncher.focus();
@@ -759,7 +783,18 @@ if(aiChatRoot){
   function appendAiMessage(role,text,extraClass=''){
     const item=document.createElement('div');
     item.className=`ai-chat-message ${role}${extraClass?' '+extraClass:''}`;
-    item.textContent=text;
+    const content=document.createElement('span');
+    content.className='ai-message-content';
+    content.textContent=text;
+    item.appendChild(content);
+    if(role==='assistant'&&!extraClass&&'speechSynthesis' in window){
+      const listen=document.createElement('button');
+      listen.className='ai-listen';
+      listen.type='button';
+      listen.textContent=`🔊 ${aiCopy('ai_voice_listen')}`;
+      listen.addEventListener('click',()=>speakAiMessage(text));
+      item.appendChild(listen);
+    }
     aiChatMessages.appendChild(item);
     aiChatMessages.scrollTop=aiChatMessages.scrollHeight;
     return item;
@@ -768,6 +803,145 @@ if(aiChatRoot){
     const copy=currentCopy();
     return copy[key]||(translations.en&&translations.en[key])||'';
   }
+  function updateAiControls(){
+    aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim();
+    aiChatInput.disabled=aiChatBusy||aiVoiceBusy;
+    if(aiVoiceButton)aiVoiceButton.disabled=aiChatBusy||aiVoiceBusy&&!(aiVoiceRecorder&&aiVoiceRecorder.state==='recording');
+  }
+  function aiTurnstileToken(){
+    const field=aiChatPanel.querySelector('[name="ai-turnstile-response"]');
+    return field?String(field.value||''):'';
+  }
+  function resetAiTurnstile(){
+    const widget=aiChatPanel.querySelector('.cf-turnstile');
+    if(widget&&window.turnstile&&typeof window.turnstile.reset==='function'){
+      try{window.turnstile.reset(widget)}catch(_e){}
+    }
+  }
+  function speakAiMessage(text){
+    if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance)return;
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(text);
+    const voices={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
+    utterance.lang=voices[document.documentElement.lang]||'en-US';
+    window.speechSynthesis.speak(utterance);
+  }
+  function setVoiceStatus(key){
+    if(aiVoiceStatus)aiVoiceStatus.textContent=key?aiCopy(key):'';
+  }
+  function releaseVoiceStream(){
+    if(aiVoiceTimer){window.clearTimeout(aiVoiceTimer);aiVoiceTimer=null}
+    if(aiVoiceStream){aiVoiceStream.getTracks().forEach(track=>track.stop());aiVoiceStream=null}
+  }
+  function stopVoiceRecording(discard=false){
+    aiVoiceDiscard=aiVoiceDiscard||discard;
+    if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording'){
+      aiVoiceRecorder.stop();
+    }else{
+      releaseVoiceStream();
+      aiVoiceChunks=[];
+      aiVoiceBusy=false;
+      if(aiVoiceButton){
+        aiVoiceButton.classList.remove('recording');
+        aiVoiceButton.setAttribute('aria-pressed','false');
+        aiVoiceButton.setAttribute('aria-label',aiCopy('ai_voice_start_label'));
+      }
+      updateAiControls();
+    }
+  }
+  async function uploadVoiceRecording(blob){
+    const token=aiTurnstileToken();
+    if(aiTurnstileRequired&&!token){
+      setVoiceStatus('ai_voice_turnstile');
+      return;
+    }
+    setVoiceStatus('ai_voice_transcribing');
+    const data=new FormData();
+    data.append('audio',blob,blob.type.includes('mp4')?'voice.m4a':'voice.webm');
+    data.append('language',document.documentElement.lang);
+    data.append('voice_consent','true');
+    data.append('turnstile_token',token);
+    try{
+      const response=await fetch('/api/assistant/transcribe',{
+        method:'POST',
+        credentials:'same-origin',
+        body:data
+      });
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok){
+        const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_voice_error');
+        aiVoiceStatus.textContent=detail||aiCopy('ai_voice_error');
+        return;
+      }
+      const transcript=String(result.transcript||'').trim();
+      if(!transcript)throw new Error('empty transcript');
+      aiChatInput.value=transcript.slice(0,1500);
+      setVoiceStatus('ai_voice_review');
+    }catch(_error){
+      setVoiceStatus('ai_voice_error');
+    }finally{
+      resetAiTurnstile();
+    }
+  }
+  async function startVoiceRecording(){
+    if(!aiVoiceButton||aiVoiceBusy)return;
+    if(!aiVoiceConsent||!aiVoiceConsent.checked){
+      setVoiceStatus('ai_voice_consent_required');
+      aiVoiceConsent&&aiVoiceConsent.focus();
+      return;
+    }
+    if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+      setVoiceStatus('ai_voice_unsupported');
+      return;
+    }
+    try{
+      aiVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+      const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported(type))||'';
+      if(!mimeType){
+        releaseVoiceStream();
+        setVoiceStatus('ai_voice_unsupported');
+        return;
+      }
+      aiVoiceRecorder=new MediaRecorder(aiVoiceStream,{mimeType});
+      aiVoiceChunks=[];
+      aiVoiceDiscard=false;
+      aiVoiceBusy=true;
+      aiVoiceRecorder.addEventListener('dataavailable',event=>{if(event.data&&event.data.size)aiVoiceChunks.push(event.data)});
+      aiVoiceRecorder.addEventListener('stop',async()=>{
+        const discard=aiVoiceDiscard;
+        const type=aiVoiceRecorder.mimeType||'audio/webm';
+        const blob=new Blob(aiVoiceChunks,{type});
+        aiVoiceChunks=[];
+        aiVoiceRecorder=null;
+        releaseVoiceStream();
+        if(aiVoiceButton){
+          aiVoiceButton.classList.remove('recording');
+          aiVoiceButton.setAttribute('aria-pressed','false');
+          aiVoiceButton.setAttribute('aria-label',aiCopy('ai_voice_start_label'));
+        }
+        if(!discard&&blob.size)await uploadVoiceRecording(blob);
+        aiVoiceBusy=false;
+        updateAiControls();
+        if(!discard)aiChatInput.focus();
+      },{once:true});
+      aiVoiceRecorder.start(500);
+      aiVoiceButton.classList.add('recording');
+      aiVoiceButton.setAttribute('aria-pressed','true');
+      aiVoiceButton.setAttribute('aria-label',aiCopy('ai_voice_stop'));
+      setVoiceStatus('ai_voice_recording');
+      updateAiControls();
+      aiVoiceTimer=window.setTimeout(()=>{
+        setVoiceStatus('ai_voice_too_long');
+        stopVoiceRecording(false);
+      },aiVoiceMaxSeconds*1000);
+    }catch(_error){
+      releaseVoiceStream();
+      aiVoiceBusy=false;
+      setVoiceStatus('ai_voice_permission');
+      updateAiControls();
+    }
+  }
   function resetAiChatForLanguageChange(){
     if(aiChatAbortController){
       aiChatAbortController.abort();
@@ -775,24 +949,30 @@ if(aiChatRoot){
     }
     aiChatHistory=[];
     aiChatBusy=false;
-    aiChatInput.disabled=false;
-    aiChatSend.disabled=false;
+    stopVoiceRecording(true);
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatInput.value='';
+    setVoiceStatus('');
     aiChatMessages.replaceChildren();
     appendAiMessage('assistant',aiCopy('ai_chat_welcome'));
     aiChatQuick.hidden=false;
+    updateAiControls();
   }
   async function sendAiMessage(rawText){
     const text=String(rawText||'').trim();
     if(!text||aiChatBusy)return;
+    const turnstileToken=aiTurnstileToken();
+    if(aiTurnstileRequired&&!turnstileToken){
+      setVoiceStatus('ai_voice_turnstile');
+      return;
+    }
     appendAiMessage('user',text);
     aiChatHistory.push({role:'user',content:text});
     aiChatHistory=aiChatHistory.slice(-8);
     aiChatInput.value='';
     aiChatQuick.hidden=true;
     aiChatBusy=true;
-    aiChatInput.disabled=true;
-    aiChatSend.disabled=true;
+    updateAiControls();
     const thinking=appendAiMessage('assistant',aiCopy('ai_chat_thinking'),'thinking');
     const controller=new AbortController();
     aiChatAbortController=controller;
@@ -802,7 +982,7 @@ if(aiChatRoot){
         headers:{'Content-Type':'application/json'},
         credentials:'same-origin',
         signal:controller.signal,
-        body:JSON.stringify({language:document.documentElement.lang,messages:aiChatHistory})
+        body:JSON.stringify({language:document.documentElement.lang,messages:aiChatHistory,turnstile_token:turnstileToken})
       });
       const result=await response.json().catch(()=>({}));
       thinking.remove();
@@ -823,8 +1003,8 @@ if(aiChatRoot){
       if(aiChatAbortController===controller){
         aiChatAbortController=null;
         aiChatBusy=false;
-        aiChatInput.disabled=false;
-        aiChatSend.disabled=false;
+        resetAiTurnstile();
+        updateAiControls();
         aiChatInput.focus();
       }
     }
@@ -832,8 +1012,13 @@ if(aiChatRoot){
   document.addEventListener('ctr:language-changed',resetAiChatForLanguageChange);
   aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat());
   aiChatClose.addEventListener('click',closeAiChat);
+  if(aiVoiceButton)aiVoiceButton.addEventListener('click',()=>{
+    if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(false);
+    else startVoiceRecording();
+  });
   aiChatQuick.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>sendAiMessage(button.textContent)));
   aiChatForm.addEventListener('submit',event=>{event.preventDefault();sendAiMessage(aiChatInput.value)});
+  aiChatInput.addEventListener('input',updateAiControls);
   aiChatInput.addEventListener('keydown',event=>{
     if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage(aiChatInput.value)}
   });
@@ -841,13 +1026,14 @@ if(aiChatRoot){
     if(aiChatPanel.hidden)return;
     if(event.key==='Escape'){closeAiChat();return;}
     if(event.key==='Tab'){
-      const focusable=[...aiChatPanel.querySelectorAll('button:not([disabled]),textarea:not([disabled])')];
+      const focusable=[...aiChatPanel.querySelectorAll('button:not([disabled]),textarea:not([disabled]),input:not([disabled])')];
       if(!focusable.length)return;
       const first=focusable[0],last=focusable[focusable.length-1];
       if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
       else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
     }
   });
+  updateAiControls();
 }
 
 </script>

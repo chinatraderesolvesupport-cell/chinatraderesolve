@@ -15,6 +15,11 @@ OPENAI_MODEL=модель_доступная_в_вашем_OpenAI_проекте
 OPENAI_MODERATION_MODEL=omni-moderation-latest
 AI_ASSISTANT_MAX_OUTPUT_TOKENS=500
 AI_ASSISTANT_HISTORY_MESSAGES=8
+MAX_DAILY_AI_ASSISTANT_REQUESTS=40
+ENABLE_VOICE_INPUT=true
+OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
+VOICE_MAX_SECONDS=120
+MAX_DAILY_VOICE_TRANSCRIPTIONS=20
 ```
 
 Для `gpt-5.6-luna`, `gpt-5.6-terra` и `gpt-5.6-sol` версия 3.7.5 автоматически использует `reasoning.effort=none` и низкую многословность. Это подходит короткому публичному чату и не даёт скрытым reasoning-токенам исчерпать лимит до появления видимого ответа.
@@ -43,7 +48,11 @@ https://chinatraderesolve.onrender.com/health
 
 ```json
 {
-  "ai_assistant_enabled": true
+  "ai_assistant_enabled": true,
+  "voice_input_enabled": true,
+  "voice_max_seconds": 120,
+  "ai_assistant_daily_limit": 40,
+  "voice_transcriptions_daily_limit": 20
 }
 ```
 
@@ -61,6 +70,9 @@ https://chinatraderesolve.onrender.com/health
 4. предупреждение о конфиденциальности;
 5. работу на телефоне;
 6. отсутствие ключа API в исходном HTML страницы.
+7. запись голоса, остановку вручную и автоматическую остановку через две минуты;
+8. появление расшифровки в редактируемом поле без автоматической отправки;
+9. озвучивание ответа кнопкой «Прослушать».
 
 ## 6. Контроль расходов и безопасности
 
@@ -78,6 +90,11 @@ https://chinatraderesolve.onrender.com/health
 - в запрос OpenAI передаются только последние сообщения;
 - `store: false`;
 - ограничение 18 запросов за 10 минут с одного подключения;
+- не более 6 голосовых записей за 30 минут с одного подключения;
+- отдельные общие суточные лимиты для ответов и расшифровок;
+- Turnstile защищает заявку, текстовый чат и голосовую расшифровку;
+- голос передаётся только после отдельного согласия и не сохраняется в базе дел;
+- расшифровка сначала показывается пользователю для проверки;
 - сообщения до 1500 символов в интерфейсе;
 - история до 8 последних сообщений;
 - ответ ограничен по длине;

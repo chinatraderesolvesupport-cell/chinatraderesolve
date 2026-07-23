@@ -97,6 +97,7 @@ class AssistantMessage(BaseModel):
 class AssistantChatRequest(BaseModel):
     language: AssistantLanguage = "en"
     messages: list[AssistantMessage] = Field(min_length=1, max_length=10)
+    turnstile_token: str = Field(default="", max_length=2048, exclude=True)
 
     @model_validator(mode="after")
     def validate_conversation(self) -> "AssistantChatRequest":
@@ -109,3 +110,7 @@ class AssistantChatRequest(BaseModel):
 
 class AssistantChatResponse(BaseModel):
     reply: str = Field(min_length=1, max_length=5000)
+
+
+class VoiceTranscriptionResponse(BaseModel):
+    transcript: str = Field(min_length=1, max_length=8000)

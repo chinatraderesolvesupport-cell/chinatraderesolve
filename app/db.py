@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import secrets
 from contextlib import contextmanager
@@ -1077,6 +1078,42 @@ def claim_document_analysis(
 
 def get_daily_analysis_usage() -> int:
     counter_key = f"document_analysis:{datetime.now(timezone.utc).date().isoformat()}"
+    with transaction() as conn:
+        row = execute(
+            conn, "SELECT count FROM usage_counters WHERE counter_key=?", (counter_key,)
+        ).fetchone()
+        return int(row["count"]) if row else 0
+
+
+class DailyUsageLimitError(RuntimeError):
+    """Raised when a public AI feature reaches its configured UTC-day budget."""
+
+
+def claim_daily_usage(counter_name: str, max_daily: int) -> int:
+    """Atomically claim one request from a named daily budget."""
+    if not re.fullmatch(r"[a-z][a-z0-9_]{1,63}", counter_name):
+        raise ValueError("Invalid usage-counter name")
+    counter_key = f"{counter_name}:{datetime.now(timezone.utc).date().isoformat()}"
+    with transaction() as conn:
+        counter = execute(
+            conn,
+            """
+            INSERT INTO usage_counters(counter_key,count) VALUES (?,1)
+            ON CONFLICT(counter_key) DO UPDATE SET count=usage_counters.count+1
+            WHERE usage_counters.count<?
+            RETURNING count
+            """,
+            (counter_key, int(max_daily)),
+        ).fetchone()
+        if not counter:
+            raise DailyUsageLimitError(f"The daily {counter_name} budget has been reached")
+        return int(counter["count"])
+
+
+def get_daily_usage(counter_name: str) -> int:
+    if not re.fullmatch(r"[a-z][a-z0-9_]{1,63}", counter_name):
+        raise ValueError("Invalid usage-counter name")
+    counter_key = f"{counter_name}:{datetime.now(timezone.utc).date().isoformat()}"
     with transaction() as conn:
         row = execute(
             conn, "SELECT count FROM usage_counters WHERE counter_key=?", (counter_key,)

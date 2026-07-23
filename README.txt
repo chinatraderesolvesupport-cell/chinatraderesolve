@@ -1,9 +1,9 @@
-ChinaTradeResolve Document AI v3.7.8
+ChinaTradeResolve Document AI v3.7.9
 
 Готовый пакет сайта с приватной загрузкой до 20 PDF/изображений, безопасным фоновым ИИ-анализом, админ-панелью и многоязычным интерфейсом.
 
 Основные инструкции: README.md, DEPLOY_RU.md и DOCUMENT_AI_SETUP_RU.md.
-Результат проверки: TEST_REPORT_V3_7_5_RU.txt.
+Результат проверки: TEST_REPORT_V3_7_9_RU.txt.
 Никогда не загружайте в GitHub .env, API-ключи, пароли, seed-фразы или приватные ключи.
 
 Готовность к запуску v3.7.0:

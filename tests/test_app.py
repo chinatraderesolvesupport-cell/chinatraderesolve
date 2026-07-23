@@ -162,6 +162,12 @@ def test_support_page_is_optional_and_non_priority():
     assert 'class="coin-icon usdt"' in page.text
     assert 'class="coin-icon sol"' in page.text
     assert page.text.count('class="network-alert"') == 4
+    assert 'id="cryptoToggle"' in page.text
+    assert 'aria-expanded="false"' in page.text
+    assert 'aria-controls="cryptoOptions"' in page.text
+    assert 'id="cryptoOptions" hidden' in page.text
+    assert "grid-template-columns:repeat(2,minmax(0,1fr))" in page.text
+    assert "id.startsWith('wallet-')" in page.text
     assert "Обязательная сеть:" in page.text
     assert "Do not use ERC20, BEP20 or any other network." in page.text
 
@@ -170,12 +176,20 @@ def test_home_shows_configured_voluntary_payment_methods():
     page = client.get("/")
     assert page.status_code == 200
     assert 'href="/support#paypal"' in page.text
-    assert 'href="/support#wallet-btc"' in page.text
-    assert 'href="/support#wallet-eth"' in page.text
-    assert 'href="/support#wallet-usdt-trc20"' in page.text
-    assert 'href="/support#wallet-sol"' in page.text
+    assert 'href="/support#crypto"' in page.text
+    assert 'href="/support#wallet-btc"' not in page.text
+    assert 'data-i18n="support_crypto_method"' in page.text
     assert "PayPal" in page.text
-    assert "USDT" in page.text
+    assert "Криптовалюта" in page.text
+
+
+def test_mobile_menu_accessible_name_is_localized():
+    page = client.get("/")
+    translations = client.get("/static/translations-v2.js")
+    assert page.status_code == 200
+    assert translations.status_code == 200
+    assert 'data-i18n-aria-label="mobile_menu_open"' in page.text
+    assert '"mobile_menu_open":"Open menu"' in translations.text
 
 
 def test_admin_auth_queue_close_and_feedback():
@@ -1254,9 +1268,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.8"
+    assert health.json()["version"] == "3.7.9"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.8"
+    assert health.headers["x-app-version"] == "3.7.9"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [

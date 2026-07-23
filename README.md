@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.8
+# ChinaTradeResolve Document AI v3.7.9
 
-Version 3.7.8 adds the verified public BTC, ETH, USDT TRC20 and SOL receiving addresses, generates matching QR codes, and displays a prominent required-network warning on every cryptocurrency card. The icons and linked support methods from v3.7.7 remain in place.
+Version 3.7.9 replaces the four cryptocurrency links on the landing page with one clear cryptocurrency option. On the support page it reveals the four wallet cards on demand in a 2×2 desktop grid and preserves direct wallet links. It also localizes the mobile-menu accessible name in all six languages.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -289,7 +289,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.8
+cd ChinaTradeResolve_Document_AI_v3.7.9
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

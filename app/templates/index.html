@@ -664,7 +664,7 @@ async function uploadDescriptionVoice(blob){
   setDescriptionVoiceStatus('description_voice_transcribing');
   const data=new FormData();
   data.append('audio',blob,blob.type.includes('mp4')?'description.m4a':'description.webm');
-  data.append('language',document.documentElement.lang||'en');data.append('voice_consent','true');data.append('turnstile_token',token);
+  data.append('language',document.documentElement.lang||'en');data.append('voice_consent','true');data.append('turnstile_token',token);data.append('purpose','description');
   try{
     const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data});
     const result=await response.json().catch(()=>({}));
@@ -1121,6 +1121,7 @@ if(aiChatRoot){
     data.append('language',document.documentElement.lang);
     data.append('voice_consent','true');
     data.append('turnstile_token',token);
+    data.append('purpose','assistant');
     try{
       const response=await fetch('/api/assistant/transcribe',{
         method:'POST',

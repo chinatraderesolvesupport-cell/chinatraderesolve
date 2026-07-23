@@ -600,6 +600,8 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert 'id="descriptionVoicePanel"' in home.text
     assert 'id="descriptionVoiceTurnstileWidget"' in home.text or 'data-turnstile-required="false"' in home.text
     assert "uploadDescriptionVoice" in home.text
+    assert "data.append('purpose','description')" in home.text
+    assert "data.append('purpose','assistant')" in home.text
     assert "descriptionField.dispatchEvent(new Event('input'" in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
@@ -655,6 +657,135 @@ def test_ai_assistant_request_validation():
     assert too_long.status_code == 422
 
 
+
+def test_ai_assistant_scope_guard_blocks_general_chat_and_specific_vendor_requests():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    off_topic = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Как починить Toyota Corolla, если стучат амортизаторы?",
+                }
+            ],
+        }
+    )
+    assert "только по вопросам споров" in assistant_scope_reply(off_topic)
+
+    vendor_request = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Порекомендуйте конкретного надёжного поставщика из Китая и дайте его контакты.",
+                }
+            ],
+        }
+    )
+    vendor_reply = assistant_scope_reply(vendor_request)
+    assert "не рекомендую" in vendor_reply
+    assert "критерии проверки" in vendor_reply
+
+
+def test_ai_assistant_scope_guard_allows_relevant_questions_and_contextual_followups():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    evidence = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Какие доказательства готовить для спора с китайским поставщиком?",
+                }
+            ],
+        }
+    )
+    assert assistant_scope_reply(evidence) is None
+
+    for quick_question in (
+        "Подходит ли сервис для моей ситуации?",
+        "Как проходит бесплатная проверка?",
+        "Is this service suitable for my situation?",
+        "How does the free review work?",
+    ):
+        quick = AssistantChatRequest.model_validate(
+            {
+                "language": "ru" if quick_question[0] > "z" else "en",
+                "messages": [{"role": "user", "content": quick_question}],
+            }
+        )
+        assert assistant_scope_reply(quick) is None
+
+    due_diligence = AssistantChatRequest.model_validate(
+        {
+            "language": "en",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "How can I verify a Chinese supplier and compare neutral red flags?",
+                }
+            ],
+        }
+    )
+    assert assistant_scope_reply(due_diligence) is None
+
+    followup = AssistantChatRequest.model_validate(
+        {
+            "language": "en",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "My supplier delivered goods that differ from the written specification.",
+                },
+                {"role": "assistant", "content": "Please preserve the written order."},
+                {"role": "user", "content": "What should I do next?"},
+            ],
+        }
+    )
+    assert assistant_scope_reply(followup) is None
+
+
+def test_ai_assistant_scope_guard_does_not_consume_daily_quota(monkeypatch):
+    import app.main as main_module
+
+    calls = {"usage": 0, "provider": 0}
+
+    async def passed_verification(_token, _request):
+        return True
+
+    async def unexpected_provider(_payload):
+        calls["provider"] += 1
+        return "unexpected"
+
+    def unexpected_usage(*_args, **_kwargs):
+        calls["usage"] += 1
+        return 1
+
+    monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "verify_turnstile", passed_verification)
+    monkeypatch.setattr(main_module, "assistant_reply", unexpected_provider)
+    monkeypatch.setattr(main_module, "claim_daily_usage", unexpected_usage)
+
+    response = client.post(
+        "/api/assistant",
+        json={
+            "language": "en",
+            "messages": [{"role": "user", "content": "How do I repair a Toyota engine?"}],
+            "turnstile_token": "test-token",
+        },
+        headers={"x-forwarded-for": "198.51.100.247"},
+    )
+    assert response.status_code == 200
+    assert "only covers disputes" in response.json()["reply"]
+    assert calls == {"usage": 0, "provider": 0}
+
+
 def test_ai_assistant_output_removes_unicode_noncharacters():
     from app.ai_assistant import _clean_output_text
 
@@ -690,7 +821,7 @@ def test_voice_transcription_api_mock(monkeypatch):
     assert "consent" in no_consent.json()["detail"].lower()
     response = client.post(
         "/api/assistant/transcribe",
-        data={"language": "en", "voice_consent": "true"},
+        data={"language": "en", "voice_consent": "true", "purpose": "description"},
         files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
         headers={"x-forwarded-for": "198.51.100.245"},
     )
@@ -700,6 +831,46 @@ def test_voice_transcription_api_mock(monkeypatch):
     assert captured["content_type"] == "audio/webm"
     assert captured["language"] == "en"
     assert len(captured["safety_identifier"]) == 64
+
+
+
+def test_voice_rate_limit_is_separate_for_assistant_and_description(monkeypatch):
+    import app.main as main_module
+    from app.security import SlidingWindowRateLimiter
+
+    async def fake_transcribe(*_args, **_kwargs):
+        return "Transcribed text."
+
+    monkeypatch.setattr(main_module, "voice_input_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "transcribe_audio", fake_transcribe)
+    monkeypatch.setattr(main_module, "claim_daily_usage", lambda *_args, **_kwargs: 1)
+    monkeypatch.setattr(main_module, "voice_attempt_limiter", SlidingWindowRateLimiter(limit=20, window_seconds=600))
+    monkeypatch.setattr(main_module, "voice_limiter", SlidingWindowRateLimiter(limit=1, window_seconds=1800))
+
+    headers = {"x-forwarded-for": "198.51.100.246"}
+    assistant = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "ru", "voice_consent": "true", "purpose": "assistant"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+        headers=headers,
+    )
+    description = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "ru", "voice_consent": "true", "purpose": "description"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+        headers=headers,
+    )
+    description_again = client.post(
+        "/api/assistant/transcribe",
+        data={"language": "ru", "voice_consent": "true", "purpose": "description"},
+        files={"audio": ("voice.webm", b"test-audio", "audio/webm")},
+        headers=headers,
+    )
+
+    assert assistant.status_code == 200
+    assert description.status_code == 200
+    assert description_again.status_code == 429
+    assert "голосовых записей" in description_again.json()["detail"]
 
 
 def test_voice_transcription_provider_request_and_validation(monkeypatch):
@@ -857,6 +1028,8 @@ def test_ai_assistant_responses_api_mock(monkeypatch):
     assert captured["body"]["text"] == {"verbosity": "low"}
     assert captured["body"]["input"][0]["role"] == "developer"
     assert "not legal advice" in captured["body"]["input"][0]["content"][0]["text"]
+    assert "Answer only about commercial disputes" in captured["body"]["input"][0]["content"][0]["text"]
+    assert "Never name, rank, advertise, endorse" in captured["body"]["input"][0]["content"][0]["text"]
     assert captured["headers"]["Authorization"] == "Bearer test-key"
 
 
@@ -1447,9 +1620,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.16"
+    assert health.json()["version"] == "3.7.18"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.16"
+    assert health.headers["x-app-version"] == "3.7.18"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["voice_transcriptions_daily_limit"] == 20
     assert health.json()["ai_assistant_daily_limit"] == 40

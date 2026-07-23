@@ -35,6 +35,7 @@ from .ai_assistant import (
     AssistantProviderError,
     assistant_is_enabled,
     assistant_reply,
+    assistant_scope_reply,
     localized_error,
 )
 from .config import admin_token_is_secure, app_secret_is_secure, settings
@@ -117,7 +118,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.16"
+APP_VERSION = "3.7.18"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -300,7 +301,8 @@ templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
-voice_limiter = SlidingWindowRateLimiter(limit=6, window_seconds=1800)
+voice_attempt_limiter = SlidingWindowRateLimiter(limit=30, window_seconds=600)
+voice_limiter = SlidingWindowRateLimiter(limit=10, window_seconds=1800)
 document_upload_limiter = SlidingWindowRateLimiter(limit=12, window_seconds=900)
 document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=1800)
 init_db()
@@ -392,6 +394,15 @@ def require_admin_csrf(request: Request, provided: str) -> None:
     expected = str(request.session.get("csrf_token") or "")
     if not expected or not secrets.compare_digest(provided or "", expected):
         raise HTTPException(status_code=403, detail="Invalid administrator form token")
+
+
+def voice_rate_session_key(request: Request) -> str:
+    """Use a browser-session bucket while retaining a separate IP flood guard."""
+    token = str(request.session.get("voice_rate_id") or "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{20,80}", token):
+        token = secrets.token_urlsafe(24)
+        request.session["voice_rate_id"] = token
+    return token
 
 
 def make_reference() -> str:
@@ -1166,6 +1177,9 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
         raise HTTPException(status_code=503, detail=localized_error(payload.language, "unavailable"))
     if not await verify_turnstile(payload.turnstile_token, request):
         raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
+    local_scope_reply = assistant_scope_reply(payload)
+    if local_scope_reply is not None:
+        return AssistantChatResponse(reply=local_scope_reply)
     try:
         claim_daily_usage("ai_assistant", settings.max_daily_ai_assistant_requests)
     except DailyUsageLimitError:
@@ -1186,10 +1200,14 @@ async def public_voice_transcription(
     language: str = Form("en"),
     voice_consent: bool = Form(False),
     turnstile_token: str = Form(""),
+    purpose: str = Form("assistant"),
 ) -> VoiceTranscriptionResponse:
     language_code = language if language in LANGUAGE_CODES else "en"
-    if not voice_limiter.allow(f"voice:{client_key(request)}"):
-        raise HTTPException(status_code=429, detail=localized_error(language_code, "rate"))
+    client = client_key(request)
+    session_key = voice_rate_session_key(request)
+    voice_purpose = purpose if purpose in {"assistant", "description"} else "assistant"
+    if not voice_attempt_limiter.allow(f"voice-attempt:{client}"):
+        raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_rate"))
     if not voice_input_is_enabled():
         raise HTTPException(status_code=503, detail=localized_error(language_code, "unavailable"))
     if not voice_consent:
@@ -1205,6 +1223,8 @@ async def public_voice_transcription(
         raise HTTPException(status_code=status_code, detail=localized_error(language_code, "voice_invalid"))
     if not await verify_turnstile(turnstile_token, request):
         raise HTTPException(status_code=400, detail=localized_error(language_code, "bot"))
+    if not voice_limiter.allow(f"voice:{voice_purpose}:{session_key}"):
+        raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_rate"))
     try:
         claim_daily_usage("voice_transcription", settings.max_daily_voice_transcriptions)
     except DailyUsageLimitError:

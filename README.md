@@ -1,10 +1,23 @@
-# ChinaTradeResolve Document AI v3.7.16
+# ChinaTradeResolve Document AI v3.7.18
 
-Version 3.7.16 fixes the layout defects found during a second live first-time-user review. Quick questions disappear after the conversation starts, the answer gets the available reading space, the voice-consent area stays inside the assistant, mobile background scrolling is locked, closing the assistant lands on the first form fields, and the first application step fits in one laptop viewport.
+Version 3.7.18 prevents normal voice use from being blocked after testing both voice entry points. The AI-assistant microphone and the application-description microphone now use separate short-window quotas, while a higher emergency request guard and the shared daily budget still protect the service from abuse. The strict public-assistant scope guard from v3.7.17 and the v3.7.16 interface fixes are retained.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
-## First-time visitor UX in v3.7.16
+
+## Voice transcription rate-limit fix in v3.7.18
+
+- Assistant voice questions and application-description dictation use separate rate-limit buckets.
+- Each purpose allows up to ten validated transcription attempts per thirty minutes per browser session.
+- A separate high-frequency guard still blocks automated request floods before expensive processing.
+- The shared daily transcription budget remains unchanged.
+- Voice-specific rate-limit messages now explain that the restriction concerns recordings, not ordinary chat messages.
+
+## Public AI scope control in v3.7.17
+
+The public assistant now rejects unrelated general-chat requests locally before they consume the OpenAI daily quota. It remains focused on Chinese-supplier disputes, evidence, contracts, marketplace complaints and practical transaction-risk reduction. It may explain neutral supplier due-diligence criteria, but it does not recommend, rank, advertise or endorse specific sellers, factories, agents or companies.
+
+## First-time visitor UX retained from v3.7.16
 
 - The chat Turnstile widget is rendered explicitly after the panel opens, avoiding incorrect measurements inside a hidden container.
 - Flexible size is used where possible; compact size is selected only for very narrow containers.
@@ -321,7 +334,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.16
+cd ChinaTradeResolve_Document_AI_v3.7.18
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

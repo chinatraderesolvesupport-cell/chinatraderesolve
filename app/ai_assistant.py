@@ -28,7 +28,10 @@ ERROR_COPY = {
     "en": {
         "unavailable": "The AI assistant is temporarily unavailable. You can still read the FAQ or submit a free application.",
         "blocked": "I cannot help with that request. I can explain the ChinaTradeResolve process, evidence preparation and general dispute-support options.",
+        "scope": "This assistant only covers disputes with Chinese suppliers, contracts, evidence, marketplace complaints and practical risk reduction. Please describe your supplier-related situation in general terms.",
+        "vendor": "I do not recommend, rank or endorse specific sellers, factories, agents or companies, and I cannot guarantee that any provider is reliable. I can help you compare neutral checks such as registration, samples, contract terms, inspections, payment safeguards and warning signs.",
         "rate": "Too many messages were sent from this connection. Please wait a few minutes and try again.",
+        "voice_rate": "Too many voice recordings were transcribed in a short time. Please wait a little or type the text.",
         "bot": "Please complete the bot-protection check and try again.",
         "daily": "The AI assistant has reached its daily usage limit. Please try again tomorrow or submit a free application.",
         "voice_daily": "The daily voice-transcription limit has been reached. Please type your message or try again tomorrow.",
@@ -38,7 +41,10 @@ ERROR_COPY = {
     "fr": {
         "unavailable": "L’assistant IA est temporairement indisponible. Vous pouvez toujours consulter la FAQ ou envoyer une demande gratuite.",
         "blocked": "Je ne peux pas aider pour cette demande. Je peux expliquer le fonctionnement de ChinaTradeResolve, la préparation des preuves et les options générales d’assistance en cas de litige.",
+        "scope": "Cet assistant traite uniquement les litiges avec des fournisseurs chinois, les contrats, les preuves, les réclamations sur les plateformes et la réduction pratique des risques. Décrivez votre situation avec le fournisseur en termes généraux.",
+        "vendor": "Je ne recommande, ne classe ni ne cautionne de vendeurs, usines, agents ou sociétés précis, et je ne peux garantir la fiabilité d’aucun prestataire. Je peux vous aider à comparer des critères neutres : immatriculation, échantillons, contrat, inspection, sécurité du paiement et signaux d’alerte.",
         "rate": "Trop de messages ont été envoyés depuis cette connexion. Veuillez patienter quelques minutes avant de réessayer.",
+        "voice_rate": "Trop d’enregistrements vocaux ont été transcrits en peu de temps. Patientez un peu ou saisissez le texte.",
         "bot": "Veuillez effectuer la vérification anti-robot puis réessayer.",
         "daily": "L’assistant IA a atteint sa limite quotidienne. Réessayez demain ou envoyez une demande gratuite.",
         "voice_daily": "La limite quotidienne de transcription vocale est atteinte. Saisissez votre message ou réessayez demain.",
@@ -48,7 +54,10 @@ ERROR_COPY = {
     "de": {
         "unavailable": "Der KI-Assistent ist vorübergehend nicht verfügbar. Sie können weiterhin die FAQ lesen oder einen kostenlosen Antrag einreichen.",
         "blocked": "Bei dieser Anfrage kann ich nicht helfen. Ich kann den Ablauf von ChinaTradeResolve, die Vorbereitung von Nachweisen und allgemeine Möglichkeiten der Streitunterstützung erklären.",
+        "scope": "Dieser Assistent behandelt nur Streitigkeiten mit chinesischen Lieferanten, Verträge, Nachweise, Beschwerden bei Marktplätzen und praktische Risikominderung. Beschreiben Sie Ihre Lieferantensituation bitte allgemein.",
+        "vendor": "Ich empfehle, bewerte oder bestätige keine bestimmten Verkäufer, Fabriken, Agenten oder Unternehmen und kann deren Zuverlässigkeit nicht garantieren. Ich kann neutrale Prüfkriterien erläutern: Registrierung, Muster, Vertragsbedingungen, Inspektion, Zahlungsschutz und Warnzeichen.",
         "rate": "Von dieser Verbindung wurden zu viele Nachrichten gesendet. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
+        "voice_rate": "In kurzer Zeit wurden zu viele Sprachaufnahmen transkribiert. Warten Sie kurz oder geben Sie den Text ein.",
         "bot": "Bitte führen Sie die Bot-Schutz-Prüfung durch und versuchen Sie es erneut.",
         "daily": "Der KI-Assistent hat sein Tageslimit erreicht. Versuchen Sie es morgen erneut oder senden Sie einen kostenlosen Antrag.",
         "voice_daily": "Das Tageslimit für Sprachtranskriptionen ist erreicht. Schreiben Sie Ihre Nachricht oder versuchen Sie es morgen erneut.",
@@ -58,7 +67,10 @@ ERROR_COPY = {
     "es": {
         "unavailable": "El asistente de IA no está disponible temporalmente. Puede consultar las preguntas frecuentes o enviar una solicitud gratuita.",
         "blocked": "No puedo ayudar con esa solicitud. Puedo explicar el proceso de ChinaTradeResolve, la preparación de pruebas y las opciones generales de apoyo en disputas.",
+        "scope": "Este asistente solo trata disputas con proveedores chinos, contratos, pruebas, reclamaciones en plataformas y reducción práctica de riesgos. Describa su situación con el proveedor en términos generales.",
+        "vendor": "No recomiendo, clasifico ni respaldo vendedores, fábricas, agentes o empresas concretos, y no puedo garantizar la fiabilidad de ningún proveedor. Puedo ayudarle a comparar controles neutrales: registro, muestras, contrato, inspección, protección del pago y señales de alerta.",
         "rate": "Se han enviado demasiados mensajes desde esta conexión. Espere unos minutos e inténtelo de nuevo.",
+        "voice_rate": "Se transcribieron demasiadas grabaciones de voz en poco tiempo. Espere un poco o escriba el texto.",
         "bot": "Complete la verificación contra bots y vuelva a intentarlo.",
         "daily": "El asistente de IA ha alcanzado su límite diario. Inténtelo mañana o envíe una solicitud gratuita.",
         "voice_daily": "Se alcanzó el límite diario de transcripción de voz. Escriba su mensaje o inténtelo mañana.",
@@ -68,7 +80,10 @@ ERROR_COPY = {
     "ru": {
         "unavailable": "ИИ‑помощник временно недоступен. Вы по-прежнему можете прочитать FAQ или отправить бесплатную заявку.",
         "blocked": "Я не могу помочь с этим запросом. Я могу объяснить порядок работы ChinaTradeResolve, подготовку доказательств и общие варианты поддержки в споре.",
+        "scope": "Этот помощник отвечает только по вопросам споров с китайскими поставщиками, договоров, доказательств, жалоб на маркетплейсы и практического снижения рисков. Опишите, пожалуйста, ситуацию с поставщиком в общих чертах.",
+        "vendor": "Я не рекомендую, не рекламирую и не ранжирую конкретных продавцов, фабрики, агентов или компании и не могу гарантировать их надёжность. Я могу помочь сравнить нейтральные критерии проверки: регистрацию, образцы, договор, инспекцию, защиту платежа и тревожные признаки.",
         "rate": "С этого подключения отправлено слишком много сообщений. Подождите несколько минут и попробуйте снова.",
+        "voice_rate": "За короткое время расшифровано слишком много голосовых записей. Немного подождите или введите текст вручную.",
         "bot": "Пройдите проверку защиты от ботов и попробуйте снова.",
         "daily": "ИИ‑помощник исчерпал суточный лимит. Попробуйте завтра или отправьте бесплатную заявку.",
         "voice_daily": "Суточный лимит расшифровки голоса исчерпан. Напишите сообщение или попробуйте завтра.",
@@ -78,7 +93,10 @@ ERROR_COPY = {
     "sr": {
         "unavailable": "AI pomoćnik je privremeno nedostupan. I dalje možete pročitati FAQ ili poslati besplatnu prijavu.",
         "blocked": "Ne mogu da pomognem sa tim zahtevom. Mogu da objasnim postupak ChinaTradeResolve, pripremu dokaza i opšte mogućnosti podrške u sporu.",
+        "scope": "Ovaj pomoćnik odgovara samo na pitanja o sporovima sa kineskim dobavljačima, ugovorima, dokazima, žalbama na platformama i praktičnom smanjenju rizika. Opišite situaciju sa dobavljačem u opštim crtama.",
+        "vendor": "Ne preporučujem, ne rangiram i ne podržavam konkretne prodavce, fabrike, agente ili kompanije i ne mogu da garantujem njihovu pouzdanost. Mogu da pomognem sa neutralnim kriterijumima provere: registracija, uzorci, ugovor, inspekcija, zaštita plaćanja i znaci upozorenja.",
         "rate": "Sa ove veze je poslato previše poruka. Sačekajte nekoliko minuta i pokušajte ponovo.",
+        "voice_rate": "Za kratko vreme je transkribovano previše glasovnih snimaka. Sačekajte malo ili unesite tekst ručno.",
         "bot": "Završite proveru zaštite od botova i pokušajte ponovo.",
         "daily": "AI pomoćnik je dostigao dnevni limit. Pokušajte sutra ili pošaljite besplatnu prijavu.",
         "voice_daily": "Dostignut je dnevni limit glasovne transkripcije. Unesite poruku ili pokušajte sutra.",
@@ -154,6 +172,146 @@ def localized_error(language: str, kind: str) -> str:
     return ERROR_COPY.get(language, ERROR_COPY["en"]).get(kind, ERROR_COPY["en"]["unavailable"])
 
 
+
+_SCOPE_STRONG_TERMS = (
+    # English
+    "supplier", "seller", "factory", "manufacturer", "marketplace", "alibaba", "aliexpress",
+    "made-in-china", "1688", "taobao", "trade assurance", "purchase order", "invoice", "shipment",
+    "delivery", "inspection", "specification", "defective", "counterfeit", "refund", "chargeback",
+    "dispute", "complaint", "claim", "evidence", "document", "documents", "contract", "due diligence", "red flag",
+    "free review", "free check", "free application", "case status", "suitable for my situation", "how does the service work", "how does it work", "chinatraderesolve",
+    # Russian
+    "поставщик", "продавец", "фабрик", "производител", "маркетплейс", "заказ", "инвойс", "счёт",
+    "поставк", "доставк", "инспекц", "спецификац", "брак", "подделк", "возврат", "спор",
+    "жалоб", "претензи", "доказательств", "документ", "договор", "контракт", "проверить поставщика",
+    "проверка поставщика", "красн", "заявк", "статус дела", "подходит ли сервис", "бесплатная проверка", "как проходит проверка", "как работает сервис",
+    # French
+    "fournisseur", "vendeur", "usine", "fabricant", "commande", "facture", "livraison", "inspection",
+    "spécification", "specification", "défectueux", "defectueux", "contrefaçon", "contrefacon",
+    "remboursement", "litige", "réclamation", "reclamation", "preuve", "document", "contrat", "vérification du fournisseur", "ce service peut-il", "comment fonctionne l’examen gratuit", "comment fonctionne le service",
+    # German
+    "lieferant", "verkäufer", "verkaufer", "fabrik", "hersteller", "bestellung", "rechnung", "lieferung",
+    "inspektion", "spezifikation", "mangelhaft", "fälschung", "falschung", "erstattung", "streit",
+    "beschwerde", "nachweis", "dokument", "vertrag", "lieferantenprüfung", "lieferantenprufung", "passt der service", "kostenlose prüfung", "kostenlose prufung", "wie funktioniert der service",
+    # Spanish
+    "proveedor", "vendedor", "fábrica", "fabrica", "fabricante", "pedido", "factura", "entrega",
+    "inspección", "inspeccion", "especificación", "especificacion", "defectuoso", "falsificación",
+    "falsificacion", "reembolso", "disputa", "reclamación", "reclamacion", "prueba", "documento", "contrato", "puede este servicio", "revisión gratuita", "revision gratuita", "cómo funciona el servicio", "como funciona el servicio",
+    # Serbian
+    "dobavljač", "dobavljac", "prodavac", "fabrika", "proizvođač", "proizvodjac", "porudžbina",
+    "porudzbina", "faktura", "isporuka", "inspekcija", "specifikacija", "neispravan", "falsifikat",
+    "povraćaj", "povracaj", "spor", "žalba", "zalba", "dokaz", "dokument", "ugovor", "da li ovaj servis", "besplatna provera", "kako funkcioniše servis", "kako funkcionise servis",
+)
+
+_CHINA_TERMS = (
+    "china", "chinese", "китай", "китайск", "chine", "chinois", "china", "chinesisch",
+    "chino", "china", "kinesk", "kina",
+)
+
+_SELECTION_GUIDANCE_TERMS = (
+    "how to choose", "how to check", "how to verify", "selection criteria", "due diligence", "red flags",
+    "как выбрать", "как проверить", "критерии выбора", "признаки риска", "на что обратить внимание",
+    "comment choisir", "comment vérifier", "comment verifier", "critères de sélection", "criteres de selection",
+    "wie auswahlen", "wie auswählen", "wie prüfen", "wie prufen", "auswahlkriterien", "warnzeichen",
+    "cómo elegir", "como elegir", "cómo verificar", "como verificar", "criterios de selección", "criterios de seleccion",
+    "kako izabrati", "kako proveriti", "kriterijumi izbora", "znaci upozorenja",
+)
+
+_VENDOR_TARGET_TERMS = (
+    "seller", "supplier", "factory", "agent", "sourcing company", "inspection company", "marketplace", "platform", "company", "vendor",
+    "продавц", "поставщик", "фабрик", "агент", "компан", "посредник", "маркетплейс", "платформ", "инспекционн",
+    "vendeur", "fournisseur", "usine", "agent", "société", "societe", "plateforme", "place de marché", "place de marche",
+    "verkäufer", "verkaufer", "lieferant", "fabrik", "agent", "unternehmen", "marktplatz", "plattform",
+    "vendedor", "proveedor", "fábrica", "fabrica", "agente", "empresa", "mercado", "plataforma",
+    "prodavac", "dobavljač", "dobavljac", "fabrika", "agent", "kompanija", "platforma", "tržište", "trziste",
+)
+
+_VENDOR_RECOMMENDATION_TERMS = (
+    "recommend", "name a", "give me contacts", "best seller", "best supplier", "reliable seller",
+    "reliable supplier", "which seller", "which supplier", "where should i buy", "who should i buy from",
+    "посоветуй", "порекомендуй", "назовите", "дайте контакты", "лучший продавец", "лучший поставщик",
+    "надёжный продавец", "надежный продавец", "надёжный поставщик", "надежный поставщик",
+    "какой продавец", "какой поставщик", "у кого купить", "где лучше купить",
+    "recommandez", "recommander", "donnez-moi les contacts", "meilleur vendeur", "meilleur fournisseur",
+    "vendeur fiable", "fournisseur fiable", "quel vendeur", "quel fournisseur",
+    "empfehlen", "nennen sie", "kontakte geben", "bester verkäufer", "bester verkaufer",
+    "bester lieferant", "zuverlässiger lieferant", "zuverlassiger lieferant", "welcher lieferant",
+    "recomiende", "recomendar", "déme contactos", "deme contactos", "mejor vendedor", "mejor proveedor",
+    "vendedor fiable", "proveedor fiable", "qué vendedor", "que vendedor", "qué proveedor", "que proveedor",
+    "preporučite", "preporucite", "dajte kontakte", "najbolji prodavac", "najbolji dobavljač",
+    "najbolji dobavljac", "pouzdan prodavac", "pouzdan dobavljač", "pouzdan dobavljac",
+)
+
+_OFF_TOPIC_TERMS = (
+    # Common attempts to use the public assistant as a general-purpose chatbot.
+    "car repair", "repair my car", "toyota", "corolla", "shock absorber", "engine", "recipe", "cook",
+    "weather", "football", "basketball", "write code", "programming", "python script", "homework",
+    "solve this equation", "medical symptoms", "diagnose", "relationship advice", "horoscope", "poem",
+    "movie recommendation", "travel itinerary", "translate this", "political news",
+    "ремонт машины", "починить автомобиль", "тойота", "королла", "амортизатор", "двигател", "рецепт",
+    "погод", "футбол", "баскетбол", "напиши код", "программирован", "домашн", "реши уравнение",
+    "симптом", "диагноз", "отношени", "гороскоп", "стих", "посоветуй фильм", "маршрут путешествия",
+    "réparer ma voiture", "reparer ma voiture", "amortisseur", "moteur", "recette", "météo", "meteo",
+    "football", "programmation", "devoir", "diagnostic médical", "diagnostic medical", "horoscope", "poème", "poeme",
+    "auto reparieren", "stoßdämpfer", "stossdampfer", "motor", "rezept", "wetter", "programmierung",
+    "hausaufgabe", "medizinische symptome", "horoskop", "gedicht",
+    "reparar mi coche", "amortiguador", "motor", "receta", "tiempo", "programación", "programacion",
+    "tarea", "síntomas médicos", "sintomas medicos", "horóscopo", "horoscopo", "poema",
+    "popravka automobila", "amortizer", "motor", "recept", "vreme", "programiranje", "domaći zadatak",
+    "domaci zadatak", "medicinski simptomi", "horoskop", "pesma",
+)
+
+
+def _normalise_scope_text(value: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", str(value or "").casefold())
+    without_marks = "".join(char for char in decomposed if not unicodedata.combining(char))
+    return " ".join(without_marks.split())
+
+
+def _contains_term(text: str, terms: tuple[str, ...]) -> bool:
+    return any(_normalise_scope_text(term) in text for term in terms)
+
+
+def _requests_specific_vendor(latest_text: str) -> bool:
+    text = _normalise_scope_text(latest_text)
+    if _contains_term(text, _SELECTION_GUIDANCE_TERMS):
+        return False
+    return _contains_term(text, _VENDOR_TARGET_TERMS) and _contains_term(text, _VENDOR_RECOMMENDATION_TERMS)
+
+
+def assistant_scope_reply(payload: AssistantChatRequest) -> str | None:
+    """Return a local, no-provider reply when a public-chat request is clearly outside the service scope."""
+    latest_user_text = next(
+        (message.content for message in reversed(payload.messages) if message.role == "user"),
+        "",
+    )
+    if _requests_specific_vendor(latest_user_text):
+        return localized_error(payload.language, "vendor")
+
+    user_history = " ".join(message.content for message in payload.messages if message.role == "user")
+    normalised_history = _normalise_scope_text(user_history)
+    latest_normalised = _normalise_scope_text(latest_user_text)
+
+    # Any strong commercial-dispute cue in the current conversation keeps short follow-ups in scope.
+    if _contains_term(normalised_history, _SCOPE_STRONG_TERMS):
+        return None
+
+    # A China reference alone is not enough: travel, politics, language and culture are not this service's scope.
+    has_china_context = _contains_term(normalised_history, _CHINA_TERMS)
+    has_commercial_context = any(
+        token in normalised_history
+        for token in ("buy", "order", "goods", "product", "payment", "business", "trade", "покуп", "товар", "оплат", "бизнес", "торгов")
+    )
+    if has_china_context and has_commercial_context:
+        return None
+
+    if _contains_term(latest_normalised, _OFF_TOPIC_TERMS):
+        return localized_error(payload.language, "scope")
+
+    # Do not spend public API budget on generic chat. A concise redirect invites a relevant question.
+    return localized_error(payload.language, "scope")
+
+
 def _extract_output_text(data: dict[str, Any]) -> str:
     if isinstance(data.get("output_text"), str) and data["output_text"].strip():
         return data["output_text"].strip()
@@ -207,6 +365,13 @@ SERVICE FACTS YOU MAY RELY ON:
 - Supported website languages are English, French, German, Spanish, Russian and Serbian.
 - Urgent court or arbitration matters, expiring limitation periods, criminal allegations, customs or certification questions, safety matters, technical testing and other high-risk legal issues require a qualified human professional.
 - The public chat assistant cannot access a user's case, status link, email, database or uploaded documents. The separate document-analysis module is available only inside the private case page when configured and consented to. For case status, direct the user to the private status link received after submitting an application.
+
+STRICT SCOPE:
+- Answer only about commercial disputes or risk reduction involving Chinese suppliers, sellers, factories, manufacturers or marketplaces; related contracts, specifications, payments, delivery, inspections, evidence, complaints and the ChinaTradeResolve process.
+- Questions merely related to China, such as travel, language, culture, politics, news or entertainment, are outside scope unless they directly concern a supplier transaction or dispute.
+- Never provide substantive answers about unrelated topics such as vehicle repair, recipes, health, coding, homework, sport or general entertainment. Give one brief scope reminder and invite a supplier-related question.
+- You may explain neutral supplier-selection and due-diligence criteria, warning signs and safer contracting practices. Never name, rank, advertise, endorse or provide direct contacts for a specific seller, factory, sourcing agent, company or marketplace, and never claim that a provider is reliable.
+- If asked for a specific provider, state that boundary and offer a neutral verification checklist instead. Do not invent names or affiliate recommendations.
 
 RULES:
 1. Give general information and practical organisation guidance, not legal advice, a binding opinion, or a prediction of success.

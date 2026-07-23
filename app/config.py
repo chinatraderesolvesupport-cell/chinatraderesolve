@@ -10,6 +10,13 @@ from urllib.parse import urlparse
 DEFAULT_ADMIN_TOKEN = "change-me-before-deployment"  # nosec B105
 DEFAULT_APP_SECRET = "development-secret-change-me"  # nosec B105
 
+# Public receiving addresses for voluntary project support. These are safe to
+# display and may be overridden with the corresponding Render variables.
+DEFAULT_BTC_ADDRESS = "1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4"
+DEFAULT_ETH_ADDRESS = "0x2F8a2773F8254d061ef286Bac8BF922344a2A494"
+DEFAULT_USDT_TRC20_ADDRESS = "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R"
+DEFAULT_SOL_ADDRESS = "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm"
+
 INSECURE_ADMIN_TOKENS = frozenset({
     "",
     DEFAULT_ADMIN_TOKEN,
@@ -178,10 +185,13 @@ class Settings:
     )
     support_url: str | None = os.getenv("SUPPORT_URL")
     support_project_name: str = os.getenv("SUPPORT_PROJECT_NAME", "ChinaTradeResolve")
-    btc_address: str | None = os.getenv("BTC_ADDRESS")
-    eth_address: str | None = os.getenv("ETH_ADDRESS")
-    usdt_trc20_address: str | None = os.getenv("USDT_TRC20_ADDRESS")
-    sol_address: str | None = os.getenv("SOL_ADDRESS")
+    btc_address: str | None = os.getenv("BTC_ADDRESS", DEFAULT_BTC_ADDRESS)
+    eth_address: str | None = os.getenv("ETH_ADDRESS", DEFAULT_ETH_ADDRESS)
+    usdt_trc20_address: str | None = os.getenv(
+        "USDT_TRC20_ADDRESS",
+        DEFAULT_USDT_TRC20_ADDRESS,
+    )
+    sol_address: str | None = os.getenv("SOL_ADDRESS", DEFAULT_SOL_ADDRESS)
     turnstile_site_key: str | None = os.getenv("TURNSTILE_SITE_KEY")
     turnstile_secret_key: str | None = os.getenv("TURNSTILE_SECRET_KEY")
     data_controller_name: str | None = os.getenv("DATA_CONTROLLER_NAME")

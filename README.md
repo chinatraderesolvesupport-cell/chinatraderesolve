@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.7
+# ChinaTradeResolve Document AI v3.7.8
 
-Version 3.7.7 makes voluntary-support methods visible on the landing page with linked PayPal, BTC, ETH, USDT TRC20 and SOL icons. Only configured cryptocurrency wallets are presented as available. The verified PayPal payment link, QR codes and strict payment-link validation from v3.7.6 remain in place.
+Version 3.7.8 adds the verified public BTC, ETH, USDT TRC20 and SOL receiving addresses, generates matching QR codes, and displays a prominent required-network warning on every cryptocurrency card. The icons and linked support methods from v3.7.7 remain in place.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -246,10 +246,10 @@ The included PayPal link can be replaced through `PAYPAL_SUPPORT_URL`. Optional 
 ENABLE_VOLUNTARY_SUPPORT=true
 PAYPAL_SUPPORT_URL=https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8
 SUPPORT_URL=
-BTC_ADDRESS=
-ETH_ADDRESS=
-USDT_TRC20_ADDRESS=
-SOL_ADDRESS=
+BTC_ADDRESS=1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4
+ETH_ADDRESS=0x2F8a2773F8254d061ef286Bac8BF922344a2A494
+USDT_TRC20_ADDRESS=TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R
+SOL_ADDRESS=AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm
 ```
 
 When disabled, the support section, navigation link, public page and QR routes are unavailable. Public wallet addresses are not secrets, but private keys, recovery phrases and passwords must never be placed in the project or environment file.
@@ -289,7 +289,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.7
+cd ChinaTradeResolve_Document_AI_v3.7.8
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

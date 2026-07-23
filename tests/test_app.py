@@ -161,6 +161,9 @@ def test_support_page_is_optional_and_non_priority():
     assert 'class="coin-icon eth"' in page.text
     assert 'class="coin-icon usdt"' in page.text
     assert 'class="coin-icon sol"' in page.text
+    assert page.text.count('class="network-alert"') == 4
+    assert "Обязательная сеть:" in page.text
+    assert "Do not use ERC20, BEP20 or any other network." in page.text
 
 
 def test_home_shows_configured_voluntary_payment_methods():
@@ -471,6 +474,25 @@ def test_crypto_support_wallets_and_network_warnings():
     assert page.text.count('data-copy=') == 4
     assert "seed phrase" in page.text
     assert "seed-фразу" in page.text
+
+
+def test_public_default_wallet_addresses_match_verified_qr_codes():
+    from app.config import (
+        DEFAULT_BTC_ADDRESS,
+        DEFAULT_ETH_ADDRESS,
+        DEFAULT_SOL_ADDRESS,
+        DEFAULT_USDT_TRC20_ADDRESS,
+    )
+    from app.main import _valid_btc, _valid_eth, _valid_solana, _valid_tron
+
+    assert DEFAULT_BTC_ADDRESS == "1KPw94sUBeJH3noxdgQWrVMQf3sAebmeN4"
+    assert DEFAULT_ETH_ADDRESS == "0x2F8a2773F8254d061ef286Bac8BF922344a2A494"
+    assert DEFAULT_USDT_TRC20_ADDRESS == "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R"
+    assert DEFAULT_SOL_ADDRESS == "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm"
+    assert _valid_btc(DEFAULT_BTC_ADDRESS)
+    assert _valid_eth(DEFAULT_ETH_ADDRESS)
+    assert _valid_tron(DEFAULT_USDT_TRC20_ADDRESS)
+    assert _valid_solana(DEFAULT_SOL_ADDRESS)
 
 
 def test_crypto_qr_assets_are_served_as_png():
@@ -1232,9 +1254,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.7"
+    assert health.json()["version"] == "3.7.8"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.7"
+    assert health.headers["x-app-version"] == "3.7.8"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [

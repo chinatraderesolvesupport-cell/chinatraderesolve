@@ -96,7 +96,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.7"
+APP_VERSION = "3.7.8"
 logger = logging.getLogger("chinatraderesolve")
 
 

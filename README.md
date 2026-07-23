@@ -1,10 +1,20 @@
-# ChinaTradeResolve Document AI v3.7.11
+# ChinaTradeResolve Document AI v3.7.13
 
-Version 3.7.11 prepares the service for a safe pre-payment deployment. A global `OPENAI_BILLING_READY` switch keeps every paid OpenAI feature unavailable until the API account is funded, the microphone permission now allows same-origin recording, and the chat closes when a visitor starts working with the application form. The release also localises hidden accessibility labels, compresses large responses, and adds readiness-aware `robots.txt` plus a public sitemap.
+Version 3.7.13 adds optional voice dictation to the main case-description field. The visitor can record up to two minutes, pass a dedicated Turnstile check, review the OpenAI transcript, edit it, and only then submit the application. Audio is not stored in the case database.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
-## Pre-payment readiness in v3.7.11
+## AI-chat verification UX in v3.7.13
+
+- The chat Turnstile widget is rendered explicitly after the panel opens, avoiding incorrect measurements inside a hidden container.
+- Flexible size is used where possible; compact size is selected only for very narrow containers.
+- The verification block has a visible title, instruction and status in all six interface languages.
+- Clicking a quick question before verification highlights and scrolls to the security block.
+- Text sending and voice recording require a valid token; voice is no longer recorded only to be rejected afterward.
+- The panel can scroll safely on short screens, and the launcher is hidden while the panel is open.
+- Speech synthesis prefers matching Natural/Online, Google and Microsoft voices when the browser exposes them.
+
+## Pre-payment and launch readiness retained from v3.7.11
 
 - Keep `OPENAI_BILLING_READY=false` until the API account has a positive balance. This single switch blocks chat, voice transcription, document analysis and AI triage without removing their configuration.
 - After funding the account, set `OPENAI_BILLING_READY=true`, deploy, and verify the individual feature flags in `/health`.
@@ -303,7 +313,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.11
+cd ChinaTradeResolve_Document_AI_v3.7.13
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

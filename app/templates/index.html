@@ -149,10 +149,11 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-root[hidden]{display:none}
 .ai-chat-launcher{position:fixed;right:20px;bottom:20px;z-index:80;border:0;border-radius:999px;background:var(--teal);color:#042f2e;padding:13px 17px;font-weight:900;box-shadow:0 16px 42px rgba(0,0,0,.38);cursor:pointer;display:flex;align-items:center;gap:9px}
 .ai-chat-launcher:hover{transform:translateY(-1px)}
+.ai-chat-root.is-open .ai-chat-launcher{opacity:0;visibility:hidden;pointer-events:none}
 .ai-chat-launcher .spark{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.45);font-size:15px}
-.ai-chat-panel{position:fixed;padding:0;scroll-margin-top:0;right:20px;bottom:78px;z-index:81;width:min(410px,calc(100vw - 28px));max-height:min(680px,78vh);display:flex;flex-direction:column;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.42);overflow:hidden}
+.ai-chat-panel{position:fixed;padding:0;scroll-margin-top:0;right:20px;bottom:78px;z-index:81;width:min(430px,calc(100vw - 28px));max-height:min(720px,calc(100dvh - 112px));display:flex;flex-direction:column;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.42);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
 .ai-chat-panel[hidden]{display:none}
-.ai-chat-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:17px 18px;background:#0f172a;color:#fff}
+.ai-chat-head{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:17px 18px;background:#0f172a;color:#fff}
 .ai-chat-head strong{display:block}.ai-chat-head small{display:block;color:#cbd5e1;margin-top:2px}
 .ai-chat-badge{display:inline-block;margin-left:7px;padding:2px 6px;border-radius:999px;background:rgba(45,212,191,.16);color:#5eead4;font-size:10px;vertical-align:middle;text-transform:uppercase;letter-spacing:.06em}
 .ai-chat-close{border:1px solid #475569;background:transparent;color:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:20px;line-height:1}
@@ -174,7 +175,17 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-voice-panel{padding:0 13px 10px;background:#fff;color:#475569;font-size:11px;line-height:1.4}
 .ai-voice-consent{display:flex;align-items:flex-start;gap:7px}.ai-voice-consent input{margin-top:2px}
 .ai-voice-status{min-height:16px;margin-top:5px;color:#0f766e}
-.ai-chat-turnstile{padding:0 13px 10px;background:#fff;overflow:hidden}
+.ai-chat-head,.ai-chat-notice,.ai-chat-quick,.ai-chat-form,.ai-voice-panel,.ai-chat-turnstile,.ai-chat-privacy{flex:0 0 auto}
+.ai-chat-turnstile{display:grid;gap:8px;padding:11px 13px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;overflow:visible;min-height:118px}
+.ai-chat-turnstile-label{display:grid;gap:2px;color:#334155;line-height:1.35}
+.ai-chat-turnstile-label strong{font-size:12px;color:#0f172a}
+.ai-chat-turnstile-label span{font-size:11px}
+.ai-chat-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
+.ai-chat-turnstile-widget iframe{max-width:100%!important}
+.ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}
+.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}
+.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}
+.ai-chat-turnstile.needs-attention{background:#fff7ed;box-shadow:inset 0 0 0 2px #f59e0b}
 .ai-message-content{display:block}
 .ai-listen{margin-top:7px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;padding:4px 7px;cursor:pointer;font-size:12px}
 @keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}
@@ -196,7 +207,16 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .trust-note{margin-top:18px;padding:14px 16px;border:1px solid #99f6e4;background:#f0fdfa;border-radius:12px;color:#134e4a}
 .consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
 .consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
+.description-compose{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:9px;align-items:start}
+.description-compose textarea{min-width:0}
+.description-voice-button{width:48px;height:48px;border:1px solid #94a3b8;border-radius:11px;background:#fff;color:#0f766e;font-size:21px;cursor:pointer;display:grid;place-items:center}
+.description-voice-button:hover{background:#ecfeff}.description-voice-button.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}.description-voice-button:disabled{opacity:.55;cursor:not-allowed}
+.description-voice-panel{display:grid;gap:8px;margin-top:9px;padding:11px 12px;border:1px solid #cbd5e1;border-radius:11px;background:#f8fafc;color:#475569;font-size:12px;line-height:1.4}
+.description-voice-panel[hidden]{display:none}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-consent input{width:auto;margin-top:2px}
+.description-voice-status{min-height:17px;color:#0f766e}.description-voice-status[data-state="error"],.description-voice-status[data-state="required"]{color:#b45309;font-weight:800}
+.description-voice-turnstile{display:grid;gap:6px;padding-top:3px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget iframe{max-width:100%!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.description-compose{grid-template-columns:minmax(0,1fr) 44px}.description-voice-button{width:44px;height:44px}}
 #faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
 #confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
 .private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
@@ -396,7 +416,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
-<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><textarea aria-describedby="descriptionHelp descriptionCount" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div></div>
+<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Надиктовать описание" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button">🎙</button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
 <aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">Перед отправкой</h3><p data-i18n="submit_summary_data">Мы сохраним контактные данные, сведения о покупке и споре, описание ситуации и выбранные согласия. Документы на этом шаге не передаются; при выборе ИИ-помощи текст заявки может обрабатываться настроенным ИИ-провайдером.</p><p data-i18n="submit_summary_response">Ориентир первого ответа человека — в течение 2 рабочих дней.</p></aside>
 <div class="consent-group">
@@ -405,7 +425,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="consent-row"><label><input name="ai_consent" style="width:auto" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
 <div class="consent-row"><label><input name="no_guarantee" required="" style="width:auto" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
 </div>
-{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="cf-turnstile-response"></div></div>{% endif %}
+{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-size="flexible" data-response-field-name="cf-turnstile-response"></div></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">Отправить бесплатную заявку</button></div>
 </div>
@@ -496,9 +516,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">Не вставляйте конфиденциальные имена, номера заказов, пароли, приватные ключи или полные документы. Помощник даёт общую информацию, а не юридическую консультацию.</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
 <div class="ai-chat-quick" id="aiChatQuick"><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
+{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">Проверка безопасности</strong><span data-i18n="ai_turnstile_help">Подтвердите, что вы не робот. После зелёной отметки можно отправить сообщение или использовать голос.</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">Загружаю проверку…</div></div>{% endif %}
 <form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea>{% if voice_input_enabled %}<button aria-label="Начать запись" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button">🎙</button>{% endif %}<button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">Отправить</button></form>
 {% if voice_input_enabled %}<div class="ai-voice-panel" id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span data-i18n="ai_voice_consent">Я согласен передать запись провайдеру ИИ только для расшифровки. Аудио не сохраняется в базе сайта.</span></label><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}
-{% if turnstile_site_key %}<div class="ai-chat-turnstile"><div class="cf-turnstile" data-response-field-name="ai-turnstile-response" data-sitekey="{{ turnstile_site_key }}"></div></div>{% endif %}
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе дел. Последние сообщения передаются ИИ‑провайдеру; применяются его правила обработки и хранения. Голосовая запись удаляется из памяти сразу после расшифровки.</div>
 </section>
 </div>
@@ -558,6 +578,98 @@ function updateDescriptionCount(){descriptionCount.textContent=`${descriptionFie
 descriptionField.addEventListener('input',updateDescriptionCount);
 caseFormElement.addEventListener('change',updateSubmitAvailability);
 updateDescriptionCount();
+
+const descriptionVoiceButton=document.getElementById('descriptionVoiceButton');
+const descriptionVoicePanel=document.getElementById('descriptionVoicePanel');
+const descriptionVoiceConsent=document.getElementById('descriptionVoiceConsent');
+const descriptionVoiceStatus=document.getElementById('descriptionVoiceStatus');
+const descriptionVoiceTurnstileMount=document.getElementById('descriptionVoiceTurnstileWidget');
+const descriptionVoiceTurnstileResponse=document.getElementById('descriptionVoiceTurnstileResponse');
+const descriptionVoiceVerificationStatus=document.getElementById('descriptionVoiceVerificationStatus');
+let descriptionVoiceRecorder=null,descriptionVoiceStream=null,descriptionVoiceChunks=[],descriptionVoiceTimer=null,descriptionVoiceBusy=false,descriptionVoiceDiscard=false;
+let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPending=false,descriptionVoiceTurnstileLoadAttempts=0;
+const descriptionVoiceMaxSeconds=Math.max(15,Number(descriptionVoicePanel&&descriptionVoicePanel.dataset.voiceMaxSeconds)||120);
+function descriptionVoiceCopy(key){const copy=window.CTR_TRANSLATIONS||{};const lang=document.documentElement.lang||'en';return(copy[lang]&&copy[lang][key])||(copy.en&&copy.en[key])||''}
+function setDescriptionVoiceStatus(key,state=''){if(!descriptionVoiceStatus)return;descriptionVoiceStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceStatus.dataset.state=state}
+function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state}
+function descriptionVoiceToken(){return descriptionVoiceTurnstileResponse?String(descriptionVoiceTurnstileResponse.value||''):''}
+function updateDescriptionVoiceButton(){if(!descriptionVoiceButton)return;const recording=descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording';descriptionVoiceButton.disabled=descriptionVoiceBusy&&!recording;descriptionVoiceButton.classList.toggle('recording',Boolean(recording));descriptionVoiceButton.setAttribute('aria-pressed',recording?'true':'false');descriptionVoiceButton.setAttribute('aria-label',descriptionVoiceCopy(recording?'description_voice_stop_label':'description_voice_start_label'))}
+function ensureDescriptionVoiceTurnstile(){
+  if(!descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||!descriptionVoiceTurnstileMount||descriptionVoiceTurnstileWidgetId!==null||descriptionVoiceTurnstileRenderPending)return;
+  if(descriptionVoicePanel.hidden)return;
+  if(!window.turnstile||typeof window.turnstile.render!=='function'){
+    descriptionVoiceTurnstileLoadAttempts+=1;
+    setDescriptionVoiceVerificationStatus(descriptionVoiceTurnstileLoadAttempts>50?'description_voice_verification_error':'description_voice_verification_loading',descriptionVoiceTurnstileLoadAttempts>50?'error':'');
+    if(descriptionVoiceTurnstileLoadAttempts<=50)window.setTimeout(ensureDescriptionVoiceTurnstile,100);
+    return;
+  }
+  descriptionVoiceTurnstileRenderPending=true;
+  try{
+    descriptionVoiceTurnstileWidgetId=window.turnstile.render(descriptionVoiceTurnstileMount,{
+      sitekey:descriptionVoiceTurnstileMount.dataset.sitekey,
+      size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'always',language:document.documentElement.lang||'auto','response-field':false,
+      callback:token=>{descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified')},
+      'expired-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_expired','required')},
+      'error-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
+    });
+  }catch(_error){descriptionVoiceTurnstileWidgetId=null;setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
+  finally{descriptionVoiceTurnstileRenderPending=false}
+}
+function resetDescriptionVoiceTurnstile(){
+  if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';
+  if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
+    try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId);setDescriptionVoiceVerificationStatus('description_voice_verification_loading')}catch(_e){setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
+  }
+}
+function releaseDescriptionVoiceStream(){if(descriptionVoiceTimer){window.clearTimeout(descriptionVoiceTimer);descriptionVoiceTimer=null}if(descriptionVoiceStream){descriptionVoiceStream.getTracks().forEach(track=>track.stop());descriptionVoiceStream=null}}
+function stopDescriptionVoiceRecording(discard=false){
+  descriptionVoiceDiscard=descriptionVoiceDiscard||discard;
+  if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){descriptionVoiceRecorder.stop();return}
+  releaseDescriptionVoiceStream();descriptionVoiceChunks=[];descriptionVoiceBusy=false;updateDescriptionVoiceButton();
+}
+async function uploadDescriptionVoice(blob){
+  const turnstileRequired=descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true';
+  const token=descriptionVoiceToken();
+  if(turnstileRequired&&!token){setDescriptionVoiceStatus('description_voice_verification_required','required');return}
+  setDescriptionVoiceStatus('description_voice_transcribing');
+  const data=new FormData();
+  data.append('audio',blob,blob.type.includes('mp4')?'description.m4a':'description.webm');
+  data.append('language',document.documentElement.lang||'en');data.append('voice_consent','true');data.append('turnstile_token',token);
+  try{
+    const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok){throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
+    const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
+    const existing=descriptionField.value.trim();const combined=(existing?existing+'\n\n':'')+transcript;
+    descriptionField.value=combined.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));
+    setDescriptionVoiceStatus('description_voice_review');descriptionField.focus();
+  }catch(error){descriptionVoiceStatus.textContent=error.message||descriptionVoiceCopy('description_voice_error');descriptionVoiceStatus.dataset.state='error'}
+  finally{resetDescriptionVoiceTurnstile()}
+}
+async function startDescriptionVoiceRecording(){
+  if(!descriptionVoiceButton||descriptionVoiceBusy)return;
+  descriptionVoicePanel.hidden=false;ensureDescriptionVoiceTurnstile();
+  if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
+  if(descriptionVoicePanel.dataset.turnstileRequired==='true'&&!descriptionVoiceToken()){setDescriptionVoiceStatus('description_voice_verification_required','required');descriptionVoiceTurnstileMount&&descriptionVoiceTurnstileMount.scrollIntoView({behavior:'smooth',block:'nearest'});return}
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setDescriptionVoiceStatus('description_voice_unsupported','error');return}
+  try{
+    descriptionVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'];const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported(type))||'';
+    if(!mimeType){releaseDescriptionVoiceStream();setDescriptionVoiceStatus('description_voice_unsupported','error');return}
+    descriptionVoiceRecorder=new MediaRecorder(descriptionVoiceStream,{mimeType});descriptionVoiceChunks=[];descriptionVoiceDiscard=false;descriptionVoiceBusy=true;
+    descriptionVoiceRecorder.addEventListener('dataavailable',event=>{if(event.data&&event.data.size)descriptionVoiceChunks.push(event.data)});
+    descriptionVoiceRecorder.addEventListener('stop',async()=>{
+      const discard=descriptionVoiceDiscard;const type=descriptionVoiceRecorder.mimeType||'audio/webm';const blob=new Blob(descriptionVoiceChunks,{type});descriptionVoiceChunks=[];descriptionVoiceRecorder=null;releaseDescriptionVoiceStream();
+      if(!discard&&blob.size)await uploadDescriptionVoice(blob);descriptionVoiceBusy=false;updateDescriptionVoiceButton();
+    },{once:true});
+    descriptionVoiceRecorder.start(500);setDescriptionVoiceStatus('description_voice_recording');updateDescriptionVoiceButton();
+    descriptionVoiceTimer=window.setTimeout(()=>{setDescriptionVoiceStatus('description_voice_too_long','required');stopDescriptionVoiceRecording(false)},descriptionVoiceMaxSeconds*1000);
+  }catch(_error){releaseDescriptionVoiceStream();descriptionVoiceBusy=false;setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
+}
+if(descriptionVoiceButton)descriptionVoiceButton.addEventListener('click',()=>{if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(false);else startDescriptionVoiceRecording()});
+if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');ensureDescriptionVoiceTurnstile()}});
+document.addEventListener('ctr:language-changed',()=>{stopDescriptionVoiceRecording(true);setDescriptionVoiceStatus('');if(descriptionVoicePanel&&!descriptionVoicePanel.hidden){if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileLoadAttempts=0;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_loading');ensureDescriptionVoiceTurnstile()}updateDescriptionVoiceButton()});
+updateDescriptionVoiceButton();
 
 const privateAccessCopy={
   en:{copied:'Private link copied.',copy_failed:'Copy was not available. Select the link and copy it manually.',email_on:'A confirmation email has been queued. Save this link as a backup.',email_off:'Email delivery is unavailable. This private link is the only way to reopen the case.'},
@@ -761,6 +873,10 @@ if(aiChatRoot){
   const aiVoiceButton=document.getElementById('aiVoiceButton');
   const aiVoiceConsent=document.getElementById('aiVoiceConsent');
   const aiVoiceStatus=document.getElementById('aiVoiceStatus');
+  const aiTurnstileSection=document.getElementById('aiChatTurnstileSection');
+  const aiTurnstileMount=document.getElementById('aiChatTurnstileWidget');
+  const aiTurnstileResponse=document.getElementById('aiTurnstileResponse');
+  const aiTurnstileStatus=document.getElementById('aiChatTurnstileStatus');
   const aiTurnstileRequired=aiChatRoot.dataset.turnstileRequired==='true';
   const aiVoiceMaxSeconds=Math.max(15,Number(aiChatRoot.dataset.voiceMaxSeconds)||120);
   let aiChatHistory=[];
@@ -772,16 +888,21 @@ if(aiChatRoot){
   let aiVoiceChunks=[];
   let aiVoiceTimer=null;
   let aiVoiceDiscard=false;
+  let aiTurnstileWidgetId=null;
+  let aiTurnstileRenderPending=false;
+  let aiTurnstileLoadAttempts=0;
 
   function openAiChat(){
     aiChatPanel.hidden=false;
+    aiChatRoot.classList.add('is-open');
     aiChatLauncher.setAttribute('aria-expanded','true');
-    window.setTimeout(()=>aiChatInput.focus(),40);
+    window.requestAnimationFrame(()=>{ensureAiTurnstile();window.setTimeout(()=>aiChatInput.focus(),40)});
   }
   function closeAiChat(restoreFocus=true){
     stopVoiceRecording(true);
     if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatPanel.hidden=true;
+    aiChatRoot.classList.remove('is-open');
     aiChatLauncher.setAttribute('aria-expanded','false');
     if(restoreFocus)aiChatLauncher.focus();
   }
@@ -808,27 +929,116 @@ if(aiChatRoot){
     const copy=currentCopy();
     return copy[key]||(translations.en&&translations.en[key])||'';
   }
+  function aiTurnstileToken(){
+    return aiTurnstileResponse?String(aiTurnstileResponse.value||''):'';
+  }
+  function setAiTurnstileStatus(key,state=''){
+    if(!aiTurnstileStatus)return;
+    aiTurnstileStatus.textContent=key?aiCopy(key):'';
+    aiTurnstileStatus.dataset.state=state;
+  }
   function updateAiControls(){
-    aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim();
+    const turnstileReady=!aiTurnstileRequired||Boolean(aiTurnstileToken());
+    aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim()||!turnstileReady;
     aiChatInput.disabled=aiChatBusy||aiVoiceBusy;
     if(aiVoiceButton)aiVoiceButton.disabled=aiChatBusy||aiVoiceBusy&&!(aiVoiceRecorder&&aiVoiceRecorder.state==='recording');
   }
-  function aiTurnstileToken(){
-    const field=aiChatPanel.querySelector('[name="ai-turnstile-response"]');
-    return field?String(field.value||''):'';
+  function showAiTurnstileRequired(){
+    if(!aiTurnstileRequired)return;
+    ensureAiTurnstile();
+    setAiTurnstileStatus('ai_turnstile_required','required');
+    if(aiTurnstileSection){
+      aiTurnstileSection.classList.add('needs-attention');
+      aiTurnstileSection.scrollIntoView({behavior:'smooth',block:'nearest'});
+      window.setTimeout(()=>aiTurnstileSection.classList.remove('needs-attention'),2200);
+    }
+  }
+  function ensureAiTurnstile(){
+    if(!aiTurnstileRequired||!aiTurnstileMount||aiTurnstileWidgetId!==null||aiTurnstileRenderPending)return;
+    if(aiChatPanel.hidden)return;
+    if(!window.turnstile||typeof window.turnstile.render!=='function'){
+      aiTurnstileLoadAttempts+=1;
+      setAiTurnstileStatus(aiTurnstileLoadAttempts>50?'ai_turnstile_error':'ai_turnstile_loading',aiTurnstileLoadAttempts>50?'error':'');
+      if(aiTurnstileLoadAttempts<=50)window.setTimeout(ensureAiTurnstile,100);
+      return;
+    }
+    aiTurnstileRenderPending=true;
+    setAiTurnstileStatus('ai_turnstile_loading');
+    try{
+      const widgetSize=aiTurnstileMount.clientWidth<300?'compact':'flexible';
+      aiTurnstileWidgetId=window.turnstile.render(aiTurnstileMount,{
+        sitekey:aiTurnstileMount.dataset.sitekey,
+        size:widgetSize,
+        theme:'light',
+        appearance:'always',
+        language:document.documentElement.lang||'auto',
+        'response-field':false,
+        callback:token=>{
+          if(aiTurnstileResponse)aiTurnstileResponse.value=String(token||'');
+          setAiTurnstileStatus('ai_turnstile_ready','verified');
+          aiTurnstileSection&&aiTurnstileSection.classList.remove('needs-attention');
+          updateAiControls();
+        },
+        'expired-callback':()=>{
+          if(aiTurnstileResponse)aiTurnstileResponse.value='';
+          setAiTurnstileStatus('ai_turnstile_expired','required');
+          updateAiControls();
+        },
+        'error-callback':()=>{
+          if(aiTurnstileResponse)aiTurnstileResponse.value='';
+          setAiTurnstileStatus('ai_turnstile_error','error');
+          updateAiControls();
+        }
+      });
+    }catch(_error){
+      aiTurnstileWidgetId=null;
+      setAiTurnstileStatus('ai_turnstile_error','error');
+    }finally{
+      aiTurnstileRenderPending=false;
+    }
   }
   function resetAiTurnstile(){
-    const widget=aiChatPanel.querySelector('.cf-turnstile');
-    if(widget&&window.turnstile&&typeof window.turnstile.reset==='function'){
-      try{window.turnstile.reset(widget)}catch(_e){}
+    if(aiTurnstileResponse)aiTurnstileResponse.value='';
+    if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
+      try{window.turnstile.reset(aiTurnstileWidgetId);setAiTurnstileStatus('ai_turnstile_loading')}catch(_e){setAiTurnstileStatus('ai_turnstile_error','error')}
     }
+    updateAiControls();
+  }
+  function preferredSpeechVoice(language){
+    if(!('speechSynthesis' in window))return null;
+    const localeMap={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
+    const locale=localeMap[language]||'en-US';
+    const prefix=locale.split('-')[0].toLowerCase();
+    const voices=window.speechSynthesis.getVoices()||[];
+    let best=null,bestScore=-1;
+    voices.forEach(voice=>{
+      const voiceLang=String(voice.lang||'').toLowerCase();
+      const name=String(voice.name||'');
+      let score=0;
+      if(voiceLang===locale.toLowerCase())score+=100;
+      else if(voiceLang.startsWith(prefix))score+=70;
+      else return;
+      if(/natural|online/i.test(name))score+=45;
+      if(/google/i.test(name))score+=30;
+      if(/microsoft/i.test(name))score+=20;
+      if(/irina|svetlana|milena|pavel/i.test(name))score+=18;
+      if(/espeak|festival/i.test(name))score-=35;
+      if(voice.default)score+=5;
+      if(score>bestScore){best=voice;bestScore=score}
+    });
+    return best;
   }
   function speakAiMessage(text){
     if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance)return;
     window.speechSynthesis.cancel();
     const utterance=new SpeechSynthesisUtterance(text);
-    const voices={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
-    utterance.lang=voices[document.documentElement.lang]||'en-US';
+    const language=document.documentElement.lang||'en';
+    const locales={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
+    utterance.lang=locales[language]||'en-US';
+    utterance.rate=.94;
+    utterance.pitch=1;
+    const voice=preferredSpeechVoice(language);
+    if(voice)utterance.voice=voice;
     window.speechSynthesis.speak(utterance);
   }
   function setVoiceStatus(key){
@@ -857,7 +1067,7 @@ if(aiChatRoot){
   async function uploadVoiceRecording(blob){
     const token=aiTurnstileToken();
     if(aiTurnstileRequired&&!token){
-      setVoiceStatus('ai_voice_turnstile');
+      showAiTurnstileRequired();
       return;
     }
     setVoiceStatus('ai_voice_transcribing');
@@ -890,6 +1100,10 @@ if(aiChatRoot){
   }
   async function startVoiceRecording(){
     if(!aiVoiceButton||aiVoiceBusy)return;
+    if(aiTurnstileRequired&&!aiTurnstileToken()){
+      showAiTurnstileRequired();
+      return;
+    }
     if(!aiVoiceConsent||!aiVoiceConsent.checked){
       setVoiceStatus('ai_voice_consent_required');
       aiVoiceConsent&&aiVoiceConsent.focus();
@@ -958,6 +1172,14 @@ if(aiChatRoot){
     if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatInput.value='';
     setVoiceStatus('');
+    if(aiTurnstileResponse)aiTurnstileResponse.value='';
+    if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){
+      try{window.turnstile.remove(aiTurnstileWidgetId)}catch(_e){}
+      aiTurnstileWidgetId=null;
+      aiTurnstileMount&&aiTurnstileMount.replaceChildren();
+    }
+    setAiTurnstileStatus('ai_turnstile_loading');
+    if(!aiChatPanel.hidden)window.requestAnimationFrame(ensureAiTurnstile);
     aiChatMessages.replaceChildren();
     appendAiMessage('assistant',aiCopy('ai_chat_welcome'));
     aiChatQuick.hidden=false;
@@ -968,7 +1190,7 @@ if(aiChatRoot){
     if(!text||aiChatBusy)return;
     const turnstileToken=aiTurnstileToken();
     if(aiTurnstileRequired&&!turnstileToken){
-      setVoiceStatus('ai_voice_turnstile');
+      showAiTurnstileRequired();
       return;
     }
     appendAiMessage('user',text);
@@ -1022,7 +1244,10 @@ if(aiChatRoot){
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(false);
     else startVoiceRecording();
   });
-  aiChatQuick.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>sendAiMessage(button.textContent)));
+  aiChatQuick.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+    if(aiTurnstileRequired&&!aiTurnstileToken()){showAiTurnstileRequired();return}
+    sendAiMessage(button.textContent);
+  }));
   aiChatForm.addEventListener('submit',event=>{event.preventDefault();sendAiMessage(aiChatInput.value)});
   aiChatInput.addEventListener('input',updateAiControls);
   aiChatInput.addEventListener('keydown',event=>{

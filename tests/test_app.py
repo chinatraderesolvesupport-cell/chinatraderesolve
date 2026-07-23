@@ -591,7 +591,16 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert "window.MediaRecorder" in home.text
     assert "speechSynthesis" in home.text
     assert "turnstile_token:turnstileToken" in home.text
-    assert "aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim()" in home.text
+    assert "!aiChatInput.value.trim()||!turnstileReady" in home.text
+    assert 'id="aiChatTurnstileWidget"' in home.text or 'data-turnstile-required="false"' in home.text
+    assert "ensureAiTurnstile" in home.text
+    assert "widgetSize=aiTurnstileMount.clientWidth<300?'compact':'flexible'" in home.text
+    assert "preferredSpeechVoice" in home.text
+    assert 'id="descriptionVoiceButton"' in home.text
+    assert 'id="descriptionVoicePanel"' in home.text
+    assert 'id="descriptionVoiceTurnstileWidget"' in home.text or 'data-turnstile-required="false"' in home.text
+    assert "uploadDescriptionVoice" in home.text
+    assert "descriptionField.dispatchEvent(new Event('input'" in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
     for language in ("en", "fr", "de", "es", "ru", "sr"):
@@ -601,6 +610,12 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
         assert translations[language]["ai_voice_consent"].strip()
         assert translations[language]["ai_voice_review"].strip()
         assert translations[language]["ai_voice_listen"].strip()
+        assert translations[language]["ai_turnstile_title"].strip()
+        assert translations[language]["ai_turnstile_required"].strip()
+        assert translations[language]["description_voice_help"].strip()
+        assert translations[language]["description_voice_consent"].strip()
+        assert translations[language]["description_voice_review"].strip()
+        assert translations[language]["description_voice_verification_required"].strip()
 
     unavailable = client.post(
         "/api/assistant",
@@ -1432,9 +1447,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.11"
+    assert health.json()["version"] == "3.7.13"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.11"
+    assert health.headers["x-app-version"] == "3.7.13"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["voice_transcriptions_daily_limit"] == 20
     assert health.json()["ai_assistant_daily_limit"] == 40

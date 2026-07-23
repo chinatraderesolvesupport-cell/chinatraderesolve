@@ -9,6 +9,7 @@
 Откройте ваш Web Service → **Environment** → **Add Environment Variable** и добавьте:
 
 ```text
+OPENAI_BILLING_READY=false
 ENABLE_AI_ASSISTANT=true
 OPENAI_API_KEY=ваш_секретный_ключ
 OPENAI_MODEL=модель_доступная_в_вашем_OpenAI_проекте
@@ -20,6 +21,14 @@ ENABLE_VOICE_INPUT=true
 OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
 VOICE_MAX_SECONDS=120
 MAX_DAILY_VOICE_TRANSCRIPTIONS=20
+```
+
+Пока баланс API не пополнен, оставьте `OPENAI_BILLING_READY=false`. Это единый предохранитель: чат, голосовая расшифровка, ИИ-анализ документов и ИИ-триаж не будут показаны или вызваны, даже если их отдельные настройки уже заполнены.
+
+После пополнения счёта замените только это значение:
+
+```text
+OPENAI_BILLING_READY=true
 ```
 
 Для `gpt-5.6-luna`, `gpt-5.6-terra` и `gpt-5.6-sol` версия 3.7.5 автоматически использует `reasoning.effort=none` и низкую многословность. Это подходит короткому публичному чату и не даёт скрытым reasoning-токенам исчерпать лимит до появления видимого ответа.
@@ -48,6 +57,7 @@ https://chinatraderesolve.onrender.com/health
 
 ```json
 {
+  "openai_billing_ready": true,
   "ai_assistant_enabled": true,
   "voice_input_enabled": true,
   "voice_max_seconds": 120,
@@ -56,7 +66,7 @@ https://chinatraderesolve.onrender.com/health
 }
 ```
 
-Если значение `false`, проверьте три обязательных пункта: `ENABLE_AI_ASSISTANT=true`, непустой `OPENAI_API_KEY` и непустая модель.
+Если значение `false`, проверьте четыре обязательных пункта: `OPENAI_BILLING_READY=true`, `ENABLE_AI_ASSISTANT=true`, непустой `OPENAI_API_KEY` и непустая модель.
 
 Если кнопка видна, но ответ временно недоступен, откройте Render → **Logs** и найдите строку `OpenAI assistant`. Версия 3.7.5 выводит только безопасные диагностические поля: HTTP-статус, тип/код ошибки, параметр и `x-request-id`. API‑ключ и текст сообщения пользователя в журнал не записываются.
 

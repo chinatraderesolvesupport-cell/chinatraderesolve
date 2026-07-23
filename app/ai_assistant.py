@@ -143,7 +143,8 @@ def _usage_fields(data: dict[str, Any]) -> tuple[int, int, int]:
 
 def assistant_is_enabled() -> bool:
     return bool(
-        settings.enable_ai_assistant
+        getattr(settings, "openai_billing_ready", True)
+        and settings.enable_ai_assistant
         and settings.openai_api_key
         and settings.openai_assistant_model
     )

@@ -44,7 +44,12 @@ def _extract_output_text(data: dict[str, Any]) -> str:
 
 
 async def ai_triage(application: ApplicationCreate) -> TriageResult | None:
-    if not settings.enable_ai_triage or not settings.openai_api_key or not settings.openai_model:
+    if (
+        not getattr(settings, "openai_billing_ready", True)
+        or not settings.enable_ai_triage
+        or not settings.openai_api_key
+        or not settings.openai_model
+    ):
         return None
     developer = (
         "You are a cautious intake triage component for ChinaTradeResolve, a commercial dispute-support free-access service. "

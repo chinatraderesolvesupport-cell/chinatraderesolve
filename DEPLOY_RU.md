@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.7.10 на Render
+# Установка ChinaTradeResolve v3.7.11 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.10.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.11.zip`.
 
-В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.10.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.11.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -35,6 +35,7 @@ PAYPAL_SUPPORT_URL=https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8
 Для включения нового анализа документов добавьте:
 
 ```env
+OPENAI_BILLING_READY=false
 ENABLE_DOCUMENT_ANALYSIS=true
 PUBLIC_LAUNCH_MODE=false
 OPENAI_DOCUMENT_MODEL=модель_с_поддержкой_изображений_и_PDF
@@ -62,6 +63,8 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 ```
 
 Также должны оставаться непустыми `OPENAI_API_KEY` и `DATABASE_URL`. Если `OPENAI_DOCUMENT_MODEL` пуст, используется `OPENAI_MODEL`.
+
+До пополнения баланса OpenAI оставьте `OPENAI_BILLING_READY=false`. При этом сохранённые ключ, модели и индивидуальные переключатели не удаляются, но платные вызовы не выполняются. После оплаты измените значение на `true`, выполните новый deploy и только затем проверяйте чат, голос и анализ документов.
 
 Старый `SUPPORT_URL` можно удалить, если другой внешний сервис поддержки больше не используется. Публичные криптовалютные адреса `BTC_ADDRESS`, `ETH_ADDRESS`, `USDT_TRC20_ADDRESS` и `SOL_ADDRESS` можно оставить: они будут показаны рядом с PayPal. При `ENABLE_VOLUNTARY_SUPPORT=false` вся страница поддержки и все QR-коды отключаются.
 
@@ -98,8 +101,11 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 ```json
 "support_enabled": true,
 "paypal_support_enabled": true,
-"document_analysis_enabled": true
+"openai_billing_ready": false,
+"document_analysis_enabled": false
 ```
+
+Это ожидаемое состояние до пополнения счёта. После оплаты и установки `OPENAI_BILLING_READY=true` должны стать активными только те ИИ-функции, чьи отдельные переменные и модели настроены.
 
 Откройте `/support`, проверьте карточку PayPal, QR-код и кнопку «Перейти к PayPal». Они должны вести только на `https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8`. Тестовый платёж выполнять необязательно.
 
@@ -138,9 +144,9 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 В версии 3.6.9 секреты, публичный URL и SMTP оставлены пустыми. Не импортируйте вымышленные значения-заглушки. На Render задайте `ADMIN_TOKEN` и `APP_SECRET` вручную; `PUBLIC_BASE_URL` для стандартного домена не требуется.
 
-## Проверка после обновления до v3.7.10
+## Проверка после обновления до v3.7.11
 
-После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.10"`. Для голоса проверьте `voice_input_enabled: true`, `voice_max_seconds: 120` и суточные лимиты. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
+После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.11"`. До оплаты ожидаются `openai_billing_ready: false`, `ai_assistant_enabled: false`, `voice_input_enabled: false` и `document_analysis_enabled: false`. После оплаты установите `OPENAI_BILLING_READY=true` и проверьте, что нужные ИИ-функции стали активны. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
 
 Откройте публичный ИИ‑помощник и отправьте вопрос без персональных данных. При ошибке найдите в Render Logs строку `OpenAI assistant`: версия 3.7.5 показывает безопасный HTTP-статус, код и `x-request-id`, не раскрывая ключ или сообщение пользователя. После проверки значение `AI_ASSISTANT_MAX_OUTPUT_TOKENS` можно вернуть к стандартному `500`, потому что GPT‑5.6 теперь явно работает с `reasoning.effort=none`.
 

@@ -15,12 +15,14 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
+from xml.sax.saxutils import escape as xml_escape
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 import qrcode
 import httpx
@@ -115,7 +117,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.10"
+APP_VERSION = "3.7.11"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -292,6 +294,7 @@ app.add_middleware(
     https_only=settings.public_base_url.startswith("https://"),
     max_age=3600,
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
@@ -623,7 +626,7 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("X-App-Version", APP_VERSION)
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
-    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
     turnstile_sources = " https://challenges.cloudflare.com" if turnstile_is_enabled() else ""
     response.headers.setdefault(
         "Content-Security-Policy",
@@ -1056,7 +1059,8 @@ def health() -> dict[str, Any]:
         "paypal_support_enabled": bool(
             settings.enable_voluntary_support and safe_paypal_support_url()
         ),
-        "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
+        "openai_billing_ready": settings.openai_billing_ready,
+        "ai_triage_enabled": settings.openai_billing_ready and settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
         "ai_assistant_daily_limit": settings.max_daily_ai_assistant_requests,
         "ai_assistant_used_today": get_daily_usage("ai_assistant") if database_available else None,
@@ -1086,6 +1090,51 @@ def readiness() -> JSONResponse:
     return JSONResponse(
         {"status": "ready" if ready else "not_ready", "version": APP_VERSION, "checks": checks},
         status_code=200 if ready else 503,
+    )
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots() -> PlainTextResponse:
+    if not public_launch_is_ready():
+        return PlainTextResponse(
+            "User-agent: *\nDisallow: /\n",
+            headers={"Cache-Control": "public, max-age=300"},
+        )
+    base_url = settings.public_base_url.rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n"
+        "Disallow: /case/\n"
+        f"Sitemap: {base_url}/sitemap.xml\n"
+    )
+    return PlainTextResponse(body, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/sitemap.xml")
+def sitemap() -> Response:
+    base_url = xml_escape(settings.public_base_url.rstrip("/"))
+    public_paths = (
+        "/",
+        "/privacy",
+        "/static/terms.html",
+        "/static/refund.html",
+        "/static/ai-notice.html",
+        "/static/disclaimer.html",
+    )
+    urls = "".join(
+        f"<url><loc>{base_url}{path}</loc></url>" for path in public_paths
+    )
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{urls}</urlset>"
+    )
+    return Response(
+        body,
+        media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 

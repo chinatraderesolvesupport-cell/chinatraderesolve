@@ -1,8 +1,17 @@
-# ChinaTradeResolve Document AI v3.7.10
+# ChinaTradeResolve Document AI v3.7.11
 
-Version 3.7.10 adds opt-in voice transcription to the public AI assistant. A visitor can record up to two minutes, review the editable transcript and explicitly send it for analysis. Audio is not stored in the case database and is discarded from server memory after transcription. Chat and transcription now share Turnstile protection and have separate IP and UTC-day cost limits.
+Version 3.7.11 prepares the service for a safe pre-payment deployment. A global `OPENAI_BILLING_READY` switch keeps every paid OpenAI feature unavailable until the API account is funded, the microphone permission now allows same-origin recording, and the chat closes when a visitor starts working with the application form. The release also localises hidden accessibility labels, compresses large responses, and adds readiness-aware `robots.txt` plus a public sitemap.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
+
+## Pre-payment readiness in v3.7.11
+
+- Keep `OPENAI_BILLING_READY=false` until the API account has a positive balance. This single switch blocks chat, voice transcription, document analysis and AI triage without removing their configuration.
+- After funding the account, set `OPENAI_BILLING_READY=true`, deploy, and verify the individual feature flags in `/health`.
+- The same-origin microphone is allowed by `Permissions-Policy`; camera and geolocation remain disabled.
+- Opening or focusing the application form closes an open assistant panel without stealing keyboard focus.
+- Large HTML, JavaScript and JSON responses support gzip compression.
+- Crawlers are blocked until all launch-readiness checks pass; the sitemap contains only public informational pages.
 
 ## Included
 
@@ -294,7 +303,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.10
+cd ChinaTradeResolve_Document_AI_v3.7.11
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -313,6 +322,7 @@ Open:
 Set these variables in Render (or in a local `.env` file):
 
 ```env
+OPENAI_BILLING_READY=true
 ENABLE_AI_ASSISTANT=true
 OPENAI_API_KEY=...
 OPENAI_MODEL=<model available in your OpenAI project>
@@ -326,7 +336,7 @@ VOICE_MAX_SECONDS=120
 MAX_DAILY_VOICE_TRANSCRIPTIONS=20
 ```
 
-When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After deployment, `/health` must report `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.
+Keep `OPENAI_BILLING_READY=false` while the API account is unfunded. When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After funding and deployment, `/health` must report `"openai_billing_ready": true` and `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.
 
 For GPT-5.6 models, the public assistant explicitly sends `reasoning.effort=none` and low verbosity. This preserves a fast, concise informational chat and prevents hidden reasoning tokens from consuming the short response budget. Provider failures are logged with the HTTP status, safe error fields and request ID; the log never includes the API key or the user's chat text.
 

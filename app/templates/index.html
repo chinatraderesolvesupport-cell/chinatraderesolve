@@ -527,9 +527,14 @@ menuBtn.addEventListener('click',()=>{
 mobilePanel.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMobileMenu));
 const submitSection=document.getElementById('submit');
 const caseFormElement=document.getElementById('caseForm');
-caseFormElement.addEventListener('focusin',()=>{formInView=true;updateMobileCta()});
-caseFormElement.addEventListener('pointerdown',()=>{formInView=true;updateMobileCta()});
-mobileCta.addEventListener('click',()=>{formInView=true;updateMobileCta()});
+function markFormEngaged(){
+  formInView=true;
+  updateMobileCta();
+  document.dispatchEvent(new CustomEvent('ctr:form-engaged'));
+}
+caseFormElement.addEventListener('focusin',markFormEngaged);
+caseFormElement.addEventListener('pointerdown',markFormEngaged);
+document.querySelectorAll('a[href="#submit"]').forEach(link=>link.addEventListener('click',markFormEngaged));
 if('IntersectionObserver' in window){
   new IntersectionObserver(entries=>{
     formInView=entries.some(entry=>entry.isIntersecting);
@@ -773,12 +778,12 @@ if(aiChatRoot){
     aiChatLauncher.setAttribute('aria-expanded','true');
     window.setTimeout(()=>aiChatInput.focus(),40);
   }
-  function closeAiChat(){
+  function closeAiChat(restoreFocus=true){
     stopVoiceRecording(true);
     if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatPanel.hidden=true;
     aiChatLauncher.setAttribute('aria-expanded','false');
-    aiChatLauncher.focus();
+    if(restoreFocus)aiChatLauncher.focus();
   }
   function appendAiMessage(role,text,extraClass=''){
     const item=document.createElement('div');
@@ -1010,6 +1015,7 @@ if(aiChatRoot){
     }
   }
   document.addEventListener('ctr:language-changed',resetAiChatForLanguageChange);
+  document.addEventListener('ctr:form-engaged',()=>{if(!aiChatPanel.hidden)closeAiChat(false)});
   aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat());
   aiChatClose.addEventListener('click',closeAiChat);
   if(aiVoiceButton)aiVoiceButton.addEventListener('click',()=>{

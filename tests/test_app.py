@@ -6,6 +6,7 @@ _tmp = tempfile.TemporaryDirectory()
 os.environ["DATABASE_PATH"] = str(Path(_tmp.name) / "test.db")
 os.environ["ADMIN_TOKEN"] = "test-admin-token-abcdefghijklmnopqrstuvwxyz"
 os.environ["APP_SECRET"] = "test-app-secret-abcdefghijklmnopqrstuvwxyz-0123456789"
+os.environ["OPENAI_BILLING_READY"] = "false"
 os.environ["ENABLE_AI_TRIAGE"] = "false"
 os.environ["FREE_ACCESS_MODE"] = "true"
 os.environ["RENDER"] = "true"
@@ -110,6 +111,10 @@ def test_health_and_home_free_access():
     assert health.json()["free_access_mode"] is True
     assert health.json()["support_enabled"] is True
     assert health.json()["paypal_support_enabled"] is True
+    assert health.json()["openai_billing_ready"] is False
+    assert health.json()["ai_assistant_enabled"] is False
+    assert health.json()["voice_input_enabled"] is False
+    assert health.json()["document_analysis_enabled"] is False
     home = client.get("/")
     assert home.status_code == 200
     assert "Заявки рассматриваются бесплатно" in home.text
@@ -170,6 +175,8 @@ def test_support_page_is_optional_and_non_priority():
     assert "id.startsWith('wallet-')" in page.text
     assert "Обязательная сеть:" in page.text
     assert "Do not use ERC20, BEP20 or any other network." in page.text
+    assert 'language_label:"Language"' in page.text
+    assert 'paypal_qr_label:"Open PayPal payment page"' in page.text
 
 
 def test_home_shows_configured_voluntary_payment_methods():
@@ -190,6 +197,21 @@ def test_mobile_menu_accessible_name_is_localized():
     assert translations.status_code == 200
     assert 'data-i18n-aria-label="mobile_menu_open"' in page.text
     assert '"mobile_menu_open":"Open menu"' in translations.text
+
+
+def test_legal_language_accessible_names_are_localized():
+    legal_script = client.get("/static/legal-i18n-v2.js")
+    assert legal_script.status_code == 200
+    for expected in (
+        "en:'Language'",
+        "fr:'Langue'",
+        "de:'Sprache'",
+        "es:'Idioma'",
+        "ru:'Язык'",
+        "sr:'Jezik'",
+    ):
+        assert expected in legal_script.text
+    assert "setAttribute('aria-label',languageLabels[l]" in legal_script.text
 
 
 def test_admin_auth_queue_close_and_feedback():
@@ -306,7 +328,7 @@ def test_russian_localization_and_security_headers():
     assert home.headers["x-content-type-options"] == "nosniff"
     assert home.headers["x-frame-options"] == "DENY"
     assert "frame-ancestors 'none'" in home.headers["content-security-policy"]
-
+    assert home.headers["permissions-policy"] == "camera=(), microphone=(self), geolocation=()"
     created = client.post(
         "/api/applications",
         json=valid_payload(
@@ -325,6 +347,12 @@ def test_russian_localization_and_security_headers():
     assert "Статус дела" in status.text
     assert "No service fee" not in status.text
     assert status.headers["cache-control"] == "no-store"
+
+
+def test_large_html_responses_are_compressed_when_supported():
+    response = client.get("/", headers={"accept-encoding": "gzip"})
+    assert response.status_code == 200
+    assert response.headers["content-encoding"] == "gzip"
 
 
 def test_admin_login_rate_limit():
@@ -1404,12 +1432,13 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.10"
+    assert health.json()["version"] == "3.7.11"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.10"
+    assert health.headers["x-app-version"] == "3.7.11"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["voice_transcriptions_daily_limit"] == 20
     assert health.json()["ai_assistant_daily_limit"] == 40
+    assert health.json()["openai_billing_ready"] is False
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2202,8 +2231,10 @@ def test_document_analysis_drops_invented_evidence_filenames(monkeypatch):
 
     monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
     original_enabled = module.settings.enable_document_analysis
+    original_billing_ready = module.settings.openai_billing_ready
     original_key = module.settings.openai_api_key
     original_model = module.settings.openai_document_model
+    object.__setattr__(module.settings, "openai_billing_ready", True)
     object.__setattr__(module.settings, "enable_document_analysis", True)
     object.__setattr__(module.settings, "openai_api_key", "test-key")
     object.__setattr__(module.settings, "openai_document_model", "test-model")
@@ -2213,6 +2244,7 @@ def test_document_analysis_drops_invented_evidence_filenames(monkeypatch):
             [{"original_name": "invoice.pdf", "content_type": "application/pdf", "content_blob": _make_pdf_bytes()}],
         ))
     finally:
+        object.__setattr__(module.settings, "openai_billing_ready", original_billing_ready)
         object.__setattr__(module.settings, "enable_document_analysis", original_enabled)
         object.__setattr__(module.settings, "openai_api_key", original_key)
         object.__setattr__(module.settings, "openai_document_model", original_model)
@@ -2362,6 +2394,7 @@ def test_document_analysis_drops_timeline_events_without_real_sources(monkeypatc
         "settings",
         module.settings.__class__(**{
             **module.settings.__dict__,
+            "openai_billing_ready": True,
             "enable_document_analysis": True,
             "openai_api_key": "test-key",
             "openai_document_model": "test-model",
@@ -3766,6 +3799,37 @@ def test_launch_readiness_endpoint_returns_200_when_all_checks_pass(monkeypatch)
     response = client.get("/ready")
     assert response.status_code == 200
     assert response.json()["status"] == "ready"
+
+
+def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
+    import app.main as module
+
+    blocked = client.get("/robots.txt")
+    assert blocked.status_code == 200
+    assert blocked.text == "User-agent: *\nDisallow: /\n"
+
+    monkeypatch.setattr(module, "public_launch_is_ready", lambda: True)
+    allowed = client.get("/robots.txt")
+    assert allowed.status_code == 200
+    assert "Allow: /" in allowed.text
+    assert "Disallow: /admin" in allowed.text
+    assert "Disallow: /api/" in allowed.text
+    assert "/sitemap.xml" in allowed.text
+
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert sitemap.headers["content-type"].startswith("application/xml")
+    assert "<loc>http://127.0.0.1:8000/</loc>" in sitemap.text
+    assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
+    assert "/admin" not in sitemap.text
+    assert "/case/" not in sitemap.text
+
+
+def test_form_engagement_closes_open_ai_chat_without_stealing_focus():
+    page = client.get("/")
+    assert page.status_code == 200
+    assert "new CustomEvent('ctr:form-engaged')" in page.text
+    assert "if(!aiChatPanel.hidden)closeAiChat(false)" in page.text
 
 
 def test_launch_readiness_fails_closed_when_database_is_unavailable(monkeypatch):

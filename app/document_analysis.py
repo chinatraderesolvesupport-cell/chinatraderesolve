@@ -618,7 +618,8 @@ LANGUAGE_NAMES = {
 
 def document_analysis_is_enabled() -> bool:
     return bool(
-        settings.enable_document_analysis
+        getattr(settings, "openai_billing_ready", True)
+        and settings.enable_document_analysis
         and settings.openai_api_key
         and settings.openai_document_model
     )

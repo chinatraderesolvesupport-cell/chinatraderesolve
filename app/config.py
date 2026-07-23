@@ -147,6 +147,7 @@ class Settings:
     app_secret: str = os.getenv("APP_SECRET", DEFAULT_APP_SECRET)
     public_base_url: str = configured_public_base_url()
     public_launch_mode: bool = _env_bool("PUBLIC_LAUNCH_MODE")
+    openai_billing_ready: bool = _env_bool("OPENAI_BILLING_READY")
     enable_ai_triage: bool = _env_bool("ENABLE_AI_TRIAGE")
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model: str | None = os.getenv("OPENAI_MODEL")

@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.5
+# ChinaTradeResolve Document AI v3.7.6
 
-Version 3.7.5 fixes the public GPT-5.6 assistant integration: short chat requests explicitly use no reasoning, incomplete Responses API results are detected, and safe provider diagnostics reach the Render application log without API keys or user messages. The v3.7.4 form and compact-landing improvements remain in place.
+Version 3.7.6 adds the verified voluntary-support PayPal payment link, a dedicated PayPal card and QR code on the support page, and strict validation that the configured payment link is hosted on `www.paypal.com`. The service remains free and support remains optional. The v3.7.5 GPT-5.6 assistant diagnostics remain in place.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -238,12 +238,13 @@ The main public page is indexable. The optional support page remains `noindex,no
 
 ## Voluntary support
 
-Voluntary support is **disabled by default**. Keep it disabled until the service operator has confirmed the legal, tax, accounting and refund handling requirements for receiving contributions.
+Voluntary support is enabled for the verified ChinaTradeResolve PayPal payment link. It remains separate from the free service and never affects acceptance, priority, review, communication or outcome.
 
-To enable it deliberately, set `ENABLE_VOLUNTARY_SUPPORT=true` and configure either a verified external support URL or one or more public wallet addresses:
+The included PayPal link can be replaced through `PAYPAL_SUPPORT_URL`. Optional cryptocurrency addresses and another verified external provider can also be configured:
 
 ```env
-ENABLE_VOLUNTARY_SUPPORT=false
+ENABLE_VOLUNTARY_SUPPORT=true
+PAYPAL_SUPPORT_URL=https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8
 SUPPORT_URL=
 BTC_ADDRESS=
 ETH_ADDRESS=
@@ -288,7 +289,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.5
+cd ChinaTradeResolve_Document_AI_v3.7.6
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

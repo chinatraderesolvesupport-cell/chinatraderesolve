@@ -171,7 +171,11 @@ class Settings:
     email_bridge_secret: str | None = os.getenv("EMAIL_BRIDGE_SECRET")
     email_bridge_timeout_seconds: float = _env_float("EMAIL_BRIDGE_TIMEOUT_SECONDS", 20, minimum=2, maximum=120)
     free_access_mode: bool = _env_bool("FREE_ACCESS_MODE", True)
-    enable_voluntary_support: bool = _env_bool("ENABLE_VOLUNTARY_SUPPORT")
+    enable_voluntary_support: bool = _env_bool("ENABLE_VOLUNTARY_SUPPORT", True)
+    paypal_support_url: str | None = os.getenv(
+        "PAYPAL_SUPPORT_URL",
+        "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8",
+    )
     support_url: str | None = os.getenv("SUPPORT_URL")
     support_project_name: str = os.getenv("SUPPORT_PROJECT_NAME", "ChinaTradeResolve")
     btc_address: str | None = os.getenv("BTC_ADDRESS")

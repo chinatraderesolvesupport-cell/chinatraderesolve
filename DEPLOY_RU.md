@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.7.5 на Render
+# Установка ChinaTradeResolve v3.7.6 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.5.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.6.zip`.
 
-В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.5.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.6.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -23,11 +23,14 @@
 - настройки электронной почты;
 - настройки ИИ, когда помощник должен работать.
 
-Для безопасного запуска оставьте:
+Для включения проверенной добровольной поддержки PayPal установите:
 
 ```env
-ENABLE_VOLUNTARY_SUPPORT=false
+ENABLE_VOLUNTARY_SUPPORT=true
+PAYPAL_SUPPORT_URL=https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8
 ```
+
+`PAYPAL_SUPPORT_URL` является публичной платёжной ссылкой, а не секретом. Пароль PayPal, данные карты, `Client Secret` и другие учётные данные в Render или код для этой интеграции не добавляются.
 
 Для включения нового анализа документов добавьте:
 
@@ -55,7 +58,7 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 Также должны оставаться непустыми `OPENAI_API_KEY` и `DATABASE_URL`. Если `OPENAI_DOCUMENT_MODEL` пуст, используется `OPENAI_MODEL`.
 
-Старые `BTC_ADDRESS`, `ETH_ADDRESS`, `USDT_TRC20_ADDRESS`, `SOL_ADDRESS` и `SUPPORT_URL` можно удалить. Даже если они останутся, при `ENABLE_VOLUNTARY_SUPPORT=false` публичная страница и QR-коды не откроются.
+Старый `SUPPORT_URL` можно удалить, если другой внешний сервис поддержки больше не используется. Публичные криптовалютные адреса `BTC_ADDRESS`, `ETH_ADDRESS`, `USDT_TRC20_ADDRESS` и `SOL_ADDRESS` можно оставить: они будут показаны рядом с PayPal. При `ENABLE_VOLUNTARY_SUPPORT=false` вся страница поддержки и все QR-коды отключаются.
 
 
 ## Прокси-заголовки и ограничения запросов
@@ -88,11 +91,12 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 В `/health` должны быть нужные значения:
 
 ```json
-"support_enabled": false,
+"support_enabled": true,
+"paypal_support_enabled": true,
 "document_analysis_enabled": true
 ```
 
-Адрес `/support` должен возвращать страницу 404, пока поддержка отключена.
+Откройте `/support`, проверьте карточку PayPal, QR-код и кнопку «Перейти к PayPal». Они должны вести только на `https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8`. Тестовый платёж выполнять необязательно.
 
 Проверьте первый экран, раздел «Результат», блок «О проекте» и тестовую заявку с отдельным тестовым email. После успешной отправки должен появиться номер вида `CTR-2026-...` и кнопка просмотра статуса.
 
@@ -129,9 +133,9 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 В версии 3.6.9 секреты, публичный URL и SMTP оставлены пустыми. Не импортируйте вымышленные значения-заглушки. На Render задайте `ADMIN_TOKEN` и `APP_SECRET` вручную; `PUBLIC_BASE_URL` для стандартного домена не требуется.
 
-## Проверка после обновления до v3.7.5
+## Проверка после обновления до v3.7.6
 
-После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.5"`. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
+После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.6"`. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
 
 Откройте публичный ИИ‑помощник и отправьте вопрос без персональных данных. При ошибке найдите в Render Logs строку `OpenAI assistant`: версия 3.7.5 показывает безопасный HTTP-статус, код и `x-request-id`, не раскрывая ключ или сообщение пользователя. После проверки значение `AI_ASSISTANT_MAX_OUTPUT_TOKENS` можно вернуть к стандартному `500`, потому что GPT‑5.6 теперь явно работает с `reasoning.effort=none`.
 

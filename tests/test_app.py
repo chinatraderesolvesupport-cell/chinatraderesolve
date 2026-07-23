@@ -10,6 +10,7 @@ os.environ["ENABLE_AI_TRIAGE"] = "false"
 os.environ["FREE_ACCESS_MODE"] = "true"
 os.environ["RENDER"] = "true"
 os.environ["ENABLE_VOLUNTARY_SUPPORT"] = "true"
+os.environ["PAYPAL_SUPPORT_URL"] = "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8"
 os.environ["SUPPORT_URL"] = "https://example.com/support"
 os.environ["BTC_ADDRESS"] = "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9"
 os.environ["ETH_ADDRESS"] = "0x69ACE684f28B0A66157aB62aD06e93761a713c6b"
@@ -108,6 +109,7 @@ def test_health_and_home_free_access():
     assert health.status_code == 200
     assert health.json()["free_access_mode"] is True
     assert health.json()["support_enabled"] is True
+    assert health.json()["paypal_support_enabled"] is True
     home = client.get("/")
     assert home.status_code == 200
     assert "Заявки рассматриваются бесплатно" in home.text
@@ -151,6 +153,9 @@ def test_support_page_is_optional_and_non_priority():
     page = client.get("/support")
     assert page.status_code == 200
     assert "не является оплатой услуги" in page.text
+    assert "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8" in page.text
+    assert "Поддержать через PayPal" in page.text
+    assert "Continue to PayPal" in page.text
     assert "https://example.com/support" in page.text
 
 
@@ -459,6 +464,14 @@ def test_crypto_qr_assets_are_served_as_png():
         assert response.headers["content-type"] == "image/png"
         assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
         assert len(response.content) > 500
+
+
+def test_paypal_qr_is_served_as_png():
+    response = client.get("/support/paypal-qr.png")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+    assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+    assert len(response.content) > 500
 
 
 def test_crypto_wallet_configuration_is_valid_and_support_is_enabled():
@@ -1203,9 +1216,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.5"
+    assert health.json()["version"] == "3.7.6"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.5"
+    assert health.headers["x-app-version"] == "3.7.6"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [
@@ -2659,6 +2672,35 @@ def test_support_url_rejects_credentials_unsafe_schemes_and_whitespace():
             assert module.safe_support_url() is None
     finally:
         object.__setattr__(module.settings, "support_url", original)
+
+
+def test_paypal_support_url_is_restricted_to_verified_payment_links():
+    import app.main as module
+
+    original = module.settings.paypal_support_url
+    try:
+        object.__setattr__(
+            module.settings,
+            "paypal_support_url",
+            "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8",
+        )
+        assert (
+            module.safe_paypal_support_url()
+            == "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8"
+        )
+
+        for value in (
+            "http://www.paypal.com/ncp/payment/THKQMZDRRNHQ8",
+            "https://paypal.com/ncp/payment/THKQMZDRRNHQ8",
+            "https://www.paypal.com.example/ncp/payment/THKQMZDRRNHQ8",
+            "https://www.paypal.com/signin",
+            "https://user:password@www.paypal.com/ncp/payment/THKQMZDRRNHQ8",
+            "https://www.paypal.com/ncp/payment/THKQMZDRRNHQ8?next=bad",
+        ):
+            object.__setattr__(module.settings, "paypal_support_url", value)
+            assert module.safe_paypal_support_url() is None
+    finally:
+        object.__setattr__(module.settings, "paypal_support_url", original)
 
 
 def test_feedback_is_rejected_before_case_is_closed():

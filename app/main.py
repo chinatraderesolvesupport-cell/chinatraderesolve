@@ -96,7 +96,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.5"
+APP_VERSION = "3.7.6"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -391,6 +391,30 @@ def safe_support_url() -> str | None:
     return raw
 
 
+def safe_paypal_support_url() -> str | None:
+    """Return only a PayPal-hosted voluntary-support payment link."""
+    raw = (settings.paypal_support_url or "").strip()
+    if not raw or any(ord(char) < 33 for char in raw):
+        return None
+    try:
+        parsed = urlparse(raw)
+        hostname = (parsed.hostname or "").casefold()
+        parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https"
+        or hostname != "www.paypal.com"
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or not re.fullmatch(r"/ncp/payment/[A-Za-z0-9]+", parsed.path)
+    ):
+        return None
+    return raw
+
+
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
@@ -525,7 +549,10 @@ def crypto_wallets() -> list[dict[str, str]]:
 
 
 def support_is_available() -> bool:
-    return bool(settings.enable_voluntary_support and (safe_support_url() or crypto_wallets()))
+    return bool(
+        settings.enable_voluntary_support
+        and (safe_paypal_support_url() or safe_support_url() or crypto_wallets())
+    )
 
 
 def turnstile_is_enabled() -> bool:
@@ -996,6 +1023,9 @@ def health() -> dict[str, Any]:
         "document_upload_request_limit_mb": DOCUMENT_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
         "free_access_mode": settings.free_access_mode,
         "support_enabled": support_is_available(),
+        "paypal_support_enabled": bool(
+            settings.enable_voluntary_support and safe_paypal_support_url()
+        ),
         "ai_triage_enabled": settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
         "ai_assistant_enabled": assistant_is_enabled(),
         "document_analysis_enabled": document_analysis_is_enabled(),
@@ -1065,9 +1095,25 @@ def support_page(request: Request) -> HTMLResponse:
         request=request,
         name="support.html",
         context={
+            "paypal_support_url": safe_paypal_support_url(),
             "support_url": safe_support_url(),
             "wallets": crypto_wallets(),
             "project_name": settings.support_project_name,
+        },
+    )
+
+
+@app.get("/support/paypal-qr.png")
+def paypal_support_qr() -> Response:
+    paypal_url = safe_paypal_support_url()
+    if not settings.enable_voluntary_support or not paypal_url:
+        raise HTTPException(status_code=404, detail="PayPal support is disabled")
+    return Response(
+        content=_qr_png(paypal_url),
+        media_type="image/png",
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
         },
     )
 

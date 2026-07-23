@@ -87,18 +87,21 @@ section{padding:44px 0;scroll-margin-top:130px}.light{background:var(--light);co
 .sample-tags span{font-size:10px;border-radius:999px;background:#f1f5f9;padding:4px 7px;color:#475569}
 .sample-page table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
 .sample-page th,.sample-page td{border:1px solid #e2e8f0;padding:7px;text-align:left}
-.form-shell{background:#fff;color:var(--ink);border-radius:20px;padding:28px;min-width:0}
-.progress-labels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px;font-size:13px;font-weight:800;color:#94a3b8}
+#submit{scroll-margin-top:92px}
+.form-shell{background:#fff;color:var(--ink);border-radius:20px;padding:16px;min-width:0;scroll-margin-top:88px;box-shadow:0 16px 44px rgba(15,23,42,.10)}
+.progress-labels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px;font-size:12px;font-weight:800;color:#94a3b8}
 .progress-labels span.active{color:#0f766e}
 .progress-labels span:last-child{text-align:right}
-.progress{display:flex;gap:8px;margin-bottom:22px}.progress span{height:7px;flex:1;border-radius:999px;background:#e2e8f0}.progress span.active{background:var(--teal)}
-.form-speed{display:inline-flex;align-items:center;gap:8px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:8px 11px;border-radius:10px;font-weight:800;font-size:13px;margin:0 0 16px}
-.feature-status{margin:0 0 16px;padding:12px 14px;border-radius:11px;font-size:14px}.feature-status.available{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.feature-status.manual{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
-.form-step{display:none}.form-step.active{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.field{display:flex;flex-direction:column;gap:7px;min-width:0}.full{grid-column:1/-1}
-input,select,textarea{width:100%;min-width:0;padding:13px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
-textarea{min-height:130px;resize:vertical}.hint{font-size:12px;color:#64748b}.error{color:#b91c1c;font-size:13px;display:none}.submit-status{display:none;margin-top:12px;padding:12px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
-.form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:8px}.btn.dark{color:#0f172a;border-color:#94a3b8}
+.progress{display:flex;gap:7px;margin-bottom:14px}.progress span{height:6px;flex:1;border-radius:999px;background:#e2e8f0}.progress span.active{background:var(--teal)}
+.form-speed{display:inline-flex;align-items:center;gap:8px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:8px 11px;border-radius:10px;font-weight:800;font-size:13px;margin:0 0 12px}
+.feature-status{margin:0 0 12px;padding:10px 12px;border-radius:11px;font-size:13px}.feature-status.available{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.feature-status.manual{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+.form-step{display:none;scroll-margin-top:88px}.form-step.active{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}#stepOne.active{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px}.step-one-problem{grid-column:span 2}.step-one-actions{grid-column:auto;display:flex;align-items:flex-end;justify-content:flex-end;margin:0}.step-one-actions .btn{width:100%;min-height:41px}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}.field>label{font-size:12px;font-weight:800}.full{grid-column:1/-1}
+input,select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
+textarea{min-height:118px;resize:vertical}.hint{font-size:11px;color:#64748b;line-height:1.4}.error{color:#b91c1c;font-size:13px;display:none}.submit-status{display:none;margin-top:10px;padding:11px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:3px}.btn.dark{color:#0f172a;border-color:#94a3b8}
+.form-choice-intro{grid-column:1/-1;display:grid;gap:3px;padding:13px 14px;border:1px solid #99f6e4;border-radius:13px;background:linear-gradient(135deg,#ecfeff,#f0fdfa);color:#134e4a}
+.form-choice-intro strong{font-size:16px}.form-choice-intro span{font-size:13px;line-height:1.4}
 .filebox{border:1px dashed #94a3b8;border-radius:12px;padding:16px;background:#f8fafc}
 .submit-summary{grid-column:1/-1;border:1px solid #99f6e4;border-radius:14px;padding:16px;background:#f0fdfa;color:#134e4a}.submit-summary h3{margin:0 0 8px;font-size:17px}.submit-summary p{margin:6px 0;font-size:14px}.submit-summary p:last-child{font-weight:800}
 .honeypot{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -151,51 +154,51 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-launcher:hover{transform:translateY(-1px)}
 .ai-chat-root.is-open .ai-chat-launcher{opacity:0;visibility:hidden;pointer-events:none}
 .ai-chat-launcher .spark{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.45);font-size:15px}
-.ai-chat-panel{position:fixed;padding:0;scroll-margin-top:0;right:20px;bottom:78px;z-index:81;width:min(430px,calc(100vw - 28px));max-height:min(720px,calc(100dvh - 112px));display:flex;flex-direction:column;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.42);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+.ai-chat-panel{position:fixed;padding:0;scroll-margin-top:0;right:20px;bottom:78px;z-index:81;width:min(430px,calc(100vw - 28px));height:min(720px,calc(100dvh - 112px));max-height:min(720px,calc(100dvh - 112px));display:flex;flex-direction:column;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.42);overflow:hidden;overscroll-behavior:contain}
 .ai-chat-panel[hidden]{display:none}
-.ai-chat-head{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:17px 18px;background:#0f172a;color:#fff}
+.ai-chat-head{z-index:3;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;background:#0f172a;color:#fff;flex:0 0 auto}
 .ai-chat-head strong{display:block}.ai-chat-head small{display:block;color:#cbd5e1;margin-top:2px}
 .ai-chat-badge{display:inline-block;margin-left:7px;padding:2px 6px;border-radius:999px;background:rgba(45,212,191,.16);color:#5eead4;font-size:10px;vertical-align:middle;text-transform:uppercase;letter-spacing:.06em}
 .ai-chat-close{border:1px solid #475569;background:transparent;color:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:20px;line-height:1}
-.ai-chat-notice{margin:0;padding:11px 14px;background:#fff7ed;color:#9a3412;border-bottom:1px solid #fed7aa;font-size:12px;line-height:1.45}
-.ai-chat-messages{padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:110px;flex:1 1 auto;background:#f8fafc}
-.ai-chat-message{max-width:88%;padding:10px 12px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
+.ai-chat-notice{margin:0;padding:7px 12px;background:#fff7ed;color:#9a3412;border-bottom:1px solid #fed7aa;font-size:10px;line-height:1.35;flex:0 0 auto}
+.ai-chat-messages{padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;min-height:118px;flex:1 1 auto;background:#f8fafc;scroll-behavior:smooth;scroll-padding:8px;overscroll-behavior:contain}
+.ai-chat-message{max-width:91%;padding:9px 11px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;scroll-margin-top:8px}
 .ai-chat-message.assistant{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
 .ai-chat-message.user{align-self:flex-end;background:#ccfbf1;color:#134e4a;border:1px solid #99f6e4;border-bottom-right-radius:4px}
 .ai-chat-message.thinking{color:#64748b;font-style:italic}
-.ai-chat-quick{display:flex;gap:7px;flex-wrap:wrap;padding:0 15px 12px;background:#f8fafc}
-.ai-chat-quick button{border:1px solid #94a3b8;background:#fff;color:#334155;border-radius:999px;padding:7px 10px;font-size:12px;cursor:pointer}
-.ai-chat-quick button:hover{border-color:#0f766e;color:#0f766e}
-.ai-chat-form{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;align-items:end}
-.ai-chat-form textarea{min-height:46px;max-height:120px;resize:vertical;padding:10px 11px}
+.ai-chat-quick{display:grid;grid-template-columns:1fr;gap:6px;padding:9px 12px;background:#f0fdfa;border-top:1px solid #99f6e4;flex:0 0 auto}
+.ai-chat-quick[hidden],.ai-chat-turnstile[hidden]{display:none}
+.ai-chat-quick button{width:100%;border:1px solid #5eead4;background:#fff;color:#134e4a;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;white-space:normal;text-align:left;line-height:1.3}
+.ai-chat-quick button:hover{border-color:#0f766e;background:#ecfeff;color:#0f766e}
+.ai-chat-input-label{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:8px 12px 0;background:#fff;color:#0f172a;font-size:12px;font-weight:900;flex:0 0 auto}
+.ai-chat-input-label span{font-size:10px;font-weight:600;color:#64748b}
+.ai-chat-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:7px 12px 9px;background:#fff;align-items:end;flex:0 0 auto}
+.ai-chat-form textarea{min-height:46px;max-height:100px;resize:vertical;padding:9px 10px}
 .ai-chat-send{border:0;border-radius:10px;background:#14b8a6;color:#042f2e;font-weight:900;padding:12px 14px;cursor:pointer}
-.ai-chat-voice{width:44px;height:44px;border:1px solid #94a3b8;border-radius:10px;background:#fff;color:#0f766e;font-size:20px;cursor:pointer}
-.ai-chat-voice.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}
-.ai-chat-voice:disabled,.ai-chat-send:disabled,.ai-chat-form textarea:disabled{opacity:.55;cursor:not-allowed}
-.ai-voice-panel{padding:0 13px 10px;background:#fff;color:#475569;font-size:11px;line-height:1.4}
-.ai-voice-consent{display:flex;align-items:flex-start;gap:7px}.ai-voice-consent input{margin-top:2px}
-.ai-voice-status{min-height:16px;margin-top:5px;color:#0f766e}
-.ai-chat-head,.ai-chat-notice,.ai-chat-quick,.ai-chat-form,.ai-voice-panel,.ai-chat-turnstile,.ai-chat-privacy{flex:0 0 auto}
-.ai-chat-turnstile{display:grid;gap:8px;padding:11px 13px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;overflow:visible;min-height:118px}
+.ai-chat-voice{grid-column:1/-1;min-height:54px;width:100%;border:2px solid #0f766e;border-radius:12px;background:linear-gradient(135deg,#ccfbf1,#ecfeff);color:#115e59;font-size:14px;font-weight:950;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;box-shadow:0 7px 18px rgba(15,118,110,.12)}
+.ai-chat-voice .mic-icon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:0 0 30px;background:#0f766e;color:#fff}.ai-chat-voice .mic-icon svg{width:20px;height:20px;display:block}.ai-chat-voice-copy{display:grid;text-align:left;line-height:1.15}.ai-chat-voice-copy small{font-size:10px;font-weight:750;color:#475569;margin-top:3px}.ai-chat-voice:hover{background:#99f6e4;transform:translateY(-1px)}
+.ai-chat-voice.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}.ai-chat-voice.recording .mic-icon{background:#b91c1c}
+.ai-chat-voice:disabled,.ai-chat-send:disabled,.ai-chat-form textarea:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.ai-voice-panel{grid-column:1/-1;padding:10px 11px;background:#fff7ed;color:#475569;font-size:11px;line-height:1.4;border:1px solid #fdba74;border-radius:11px;flex:0 0 auto}
+.ai-voice-panel[hidden]{display:none}.ai-voice-panel.needs-attention{animation:consent-attention 1.15s ease-out 1;box-shadow:0 0 0 3px rgba(245,158,11,.26)}
+.ai-voice-consent{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.ai-voice-consent input{width:20px;height:20px;margin:2px 0 0;accent-color:#0f766e}.ai-voice-consent strong{display:block;color:#9a3412;margin-bottom:2px;font-size:12px}.ai-voice-consent span span{display:block}
+.ai-voice-status{min-height:16px;margin-top:6px;color:#0f766e;font-weight:800}
+.ai-chat-head,.ai-chat-notice,.ai-chat-quick,.ai-chat-form,.ai-voice-panel,.ai-chat-turnstile,.ai-chat-privacy,.ai-chat-input-label{flex:0 0 auto}
+.ai-chat-turnstile{display:grid;gap:5px;padding:8px 12px 9px;background:#f8fafc;border-top:1px solid #e2e8f0;overflow:visible;min-height:78px;flex:0 0 auto}
 .ai-chat-turnstile-label{display:grid;gap:2px;color:#334155;line-height:1.35}
-.ai-chat-turnstile-label strong{font-size:12px;color:#0f172a}
-.ai-chat-turnstile-label span{font-size:11px}
-.ai-chat-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
-.ai-chat-turnstile-widget iframe{max-width:100%!important}
-.ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}
-.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}
-.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}
+.ai-chat-turnstile-label strong{font-size:12px;color:#0f172a}.ai-chat-turnstile-label span{font-size:11px}
+.ai-chat-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.ai-chat-turnstile-widget iframe{max-width:100%!important}
+.ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}
 .ai-chat-turnstile.needs-attention{background:#fff7ed;box-shadow:inset 0 0 0 2px #f59e0b}
 .ai-message-content{display:block}
-.ai-listen{margin-top:7px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;padding:4px 7px;cursor:pointer;font-size:12px}
-@keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}
+@keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}@keyframes consent-attention{0%{transform:scale(.99);background:#fef3c7}45%{transform:scale(1.01);background:#fffbeb}100%{transform:scale(1);background:#fff7ed}}
 .ai-chat-privacy{padding:0 13px 11px;background:#fff;color:#64748b;font-size:10px;line-height:1.4}
-@media(max-width:700px){.ai-chat-launcher{right:4%;bottom:96px;max-width:92%}.ai-chat-launcher span:last-child{max-width:210px}.ai-chat-panel{right:4%;bottom:151px;width:92%;max-height:calc(100vh - 175px)}}
+@media(max-width:700px){.ai-chat-launcher{right:4%;bottom:96px;max-width:92%}.ai-chat-launcher span:last-child{max-width:210px}.ai-chat-panel{right:4%;bottom:151px;width:92%;height:calc(100dvh - 175px);max-height:calc(100dvh - 175px)}}
 .ai-chat-launcher.is-compact{width:52px;height:52px;padding:0;justify-content:center}
 .ai-chat-launcher.is-compact .launcher-label{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .ai-chat-launcher.is-compact .spark{width:30px;height:30px}
-@media(max-width:980px){.links{display:none}.menu-btn{display:block}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active{grid-template-columns:1fr}.full{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:14px;z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:4%;bottom:20px;max-width:52px}}
+@media(max-width:980px){.links{display:none}.menu-btn{display:block}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}#stepOne.active{grid-template-columns:1fr 1fr}.step-one-problem,.step-one-actions{grid-column:1/-1}}
+@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active,#stepOne.active{grid-template-columns:1fr}.full,.step-one-problem,.step-one-actions{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:14px;z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:4%;bottom:20px;max-width:52px}}
 
 .anchor-alias{display:block;position:relative;top:-130px;visibility:hidden}
 .service-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:24px;align-items:start;margin-top:26px}
@@ -207,16 +210,16 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .trust-note{margin-top:18px;padding:14px 16px;border:1px solid #99f6e4;background:#f0fdfa;border-radius:12px;color:#134e4a}
 .consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
 .consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
-.description-compose{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:9px;align-items:start}
+.description-compose{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
 .description-compose textarea{min-width:0}
-.description-voice-button{width:48px;height:48px;border:1px solid #94a3b8;border-radius:11px;background:#fff;color:#0f766e;font-size:21px;cursor:pointer;display:grid;place-items:center}
-.description-voice-button:hover{background:#ecfeff}.description-voice-button.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}.description-voice-button:disabled{opacity:.55;cursor:not-allowed}
-.description-voice-panel{display:grid;gap:8px;margin-top:9px;padding:11px 12px;border:1px solid #cbd5e1;border-radius:11px;background:#f8fafc;color:#475569;font-size:12px;line-height:1.4}
-.description-voice-panel[hidden]{display:none}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-consent input{width:auto;margin-top:2px}
+.description-voice-button{width:100%;min-height:48px;border:1px solid #0f766e;border-radius:11px;background:linear-gradient(135deg,#ecfeff,#ccfbf1);color:#0f766e;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;padding:9px 14px}
+.description-voice-button .mic-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 24px}.description-voice-button .mic-icon svg{width:24px;height:24px;display:block}.description-voice-button .voice-button-copy{display:grid;text-align:left;line-height:1.2}.description-voice-button .voice-button-copy small{font-size:10px;font-weight:700;color:#475569;margin-top:2px}.description-voice-button:hover{background:#ccfbf1}.description-voice-button.recording{background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite}.description-voice-button:disabled{opacity:.55;cursor:not-allowed}
+.description-voice-panel{display:grid;gap:8px;margin-top:7px;padding:11px 12px;border:1px solid #f59e0b;border-radius:11px;background:#fff7ed;color:#475569;font-size:12px;line-height:1.4}
+.description-voice-panel[hidden]{display:none}.description-voice-panel.needs-attention{box-shadow:0 0 0 3px rgba(245,158,11,.28)}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-consent input{width:auto;margin-top:2px}
 .description-voice-status{min-height:17px;color:#0f766e}.description-voice-status[data-state="error"],.description-voice-status[data-state="required"]{color:#b45309;font-weight:800}
 .description-voice-turnstile{display:grid;gap:6px;padding-top:3px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget iframe{max-width:100%!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
-@media(max-width:520px){.description-compose{grid-template-columns:minmax(0,1fr) 44px}.description-voice-button{width:44px;height:44px}}
+@media(max-width:520px){.form-shell{padding:15px}.description-voice-button{min-height:50px}.ai-chat-panel{height:calc(100dvh - 175px)}}
 #faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
 #confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
 .private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
@@ -394,7 +397,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="eyebrow" data-i18n="form_eyebrow">Бесплатная заявка</div>
 <h2 data-i18n="form_title">Отправьте материалы на предварительную оценку</h2>
 <p class="intro" data-i18n="form_intro">Начните с краткого описания. После отправки на закрытой странице дела можно безопасно добавить до 20 ключевых документов.</p>
-<div class="form-speed" data-i18n="form_speed">Около 2 минут · Без платы за услуги · Без больших загрузок</div>
+<div class="form-speed" data-i18n="form_speed">Около 3–5 минут · Без платы за услуги · Можно написать или рассказать голосом</div>
 {% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">Автоматическая систематизация документов доступна после загрузки и отдельного согласия.</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">Сейчас документы проверяются вручную; автоматический анализ не подключён.</div>{% endif %}
 <div class="form-shell">
 <div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">Основные данные</span><span data-i18n="form_stage2" id="label2">Информация о деле</span></div>
@@ -407,16 +410,17 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_french" value="French">Французский</option><option data-i18n="opt_german" value="German">Немецкий</option><option data-i18n="opt_spanish" value="Spanish">Испанский</option><option data-i18n="opt_russian" value="Russian">Русский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
 <div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
 <div class="field"><label data-i18n="amount" for="amountDispute">Сумма, которую вы хотите вернуть</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
-<div class="field full"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option><option data-i18n="opt_problem_other" value="Other or multiple issues">Другая или несколько проблем</option></select></div>
+<div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option><option data-i18n="opt_problem_other" value="Other or multiple issues">Другая или несколько проблем</option></select></div>
 <div class="field full"><div class="error" data-i18n="form_error" id="stepError">Укажите имя и корректный email.</div></div>
-<div class="field full form-actions"><span></span><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
+<div class="field form-actions step-one-actions"><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
 </div>
 <div class="form-step" id="stepTwo">
+<div class="form-choice-intro"><strong data-i18n="description_mode_title">Как вам удобнее описать ситуацию?</strong><span data-i18n="description_mode_text">Напишите в поле ниже или нажмите «Рассказать голосом». Расшифровку можно исправить перед отправкой.</span></div>
+<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
 <div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
-<div class="field full"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Надиктовать описание" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button">🎙</button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
 <aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">Перед отправкой</h3><p data-i18n="submit_summary_data">Мы сохраним контактные данные, сведения о покупке и споре, описание ситуации и выбранные согласия. Документы на этом шаге не передаются; при выборе ИИ-помощи текст заявки может обрабатываться настроенным ИИ-провайдером.</p><p data-i18n="submit_summary_response">Ориентир первого ответа человека — в течение 2 рабочих дней.</p></aside>
 <div class="consent-group">
@@ -513,12 +517,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
 <section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
-<p class="ai-chat-notice" data-i18n="ai_chat_notice">Не вставляйте конфиденциальные имена, номера заказов, пароли, приватные ключи или полные документы. Помощник даёт общую информацию, а не юридическую консультацию.</p>
+<p class="ai-chat-notice" data-i18n="ai_chat_notice">Не указывайте конфиденциальные данные. Помощник даёт общую информацию.</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
-<div class="ai-chat-quick" id="aiChatQuick"><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
-{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">Проверка безопасности</strong><span data-i18n="ai_turnstile_help">Подтвердите, что вы не робот. После зелёной отметки можно отправить сообщение или использовать голос.</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">Загружаю проверку…</div></div>{% endif %}
-<form class="ai-chat-form" id="aiChatForm"><textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea>{% if voice_input_enabled %}<button aria-label="Начать запись" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button">🎙</button>{% endif %}<button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">Отправить</button></form>
-{% if voice_input_enabled %}<div class="ai-voice-panel" id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span data-i18n="ai_voice_consent">Я согласен передать запись провайдеру ИИ только для расшифровки. Аудио не сохраняется в базе сайта.</span></label><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}
+{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">Проверка безопасности</strong><span data-i18n="ai_turnstile_help">Проверка обычно проходит автоматически. Если потребуется действие, оно появится здесь.</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">Загружаю проверку…</div></div>{% endif %}
+<div class="ai-chat-quick" id="aiChatQuick"{% if turnstile_site_key %} hidden{% endif %}><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
+<label class="ai-chat-input-label" for="aiChatInput"><strong data-i18n="ai_chat_input_title">Ваш вопрос</strong><span data-i18n="ai_chat_input_help">Напишите или расскажите голосом</span></label>
+<form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="Рассказать вопрос голосом" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta">Рассказать вопрос голосом</span><small data-i18n="ai_voice_cta_hint">Нажмите и говорите до 2 минут</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">Только для голосового ввода</strong><span data-i18n="ai_voice_consent">Я согласен передать запись провайдеру ИИ только для расшифровки. Аудио не сохраняется в базе сайта.</span></span></label><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">Отправить</button></form>
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе дел. Последние сообщения передаются ИИ‑провайдеру; применяются его правила обработки и хранения. Голосовая запись удаляется из памяти сразу после расшифровки.</div>
 </section>
 </div>
@@ -554,7 +558,18 @@ function markFormEngaged(){
 }
 caseFormElement.addEventListener('focusin',markFormEngaged);
 caseFormElement.addEventListener('pointerdown',markFormEngaged);
-document.querySelectorAll('a[href="#submit"]').forEach(link=>link.addEventListener('click',markFormEngaged));
+function scrollElementToFormTop(element,{offset=88}={}){
+  if(!element)return;
+  const root=document.documentElement,previous=root.style.scrollBehavior;
+  root.style.scrollBehavior='auto';
+  const top=Math.max(0,window.scrollY+element.getBoundingClientRect().top-offset);
+  window.scrollTo(0,top);
+  window.requestAnimationFrame(()=>{root.style.scrollBehavior=previous});
+}
+const formShell=document.querySelector('.form-shell');
+function scrollToFormStart(){markFormEngaged();window.requestAnimationFrame(()=>scrollElementToFormTop(formShell||document.getElementById('stepOne'),{offset:88,behavior:'auto'}))}
+function scrollToApplicationSection(){window.requestAnimationFrame(()=>scrollElementToFormTop(submitSection,{offset:82,behavior:'auto'}))}
+document.querySelectorAll('a[href="#submit"]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();history.replaceState(null,'','#submit');scrollToFormStart()}));
 if('IntersectionObserver' in window){
   new IntersectionObserver(entries=>{
     formInView=entries.some(entry=>entry.isIntersecting);
@@ -607,7 +622,7 @@ function ensureDescriptionVoiceTurnstile(){
   try{
     descriptionVoiceTurnstileWidgetId=window.turnstile.render(descriptionVoiceTurnstileMount,{
       sitekey:descriptionVoiceTurnstileMount.dataset.sitekey,
-      size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'always',language:document.documentElement.lang||'auto','response-field':false,
+      size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'interaction-only',language:document.documentElement.lang||'auto','response-field':false,
       callback:token=>{descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified')},
       'expired-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_expired','required')},
       'error-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
@@ -648,7 +663,7 @@ async function uploadDescriptionVoice(blob){
 }
 async function startDescriptionVoiceRecording(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
-  descriptionVoicePanel.hidden=false;ensureDescriptionVoiceTurnstile();
+  descriptionVoicePanel.hidden=false;descriptionVoicePanel.classList.add('needs-attention');window.setTimeout(()=>descriptionVoicePanel.classList.remove('needs-attention'),1800);ensureDescriptionVoiceTurnstile();
   if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
   if(descriptionVoicePanel.dataset.turnstileRequired==='true'&&!descriptionVoiceToken()){setDescriptionVoiceStatus('description_voice_verification_required','required');descriptionVoiceTurnstileMount&&descriptionVoiceTurnstileMount.scrollIntoView({behavior:'smooth',block:'nearest'});return}
   if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setDescriptionVoiceStatus('description_voice_unsupported','error');return}
@@ -699,10 +714,10 @@ nextButton.addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
   const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
   if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
-  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.location.hash='submit'}
+  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
 });
 stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
-document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active')});
+document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active');window.requestAnimationFrame(()=>scrollElementToFormTop(stepOne,{offset:88,behavior:'smooth'}))});
 document.getElementById('caseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const form=e.target;
@@ -872,6 +887,7 @@ if(aiChatRoot){
   const aiChatSend=document.getElementById('aiChatSend');
   const aiVoiceButton=document.getElementById('aiVoiceButton');
   const aiVoiceConsent=document.getElementById('aiVoiceConsent');
+  const aiVoicePanel=document.getElementById('aiVoicePanel');
   const aiVoiceStatus=document.getElementById('aiVoiceStatus');
   const aiTurnstileSection=document.getElementById('aiChatTurnstileSection');
   const aiTurnstileMount=document.getElementById('aiChatTurnstileWidget');
@@ -892,37 +908,48 @@ if(aiChatRoot){
   let aiTurnstileRenderPending=false;
   let aiTurnstileLoadAttempts=0;
 
+  function showAiQuickQuestions(){
+    if(aiTurnstileSection)aiTurnstileSection.hidden=true;
+    aiChatQuick.hidden=false;
+  }
+  function showAiVerification(){
+    aiChatQuick.hidden=true;
+    if(aiTurnstileSection)aiTurnstileSection.hidden=false;
+  }
   function openAiChat(){
     aiChatPanel.hidden=false;
     aiChatRoot.classList.add('is-open');
     aiChatLauncher.setAttribute('aria-expanded','true');
-    window.requestAnimationFrame(()=>{ensureAiTurnstile();window.setTimeout(()=>aiChatInput.focus(),40)});
+    if(aiTurnstileRequired&&!aiTurnstileToken())showAiVerification();else showAiQuickQuestions();
+    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(!aiTurnstileRequired||aiTurnstileToken())window.setTimeout(()=>aiChatInput.focus(),40)});
   }
-  function closeAiChat(restoreFocus=true){
+  function closeAiChat(restoreFocus=true,goToApplication=false){
     stopVoiceRecording(true);
-    if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatPanel.hidden=true;
     aiChatRoot.classList.remove('is-open');
     aiChatLauncher.setAttribute('aria-expanded','false');
-    if(restoreFocus)aiChatLauncher.focus();
+    if(goToApplication)window.setTimeout(scrollToApplicationSection,60);
+    else if(restoreFocus)aiChatLauncher.focus();
   }
-  function appendAiMessage(role,text,extraClass=''){
+  function revealAiMessage(item,position='end'){
+    window.requestAnimationFrame(()=>{
+      if(position==='start'){
+        const itemRect=item.getBoundingClientRect();
+        const containerRect=aiChatMessages.getBoundingClientRect();
+        const target=aiChatMessages.scrollTop+(itemRect.top-containerRect.top)-8;
+        aiChatMessages.scrollTo({top:Math.max(0,target),behavior:'auto'});
+      }else aiChatMessages.scrollTo({top:aiChatMessages.scrollHeight,behavior:'smooth'});
+    });
+  }
+  function appendAiMessage(role,text,extraClass='',reveal='end'){
     const item=document.createElement('div');
     item.className=`ai-chat-message ${role}${extraClass?' '+extraClass:''}`;
     const content=document.createElement('span');
     content.className='ai-message-content';
     content.textContent=text;
     item.appendChild(content);
-    if(role==='assistant'&&!extraClass&&'speechSynthesis' in window){
-      const listen=document.createElement('button');
-      listen.className='ai-listen';
-      listen.type='button';
-      listen.textContent=`🔊 ${aiCopy('ai_voice_listen')}`;
-      listen.addEventListener('click',()=>speakAiMessage(text));
-      item.appendChild(listen);
-    }
     aiChatMessages.appendChild(item);
-    aiChatMessages.scrollTop=aiChatMessages.scrollHeight;
+    revealAiMessage(item,reveal);
     return item;
   }
   function aiCopy(key){
@@ -936,6 +963,7 @@ if(aiChatRoot){
     if(!aiTurnstileStatus)return;
     aiTurnstileStatus.textContent=key?aiCopy(key):'';
     aiTurnstileStatus.dataset.state=state;
+    if(aiTurnstileSection)aiTurnstileSection.classList.toggle('is-verified',state==='verified');
   }
   function updateAiControls(){
     const turnstileReady=!aiTurnstileRequired||Boolean(aiTurnstileToken());
@@ -945,6 +973,7 @@ if(aiChatRoot){
   }
   function showAiTurnstileRequired(){
     if(!aiTurnstileRequired)return;
+    showAiVerification();
     ensureAiTurnstile();
     setAiTurnstileStatus('ai_turnstile_required','required');
     if(aiTurnstileSection){
@@ -970,13 +999,14 @@ if(aiChatRoot){
         sitekey:aiTurnstileMount.dataset.sitekey,
         size:widgetSize,
         theme:'light',
-        appearance:'always',
+        appearance:'interaction-only',
         language:document.documentElement.lang||'auto',
         'response-field':false,
         callback:token=>{
           if(aiTurnstileResponse)aiTurnstileResponse.value=String(token||'');
           setAiTurnstileStatus('ai_turnstile_ready','verified');
           aiTurnstileSection&&aiTurnstileSection.classList.remove('needs-attention');
+          showAiQuickQuestions();
           updateAiControls();
         },
         'expired-callback':()=>{
@@ -997,49 +1027,13 @@ if(aiChatRoot){
       aiTurnstileRenderPending=false;
     }
   }
-  function resetAiTurnstile(){
+  function resetAiTurnstile({silent=true}={}){
     if(aiTurnstileResponse)aiTurnstileResponse.value='';
+    if(silent)showAiQuickQuestions();else showAiVerification();
     if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
       try{window.turnstile.reset(aiTurnstileWidgetId);setAiTurnstileStatus('ai_turnstile_loading')}catch(_e){setAiTurnstileStatus('ai_turnstile_error','error')}
     }
     updateAiControls();
-  }
-  function preferredSpeechVoice(language){
-    if(!('speechSynthesis' in window))return null;
-    const localeMap={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
-    const locale=localeMap[language]||'en-US';
-    const prefix=locale.split('-')[0].toLowerCase();
-    const voices=window.speechSynthesis.getVoices()||[];
-    let best=null,bestScore=-1;
-    voices.forEach(voice=>{
-      const voiceLang=String(voice.lang||'').toLowerCase();
-      const name=String(voice.name||'');
-      let score=0;
-      if(voiceLang===locale.toLowerCase())score+=100;
-      else if(voiceLang.startsWith(prefix))score+=70;
-      else return;
-      if(/natural|online/i.test(name))score+=45;
-      if(/google/i.test(name))score+=30;
-      if(/microsoft/i.test(name))score+=20;
-      if(/irina|svetlana|milena|pavel/i.test(name))score+=18;
-      if(/espeak|festival/i.test(name))score-=35;
-      if(voice.default)score+=5;
-      if(score>bestScore){best=voice;bestScore=score}
-    });
-    return best;
-  }
-  function speakAiMessage(text){
-    if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance)return;
-    window.speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(text);
-    const language=document.documentElement.lang||'en';
-    const locales={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',sr:'sr-RS'};
-    utterance.lang=locales[language]||'en-US';
-    utterance.rate=.94;
-    utterance.pitch=1;
-    const voice=preferredSpeechVoice(language);
-    if(voice)utterance.voice=voice;
-    window.speechSynthesis.speak(utterance);
   }
   function setVoiceStatus(key){
     if(aiVoiceStatus)aiVoiceStatus.textContent=key?aiCopy(key):'';
@@ -1100,13 +1094,15 @@ if(aiChatRoot){
   }
   async function startVoiceRecording(){
     if(!aiVoiceButton||aiVoiceBusy)return;
-    if(aiTurnstileRequired&&!aiTurnstileToken()){
-      showAiTurnstileRequired();
-      return;
-    }
+    if(aiVoicePanel){aiVoicePanel.hidden=false;aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
     if(!aiVoiceConsent||!aiVoiceConsent.checked){
       setVoiceStatus('ai_voice_consent_required');
-      aiVoiceConsent&&aiVoiceConsent.focus();
+      aiVoiceConsent&&aiVoiceConsent.focus({preventScroll:true});
+      aiVoicePanel&&aiVoicePanel.scrollIntoView({behavior:'smooth',block:'nearest'});
+      return;
+    }
+    if(aiTurnstileRequired&&!aiTurnstileToken()){
+      showAiTurnstileRequired();
       return;
     }
     if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
@@ -1169,9 +1165,9 @@ if(aiChatRoot){
     aiChatHistory=[];
     aiChatBusy=false;
     stopVoiceRecording(true);
-    if('speechSynthesis' in window)window.speechSynthesis.cancel();
     aiChatInput.value='';
     setVoiceStatus('');
+    if(aiVoicePanel)aiVoicePanel.hidden=true;
     if(aiTurnstileResponse)aiTurnstileResponse.value='';
     if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){
       try{window.turnstile.remove(aiTurnstileWidgetId)}catch(_e){}
@@ -1179,10 +1175,10 @@ if(aiChatRoot){
       aiTurnstileMount&&aiTurnstileMount.replaceChildren();
     }
     setAiTurnstileStatus('ai_turnstile_loading');
+    if(aiTurnstileRequired)showAiVerification();else showAiQuickQuestions();
     if(!aiChatPanel.hidden)window.requestAnimationFrame(ensureAiTurnstile);
     aiChatMessages.replaceChildren();
     appendAiMessage('assistant',aiCopy('ai_chat_welcome'));
-    aiChatQuick.hidden=false;
     updateAiControls();
   }
   async function sendAiMessage(rawText){
@@ -1197,7 +1193,7 @@ if(aiChatRoot){
     aiChatHistory.push({role:'user',content:text});
     aiChatHistory=aiChatHistory.slice(-8);
     aiChatInput.value='';
-    aiChatQuick.hidden=true;
+    aiChatQuick.hidden=false;
     aiChatBusy=true;
     updateAiControls();
     const thinking=appendAiMessage('assistant',aiCopy('ai_chat_thinking'),'thinking');
@@ -1215,31 +1211,37 @@ if(aiChatRoot){
       thinking.remove();
       if(!response.ok){
         const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_chat_error');
-        appendAiMessage('assistant',detail||aiCopy('ai_chat_error'));
+        appendAiMessage('assistant',detail||aiCopy('ai_chat_error'),'','start');
         return;
       }
       const reply=String(result.reply||'').trim();
       if(!reply)throw new Error('empty reply');
-      appendAiMessage('assistant',reply);
+      appendAiMessage('assistant',reply,'','start');
       aiChatHistory.push({role:'assistant',content:reply});
       aiChatHistory=aiChatHistory.slice(-8);
     }catch(error){
       if(thinking.isConnected)thinking.remove();
-      if(error.name!=='AbortError')appendAiMessage('assistant',aiCopy('ai_chat_error'));
+      if(error.name!=='AbortError')appendAiMessage('assistant',aiCopy('ai_chat_error'),'','start');
     }finally{
       if(aiChatAbortController===controller){
         aiChatAbortController=null;
         aiChatBusy=false;
-        resetAiTurnstile();
+        resetAiTurnstile({silent:true});
         updateAiControls();
+        window.setTimeout(()=>{
+          const messages=[...aiChatMessages.querySelectorAll('.ai-chat-message.assistant:not(.thinking)')];
+          const latest=messages[messages.length-1];
+          if(latest)revealAiMessage(latest,'start');
+        },180);
         aiChatInput.focus();
       }
     }
   }
   document.addEventListener('ctr:language-changed',resetAiChatForLanguageChange);
   document.addEventListener('ctr:form-engaged',()=>{if(!aiChatPanel.hidden)closeAiChat(false)});
-  aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat());
-  aiChatClose.addEventListener('click',closeAiChat);
+  aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat(false,true));
+  aiChatClose.addEventListener('click',()=>closeAiChat(false,true));
+  if(aiVoiceConsent)aiVoiceConsent.addEventListener('change',()=>{if(aiVoiceConsent.checked){setVoiceStatus('');aiVoicePanel&&aiVoicePanel.classList.remove('needs-attention')}});
   if(aiVoiceButton)aiVoiceButton.addEventListener('click',()=>{
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(false);
     else startVoiceRecording();

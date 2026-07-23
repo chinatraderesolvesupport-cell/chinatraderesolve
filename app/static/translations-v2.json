@@ -278,7 +278,8 @@
     "ai_chat_input_title": "Your question",
     "ai_chat_input_help": "Write it or describe it by voice",
     "ai_voice_cta": "Ask your question by voice",
-    "ai_voice_consent_title": "For voice input only"
+    "ai_voice_consent_title": "For voice input only",
+    "ai_voice_cta_hint": "Press and speak for up to 2 minutes"
   },
   "ru": {
     "prototype": "Заявки сейчас рассматриваются бесплатно. Приём зависит от профиля дела и доступной мощности.",
@@ -559,7 +560,8 @@
     "ai_chat_input_title": "Ваш вопрос",
     "ai_chat_input_help": "Напишите или расскажите голосом",
     "ai_voice_cta": "Рассказать вопрос голосом",
-    "ai_voice_consent_title": "Только для голосового ввода"
+    "ai_voice_consent_title": "Только для голосового ввода",
+    "ai_voice_cta_hint": "Нажмите и говорите до 2 минут"
   },
   "sr": {
     "prototype": "Prijave se trenutno pregledaju besplatno. Prihvatanje zavisi od vrste predmeta i raspoloživog kapaciteta.",
@@ -840,7 +842,8 @@
     "ai_chat_input_title": "Vaše pitanje",
     "ai_chat_input_help": "Napišite ili ispričajte glasom",
     "ai_voice_cta": "Postavite pitanje glasom",
-    "ai_voice_consent_title": "Samo za glasovni unos"
+    "ai_voice_consent_title": "Samo za glasovni unos",
+    "ai_voice_cta_hint": "Pritisnite i govorite do 2 minuta"
   },
   "fr": {
     "prototype": "Les demandes sont actuellement examinées gratuitement. L’acceptation dépend du type de dossier et de la capacité disponible.",
@@ -1121,7 +1124,8 @@
     "ai_chat_input_title": "Votre question",
     "ai_chat_input_help": "Écrivez ou posez-la à voix haute",
     "ai_voice_cta": "Poser la question à voix haute",
-    "ai_voice_consent_title": "Uniquement pour la saisie vocale"
+    "ai_voice_consent_title": "Uniquement pour la saisie vocale",
+    "ai_voice_cta_hint": "Appuyez et parlez pendant 2 minutes maximum"
   },
   "de": {
     "prototype": "Anträge werden derzeit kostenlos geprüft. Die Annahme hängt von Falltyp und verfügbarer Kapazität ab.",
@@ -1402,7 +1406,8 @@
     "ai_chat_input_title": "Ihre Frage",
     "ai_chat_input_help": "Schreiben oder per Sprache stellen",
     "ai_voice_cta": "Frage per Sprache stellen",
-    "ai_voice_consent_title": "Nur für die Spracheingabe"
+    "ai_voice_consent_title": "Nur für die Spracheingabe",
+    "ai_voice_cta_hint": "Drücken und bis zu 2 Minuten sprechen"
   },
   "es": {
     "prototype": "Las solicitudes se revisan actualmente sin coste. La aceptación depende del tipo de caso y de la capacidad disponible.",
@@ -1683,6 +1688,7 @@
     "ai_chat_input_title": "Su pregunta",
     "ai_chat_input_help": "Escriba o cuéntela por voz",
     "ai_voice_cta": "Hacer la pregunta por voz",
-    "ai_voice_consent_title": "Solo para entrada de voz"
+    "ai_voice_consent_title": "Solo para entrada de voz",
+    "ai_voice_cta_hint": "Pulse y hable durante un máximo de 2 minutos"
   }
 }

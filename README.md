@@ -1,10 +1,10 @@
-# ChinaTradeResolve Document AI v3.7.14
+# ChinaTradeResolve Document AI v3.7.15
 
-Version 3.7.14 redesigns the public assistant and application form around first-time visitors. Assistant answers now open at the beginning of the response, quick questions remain visible, security verification collapses after success, and voice input is presented as a clearly labelled action. The compact application form jumps directly to the active fields and begins its second step with a choice to write or describe the situation by voice.
+Version 3.7.15 applies the findings from a live first-time-user review. After Turnstile succeeds, its block is replaced by three ready-made questions. Voice input and its consent are presented together as a prominent action, browser speech playback is removed, closing the assistant moves to the application section, and the first application step fits in one laptop viewport.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
-## First-time visitor UX in v3.7.14
+## First-time visitor UX in v3.7.15
 
 - The chat Turnstile widget is rendered explicitly after the panel opens, avoiding incorrect measurements inside a hidden container.
 - Flexible size is used where possible; compact size is selected only for very narrow containers.
@@ -12,7 +12,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - Clicking a quick question before verification highlights and scrolls to the security block.
 - Text sending and voice recording require a valid token; voice is no longer recorded only to be rejected afterward.
 - The panel can scroll safely on short screens, and the launcher is hidden while the panel is open.
-- Speech synthesis prefers matching Natural/Online, Google and Microsoft voices when the browser exposes them.
+- Assistant responses are text-only; browser speech synthesis and the “Listen” control are intentionally removed.
 
 
 - The assistant uses a fixed layout: only the conversation scrolls, while quick questions and the composer remain visible.
@@ -37,7 +37,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - SQLite case database and audit log;
 - deterministic safety-first triage;
 - optional multilingual public AI assistant;
-- optional voice-to-text input with browser-native playback of assistant answers;
+- optional voice-to-text input with editable transcription; assistant answers remain text-only;
 - optional OpenAI structured triage;
 - exception-driven admin queue;
 - private case-status page;
@@ -321,7 +321,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.14
+cd ChinaTradeResolve_Document_AI_v3.7.15
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

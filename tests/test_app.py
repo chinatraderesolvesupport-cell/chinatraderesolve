@@ -1447,9 +1447,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.13"
+    assert health.json()["version"] == "3.7.14"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.13"
+    assert health.headers["x-app-version"] == "3.7.14"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["voice_transcriptions_daily_limit"] == 20
     assert health.json()["ai_assistant_daily_limit"] == 40

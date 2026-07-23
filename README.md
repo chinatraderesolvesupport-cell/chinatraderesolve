@@ -1,10 +1,10 @@
-# ChinaTradeResolve Document AI v3.7.13
+# ChinaTradeResolve Document AI v3.7.14
 
-Version 3.7.13 adds optional voice dictation to the main case-description field. The visitor can record up to two minutes, pass a dedicated Turnstile check, review the OpenAI transcript, edit it, and only then submit the application. Audio is not stored in the case database.
+Version 3.7.14 redesigns the public assistant and application form around first-time visitors. Assistant answers now open at the beginning of the response, quick questions remain visible, security verification collapses after success, and voice input is presented as a clearly labelled action. The compact application form jumps directly to the active fields and begins its second step with a choice to write or describe the situation by voice.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
-## AI-chat verification UX in v3.7.13
+## First-time visitor UX in v3.7.14
 
 - The chat Turnstile widget is rendered explicitly after the panel opens, avoiding incorrect measurements inside a hidden container.
 - Flexible size is used where possible; compact size is selected only for very narrow containers.
@@ -13,6 +13,14 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - Text sending and voice recording require a valid token; voice is no longer recorded only to be rejected afterward.
 - The panel can scroll safely on short screens, and the launcher is hidden while the panel is open.
 - Speech synthesis prefers matching Natural/Online, Google and Microsoft voices when the browser exposes them.
+
+
+- The assistant uses a fixed layout: only the conversation scrolls, while quick questions and the composer remain visible.
+- A newly returned assistant answer is aligned to its beginning, so the visitor reads from top to bottom.
+- The privacy notice is compact and no longer competes with the answer.
+- Voice input uses a full-width labelled microphone action and reveals its consent only when needed.
+- Application CTAs jump directly to the first fields; the form uses tighter spacing.
+- Step two begins with the editable description and an obvious “Describe by voice” option before optional order details.
 
 ## Pre-payment and launch readiness retained from v3.7.11
 
@@ -313,7 +321,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.13
+cd ChinaTradeResolve_Document_AI_v3.7.14
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

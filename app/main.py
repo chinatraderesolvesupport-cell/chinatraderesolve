@@ -96,7 +96,7 @@ from .triage import merge_triage, rules_triage
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.6"
+APP_VERSION = "3.7.7"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -990,11 +990,16 @@ def public_case_progress(
 def home(request: Request) -> HTMLResponse:
     if public_launch_is_blocked():
         return unavailable_until_configured(request)
+    wallets = crypto_wallets()
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
             "support_enabled": support_is_available(),
+            "paypal_support_enabled": bool(
+                settings.enable_voluntary_support and safe_paypal_support_url()
+            ),
+            "crypto_wallets": wallets,
             "contact_email": settings.contact_email,
             "ai_assistant_enabled": assistant_is_enabled(),
             "document_analysis_enabled": document_analysis_is_enabled(),

@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.6
+# ChinaTradeResolve Document AI v3.7.7
 
-Version 3.7.6 adds the verified voluntary-support PayPal payment link, a dedicated PayPal card and QR code on the support page, and strict validation that the configured payment link is hosted on `www.paypal.com`. The service remains free and support remains optional. The v3.7.5 GPT-5.6 assistant diagnostics remain in place.
+Version 3.7.7 makes voluntary-support methods visible on the landing page with linked PayPal, BTC, ETH, USDT TRC20 and SOL icons. Only configured cryptocurrency wallets are presented as available. The verified PayPal payment link, QR codes and strict payment-link validation from v3.7.6 remain in place.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -289,7 +289,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.6
+cd ChinaTradeResolve_Document_AI_v3.7.7
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

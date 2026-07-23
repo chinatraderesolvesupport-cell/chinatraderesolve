@@ -157,6 +157,22 @@ def test_support_page_is_optional_and_non_priority():
     assert "Поддержать через PayPal" in page.text
     assert "Continue to PayPal" in page.text
     assert "https://example.com/support" in page.text
+    assert 'class="coin-icon btc"' in page.text
+    assert 'class="coin-icon eth"' in page.text
+    assert 'class="coin-icon usdt"' in page.text
+    assert 'class="coin-icon sol"' in page.text
+
+
+def test_home_shows_configured_voluntary_payment_methods():
+    page = client.get("/")
+    assert page.status_code == 200
+    assert 'href="/support#paypal"' in page.text
+    assert 'href="/support#wallet-btc"' in page.text
+    assert 'href="/support#wallet-eth"' in page.text
+    assert 'href="/support#wallet-usdt-trc20"' in page.text
+    assert 'href="/support#wallet-sol"' in page.text
+    assert "PayPal" in page.text
+    assert "USDT" in page.text
 
 
 def test_admin_auth_queue_close_and_feedback():
@@ -1216,9 +1232,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.6"
+    assert health.json()["version"] == "3.7.7"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.6"
+    assert health.headers["x-app-version"] == "3.7.7"
 
     base = Path(__file__).resolve().parent.parent
     active_files = [

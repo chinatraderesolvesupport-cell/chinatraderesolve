@@ -9,6 +9,7 @@
 :root{--bg:#0f172a;--panel:#17324d;--teal:#14b8a6;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#dbe4ee}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,var(--bg),var(--panel));color:white;line-height:1.6}.wrap{width:min(1120px,94%);margin:5vh auto 8vh}.top{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:900;font-size:23px}.brand span{color:var(--teal)}.lang{padding:9px 11px;border-radius:9px;border:1px solid #ffffff55;background:#fff;color:#0f172a}.hero{background:white;color:var(--ink);border-radius:20px;padding:clamp(24px,4vw,42px);box-shadow:0 24px 70px #0005;margin-top:20px}.hero h1{font-size:clamp(30px,5vw,46px);line-height:1.12;margin:0 0 14px}.intro{font-size:18px;color:#334155;max-width:850px}.note{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:15px 16px;margin:22px 0}.wallets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:26px 0}.wallet{border:1px solid var(--line);border-radius:18px;padding:20px;background:#fff;box-shadow:0 9px 28px #0f172a0d}.wallet-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.asset{font-size:24px;font-weight:900}.network{display:inline-block;border-radius:999px;padding:4px 9px;background:#e2e8f0;color:#334155;font-size:12px;font-weight:800}.qr-wrap{display:flex;justify-content:center;margin:18px 0}.qr{width:min(210px,100%);height:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;background:white}.label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}.address{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px;font-size:13px;min-height:66px;display:flex;align-items:center}.copy-btn,.btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 15px;border-radius:10px;font-weight:900;text-decoration:none;cursor:pointer}.copy-btn{width:100%;margin-top:10px;border:0;background:var(--teal);color:#042f2e}.copy-btn:focus-visible,.btn:focus-visible,.lang:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.warning{font-size:13px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:11px;margin-top:12px}.safety{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-top:24px}.safety h2{margin-top:0}.safety ul{padding-left:21px}.safety li{margin:8px 0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.btn.primary{background:var(--teal);color:#042f2e}.btn.secondary{background:white;border:1px solid #94a3b8;color:#0f172a}.provider{border-top:1px solid #e2e8f0;margin-top:24px;padding-top:20px}.legal{font-size:12px;color:#64748b;margin:22px 0 0}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;background:#0f172a;color:white;padding:11px 16px;border-radius:999px;box-shadow:0 10px 35px #0005;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .paypal-card{display:grid;grid-template-columns:1fr 190px;align-items:center;gap:26px;margin:26px 0;padding:24px;border:1px solid #bfdbfe;border-radius:18px;background:linear-gradient(135deg,#eff6ff,#fff);box-shadow:0 12px 34px #1e3a8a14}.paypal-mark{display:inline-block;color:#003087;font-size:30px;font-weight:950;font-style:italic;letter-spacing:-1.5px}.paypal-mark span{color:#0070e0}.paypal-card h2{margin:8px 0 7px;font-size:24px}.paypal-card p{margin:0 0 14px;color:#334155}.paypal-card .btn{background:#ffc439;color:#111827;min-width:210px;border:1px solid #e5a900}.paypal-card .btn:hover{background:#ffb820}.paypal-qr-link{display:block;padding:9px;background:#fff;border:1px solid #dbe4ee;border-radius:14px;text-align:center}.paypal-qr-link:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.paypal-qr{display:block;width:170px;height:170px;max-width:100%;margin:auto}.paypal-safety{font-size:12px;color:#64748b!important;margin:11px 0 0!important}
+.paypal-card,.wallet{scroll-margin-top:18px}.asset-wrap{display:flex;align-items:center;gap:11px}.coin-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:50%;font-size:25px;font-weight:950;line-height:1}.coin-icon.btc{background:#f7931a;color:#fff}.coin-icon.eth{background:#eef2ff}.coin-icon.usdt{background:#26a17b;color:#fff}.coin-icon.sol{background:#0b0f19}.coin-icon svg{display:block;width:25px;height:25px}
 @media(max-width:900px){.wallets{grid-template-columns:1fr}.wallet{display:grid;grid-template-columns:180px 1fr;column-gap:18px}.wallet-head{grid-column:1/-1}.qr-wrap{grid-row:2/7;margin:12px 0}.qr{width:170px}.warning{grid-column:2}}
 @media(max-width:590px){.top{align-items:flex-start}.wallet{display:block}.qr{width:205px}.warning{display:block}.hero{padding:22px}.lang{max-width:130px}.paypal-card{grid-template-columns:1fr;padding:19px}.paypal-card .btn{width:100%;min-width:0}.paypal-qr-link{width:190px;max-width:100%;margin:auto}}
 </style>
@@ -22,7 +23,7 @@
     <div class="note" data-k="principle">Добровольная поддержка не является оплатой услуги, консультации, банковской или иной помощи. Она не влияет на принятие обращения, приоритет, проверку, коммуникацию или результат.</div>
 
     {% if paypal_support_url %}
-    <section class="paypal-card" aria-labelledby="paypal-support-title">
+    <section class="paypal-card" id="paypal" aria-labelledby="paypal-support-title">
       <div>
         <div class="paypal-mark" aria-label="PayPal">Pay<span>Pal</span></div>
         <h2 id="paypal-support-title" data-k="paypal_title">Поддержать через PayPal</h2>
@@ -40,8 +41,22 @@
     <h2 data-k="choose">Выберите актив и строго соблюдайте указанную сеть</h2>
     <div class="wallets">
       {% for wallet in wallets %}
-      <section class="wallet" aria-labelledby="wallet-{{ wallet.id }}">
-        <div class="wallet-head"><div id="wallet-{{ wallet.id }}" class="asset">{{ wallet.asset }}</div><span class="network">{{ wallet.network }}</span></div>
+      <section class="wallet" id="wallet-{{ wallet.id }}" aria-labelledby="wallet-title-{{ wallet.id }}">
+        <div class="wallet-head">
+          <div class="asset-wrap">
+            {% if wallet.id == 'btc' %}
+            <span class="coin-icon btc" aria-hidden="true">₿</span>
+            {% elif wallet.id == 'eth' %}
+            <span class="coin-icon eth" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#343434" d="M12 1.8 5.4 12.3 12 16.2l6.6-3.9L12 1.8Zm0 15.7-6.6-3.9L12 22.2l6.6-8.6-6.6 3.9Z"/></svg></span>
+            {% elif wallet.id == 'usdt-trc20' %}
+            <span class="coin-icon usdt" aria-hidden="true">₮</span>
+            {% else %}
+            <span class="coin-icon sol" aria-hidden="true"><svg viewBox="0 0 24 24"><defs><linearGradient id="sol-support-{{ loop.index }}" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#00ffa3"/><stop offset="1" stop-color="#dc1fff"/></linearGradient></defs><path fill="url(#sol-support-{{ loop.index }})" d="M5.2 4h14.2l-2.7 2.8H2.5L5.2 4Zm0 6.6h14.2l2.7 2.8H7.9l-2.7-2.8Zm2.7 6.6h14.2L19.4 20H5.2l2.7-2.8Z"/></svg></span>
+            {% endif %}
+            <div id="wallet-title-{{ wallet.id }}" class="asset">{{ wallet.asset }}</div>
+          </div>
+          <span class="network">{{ wallet.network }}</span>
+        </div>
         <div class="qr-wrap"><img class="qr" src="{{ wallet.qr_url }}" alt="QR: {{ wallet.asset }} — {{ wallet.network }}" width="420" height="420"></div>
         <div class="label" data-k="address_label">Адрес кошелька</div>
         <div class="address" id="address-{{ wallet.id }}">{{ wallet.address }}</div>

@@ -1,8 +1,0 @@
-ChinaTradeResolve v3.5.9
-
-- Исправлена обработка неполного Structured Output от OpenAI.
-- Для GPT-5 document analysis используется reasoning effort=low и text verbosity=low.
-- Минимальный бюджет ответа увеличен с 3000 до 6000 токенов; для больших пакетов — до 12000.
-- При обрезании по max_output_tokens запрос автоматически повторяется один раз с увеличенным бюджетом.
-- Журнал теперь различает incomplete, content filter, refusal, failed response и malformed JSON, сохраняя безопасный response id.
-- Добавлены регрессионные тесты реального формата Responses API.

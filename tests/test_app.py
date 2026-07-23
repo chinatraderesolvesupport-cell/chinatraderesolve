@@ -591,7 +591,7 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert "window.MediaRecorder" in home.text
     assert "speechSynthesis" not in home.text
     assert "turnstile_token:turnstileToken" in home.text
-    assert "!aiChatInput.value.trim()||!turnstileReady" in home.text
+    assert "aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim()" in home.text
     assert 'id="aiChatTurnstileWidget"' in home.text or 'data-turnstile-required="false"' in home.text
     assert "ensureAiTurnstile" in home.text
     assert "widgetSize=aiTurnstileMount.clientWidth<300?'compact':'flexible'" in home.text
@@ -1447,9 +1447,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.15"
+    assert health.json()["version"] == "3.7.16"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.15"
+    assert health.headers["x-app-version"] == "3.7.16"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["voice_transcriptions_daily_limit"] == 20
     assert health.json()["ai_assistant_daily_limit"] == 40

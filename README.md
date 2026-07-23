@@ -1,21 +1,21 @@
-# ChinaTradeResolve Document AI v3.7.15
+# ChinaTradeResolve Document AI v3.7.16
 
-Version 3.7.15 applies the findings from a live first-time-user review. After Turnstile succeeds, its block is replaced by three ready-made questions. Voice input and its consent are presented together as a prominent action, browser speech playback is removed, closing the assistant moves to the application section, and the first application step fits in one laptop viewport.
+Version 3.7.16 fixes the layout defects found during a second live first-time-user review. Quick questions disappear after the conversation starts, the answer gets the available reading space, the voice-consent area stays inside the assistant, mobile background scrolling is locked, closing the assistant lands on the first form fields, and the first application step fits in one laptop viewport.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
-## First-time visitor UX in v3.7.15
+## First-time visitor UX in v3.7.16
 
 - The chat Turnstile widget is rendered explicitly after the panel opens, avoiding incorrect measurements inside a hidden container.
 - Flexible size is used where possible; compact size is selected only for very narrow containers.
 - The verification block has a visible title, instruction and status in all six interface languages.
-- Clicking a quick question before verification highlights and scrolls to the security block.
+- Clicking a quick question before verification reveals and highlights the security block without moving the page behind the assistant.
 - Text sending and voice recording require a valid token; voice is no longer recorded only to be rejected afterward.
-- The panel can scroll safely on short screens, and the launcher is hidden while the panel is open.
+- The panel uses nearly the full available height on short screens; the mobile page behind it is locked while it is open.
 - Assistant responses are text-only; browser speech synthesis and the “Listen” control are intentionally removed.
 
 
-- The assistant uses a fixed layout: only the conversation scrolls, while quick questions and the composer remain visible.
+- Ready-made questions are shown after the initial verification and then hidden as soon as a conversation starts, leaving more room for the answer.
 - A newly returned assistant answer is aligned to its beginning, so the visitor reads from top to bottom.
 - The privacy notice is compact and no longer competes with the answer.
 - Voice input uses a full-width labelled microphone action and reveals its consent only when needed.
@@ -321,7 +321,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.15
+cd ChinaTradeResolve_Document_AI_v3.7.16
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

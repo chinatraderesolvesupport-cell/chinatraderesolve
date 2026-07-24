@@ -116,7 +116,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.24"
+APP_VERSION = "3.7.25"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -996,6 +996,35 @@ _DOCUMENT_DUPLICATE_COPY = {
 }
 for _language, _message in _DOCUMENT_DUPLICATE_COPY.items():
     DOCUMENT_COPY[_language]["duplicate"] = _message
+
+_DOCUMENT_UPLOAD_PROGRESS_COPY = {
+    "English": {
+        "uploading": "Uploading documents…",
+        "uploading_note": "Please keep this page open. Large files may take a little longer.",
+    },
+    "Russian": {
+        "uploading": "Загрузка документов…",
+        "uploading_note": "Не закрывайте страницу. Загрузка крупных файлов может занять некоторое время.",
+    },
+    "Serbian": {
+        "uploading": "Otpremanje dokumenata…",
+        "uploading_note": "Ne zatvarajte stranicu. Otpremanje velikih fajlova može potrajati.",
+    },
+    "French": {
+        "uploading": "Téléversement des documents…",
+        "uploading_note": "Gardez cette page ouverte. Les fichiers volumineux peuvent prendre un peu plus de temps.",
+    },
+    "German": {
+        "uploading": "Dokumente werden hochgeladen…",
+        "uploading_note": "Bitte lassen Sie diese Seite geöffnet. Große Dateien können etwas länger dauern.",
+    },
+    "Spanish": {
+        "uploading": "Subiendo documentos…",
+        "uploading_note": "Mantenga esta página abierta. Los archivos grandes pueden tardar un poco más.",
+    },
+}
+for _language, _copy in _DOCUMENT_UPLOAD_PROGRESS_COPY.items():
+    DOCUMENT_COPY[_language].update(_copy)
 
 DOCUMENT_UPLOAD_ERROR_COPY = {
     "English": {

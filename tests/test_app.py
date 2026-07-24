@@ -1868,9 +1868,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.24"
+    assert health.json()["version"] == "3.7.25"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.24"
+    assert health.headers["x-app-version"] == "3.7.25"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -2336,13 +2336,35 @@ def test_document_upload_feedback_copy_is_complete_in_all_languages():
     assert set(DOCUMENT_UPLOAD_ERROR_COPY) == set(DOCUMENT_COPY)
     for language in DOCUMENT_COPY:
         assert DOCUMENT_COPY[language]["duplicate"].strip()
+        assert DOCUMENT_COPY[language]["uploading"].strip()
+        assert DOCUMENT_COPY[language]["uploading_note"].strip()
         assert set(DOCUMENT_UPLOAD_ERROR_COPY[language]) == required_errors
         assert all(message.strip() for message in DOCUMENT_UPLOAD_ERROR_COPY[language].values())
 
     template = (Path(__file__).resolve().parents[1] / "app" / "templates" / "public_status.html").read_text()
     assert 'id="documentUploadClientError"' in template
+    assert 'id="documentUploadLoading"' in template
+    assert 'id="documentUploadButton"' in template
+    assert 'role="status"' in template
+    assert "uploadForm.setAttribute('aria-busy', 'true')" in template
+    assert "button.disabled = true" in template
     assert "showUploadError" in template
     assert "alert('Maximum" not in template
+
+
+def test_document_upload_progress_is_rendered_in_selected_language():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="upload-progress@example.com", preferred_language="Russian"),
+        headers={"x-forwarded-for": "198.51.100.245"},
+    ).json()
+    page = client.get(created["status_url"])
+    assert page.status_code == 200
+    assert 'id="documentUploadLoading"' in page.text
+    assert 'id="documentUploadButton"' in page.text
+    assert "Загрузка документов…" in page.text
+    assert "Не закрывайте страницу" in page.text
+    assert 'aria-live="polite"' in page.text
 
 
 def test_client_key_uses_render_first_forwarded_address(monkeypatch):

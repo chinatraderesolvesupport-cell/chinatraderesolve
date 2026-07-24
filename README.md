@@ -1,9 +1,15 @@
-# ChinaTradeResolve Document AI v3.7.24
+# ChinaTradeResolve Document AI v3.7.25
 
-Version 3.7.24 keeps document-upload errors on the private case page in the visitor’s selected language and clearly reports when an identical file was skipped instead of claiming that it was uploaded again. It also retains the clarified service notice, always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
+Version 3.7.25 adds a clear, accessible upload-in-progress state for large documents. It also retains localized document-upload errors and honest duplicate-file feedback from v3.7.24. It also retains the clarified service notice, always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
+
+## Upload progress feedback in v3.7.25
+
+- After client-side validation succeeds, the upload button is disabled and changes to a localized “Uploading documents…” label.
+- A visible spinner, indeterminate progress bar and note ask the visitor to keep the page open while large files are transferred.
+- The status is announced through an accessible live region and automatically resets when a visitor returns using browser history.
 
 ## Document-upload feedback in v3.7.24
 
@@ -357,7 +363,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.24
+cd ChinaTradeResolve_Document_AI_v3.7.25
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

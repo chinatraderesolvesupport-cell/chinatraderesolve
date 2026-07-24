@@ -140,7 +140,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.33"
+APP_VERSION = "3.7.34"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -2468,6 +2468,11 @@ async def admin_retriage(
             ai = None
     replace_triage(case_id, merge_triage(rules, ai).model_dump())
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
+
+@app.get("/{key}.txt", response_class=PlainTextResponse, include_in_schema=False)
+def indexnow_root_key_file(key: str) -> PlainTextResponse:
+    return indexnow_key_file(key)
+
 # Keep the body-size guard outside FastAPI/Starlette exception handling so
 # streamed overflows reliably return HTTP 413 instead of being translated into
 # a generic body-parsing error. All route decorators above are already bound.

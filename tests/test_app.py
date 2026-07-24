@@ -608,6 +608,13 @@ def test_ai_assistant_frontend_and_disabled_endpoint(monkeypatch):
     assert "window.webkitSpeechRecognition" in home.text
     assert 'id="descriptionVoiceLive"' in home.text
     assert 'id="aiVoiceLive"' in home.text
+    assert '.ai-chat-voice.recording{position:sticky;top:0' in home.text
+    assert '.description-voice-button.recording{position:fixed' in home.text
+    assert 'bottom:calc(12px + env(safe-area-inset-bottom))' in home.text
+    assert 'id="aiVoiceButtonText"' in home.text
+    assert 'id="descriptionVoiceButtonText"' in home.text
+    assert 'setAiVoiceButtonState(true)' in home.text
+    assert "descriptionVoiceButtonHint.hidden=Boolean(recording)" in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
     for language in ("en", "fr", "de", "es", "ru", "sr"):
@@ -1852,9 +1859,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.21"
+    assert health.json()["version"] == "3.7.22"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.21"
+    assert health.headers["x-app-version"] == "3.7.22"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()

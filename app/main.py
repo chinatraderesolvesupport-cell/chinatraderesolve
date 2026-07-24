@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import os
 from contextlib import asynccontextmanager
 import json
 import re
@@ -288,10 +289,35 @@ async def _maintenance_loop() -> None:
             logger.exception("Periodic maintenance failed")
         await asyncio.sleep(settings.maintenance_interval_seconds)
 
+async def _send_telegram_message(text: str) -> None:
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+
+    if not token or not chat_id:
+        logger.warning("Telegram bot is not configured")
+        return
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": text,
+                    "disable_web_page_preview": True,
+                },
+            )
+            response.raise_for_status()
+    except Exception:
+        logger.exception("Failed to send Telegram message")
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Apply retention, recover abandoned jobs and start periodic maintenance."""
+    await _send_telegram_message(
+        "✅ ChinaTradeResolve Monitor подключён и готов к работе."
+    )
     soft_delete_expired(settings.retention_days, settings.inactive_retention_days)
     recovered = fail_running_document_analyses_on_startup(_document_analysis_stale_seconds())
     if recovered:

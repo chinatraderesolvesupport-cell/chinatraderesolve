@@ -1928,9 +1928,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.26"
+    assert health.json()["version"] == "3.7.27"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.26"
+    assert health.headers["x-app-version"] == "3.7.27"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4609,6 +4609,9 @@ def test_targeted_landing_copy_is_shorter_precise_and_transparent():
 
     assert "aiLauncherButton.classList.toggle('is-compact',formInView)" in response.text
     assert '.ai-chat-launcher.is-compact{width:52px;height:52px' in response.text
+    assert '@media(max-width:700px){.ai-chat-launcher{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));width:52px;height:52px' in response.text
+    assert '.ai-chat-launcher .launcher-label{position:absolute!important;width:1px!important;height:1px!important' in response.text
+    assert '.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:calc(14px + env(safe-area-inset-bottom))' in response.text
 
     sample = client.get("/static/sample_case_assessment.html")
     assert sample.status_code == 200

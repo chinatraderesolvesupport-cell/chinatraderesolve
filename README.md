@@ -1,11 +1,13 @@
-# ChinaTradeResolve Document AI v3.7.26
+# ChinaTradeResolve Document AI v3.7.27
 
-Version 3.7.26 removes the obsolete environment-supplied prototype notice from the public page and aligns applicant confirmation emails with the current payment, document-screening and voluntary-support policy. It retains the accessible upload-in-progress state, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
+Version 3.7.27 makes the mobile AI launcher permanently compact and positions it above the fixed application CTA, preventing overlap with primary actions while preserving full accessibility. It retains the public/email copy consistency, upload progress, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
-## Public and email copy consistency in v3.7.26
+## Mobile launcher layout in v3.7.27
+
+On screens up to 700 px wide, the AI launcher is rendered as a 52 px icon-only control with its text kept available to assistive technology. Before the application form is engaged, it sits above the fixed “Submit application” CTA; once the form is active and that CTA is hidden, the launcher moves to the lower safe-area edge.
 
 - The legacy `OPERATOR_PROFILE` text is no longer rendered on the public home page, so a stale Render environment value cannot reintroduce the old payment/document contradiction.
 - Applicant confirmation emails now state that service payments are not accepted, explain that key documents are requested only after preliminary screening, and clarify that voluntary support does not affect priority.
@@ -369,7 +371,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.26
+cd ChinaTradeResolve_Document_AI_v3.7.27
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

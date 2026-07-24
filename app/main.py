@@ -116,7 +116,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.26"
+APP_VERSION = "3.7.27"
 logger = logging.getLogger("chinatraderesolve")
 
 

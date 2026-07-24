@@ -11,7 +11,9 @@
   <p>{{ document_copy.intro }}</p>
   <p class="fine">{{ document_copy.privacy }}</p>
   {% if not document_analysis_enabled and not document_analysis %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
-  {% if documents_uploaded %}<p class="success">{{ document_copy.uploaded }}</p>{% endif %}
+  {% if upload_success %}<p class="success" id="documentUploadNotice">{{ document_copy.uploaded }}</p>{% endif %}
+  {% if upload_duplicate %}<p class="warning" id="documentDuplicateNotice">{{ document_copy.duplicate }}</p>{% endif %}
+  {% if upload_error_message %}<p class="error" id="documentUploadError" role="alert">{{ upload_error_message }}</p>{% endif %}
   {% if analysis_error %}<p class="error">{{ document_copy.analysis_error }}</p>{% endif %}
   {% if analysis_started %}<p class="success">{{ document_copy.analysing }}</p>{% endif %}
   {% if analysis_not_configured %}<p class="warning">{{ document_copy.analysis_not_configured }}</p>{% endif %}
@@ -37,6 +39,7 @@
   <form id="documentUploadForm" method="post" enctype="multipart/form-data" action="/case/{{ case.case_reference }}/{{ case.public_token }}/documents">
     <label for="documentFiles">{{ document_copy.select }}</label>
     <input id="documentFiles" type="file" name="files" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple required>
+    <p class="error" id="documentUploadClientError" role="alert" hidden></p>
     <p class="fine">{{ document_copy.limit }} {{ documents|length }}/{{ max_documents }}</p>
     <label class="check"><input type="checkbox" name="document_consent" value="true" required><span>{{ document_copy.consent }}</span></label>
     <button class="btn primary" type="submit">{{ document_copy.upload }}</button>
@@ -123,25 +126,62 @@
 <script>
 const uploadForm = document.getElementById('documentUploadForm');
 if (uploadForm) {
+  const uploadError = document.getElementById('documentUploadClientError');
+  const showUploadError = message => {
+    if (!uploadError) return;
+    uploadError.textContent = message;
+    uploadError.hidden = false;
+    uploadError.scrollIntoView({block:'nearest'});
+  };
+  const clearUploadError = () => {
+    if (!uploadError) return;
+    uploadError.textContent = '';
+    uploadError.hidden = true;
+    document.getElementById('documentUploadError')?.setAttribute('hidden', '');
+  };
+  document.getElementById('documentFiles')?.addEventListener('change', clearUploadError);
   uploadForm.addEventListener('submit', event => {
+    clearUploadError();
     const input = document.getElementById('documentFiles');
     const files = [...(input?.files || [])];
-    const existing = {{ documents|length }};
     const existingBytes = {{ documents|sum(attribute="size_bytes") }};
-    if (existing + files.length > {{ max_documents }}) {
+    if (!files.length) {
       event.preventDefault();
-      alert('Maximum {{ max_documents }} files.');
+      showUploadError({{ upload_error_copy.no_files | tojson }});
+      return;
+    }
+    if (files.length > {{ max_documents }}) {
+      event.preventDefault();
+      showUploadError({{ upload_error_copy.max_documents | tojson }});
+      return;
+    }
+    const allowedFilename = /\.(pdf|jpe?g|png|webp)$/i;
+    if (files.some(file => !allowedFilename.test(file.name))) {
+      event.preventDefault();
+      showUploadError({{ upload_error_copy.unsupported_type | tojson }});
       return;
     }
     const total = files.reduce((sum, file) => sum + file.size, 0);
     if (files.some(file => file.size > 8 * 1024 * 1024) || existingBytes + total > 45 * 1024 * 1024) {
       event.preventDefault();
-      alert('{{ document_copy.limit }}');
+      showUploadError({{ upload_error_copy.too_large | tojson }});
       return;
     }
     const button = uploadForm.querySelector('button[type=submit]');
     if (button) button.disabled = true;
   });
+}
+
+const uploadStatusUrl = new URL(window.location.href);
+let uploadStatusChanged = false;
+for (const key of ['upload_result','upload_issue','documents_uploaded']) {
+  if (uploadStatusUrl.searchParams.has(key)) {
+    uploadStatusUrl.searchParams.delete(key);
+    uploadStatusChanged = true;
+  }
+}
+if (uploadStatusChanged) {
+  window.history.replaceState({}, '', uploadStatusUrl.pathname + uploadStatusUrl.search + uploadStatusUrl.hash);
 }
 
 const analysisForm = document.getElementById('documentAnalysisForm');

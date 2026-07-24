@@ -1564,7 +1564,7 @@ def test_private_document_upload_download_delete_and_admin_visibility():
 def test_document_upload_rejects_unsafe_and_oversized_files():
     created = client.post(
         "/api/applications",
-        json=valid_payload(email="unsafe-docs@example.com"),
+        json=valid_payload(email="unsafe-docs@example.com", preferred_language="Russian"),
         headers={"x-forwarded-for": "198.51.100.202"},
     ).json()
     status_url = created["status_url"]
@@ -1572,17 +1572,24 @@ def test_document_upload_rejects_unsafe_and_oversized_files():
         status_url + "/documents",
         files=[("files", ("payload.html", b"<script>alert(1)</script>", "text/html"))],
         data={"document_consent": "true"},
+        follow_redirects=False,
     )
-    assert unsafe.status_code == 400
-    assert "Only PDF, JPG, PNG and WebP" in unsafe.text
+    assert unsafe.status_code == 303
+    assert "upload_issue=unsupported_type" in unsafe.headers["location"]
+    unsafe_page = client.get(unsafe.headers["location"])
+    assert "Выберите только файлы PDF, JPG, PNG или WebP" in unsafe_page.text
+    assert 'id="documentUploadForm"' in unsafe_page.text
 
     oversized = client.post(
         status_url + "/documents",
         files=[("files", ("large.png", b"\x89PNG\r\n\x1a\n" + b"x" * (8 * 1024 * 1024), "image/png"))],
         data={"document_consent": "true"},
+        follow_redirects=False,
     )
-    assert oversized.status_code == 400
-    assert "8 MB" in oversized.text
+    assert oversized.status_code == 303
+    assert "upload_issue=too_large" in oversized.headers["location"]
+    oversized_page = client.get(oversized.headers["location"])
+    assert "8 МБ" in oversized_page.text
 
 
 def test_document_analysis_mock_and_public_report(monkeypatch):
@@ -1861,9 +1868,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.23"
+    assert health.json()["version"] == "3.7.24"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.23"
+    assert health.headers["x-app-version"] == "3.7.24"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -2236,6 +2243,108 @@ def test_duplicate_document_names_are_made_unique():
     assert names == ["screenshot.png", "screenshot (2).png"]
 
 
+def test_identical_document_is_not_added_twice_and_user_is_told():
+    from app.db import get_case_by_public, list_case_documents
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="duplicate-content@example.com", preferred_language="Russian"),
+        headers={"x-forwarded-for": "198.51.100.42"},
+    ).json()
+    content = _make_png_bytes()
+    first = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("supplier-chat.png", content, "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.42"},
+    )
+    assert first.status_code == 303
+    assert "upload_result=uploaded" in first.headers["location"]
+
+    repeated = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("supplier-chat-copy.png", content, "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.42"},
+    )
+    assert repeated.status_code == 303
+    assert "upload_result=duplicate" in repeated.headers["location"]
+    page = client.get(repeated.headers["location"])
+    assert "уже были загружены" in page.text
+    assert "Документы успешно загружены" not in page.text
+
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    assert len(list_case_documents(case["id"])) == 1
+
+
+def test_mixed_document_batch_reports_added_files_and_duplicates():
+    from io import BytesIO
+    from PIL import Image
+    from app.db import get_case_by_public, list_case_documents
+
+    def image_bytes(colour: str) -> bytes:
+        output = BytesIO()
+        Image.new("RGB", (3, 3), colour).save(output, format="PNG")
+        return output.getvalue()
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="mixed-documents@example.com", preferred_language="English"),
+        headers={"x-forwarded-for": "198.51.100.43"},
+    ).json()
+    first_content = image_bytes("red")
+    client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("first.png", first_content, "image/png"))],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.43"},
+    )
+    mixed = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[
+            ("files", ("duplicate.png", first_content, "image/png")),
+            ("files", ("second.png", image_bytes("blue"), "image/png")),
+        ],
+        follow_redirects=False,
+        headers={"x-forwarded-for": "198.51.100.43"},
+    )
+    assert mixed.status_code == 303
+    assert "upload_result=mixed" in mixed.headers["location"]
+    page = client.get(mixed.headers["location"])
+    assert "Documents uploaded successfully" in page.text
+    assert "already uploaded" in page.text
+
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    assert len(list_case_documents(case["id"])) == 2
+
+
+def test_document_upload_feedback_copy_is_complete_in_all_languages():
+    from app.main import DOCUMENT_COPY, DOCUMENT_UPLOAD_ERROR_COPY
+
+    required_errors = {
+        "unsupported_type", "too_large", "empty_file", "invalid_image",
+        "invalid_pdf", "encrypted_pdf", "pdf_pages", "total_pdf_pages",
+        "max_documents", "consent", "rate_limited", "no_files",
+        "analysis_running", "case_closed", "generic",
+    }
+    assert set(DOCUMENT_UPLOAD_ERROR_COPY) == set(DOCUMENT_COPY)
+    for language in DOCUMENT_COPY:
+        assert DOCUMENT_COPY[language]["duplicate"].strip()
+        assert set(DOCUMENT_UPLOAD_ERROR_COPY[language]) == required_errors
+        assert all(message.strip() for message in DOCUMENT_UPLOAD_ERROR_COPY[language].values())
+
+    template = (Path(__file__).resolve().parents[1] / "app" / "templates" / "public_status.html").read_text()
+    assert 'id="documentUploadClientError"' in template
+    assert "showUploadError" in template
+    assert "alert('Maximum" not in template
+
+
 def test_client_key_uses_render_first_forwarded_address(monkeypatch):
     from starlette.requests import Request
     from app.security import client_key
@@ -2387,7 +2496,8 @@ def test_analysis_claim_is_atomic_and_blocks_evidence_changes():
         follow_redirects=False,
         headers={"x-forwarded-for": "198.51.100.62"},
     )
-    assert blocked_upload.status_code == 409
+    assert blocked_upload.status_code == 303
+    assert "upload_issue=analysis_running" in blocked_upload.headers["location"]
     blocked_delete = client.post(
         created["status_url"] + f"/documents/{documents[0]['id']}/delete",
         follow_redirects=False,
@@ -3462,7 +3572,9 @@ def test_oversized_document_content_length_is_rejected_before_body_read():
 
     assert called is False
     assert received is False
-    assert messages[0]["status"] == 413
+    assert messages[0]["status"] == 303
+    headers = dict(messages[0]["headers"])
+    assert b"upload_issue=too_large" in headers[b"location"]
 
 
 def test_chunked_body_is_capped_without_content_length():

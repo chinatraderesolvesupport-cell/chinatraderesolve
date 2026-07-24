@@ -14,7 +14,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urlencode, urlparse
 from xml.sax.saxutils import escape as xml_escape
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Form, File, UploadFile
@@ -116,7 +116,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.23"
+APP_VERSION = "3.7.24"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -214,6 +214,16 @@ class RequestBodyLimitMiddleware:
 
     @staticmethod
     async def _reject(scope, receive, send) -> None:
+        path = str(scope.get("path") or "")
+        match = re.fullmatch(r"(/case/[^/]+/[^/]+)/documents", path)
+        if match:
+            response = RedirectResponse(
+                f"{match.group(1)}?upload_issue=too_large#documents",
+                status_code=303,
+                headers={"Connection": "close"},
+            )
+            await response(scope, receive, send)
+            return
         response = JSONResponse(
             {"detail": "Request body is too large"},
             status_code=413,
@@ -976,6 +986,122 @@ _PDF_PAGE_LIMIT_COPY = {
 for _language, _message in _PDF_PAGE_LIMIT_COPY.items():
     DOCUMENT_COPY[_language]["limit"] += " " + _message
 
+_DOCUMENT_DUPLICATE_COPY = {
+    "English": "One or more selected files were already uploaded and were not added again.",
+    "Russian": "Один или несколько выбранных файлов уже были загружены и не были добавлены повторно.",
+    "Serbian": "Jedan ili više izabranih fajlova već je otpremljen i nije ponovo dodat.",
+    "French": "Un ou plusieurs fichiers sélectionnés avaient déjà été importés et n’ont pas été ajoutés de nouveau.",
+    "German": "Eine oder mehrere ausgewählte Dateien wurden bereits hochgeladen und nicht erneut hinzugefügt.",
+    "Spanish": "Uno o varios archivos seleccionados ya se habían subido y no se añadieron de nuevo.",
+}
+for _language, _message in _DOCUMENT_DUPLICATE_COPY.items():
+    DOCUMENT_COPY[_language]["duplicate"] = _message
+
+DOCUMENT_UPLOAD_ERROR_COPY = {
+    "English": {
+        "unsupported_type": "Select PDF, JPG, PNG or WebP files only.",
+        "too_large": "Each file must be 8 MB or smaller, and the combined case total cannot exceed 45 MB.",
+        "empty_file": "The selected file is empty. Choose another file.",
+        "invalid_image": "The selected image is damaged, unsupported or too large to process safely.",
+        "invalid_pdf": "The selected PDF is damaged, unsafe or unsupported.",
+        "encrypted_pdf": "Password-protected PDFs cannot be uploaded. Save an unprotected copy first.",
+        "pdf_pages": "Each PDF may contain no more than 100 pages.",
+        "total_pdf_pages": "One case may contain no more than 200 PDF pages in total.",
+        "max_documents": "One case may contain no more than 20 documents.",
+        "consent": "Confirm that you have the right to share these files before uploading.",
+        "rate_limited": "Too many upload attempts were made. Please wait a few minutes and try again.",
+        "no_files": "Choose at least one file to upload.",
+        "analysis_running": "Wait for the current document analysis to finish before changing files.",
+        "case_closed": "This case is no longer accepting documents.",
+        "generic": "The documents could not be uploaded. Check the files and try again.",
+    },
+    "Russian": {
+        "unsupported_type": "Выберите только файлы PDF, JPG, PNG или WebP.",
+        "too_large": "Размер каждого файла не должен превышать 8 МБ, а общий объём документов по делу — 45 МБ.",
+        "empty_file": "Выбранный файл пуст. Выберите другой файл.",
+        "invalid_image": "Изображение повреждено, не поддерживается или слишком велико для безопасной обработки.",
+        "invalid_pdf": "PDF повреждён, небезопасен или не поддерживается.",
+        "encrypted_pdf": "PDF с паролем загрузить нельзя. Сначала сохраните копию без защиты.",
+        "pdf_pages": "В одном PDF должно быть не более 100 страниц.",
+        "total_pdf_pages": "В одном деле должно быть не более 200 PDF-страниц суммарно.",
+        "max_documents": "В одном деле можно хранить не более 20 документов.",
+        "consent": "Перед загрузкой подтвердите, что имеете право передавать эти файлы.",
+        "rate_limited": "Слишком много попыток загрузки. Подождите несколько минут и попробуйте снова.",
+        "no_files": "Выберите хотя бы один файл для загрузки.",
+        "analysis_running": "Дождитесь завершения текущего анализа документов, прежде чем изменять файлы.",
+        "case_closed": "Это дело больше не принимает документы.",
+        "generic": "Документы загрузить не удалось. Проверьте файлы и попробуйте снова.",
+    },
+    "Serbian": {
+        "unsupported_type": "Izaberite samo PDF, JPG, PNG ili WebP fajlove.",
+        "too_large": "Svaki fajl mora imati najviše 8 MB, a svi dokumenti u slučaju ukupno najviše 45 MB.",
+        "empty_file": "Izabrani fajl je prazan. Izaberite drugi fajl.",
+        "invalid_image": "Slika je oštećena, nepodržana ili prevelika za bezbednu obradu.",
+        "invalid_pdf": "PDF je oštećen, nebezbedan ili nepodržan.",
+        "encrypted_pdf": "PDF zaštićen lozinkom ne može da se otpremi. Sačuvajte nezaštićenu kopiju.",
+        "pdf_pages": "Jedan PDF može imati najviše 100 strana.",
+        "total_pdf_pages": "Jedan slučaj može imati ukupno najviše 200 PDF strana.",
+        "max_documents": "Jedan slučaj može imati najviše 20 dokumenata.",
+        "consent": "Pre otpremanja potvrdite da imate pravo da podelite ove fajlove.",
+        "rate_limited": "Bilo je previše pokušaja otpremanja. Sačekajte nekoliko minuta i pokušajte ponovo.",
+        "no_files": "Izaberite najmanje jedan fajl za otpremanje.",
+        "analysis_running": "Sačekajte da se trenutna analiza završi pre menjanja fajlova.",
+        "case_closed": "Ovaj slučaj više ne prima dokumente.",
+        "generic": "Dokumenti nisu mogli da se otpreme. Proverite fajlove i pokušajte ponovo.",
+    },
+    "French": {
+        "unsupported_type": "Sélectionnez uniquement des fichiers PDF, JPG, PNG ou WebP.",
+        "too_large": "Chaque fichier doit faire au maximum 8 Mo et l’ensemble du dossier au maximum 45 Mo.",
+        "empty_file": "Le fichier sélectionné est vide. Choisissez un autre fichier.",
+        "invalid_image": "L’image est endommagée, non prise en charge ou trop volumineuse pour un traitement sûr.",
+        "invalid_pdf": "Le PDF est endommagé, non sûr ou non pris en charge.",
+        "encrypted_pdf": "Les PDF protégés par mot de passe ne peuvent pas être importés. Enregistrez d’abord une copie non protégée.",
+        "pdf_pages": "Chaque PDF peut contenir au maximum 100 pages.",
+        "total_pdf_pages": "Un dossier peut contenir au maximum 200 pages PDF au total.",
+        "max_documents": "Un dossier peut contenir au maximum 20 documents.",
+        "consent": "Confirmez que vous avez le droit de partager ces fichiers avant de les importer.",
+        "rate_limited": "Trop de tentatives d’importation ont été effectuées. Attendez quelques minutes et réessayez.",
+        "no_files": "Choisissez au moins un fichier à importer.",
+        "analysis_running": "Attendez la fin de l’analyse en cours avant de modifier les fichiers.",
+        "case_closed": "Ce dossier n’accepte plus de documents.",
+        "generic": "Les documents n’ont pas pu être importés. Vérifiez les fichiers et réessayez.",
+    },
+    "German": {
+        "unsupported_type": "Wählen Sie nur PDF-, JPG-, PNG- oder WebP-Dateien aus.",
+        "too_large": "Jede Datei darf höchstens 8 MB groß sein; insgesamt sind pro Fall höchstens 45 MB zulässig.",
+        "empty_file": "Die ausgewählte Datei ist leer. Wählen Sie eine andere Datei.",
+        "invalid_image": "Das Bild ist beschädigt, wird nicht unterstützt oder ist für eine sichere Verarbeitung zu groß.",
+        "invalid_pdf": "Die PDF-Datei ist beschädigt, unsicher oder wird nicht unterstützt.",
+        "encrypted_pdf": "Passwortgeschützte PDF-Dateien können nicht hochgeladen werden. Speichern Sie zuerst eine ungeschützte Kopie.",
+        "pdf_pages": "Eine PDF-Datei darf höchstens 100 Seiten enthalten.",
+        "total_pdf_pages": "Ein Fall darf insgesamt höchstens 200 PDF-Seiten enthalten.",
+        "max_documents": "Ein Fall darf höchstens 20 Dokumente enthalten.",
+        "consent": "Bestätigen Sie vor dem Hochladen, dass Sie diese Dateien weitergeben dürfen.",
+        "rate_limited": "Es gab zu viele Uploadversuche. Warten Sie einige Minuten und versuchen Sie es erneut.",
+        "no_files": "Wählen Sie mindestens eine Datei zum Hochladen aus.",
+        "analysis_running": "Warten Sie, bis die laufende Dokumentenanalyse beendet ist, bevor Sie Dateien ändern.",
+        "case_closed": "Dieser Fall nimmt keine Dokumente mehr an.",
+        "generic": "Die Dokumente konnten nicht hochgeladen werden. Prüfen Sie die Dateien und versuchen Sie es erneut.",
+    },
+    "Spanish": {
+        "unsupported_type": "Seleccione únicamente archivos PDF, JPG, PNG o WebP.",
+        "too_large": "Cada archivo debe ocupar como máximo 8 MB y el total del caso no puede superar 45 MB.",
+        "empty_file": "El archivo seleccionado está vacío. Elija otro archivo.",
+        "invalid_image": "La imagen está dañada, no es compatible o es demasiado grande para procesarla de forma segura.",
+        "invalid_pdf": "El PDF está dañado, no es seguro o no es compatible.",
+        "encrypted_pdf": "No se pueden subir PDF protegidos con contraseña. Guarde primero una copia sin protección.",
+        "pdf_pages": "Cada PDF puede contener como máximo 100 páginas.",
+        "total_pdf_pages": "Un caso puede contener como máximo 200 páginas PDF en total.",
+        "max_documents": "Un caso puede contener como máximo 20 documentos.",
+        "consent": "Antes de subirlos, confirme que tiene derecho a compartir estos archivos.",
+        "rate_limited": "Se han realizado demasiados intentos de carga. Espere unos minutos e inténtelo de nuevo.",
+        "no_files": "Seleccione al menos un archivo para subir.",
+        "analysis_running": "Espere a que termine el análisis actual antes de modificar los archivos.",
+        "case_closed": "Este caso ya no acepta documentos.",
+        "generic": "No se pudieron subir los documentos. Revise los archivos e inténtelo de nuevo.",
+    },
+}
+
 PRIVACY_ACTION_COPY = {
     "English": {"title":"Privacy controls","revoke":"Withdraw AI consent","revoke_note":"This prevents future AI processing and removes the stored AI report. Uploaded files remain available for human review.","revoke_confirm":"I confirm that I withdraw consent for future AI processing.","delete":"Permanently delete this case","delete_note":"This immediately removes the case details, uploaded documents, report, feedback and notification records. This cannot be undone.","delete_confirm":"I understand that this deletion is permanent.","submit_revoke":"Withdraw consent","submit_delete":"Delete case permanently"},
     "Russian": {"title":"Управление данными","revoke":"Отозвать согласие на ИИ","revoke_note":"Будущая ИИ-обработка прекратится, сохранённый ИИ-отчёт будет удалён. Файлы останутся для ручной проверки.","revoke_confirm":"Я подтверждаю отзыв согласия на будущую ИИ-обработку.","delete":"Безвозвратно удалить дело","delete_note":"Будут немедленно удалены сведения дела, документы, отчёт, отзыв и записи уведомлений. Отменить это действие нельзя.","delete_confirm":"Я понимаю, что удаление является безвозвратным.","submit_revoke":"Отозвать согласие","submit_delete":"Удалить дело навсегда"},
@@ -1437,8 +1563,59 @@ def download_case_access_note(reference: str, token: str) -> PlainTextResponse:
     )
 
 
+def _document_upload_location(
+    reference: str,
+    token: str,
+    *,
+    result: str = "",
+    issue: str = "",
+) -> str:
+    query: dict[str, str] = {}
+    if result:
+        query["upload_result"] = result
+    if issue:
+        query["upload_issue"] = issue
+    suffix = f"?{urlencode(query)}" if query else ""
+    return f"/case/{quote(reference, safe='')}/{quote(token, safe='')}{suffix}#documents"
+
+
+def _document_upload_issue_from_error(error: Exception) -> str:
+    message = str(error).casefold()
+    if "only pdf, jpg, png and webp" in message:
+        return "unsupported_type"
+    if "selected file is empty" in message:
+        return "empty_file"
+    if "password-protected" in message:
+        return "encrypted_pdf"
+    if "no more than 100 pages" in message:
+        return "pdf_pages"
+    if "no more than 200 pages" in message or "200 pages in total" in message:
+        return "total_pdf_pages"
+    if "no more than 20 documents" in message:
+        return "max_documents"
+    if "8 mb" in message or "45 mb" in message or "total document size" in message:
+        return "too_large"
+    if "image" in message:
+        return "invalid_image"
+    if "pdf" in message:
+        return "invalid_pdf"
+    return "generic"
+
+
 @app.get("/case/{reference}/{token}", response_class=HTMLResponse)
-def public_case_status(reference: str, token: str, request: Request, feedback_saved: int = 0, documents_uploaded: int = 0, analysis_error: int = 0, analysis_unavailable: int = 0, analysis_started: int = 0, analysis_issue: str = "") -> HTMLResponse:
+def public_case_status(
+    reference: str,
+    token: str,
+    request: Request,
+    feedback_saved: int = 0,
+    documents_uploaded: int = 0,
+    upload_result: str = "",
+    upload_issue: str = "",
+    analysis_error: int = 0,
+    analysis_unavailable: int = 0,
+    analysis_started: int = 0,
+    analysis_issue: str = "",
+) -> HTMLResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -1449,6 +1626,9 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
     documents = list_case_documents(case["id"])
     document_analysis = _fresh_document_analysis(case["id"])
     progress_copy = CASE_PROGRESS_COPY.get(language, CASE_PROGRESS_COPY["English"])
+    upload_error_copy = DOCUMENT_UPLOAD_ERROR_COPY.get(
+        language, DOCUMENT_UPLOAD_ERROR_COPY["English"]
+    )
     progress_stages, next_step = public_case_progress(case, documents, document_analysis, progress_copy)
     private_status_url = f"{settings.public_base_url}/case/{reference}/{token}"
     last_updated = str(case.get("updated_at") or case.get("created_at") or "").replace("T", " ").replace("+00:00", " UTC")
@@ -1461,7 +1641,11 @@ def public_case_status(reference: str, token: str, request: Request, feedback_sa
             "copy": copy,
             "feedback": feedback,
             "feedback_saved": bool(feedback_saved),
-            "documents_uploaded": bool(documents_uploaded),
+            "upload_success": bool(documents_uploaded)
+            or upload_result in {"uploaded", "mixed"},
+            "upload_duplicate": upload_result in {"duplicate", "mixed"},
+            "upload_error_message": upload_error_copy.get(upload_issue, ""),
+            "upload_error_copy": upload_error_copy,
             "analysis_error": bool(analysis_error),
             "analysis_started": bool(
                 analysis_started
@@ -1497,40 +1681,56 @@ async def public_upload_documents(
     reference: str,
     token: str,
     request: Request,
-    files: list[UploadFile] = File(...),
+    files: list[UploadFile] | None = File(None),
     document_consent: bool = Form(False),
 ) -> RedirectResponse:
     case = get_case_by_public(reference, token)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     if case["status"] in {"declined", "closed"}:
-        raise HTTPException(status_code=409, detail="This case is no longer accepting documents")
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="case_closed"),
+            status_code=303,
+        )
     if not document_consent:
-        raise HTTPException(status_code=400, detail="Document-sharing consent is required")
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="consent"),
+            status_code=303,
+        )
     if not document_upload_limiter.allow(f"documents:{client_key(request)}"):
-        raise HTTPException(status_code=429, detail="Too many document uploads. Please try later.")
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="rate_limited"),
+            status_code=303,
+        )
+    files = files or []
     if not files:
-        raise HTTPException(status_code=400, detail="No files were selected")
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="no_files"),
+            status_code=303,
+        )
+    if len(files) > MAX_DOCUMENTS_PER_CASE:
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="max_documents"),
+            status_code=303,
+        )
 
-    existing = list_case_documents(case["id"])
-    if len(existing) + len(files) > MAX_DOCUMENTS_PER_CASE:
-        raise HTTPException(status_code=400, detail=f"A case can contain no more than {MAX_DOCUMENTS_PER_CASE} documents")
-
-    existing_total = sum(int(document["size_bytes"]) for document in existing)
     prepared = []
-    prepared_total = 0
     try:
         for upload in files:
             document = await prepare_upload(upload)
-            prepared_total += document.size_bytes
-            if existing_total + prepared_total > MAX_TOTAL_BYTES:
-                raise DocumentValidationError("The total document size for one case cannot exceed 45 MB")
             prepared.append(document)
     except DocumentValidationError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return RedirectResponse(
+            _document_upload_location(
+                reference,
+                token,
+                issue=_document_upload_issue_from_error(exc),
+            ),
+            status_code=303,
+        )
 
     try:
-        add_case_documents(
+        added, duplicate_count = add_case_documents(
             case["id"],
             [
                 {
@@ -1548,11 +1748,31 @@ async def public_upload_documents(
             max_total_pdf_pages=MAX_TOTAL_PDF_PAGES_PER_CASE,
             actor="client",
         )
-    except DocumentAnalysisInProgressError as exc:
-        raise HTTPException(status_code=409, detail="Wait for the current document analysis to finish before changing files") from exc
+    except DocumentAnalysisInProgressError:
+        return RedirectResponse(
+            _document_upload_location(reference, token, issue="analysis_running"),
+            status_code=303,
+        )
     except DocumentLimitError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return RedirectResponse(f"/case/{reference}/{token}?documents_uploaded=1", status_code=303)
+        return RedirectResponse(
+            _document_upload_location(
+                reference,
+                token,
+                issue=_document_upload_issue_from_error(exc),
+            ),
+            status_code=303,
+        )
+
+    if added and duplicate_count:
+        result = "mixed"
+    elif added:
+        result = "uploaded"
+    else:
+        result = "duplicate"
+    return RedirectResponse(
+        _document_upload_location(reference, token, result=result),
+        status_code=303,
+    )
 
 
 @app.get("/case/{reference}/{token}/documents/{document_id}")

@@ -1,11 +1,19 @@
-# ChinaTradeResolve Document AI v3.7.23
+# ChinaTradeResolve Document AI v3.7.24
 
-Version 3.7.23 clarifies that service payments are not currently accepted, that key documents are requested only after preliminary screening, and that voluntary project support is neither payment for services nor a factor in case priority. It also retains the always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
+Version 3.7.24 keeps document-upload errors on the private case page in the visitor’s selected language and clearly reports when an identical file was skipped instead of claiming that it was uploaded again. It also retains the clarified service notice, always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
-## Always-visible voice controls, scope and budgets in v3.7.23
+## Document-upload feedback in v3.7.24
+
+- Invalid, oversized, encrypted or unsupported files now return the visitor to the document section with a localized explanation instead of a standalone JSON error page.
+- Client-side checks use the same localized messages and display them beside the upload form.
+- Identical files are not stored twice and are reported as duplicates; mixed batches distinguish newly added files from skipped duplicates.
+- Duplicate files are excluded before authoritative document-count, total-size and PDF-page limits are calculated.
+- Oversized multipart requests are redirected back to the private case document section with a safe localized error.
+
+## Retained voice controls, scope and budgets
 
 - During assistant dictation, the red “Stop recording” control remains sticky and visible while the live transcript scrolls.
 - During application-description dictation, the stop control is fixed above the mobile safe area until recording ends.
@@ -25,7 +33,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - Assistant voice questions and application-description dictation use separate rate-limit buckets.
 - Each purpose allows up to ten validated transcription attempts per thirty minutes per browser session.
 - A separate high-frequency guard still blocks automated request floods before expensive processing.
-- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.23.
+- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.24.
 - Voice-specific rate-limit messages now explain that the restriction concerns recordings, not ordinary chat messages.
 
 ## Public AI scope control in v3.7.17
@@ -349,7 +357,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.23
+cd ChinaTradeResolve_Document_AI_v3.7.24
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

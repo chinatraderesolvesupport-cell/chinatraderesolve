@@ -116,7 +116,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.25"
+APP_VERSION = "3.7.26"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -1211,7 +1211,6 @@ def home(request: Request) -> HTMLResponse:
             "email_delivery_configured": email_delivery_is_configured(),
             "turnstile_site_key": settings.turnstile_site_key if turnstile_is_enabled() else "",
             "canonical_url": settings.public_base_url + "/",
-            "operator_profile": (settings.operator_profile or "").strip(),
             "operator_credentials": (settings.operator_credentials or "").strip(),
             "operator_registration": (settings.data_controller_registration or "").strip(),
         },

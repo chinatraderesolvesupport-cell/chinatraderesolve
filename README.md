@@ -1,15 +1,21 @@
-# ChinaTradeResolve Document AI v3.7.25
+# ChinaTradeResolve Document AI v3.7.26
 
-Version 3.7.25 adds a clear, accessible upload-in-progress state for large documents. It also retains localized document-upload errors and honest duplicate-file feedback from v3.7.24. It also retains the clarified service notice, always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
+Version 3.7.26 removes the obsolete environment-supplied prototype notice from the public page and aligns applicant confirmation emails with the current payment, document-screening and voluntary-support policy. It retains the accessible upload-in-progress state, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
-## Upload progress feedback in v3.7.25
+## Public and email copy consistency in v3.7.26
 
-- After client-side validation succeeds, the upload button is disabled and changes to a localized “Uploading documents…” label.
-- A visible spinner, indeterminate progress bar and note ask the visitor to keep the page open while large files are transferred.
-- The status is announced through an accessible live region and automatically resets when a visitor returns using browser history.
+- The legacy `OPERATOR_PROFILE` text is no longer rendered on the public home page, so a stale Render environment value cannot reintroduce the old payment/document contradiction.
+- Applicant confirmation emails now state that service payments are not accepted, explain that key documents are requested only after preliminary screening, and clarify that voluntary support does not affect priority.
+- The private case link remains prominent in every supported language so applicants can return to their case status safely.
+
+## Upload progress feedback retained from v3.7.25
+
+- During a document upload, the submit button changes to a localized “Uploading documents…” state and cannot be pressed twice.
+- An accessible wait indicator and animated progress bar ask the visitor to keep the page open while large files are being transferred.
+- The state resets correctly when the visitor returns through browser history.
 
 ## Document-upload feedback in v3.7.24
 
@@ -363,7 +369,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.25
+cd ChinaTradeResolve_Document_AI_v3.7.26
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

@@ -122,9 +122,69 @@ def test_health_and_home_free_access():
     assert "chinatraderesolve.support@gmail.com" in home.text
     assert "Оплата услуг сейчас не принимается. Ключевые документы запрашиваются только после предварительного отбора заявки." in home.text
     assert "Через этот прототип не принимаются платежи и документы" not in home.text
+    assert "Статус прототипа" not in home.text
     assert health.json()["email_delivery_configured"] is False
     assert health.json()["secure_configuration"] is True
 
+
+
+def test_legacy_operator_profile_cannot_reappear_on_home():
+    import app.main as main_module
+
+    original = main_module.settings.operator_profile
+    object.__setattr__(
+        main_module.settings,
+        "operator_profile",
+        "Статус прототипа: Через этот прототип не принимаются платежи и документы.",
+    )
+    try:
+        home = client.get("/")
+    finally:
+        object.__setattr__(main_module.settings, "operator_profile", original)
+    assert home.status_code == 200
+    assert "Статус прототипа" not in home.text
+    assert "Через этот прототип не принимаются платежи и документы" not in home.text
+
+
+def test_client_confirmation_email_matches_current_service_policy():
+    from app.notifications import build_case_notifications
+
+    base_case = {
+        "id": 1,
+        "full_name": "Test Buyer",
+        "email": "buyer@example.com",
+        "case_reference": "CTR-TEST-3726",
+        "public_token": "private-token",
+        "status": "pilot_candidate",
+        "risk_level": "low",
+        "priority": 10,
+        "main_problem": "Goods not delivered",
+    }
+    expectations = {
+        "Russian": ("Оплата услуг сейчас не принимается", "Ключевые документы запрашиваются только после предварительного отбора заявки", "Добровольная поддержка проекта не является оплатой услуг"),
+        "English": ("Payment for services is not currently accepted", "Key documents are requested only after the application has passed preliminary screening", "Voluntary support for the project is not payment for services"),
+        "French": ("Le paiement des services n’est pas accepté actuellement", "Les documents essentiels ne sont demandés qu’après la présélection", "Le soutien volontaire au projet ne constitue pas un paiement"),
+        "German": ("Eine Bezahlung von Dienstleistungen wird derzeit nicht angenommen", "Wichtige Dokumente werden erst nach der Vorprüfung", "Freiwillige Unterstützung des Projekts ist keine Bezahlung"),
+        "Spanish": ("Actualmente no se acepta el pago de servicios", "Los documentos esenciales solo se solicitan después de la evaluación preliminar", "El apoyo voluntario al proyecto no constituye el pago"),
+        "Serbian": ("Plaćanje usluga se trenutno ne prihvata", "Ključni dokumenti se traže tek nakon preliminarnog pregleda", "Dobrovoljna podrška projektu nije plaćanje usluge"),
+    }
+    obsolete = (
+        "На этом этапе оплата и загрузка документов не требуются",
+        "No service fee or document upload is required at this stage",
+        "Aucun paiement ni téléchargement de document n’est requis à ce stade",
+        "In dieser Phase sind weder Zahlung noch Dokumenten-Upload erforderlich",
+        "En esta fase no se requiere pago ni carga de documentos",
+        "U ovoj fazi nisu potrebni plaćanje ni otpremanje dokumenata",
+    )
+    for language, fragments in expectations.items():
+        case = {**base_case, "preferred_language": language}
+        client_message = build_case_notifications(case)[0]
+        body = client_message["body"]
+        assert f"/case/{case['case_reference']}/{case['public_token']}" in body
+        for fragment in fragments:
+            assert fragment in body
+        for stale in obsolete:
+            assert stale not in body
 
 def test_submit_candidate_and_status_page():
     response = client.post("/api/applications", json=valid_payload())
@@ -1868,9 +1928,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.25"
+    assert health.json()["version"] == "3.7.26"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.25"
+    assert health.headers["x-app-version"] == "3.7.26"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()

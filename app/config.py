@@ -158,15 +158,44 @@ class Settings:
     document_analysis_max_output_tokens: int = _env_int("DOCUMENT_ANALYSIS_MAX_OUTPUT_TOKENS", 6000, minimum=1000, maximum=12000)
     document_analysis_timeout_seconds: float = _env_float("DOCUMENT_ANALYSIS_TIMEOUT_SECONDS", 90, minimum=10, maximum=300)
     document_pdf_detail: str = _env_choice("DOCUMENT_PDF_DETAIL", "low", {"low", "high", "auto"})
-    max_daily_document_analyses: int = _env_int("MAX_DAILY_DOCUMENT_ANALYSES", 20, minimum=1, maximum=1000)
+    # Per-case allowance plus a larger site-wide emergency ceiling.  The old
+    # MAX_DAILY_DOCUMENT_ANALYSES name is retained as an alias for tooling that
+    # still reads the attribute, but new deployments should use the two explicit
+    # variables below.
+    max_daily_document_analyses_per_case: int = _env_int("MAX_DAILY_DOCUMENT_ANALYSES_PER_CASE", 3, minimum=1, maximum=50)
+    max_daily_document_analyses_global: int = _env_int("MAX_DAILY_DOCUMENT_ANALYSES_GLOBAL", 100, minimum=1, maximum=10000)
+    max_daily_document_analyses: int = max_daily_document_analyses_global
     openai_moderation_model: str | None = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
     ai_assistant_max_output_tokens: int = _env_int("AI_ASSISTANT_MAX_OUTPUT_TOKENS", 500, minimum=100, maximum=5000)
     ai_assistant_history_messages: int = _env_int("AI_ASSISTANT_HISTORY_MESSAGES", 8, minimum=1, maximum=10)
-    max_daily_ai_assistant_requests: int = _env_int("MAX_DAILY_AI_ASSISTANT_REQUESTS", 40, minimum=1, maximum=10000)
+    # MAX_DAILY_AI_ASSISTANT_REQUESTS is a backward-compatible per-browser
+    # fallback.  It is no longer the shared budget for the whole public site.
+    max_daily_ai_assistant_requests_per_session: int = _env_int(
+        "MAX_DAILY_AI_ASSISTANT_REQUESTS_PER_SESSION",
+        _env_int("MAX_DAILY_AI_ASSISTANT_REQUESTS", 20, minimum=1, maximum=1000),
+        minimum=1,
+        maximum=1000,
+    )
+    max_daily_ai_assistant_global_requests: int = _env_int(
+        "MAX_DAILY_AI_ASSISTANT_GLOBAL_REQUESTS", 500, minimum=10, maximum=100000
+    )
+    max_daily_ai_assistant_requests: int = max_daily_ai_assistant_requests_per_session
     enable_voice_input: bool = _env_bool("ENABLE_VOICE_INPUT", True)
     openai_transcription_model: str | None = os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe")
     voice_max_seconds: int = _env_int("VOICE_MAX_SECONDS", 120, minimum=15, maximum=300)
-    max_daily_voice_transcriptions: int = _env_int("MAX_DAILY_VOICE_TRANSCRIPTIONS", 20, minimum=1, maximum=1000)
+    # Assistant dictation and application-description dictation are counted in
+    # separate per-browser and site-wide buckets.  The legacy variable is used
+    # only as a per-scenario fallback.
+    max_daily_voice_transcriptions_per_session: int = _env_int(
+        "MAX_DAILY_VOICE_TRANSCRIPTIONS_PER_SESSION",
+        _env_int("MAX_DAILY_VOICE_TRANSCRIPTIONS", 10, minimum=1, maximum=200),
+        minimum=1,
+        maximum=200,
+    )
+    max_daily_voice_transcriptions_global: int = _env_int(
+        "MAX_DAILY_VOICE_TRANSCRIPTIONS_GLOBAL", 200, minimum=10, maximum=100000
+    )
+    max_daily_voice_transcriptions: int = max_daily_voice_transcriptions_per_session
     openai_timeout_seconds: float = _env_float("OPENAI_TIMEOUT_SECONDS", 20, minimum=2, maximum=120)
     application_triage_timeout_seconds: float = _env_float("APPLICATION_TRIAGE_TIMEOUT_SECONDS", 8, minimum=1, maximum=30)
     maintenance_interval_seconds: int = _env_int("MAINTENANCE_INTERVAL_SECONDS", 60, minimum=60, maximum=3600)

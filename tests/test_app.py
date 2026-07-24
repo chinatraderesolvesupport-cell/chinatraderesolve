@@ -571,9 +571,11 @@ def test_solana_address_validation_is_network_specific():
     assert _valid_solana("short") is False
 
 
-def test_ai_assistant_frontend_and_disabled_endpoint():
+def test_ai_assistant_frontend_and_disabled_endpoint(monkeypatch):
     import json
+    import app.main as main_module
 
+    monkeypatch.setattr(main_module, "voice_input_is_enabled", lambda: True)
     home = client.get("/")
     assert home.status_code == 200
     assert 'id="aiChatRoot"' in home.text
@@ -603,6 +605,9 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
     assert "data.append('purpose','description')" in home.text
     assert "data.append('purpose','assistant')" in home.text
     assert "descriptionField.dispatchEvent(new Event('input'" in home.text
+    assert "window.webkitSpeechRecognition" in home.text
+    assert 'id="descriptionVoiceLive"' in home.text
+    assert 'id="aiVoiceLive"' in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
     for language in ("en", "fr", "de", "es", "ru", "sr"):
@@ -618,6 +623,9 @@ def test_ai_assistant_frontend_and_disabled_endpoint():
         assert translations[language]["description_voice_consent"].strip()
         assert translations[language]["description_voice_review"].strip()
         assert translations[language]["description_voice_verification_required"].strip()
+        assert translations[language]["voice_live_privacy"].strip()
+        assert translations[language]["voice_live_title"].strip()
+        assert translations[language]["voice_live_unavailable"].strip()
 
     unavailable = client.post(
         "/api/assistant",
@@ -751,6 +759,157 @@ def test_ai_assistant_scope_guard_allows_relevant_questions_and_contextual_follo
     assert assistant_scope_reply(followup) is None
 
 
+
+
+def test_ai_assistant_scope_guard_allows_car_part_supplier_disputes_but_not_repairs():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    relevant = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Китайский поставщик прислал бракованный двигатель и не возвращает деньги.",
+                }
+            ],
+        }
+    )
+    assert assistant_scope_reply(relevant) is None
+
+    selection = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Как проверить поставщика автомобильных амортизаторов перед оплатой?",
+                }
+            ],
+        }
+    )
+    assert assistant_scope_reply(selection) is None
+
+    repair = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Как починить двигатель Toyota Corolla?",
+                }
+            ],
+        }
+    )
+    assert "только по вопросам споров" in assistant_scope_reply(repair)
+
+
+def test_ai_assistant_scope_guard_rechecks_each_turn_and_blocks_topic_hopping():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    unrelated_followups = (
+        "Расскажи анекдот",
+        "Кто такой Наполеон?",
+        "Объясни квантовую механику",
+        "Составь мне резюме",
+        "Сколько будет дважды два?",
+        "Tell me a joke",
+    )
+    for latest in unrelated_followups:
+        payload = AssistantChatRequest.model_validate(
+            {
+                "language": "en" if latest.startswith("Tell") else "ru",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Поставщик из Китая прислал товар с браком. Что делать?",
+                    },
+                    {"role": "assistant", "content": "Сохраните договор и фотографии."},
+                    {"role": "user", "content": latest},
+                ],
+            }
+        )
+        assert assistant_scope_reply(payload) is not None
+
+
+def test_ai_assistant_scope_guard_blocks_unrelated_code_and_vendor_rankings():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    code_request = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {"role": "user", "content": "Напиши Python-код для проверки поставщиков."}
+            ],
+        }
+    )
+    assert "только по вопросам споров" in assistant_scope_reply(code_request)
+
+    for request in (
+        "Какой маркетплейс лучше для покупки в Китае?",
+        "Назови лучшую инспекционную компанию в Китае.",
+    ):
+        payload = AssistantChatRequest.model_validate(
+            {"language": "ru", "messages": [{"role": "user", "content": request}]}
+        )
+        assert "не рекомендую" in assistant_scope_reply(payload)
+
+
+def test_ai_assistant_scope_guard_allows_neutral_vendor_checklists_not_endorsements():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    for request in (
+        "Назовите признаки мошенничества поставщика.",
+        "Назовите документы, которые нужно запросить у поставщика.",
+        "Какой поставщик считается надёжным по объективным признакам?",
+        "Name the red flags when checking a supplier.",
+        "Which supplier documents should I verify?",
+    ):
+        payload = AssistantChatRequest.model_validate(
+            {
+                "language": "en" if request[0].isascii() else "ru",
+                "messages": [{"role": "user", "content": request}],
+            }
+        )
+        assert assistant_scope_reply(payload) is None, request
+
+    for request in (
+        "Какой маркетплейс лучше защищает покупателя?",
+        "Какая инспекционная компания подходит для проверки качества?",
+        "Which supplier should I choose?",
+    ):
+        payload = AssistantChatRequest.model_validate(
+            {
+                "language": "en" if request[0].isascii() else "ru",
+                "messages": [{"role": "user", "content": request}],
+            }
+        )
+        reply = assistant_scope_reply(payload)
+        assert reply is not None
+        assert "recommend" in reply.lower() or "не рекомендую" in reply.lower()
+
+
+def test_ai_assistant_scope_guard_allows_plain_language_quality_disputes():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    for request in (
+        "Я заказал двигатель, но он не соответствует спецификации.",
+        "Мне прислали не тот цвет.",
+        "Оплатил товар, но его не прислали. Что делать?",
+        "Мне не возвращают деньги.",
+        "Как проверить компанию перед оплатой?",
+    ):
+        payload = AssistantChatRequest.model_validate(
+            {"language": "ru", "messages": [{"role": "user", "content": request}]}
+        )
+        assert assistant_scope_reply(payload) is None, request
+
+
 def test_ai_assistant_scope_guard_does_not_consume_daily_quota(monkeypatch):
     import app.main as main_module
 
@@ -770,7 +929,7 @@ def test_ai_assistant_scope_guard_does_not_consume_daily_quota(monkeypatch):
     monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
     monkeypatch.setattr(main_module, "verify_turnstile", passed_verification)
     monkeypatch.setattr(main_module, "assistant_reply", unexpected_provider)
-    monkeypatch.setattr(main_module, "claim_daily_usage", unexpected_usage)
+    monkeypatch.setattr(main_module, "claim_daily_usage_for_subject", unexpected_usage)
 
     response = client.post(
         "/api/assistant",
@@ -786,12 +945,69 @@ def test_ai_assistant_scope_guard_does_not_consume_daily_quota(monkeypatch):
     assert calls == {"usage": 0, "provider": 0}
 
 
+def test_ai_assistant_scope_guard_accepts_implicit_transaction_language_and_rechecks_latest_message():
+    from app.ai_assistant import assistant_scope_reply
+    from app.schemas import AssistantChatRequest
+
+    for text in (
+        "Оплатил товар, но его не прислали. Что делать?",
+        "Мне не возвращают деньги.",
+        "Как проверить компанию перед оплатой?",
+    ):
+        payload = AssistantChatRequest.model_validate({
+            "language": "ru",
+            "messages": [{"role": "user", "content": text}],
+        })
+        assert assistant_scope_reply(payload) is None
+
+    bypass = AssistantChatRequest.model_validate({
+        "language": "ru",
+        "messages": [
+            {"role": "user", "content": "Поставщик прислал товар не по спецификации."},
+            {"role": "assistant", "content": "Сохраните договор и переписку."},
+            {"role": "user", "content": "А теперь напиши стих про лето."},
+        ],
+    })
+    assert "только по вопросам споров" in assistant_scope_reply(bypass)
+
+
 def test_ai_assistant_output_removes_unicode_noncharacters():
     from app.ai_assistant import _clean_output_text
 
     assert _clean_output_text("Bonjour.\U0008ffff") == "Bonjour."
     assert _clean_output_text("Line one\n\n\nLine two") == "Line one\n\nLine two"
     assert _clean_output_text("Normal français, Deutsch, русский, srpski.") == "Normal français, Deutsch, русский, srpski."
+
+
+def test_ai_assistant_short_limit_is_per_browser_session_not_shared_ip(monkeypatch):
+    import app.main as main_module
+    from app.security import SlidingWindowRateLimiter
+    from fastapi.testclient import TestClient
+
+    async def passed_verification(_token, _request):
+        return True
+
+    async def fake_reply(_payload):
+        return "Keep the written order and payment proof."
+
+    monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "verify_turnstile", passed_verification)
+    monkeypatch.setattr(main_module, "assistant_reply", fake_reply)
+    monkeypatch.setattr(main_module, "claim_daily_usage_for_subject", lambda *_args, **_kwargs: (1, 1))
+    monkeypatch.setattr(main_module, "assistant_limiter", SlidingWindowRateLimiter(limit=1, window_seconds=600))
+    monkeypatch.setattr(main_module, "assistant_ip_flood_limiter", SlidingWindowRateLimiter(limit=20, window_seconds=600))
+
+    first_client = TestClient(main_module.app)
+    second_client = TestClient(main_module.app)
+    payload = {
+        "language": "en",
+        "messages": [{"role": "user", "content": "The supplier did not deliver my paid order."}],
+        "turnstile_token": "test-token",
+    }
+    headers = {"x-forwarded-for": "198.51.100.249"}
+    assert first_client.post("/api/assistant", json=payload, headers=headers).status_code == 200
+    assert second_client.post("/api/assistant", json=payload, headers=headers).status_code == 200
+    assert first_client.post("/api/assistant", json=payload, headers=headers).status_code == 429
 
 
 def test_voice_transcription_api_mock(monkeypatch):
@@ -810,7 +1026,7 @@ def test_voice_transcription_api_mock(monkeypatch):
 
     monkeypatch.setattr(main_module, "voice_input_is_enabled", lambda: True)
     monkeypatch.setattr(main_module, "transcribe_audio", fake_transcribe)
-    monkeypatch.setattr(main_module, "claim_daily_usage", lambda *_args, **_kwargs: 1)
+    monkeypatch.setattr(main_module, "claim_daily_usage_for_subject", lambda *_args, **_kwargs: (1, 1))
     no_consent = client.post(
         "/api/assistant/transcribe",
         data={"language": "en"},
@@ -843,7 +1059,7 @@ def test_voice_rate_limit_is_separate_for_assistant_and_description(monkeypatch)
 
     monkeypatch.setattr(main_module, "voice_input_is_enabled", lambda: True)
     monkeypatch.setattr(main_module, "transcribe_audio", fake_transcribe)
-    monkeypatch.setattr(main_module, "claim_daily_usage", lambda *_args, **_kwargs: 1)
+    monkeypatch.setattr(main_module, "claim_daily_usage_for_subject", lambda *_args, **_kwargs: (1, 1))
     monkeypatch.setattr(main_module, "voice_attempt_limiter", SlidingWindowRateLimiter(limit=20, window_seconds=600))
     monkeypatch.setattr(main_module, "voice_limiter", SlidingWindowRateLimiter(limit=1, window_seconds=1800))
 
@@ -1620,12 +1836,14 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.18"
+    assert health.json()["version"] == "3.7.20"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.18"
+    assert health.headers["x-app-version"] == "3.7.20"
     assert health.json()["voice_max_seconds"] == 120
-    assert health.json()["voice_transcriptions_daily_limit"] == 20
-    assert health.json()["ai_assistant_daily_limit"] == 40
+    assert "voice_transcriptions_daily_limit" not in health.json()
+    assert "voice_transcriptions_used_today" not in health.json()
+    assert "ai_assistant_daily_limit" not in health.json()
+    assert "ai_assistant_used_today" not in health.json()
     assert health.json()["openai_billing_ready"] is False
 
     base = Path(__file__).resolve().parent.parent
@@ -3900,6 +4118,69 @@ def test_daily_document_analysis_budget_is_database_backed():
         )
 
 
+def test_personal_and_global_daily_ai_budgets_are_atomic():
+    import pytest
+    from app.db import DailyUsageLimitError, claim_daily_usage_for_subject
+
+    name = "assistant_budget_test"
+    subject_a = "a" * 32
+    subject_b = "b" * 32
+    subject_c = "c" * 32
+
+    assert claim_daily_usage_for_subject(name, subject_a, 1, 2) == (1, 1)
+    with pytest.raises(DailyUsageLimitError):
+        claim_daily_usage_for_subject(name, subject_a, 1, 2)
+    # The failed personal claim above must not consume the global counter.
+    assert claim_daily_usage_for_subject(name, subject_b, 1, 2) == (1, 2)
+    with pytest.raises(DailyUsageLimitError):
+        claim_daily_usage_for_subject(name, subject_c, 1, 2)
+
+
+def test_document_analysis_has_per_case_and_global_budgets():
+    import pytest
+    from app.db import (
+        DailyAnalysisLimitError,
+        claim_document_analysis,
+        get_case_by_public,
+        get_daily_analysis_usage,
+        set_document_analysis_status,
+    )
+
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="per-case-budget@example.com"),
+        headers={"x-forwarded-for": "203.0.113.199"},
+    ).json()
+    upload = client.post(
+        created["status_url"] + "/documents",
+        data={"document_consent": "true"},
+        files=[("files", ("evidence.png", _make_png_bytes(), "image/png"))],
+        follow_redirects=False,
+    )
+    assert upload.status_code == 303
+    reference, token = created["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    baseline = get_daily_analysis_usage()
+
+    run_token = claim_document_analysis(
+        case["id"], "test-model", actor="test", document_count=1,
+        max_daily_analyses_per_case=1,
+        max_daily_analyses_global=baseline + 10,
+    )
+    assert run_token
+    set_document_analysis_status(
+        case["id"], "failed", "test-model", "test cleanup",
+        expected_run_token=run_token,
+    )
+    with pytest.raises(DailyAnalysisLimitError):
+        claim_document_analysis(
+            case["id"], "test-model", actor="test", document_count=1,
+            allow_completed=True,
+            max_daily_analyses_per_case=1,
+            max_daily_analyses_global=baseline + 10,
+        )
+
+
 def test_private_link_can_revoke_ai_consent_and_delete_case():
     from app.db import get_case_by_public, list_case_documents
 
@@ -3962,6 +4243,12 @@ def test_privacy_route_exposes_configuration_status():
     assert "This local preview is not accepting public applications" in response.text
     health = client.get("/health").json()
     assert health["privacy_configuration_complete"] is False
+
+
+def test_container_healthcheck_uses_readiness_endpoint():
+    dockerfile = (Path(__file__).resolve().parent.parent / "Dockerfile").read_text(encoding="utf-8")
+    assert "/ready" in dockerfile
+    assert "urlopen('http://127.0.0.1:'" in dockerfile
 
 
 def test_launch_readiness_endpoint_is_fail_closed_by_default():
@@ -4039,7 +4326,7 @@ def test_health_remains_live_when_database_is_unavailable(monkeypatch):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["readiness_checks"]["database_storage"] is False
-    assert response.json()["document_analysis_used_today"] is None
+    assert "document_analysis_used_today" not in response.json()
 
 
 def test_public_launch_mode_blocks_incomplete_site_without_leaking_config(monkeypatch):

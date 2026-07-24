@@ -56,8 +56,6 @@ from .db import (
     get_case_by_public,
     get_case_document,
     get_document_analysis,
-    get_daily_analysis_usage,
-    get_daily_usage,
     fail_running_document_analyses_on_startup,
     fail_stale_document_analysis,
     get_feedback,
@@ -65,7 +63,7 @@ from .db import (
     init_db,
     list_case_documents,
     list_cases,
-    claim_daily_usage,
+    claim_daily_usage_for_subject,
     replace_triage,
     record_audit,
     revoke_ai_consent,
@@ -118,7 +116,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.18"
+APP_VERSION = "3.7.20"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -301,7 +299,8 @@ templates = Jinja2Templates(directory=BASE / "templates")
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
-voice_attempt_limiter = SlidingWindowRateLimiter(limit=30, window_seconds=600)
+assistant_ip_flood_limiter = SlidingWindowRateLimiter(limit=90, window_seconds=600)
+voice_attempt_limiter = SlidingWindowRateLimiter(limit=120, window_seconds=600)
 voice_limiter = SlidingWindowRateLimiter(limit=10, window_seconds=1800)
 document_upload_limiter = SlidingWindowRateLimiter(limit=12, window_seconds=900)
 document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=1800)
@@ -396,13 +395,25 @@ def require_admin_csrf(request: Request, provided: str) -> None:
         raise HTTPException(status_code=403, detail="Invalid administrator form token")
 
 
-def voice_rate_session_key(request: Request) -> str:
-    """Use a browser-session bucket while retaining a separate IP flood guard."""
-    token = str(request.session.get("voice_rate_id") or "")
+def public_rate_session_key(request: Request) -> str:
+    """Return a stable browser-session bucket without storing a raw IP address."""
+    token = str(request.session.get("public_rate_id") or "")
     if not re.fullmatch(r"[A-Za-z0-9_-]{20,80}", token):
         token = secrets.token_urlsafe(24)
-        request.session["voice_rate_id"] = token
+        request.session["public_rate_id"] = token
     return token
+
+
+def usage_subject(request: Request, purpose: str) -> str:
+    token = public_rate_session_key(request)
+    return hashlib.sha256(
+        f"{_runtime_session_secret}:{purpose}:{token}".encode("utf-8")
+    ).hexdigest()[:32]
+
+
+def voice_rate_session_key(request: Request) -> str:
+    """Backward-compatible alias used by voice short-window buckets."""
+    return public_rate_session_key(request)
 
 
 def make_reference() -> str:
@@ -1054,8 +1065,8 @@ def home(request: Request) -> HTMLResponse:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    """Lightweight liveness information without exposing usage budgets."""
     readiness = launch_readiness_checks()
-    database_available = readiness["database_storage"]
     return {
         "status": "ok",
         "version": APP_VERSION,
@@ -1065,24 +1076,17 @@ def health() -> dict[str, Any]:
         "max_pdf_pages_per_case": MAX_TOTAL_PDF_PAGES_PER_CASE,
         "standard_request_limit_mb": STANDARD_REQUEST_BODY_BYTES // (1024 * 1024),
         "document_upload_request_limit_mb": DOCUMENT_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
+        "voice_upload_request_limit_mb": VOICE_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
+        "voice_input_enabled": voice_input_is_enabled(),
+        "voice_max_seconds": settings.voice_max_seconds,
+        "ai_assistant_enabled": assistant_is_enabled(),
+        "document_analysis_enabled": document_analysis_is_enabled(),
         "free_access_mode": settings.free_access_mode,
         "support_enabled": support_is_available(),
         "paypal_support_enabled": bool(
             settings.enable_voluntary_support and safe_paypal_support_url()
         ),
         "openai_billing_ready": settings.openai_billing_ready,
-        "ai_triage_enabled": settings.openai_billing_ready and settings.enable_ai_triage and bool(settings.openai_api_key and settings.openai_model),
-        "ai_assistant_enabled": assistant_is_enabled(),
-        "ai_assistant_daily_limit": settings.max_daily_ai_assistant_requests,
-        "ai_assistant_used_today": get_daily_usage("ai_assistant") if database_available else None,
-        "voice_input_enabled": voice_input_is_enabled(),
-        "voice_upload_request_limit_mb": VOICE_UPLOAD_REQUEST_BODY_BYTES // (1024 * 1024),
-        "voice_max_seconds": settings.voice_max_seconds,
-        "voice_transcriptions_daily_limit": settings.max_daily_voice_transcriptions,
-        "voice_transcriptions_used_today": get_daily_usage("voice_transcription") if database_available else None,
-        "document_analysis_enabled": document_analysis_is_enabled(),
-        "document_analysis_daily_limit": settings.max_daily_document_analyses,
-        "document_analysis_used_today": get_daily_analysis_usage() if database_available else None,
         "secure_configuration": admin_configuration_is_secure(),
         "public_url_https": settings.public_base_url.startswith("https://"),
         "email_delivery_configured": email_delivery_is_configured(),
@@ -1170,18 +1174,32 @@ def privacy_page(request: Request) -> HTMLResponse:
 
 @app.post("/api/assistant", response_model=AssistantChatResponse)
 async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -> AssistantChatResponse:
-    key = f"assistant:{client_key(request)}"
-    if not assistant_limiter.allow(key):
-        raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
     if not assistant_is_enabled():
         raise HTTPException(status_code=503, detail=localized_error(payload.language, "unavailable"))
-    if not await verify_turnstile(payload.turnstile_token, request):
-        raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
+
+    # Scope is checked before any user budget or provider call.  Explicitly
+    # unrelated messages therefore cannot waste the visitor's quota.
     local_scope_reply = assistant_scope_reply(payload)
     if local_scope_reply is not None:
         return AssistantChatResponse(reply=local_scope_reply)
+
+    session_key = public_rate_session_key(request)
+    if not assistant_limiter.allow(f"assistant-session:{session_key}"):
+        raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
+    # A deliberately generous IP bucket remains only as an emergency flood
+    # guard; normal visitors behind one office or mobile carrier use independent
+    # session buckets above.
+    if not assistant_ip_flood_limiter.allow(f"assistant-ip:{client_key(request)}"):
+        raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
+    if not await verify_turnstile(payload.turnstile_token, request):
+        raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
     try:
-        claim_daily_usage("ai_assistant", settings.max_daily_ai_assistant_requests)
+        claim_daily_usage_for_subject(
+            "ai_assistant",
+            usage_subject(request, "ai_assistant"),
+            settings.max_daily_ai_assistant_requests_per_session,
+            settings.max_daily_ai_assistant_global_requests,
+        )
     except DailyUsageLimitError:
         raise HTTPException(status_code=429, detail=localized_error(payload.language, "daily"))
     try:
@@ -1226,7 +1244,12 @@ async def public_voice_transcription(
     if not voice_limiter.allow(f"voice:{voice_purpose}:{session_key}"):
         raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_rate"))
     try:
-        claim_daily_usage("voice_transcription", settings.max_daily_voice_transcriptions)
+        claim_daily_usage_for_subject(
+            f"voice_{voice_purpose}",
+            usage_subject(request, f"voice_{voice_purpose}"),
+            settings.max_daily_voice_transcriptions_per_session,
+            settings.max_daily_voice_transcriptions_global,
+        )
     except DailyUsageLimitError:
         raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_daily"))
     safety_identifier = hashlib.sha256(
@@ -1607,7 +1630,8 @@ async def public_analyse_documents(
             actor="client",
             document_count=len(documents),
             allow_completed=False,
-            max_daily_analyses=settings.max_daily_document_analyses,
+            max_daily_analyses_per_case=settings.max_daily_document_analyses_per_case,
+            max_daily_analyses_global=settings.max_daily_document_analyses_global,
         )
     except DailyAnalysisLimitError:
         return RedirectResponse(
@@ -1851,7 +1875,8 @@ async def admin_analyse_documents(
             actor="admin",
             document_count=len(documents),
             allow_completed=True,
-            max_daily_analyses=settings.max_daily_document_analyses,
+            max_daily_analyses_per_case=settings.max_daily_document_analyses_per_case,
+            max_daily_analyses_global=settings.max_daily_document_analyses_global,
         )
     except DailyAnalysisLimitError as exc:
         raise HTTPException(status_code=429, detail=str(exc)) from exc

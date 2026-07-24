@@ -204,17 +204,47 @@ _SCOPE_STRONG_TERMS = (
 )
 
 _CHINA_TERMS = (
-    "china", "chinese", "китай", "китайск", "chine", "chinois", "china", "chinesisch",
-    "chino", "china", "kinesk", "kina",
+    "china", "chinese", "китай", "китайск", "chine", "chinois", "chinesisch",
+    "chino", "kinesk", "kina",
+)
+
+# Generic transaction language is accepted because a visitor is already using a
+# specialist supplier-dispute website and may reasonably omit the word "China".
+_TRANSACTION_TERMS = (
+    "buy", "bought", "order", "ordered", "goods", "product", "payment", "paid", "money", "company", "business", "trade", "shipment", "delivery", "sent", "received",
+    "покуп", "заказ", "товар", "оплат", "платёж", "платеж", "деньг", "компан", "сделк", "поставк", "доставк", "прислал", "прислали", "получил", "получила",
+    "achat", "acheté", "achete", "commande", "produit", "paiement", "payé", "paye", "argent", "société", "societe", "livraison",
+    "kauf", "bestell", "ware", "produkt", "zahlung", "bezahlt", "geld", "unternehmen", "lieferung",
+    "compra", "pedido", "producto", "pago", "pagado", "dinero", "empresa", "entrega",
+    "kup", "porudž", "porudz", "roba", "proizvod", "plać", "plac", "novac", "kompan", "isporuk",
+)
+
+_DISPUTE_OR_CHECK_TERMS = (
+    "not delivered", "not received", "never arrived", "did not send", "won't refund", "will not refund", "refund", "return my money", "defect", "wrong item", "wrong material", "wrong colour", "wrong color", "does not match", "not as specified", "not responding", "disappeared", "verify", "check the company", "before payment", "scam", "fraud", "risk",
+    "не прислал", "не прислали", "не достав", "не получил", "не получила", "не возвращ", "вернуть деньги", "возврат", "брак", "не тот", "не соответствует", "не совпадает", "другой цвет", "не отвечает", "пропал", "проверить компан", "перед оплат", "мошенн", "обман", "риск",
+    "non livré", "non livre", "pas reçu", "pas recu", "ne rembourse", "remboursement", "défect", "defect", "vérifier", "verifier", "avant paiement", "fraude", "risque",
+    "nicht geliefert", "nicht erhalten", "keine erstattung", "erstattung", "mangel", "falsch", "prüfen", "prufen", "vor der zahlung", "betrug", "risiko",
+    "no entregado", "no recibido", "no reembolsa", "reembolso", "defecto", "incorrecto", "verificar", "antes de pagar", "fraude", "riesgo",
+    "nije isporuč", "nije isporuc", "nisam dobio", "ne vraća", "ne vraca", "povraćaj", "povracaj", "neispravan", "pogrešan", "pogresan", "proveriti", "pre plaćanja", "pre placanja", "prevara", "rizik",
 )
 
 _SELECTION_GUIDANCE_TERMS = (
-    "how to choose", "how to check", "how to verify", "selection criteria", "due diligence", "red flags",
-    "как выбрать", "как проверить", "критерии выбора", "признаки риска", "на что обратить внимание",
-    "comment choisir", "comment vérifier", "comment verifier", "critères de sélection", "criteres de selection",
-    "wie auswahlen", "wie auswählen", "wie prüfen", "wie prufen", "auswahlkriterien", "warnzeichen",
-    "cómo elegir", "como elegir", "cómo verificar", "como verificar", "criterios de selección", "criterios de seleccion",
-    "kako izabrati", "kako proveriti", "kriterijumi izbora", "znaci upozorenja",
+    # Neutral process questions that must remain allowed even when they mention a seller.
+    "how to choose", "how to check", "how to verify", "ways to check", "selection criteria",
+    "due diligence", "red flags", "warning signs", "signs of risk", "what documents",
+    "which documents", "registration", "samples", "contract terms", "payment safeguards",
+    "buyer protection", "marketplace protection",
+    "как выбрать", "как проверить", "способы проверить", "критерии выбора", "признаки риска",
+    "признаки мошенничества", "на что обратить внимание", "какие документы", "назовите документы",
+    "регистрац", "образц", "условия договора", "защита платежа", "защита покупателя",
+    "comment choisir", "comment vérifier", "comment verifier", "critères de sélection",
+    "criteres de selection", "signaux d’alerte", "signaux d'alerte", "quels documents",
+    "wie auswahlen", "wie auswählen", "wie prüfen", "wie prufen", "auswahlkriterien",
+    "warnzeichen", "welche dokumente",
+    "cómo elegir", "como elegir", "cómo verificar", "como verificar", "criterios de selección",
+    "criterios de seleccion", "señales de alerta", "senales de alerta", "qué documentos",
+    "que documentos",
+    "kako izabrati", "kako proveriti", "kriterijumi izbora", "znaci upozorenja", "koje dokumente",
 )
 
 _VENDOR_TARGET_TERMS = (
@@ -226,39 +256,101 @@ _VENDOR_TARGET_TERMS = (
     "prodavac", "dobavljač", "dobavljac", "fabrika", "agent", "kompanija", "platforma", "tržište", "trziste",
 )
 
-_VENDOR_RECOMMENDATION_TERMS = (
-    "recommend", "name a", "give me contacts", "best seller", "best supplier", "reliable seller",
-    "reliable supplier", "which seller", "which supplier", "where should i buy", "who should i buy from",
-    "посоветуй", "порекомендуй", "назовите", "дайте контакты", "лучший продавец", "лучший поставщик",
-    "надёжный продавец", "надежный продавец", "надёжный поставщик", "надежный поставщик",
-    "какой продавец", "какой поставщик", "у кого купить", "где лучше купить",
-    "recommandez", "recommander", "donnez-moi les contacts", "meilleur vendeur", "meilleur fournisseur",
-    "vendeur fiable", "fournisseur fiable", "quel vendeur", "quel fournisseur",
-    "empfehlen", "nennen sie", "kontakte geben", "bester verkäufer", "bester verkaufer",
-    "bester lieferant", "zuverlässiger lieferant", "zuverlassiger lieferant", "welcher lieferant",
-    "recomiende", "recomendar", "déme contactos", "deme contactos", "mejor vendedor", "mejor proveedor",
-    "vendedor fiable", "proveedor fiable", "qué vendedor", "que vendedor", "qué proveedor", "que proveedor",
-    "preporučite", "preporucite", "dajte kontakte", "najbolji prodavac", "najbolji dobavljač",
-    "najbolji dobavljac", "pouzdan prodavac", "pouzdan dobavljač", "pouzdan dobavljac",
+_VENDOR_CONTACT_TERMS = (
+    "give me contacts", "provide contacts", "contact details", "contact information",
+    "дайте контакты", "дай контакты", "контакты компании", "контактные данные",
+    "donnez-moi les contacts", "coordonnées", "coordonnees",
+    "kontakte geben", "kontaktdaten",
+    "déme contactos", "deme contactos", "datos de contacto",
+    "dajte kontakte", "kontakt podatke",
 )
 
-_OFF_TOPIC_TERMS = (
-    # Common attempts to use the public assistant as a general-purpose chatbot.
-    "car repair", "repair my car", "toyota", "corolla", "shock absorber", "engine", "recipe", "cook",
-    "weather", "football", "basketball", "write code", "programming", "python script", "homework",
-    "solve this equation", "medical symptoms", "diagnose", "relationship advice", "horoscope", "poem",
-    "movie recommendation", "travel itinerary", "translate this", "political news",
-    "ремонт машины", "починить автомобиль", "тойота", "королла", "амортизатор", "двигател", "рецепт",
-    "погод", "футбол", "баскетбол", "напиши код", "программирован", "домашн", "реши уравнение",
-    "симптом", "диагноз", "отношени", "гороскоп", "стих", "посоветуй фильм", "маршрут путешествия",
-    "réparer ma voiture", "reparer ma voiture", "amortisseur", "moteur", "recette", "météo", "meteo",
-    "football", "programmation", "devoir", "diagnostic médical", "diagnostic medical", "horoscope", "poème", "poeme",
-    "auto reparieren", "stoßdämpfer", "stossdampfer", "motor", "rezept", "wetter", "programmierung",
-    "hausaufgabe", "medizinische symptome", "horoskop", "gedicht",
-    "reparar mi coche", "amortiguador", "motor", "receta", "tiempo", "programación", "programacion",
-    "tarea", "síntomas médicos", "sintomas medicos", "horóscopo", "horoscopo", "poema",
-    "popravka automobila", "amortizer", "motor", "recept", "vreme", "programiranje", "domaći zadatak",
-    "domaci zadatak", "medicinski simptomi", "horoskop", "pesma",
+_VENDOR_SUPERLATIVE_TERMS = (
+    "best seller", "best supplier", "best factory", "best marketplace", "best platform",
+    "best inspection company", "most reliable seller", "most reliable supplier",
+    "лучший продавец", "лучшая фабрика", "лучший поставщик", "лучший маркетплейс",
+    "лучшая платформа", "лучшая инспекционная компания", "самый надежный поставщик",
+    "самый надёжный поставщик",
+    "meilleur vendeur", "meilleur fournisseur", "meilleure usine", "meilleure plateforme",
+    "bester verkäufer", "bester verkaufer", "bester lieferant", "beste fabrik", "bester marktplatz",
+    "mejor vendedor", "mejor proveedor", "mejor fábrica", "mejor fabrica", "mejor plataforma",
+    "najbolji prodavac", "najbolji dobavljač", "najbolji dobavljac", "najbolja fabrika",
+    "najbolja platforma",
+)
+
+_VENDOR_RECOMMENDATION_VERBS = (
+    "recommend", "suggest", "name a", "name the",
+    "посоветуй", "посоветуйте", "порекомендуй", "порекомендуйте", "назови", "назовите",
+    "recommandez", "recommander", "nommez",
+    "empfehlen", "nennen sie",
+    "recomiende", "recomendar", "nombre",
+    "preporučite", "preporucite", "navedite",
+)
+
+_VENDOR_EXPLICIT_CHOICE_TERMS = (
+    "where should i buy", "who should i buy from", "which seller should i choose",
+    "which supplier should i choose", "which factory should i use", "which marketplace is better",
+    "which marketplace is best", "which platform is better", "which inspection company should i use",
+    "у кого купить", "где лучше купить", "кого выбрать", "какого выбрать",
+    "какого поставщика выбрать", "какого продавца выбрать", "какую фабрику выбрать",
+    "какой маркетплейс лучше", "какая платформа лучше", "какая инспекционная компания подходит",
+    "выгоднее купить",
+    "quel vendeur choisir", "quel fournisseur choisir", "quelle plateforme choisir",
+    "welchen lieferanten wählen", "welchen lieferanten wahlen", "welchen marktplatz wählen",
+    "welchen marktplatz wahlen",
+    "qué proveedor elegir", "que proveedor elegir", "qué plataforma elegir", "que plataforma elegir",
+    "kog dobavljača izabrati", "kog dobavljaca izabrati", "koju platformu izabrati",
+)
+
+
+# Hard off-topic intent is checked before commercial keywords. This prevents a
+# request such as "write Python code for checking suppliers" from spending paid
+# API budget merely because it contains the word supplier. Product nouns such as
+# engine or shock absorber are deliberately absent: they may be the subject of a
+# legitimate quality dispute.
+_HARD_OFF_TOPIC_TERMS = (
+    "car repair", "repair my car", "repair the engine", "fix my car", "fix the engine",
+    "how to repair", "how to replace", "recipe", "cook", "weather", "football", "basketball",
+    "write code", "write a script", "programming", "python code", "javascript code", "homework",
+    "solve this equation", "what is 2+2", "medical symptoms", "diagnose", "relationship advice",
+    "horoscope", "poem", "tell me a joke", "movie recommendation", "travel itinerary",
+    "political news", "who was napoleon", "quantum mechanics", "write my resume", "write a cv",
+    "ремонт машины", "ремонт автомобиля", "починить автомобиль", "починить машину",
+    "как починить", "как ремонтировать", "отремонтировать", "заменить амортизатор",
+    "рецепт", "приготовить", "погод", "футбол", "баскетбол", "напиши код", "напиши программу",
+    "python-код", "python код", "программирован", "домашн", "реши уравнение", "сколько будет",
+    "симптом", "диагноз", "болит", "отношени", "гороскоп", "стих", "анекдот",
+    "посоветуй фильм", "маршрут путешествия", "политическ", "кто такой наполеон",
+    "квантов", "составь резюме",
+    "réparer ma voiture", "reparer ma voiture", "réparer le moteur", "reparer le moteur",
+    "recette", "cuisiner", "météo", "meteo", "programmation", "écrire du code", "ecrire du code",
+    "devoir", "diagnostic médical", "diagnostic medical", "horoscope", "poème", "poeme", "blague",
+    "auto reparieren", "motor reparieren", "rezept", "kochen", "wetter", "programmierung",
+    "code schreiben", "hausaufgabe", "medizinische symptome", "horoskop", "gedicht", "witz",
+    "reparar mi coche", "reparar el motor", "receta", "cocinar", "tiempo", "programación",
+    "programacion", "escribir código", "escribir codigo", "tarea", "síntomas médicos",
+    "sintomas medicos", "horóscopo", "horoscopo", "poema", "chiste",
+    "popravka automobila", "popraviti automobil", "popraviti motor", "recept", "kuvanje",
+    "vreme", "programiranje", "napiši kod", "napisi kod", "domaći zadatak", "domaci zadatak",
+    "medicinski simptomi", "horoskop", "pesma", "vic",
+)
+
+_PROMPT_ATTACK_TERMS = (
+    "ignore previous instructions", "ignore all instructions", "reveal the system prompt", "show the system prompt",
+    "developer message", "jailbreak", "игнорируй предыдущие инструкции", "игнорируй все инструкции",
+    "покажи системный промпт", "раскрой системный промпт", "системное сообщение", "джейлбрейк",
+    "ignorez les instructions", "montrez le prompt système", "zeige den system-prompt",
+    "ignora las instrucciones", "muestra el prompt del sistema", "ignoriši uputstva", "ignorisi uputstva",
+)
+
+
+_FOLLOWUP_TERMS = (
+    "what next", "what should i do", "and then", "what about", "can i", "is that enough", "how long",
+    "что дальше", "что делать", "а потом", "а если", "этого достаточно", "сколько времени",
+    "et ensuite", "que faire", "et si", "est-ce suffisant",
+    "was nun", "was soll ich tun", "und dann", "reicht das",
+    "qué hago", "que hago", "y después", "y despues", "es suficiente",
+    "šta dalje", "sta dalje", "šta da radim", "sta da radim", "da li je dovoljno",
 )
 
 
@@ -269,46 +361,122 @@ def _normalise_scope_text(value: str) -> str:
 
 
 def _contains_term(text: str, terms: tuple[str, ...]) -> bool:
-    return any(_normalise_scope_text(term) in text for term in terms)
+    """Return True when a configured phrase is present in normalised text.
+
+    Most entries intentionally include language stems (for example ``поставк``),
+    so broad substring matching remains useful. Very short Latin single words are
+    matched as complete tokens, though: without that guard the Serbian word
+    ``vic`` (joke) also matches the English word ``service``.
+    """
+    for term in terms:
+        normalised_term = _normalise_scope_text(term)
+        if not normalised_term:
+            continue
+        if (
+            len(normalised_term) <= 4
+            and " " not in normalised_term
+            and normalised_term.isascii()
+            and normalised_term.isalnum()
+        ):
+            if re.search(rf"(?<![a-z0-9]){re.escape(normalised_term)}(?![a-z0-9])", text):
+                return True
+            continue
+        if normalised_term in text:
+            return True
+    return False
 
 
 def _requests_specific_vendor(latest_text: str) -> bool:
+    """Detect requests for a concrete provider without blocking neutral checks.
+
+    A visitor may ask us to *name documents* or *list red flags* and mention a
+    supplier in the same sentence. Those are useful process questions, not an
+    endorsement request. Direct contacts, rankings and explicit choice phrases
+    always remain out of scope.
+    """
     text = _normalise_scope_text(latest_text)
+    has_target = _contains_term(text, _VENDOR_TARGET_TERMS)
+    if _contains_term(text, _VENDOR_CONTACT_TERMS + _VENDOR_SUPERLATIVE_TERMS):
+        return has_target
+    if _contains_term(text, _VENDOR_EXPLICIT_CHOICE_TERMS):
+        return True
     if _contains_term(text, _SELECTION_GUIDANCE_TERMS):
         return False
-    return _contains_term(text, _VENDOR_TARGET_TERMS) and _contains_term(text, _VENDOR_RECOMMENDATION_TERMS)
+    return has_target and _contains_term(text, _VENDOR_RECOMMENDATION_VERBS)
+
+
+def _has_clear_commercial_scope(latest_text: str) -> bool:
+    """Recognise an explicit supplier transaction even when the product is a car part.
+
+    Product words such as "engine" or "shock absorber" can occur in both an
+    unrelated repair question and a perfectly relevant quality dispute.  A clear
+    commercial/dispute combination therefore outranks the product-topic guard.
+    """
+    text = _normalise_scope_text(latest_text)
+    has_supplier = _contains_term(text, _VENDOR_TARGET_TERMS)
+    has_transaction = _contains_term(text, _TRANSACTION_TERMS)
+    has_dispute_or_check = _contains_term(text, _DISPUTE_OR_CHECK_TERMS)
+    has_selection_guidance = _contains_term(text, _SELECTION_GUIDANCE_TERMS)
+    return bool(
+        (has_transaction and has_dispute_or_check)
+        or (has_supplier and has_dispute_or_check)
+        or (has_supplier and has_selection_guidance)
+    )
+
+
+def _latest_is_in_scope(latest_text: str) -> bool:
+    text = _normalise_scope_text(latest_text)
+    if _has_clear_commercial_scope(latest_text):
+        return True
+    if _contains_term(text, _SCOPE_STRONG_TERMS):
+        return True
+    has_transaction = _contains_term(text, _TRANSACTION_TERMS)
+    if _contains_term(text, _CHINA_TERMS) and has_transaction:
+        return True
+    return False
+
+
+def _is_contextual_followup(latest_text: str, earlier_user_text: str) -> bool:
+    latest = _normalise_scope_text(latest_text)
+    earlier = _normalise_scope_text(earlier_user_text)
+    if not latest or len(latest) > 240:
+        return False
+    if _contains_term(latest, _HARD_OFF_TOPIC_TERMS + _PROMPT_ATTACK_TERMS):
+        return False
+    if not (_contains_term(earlier, _SCOPE_STRONG_TERMS) or _latest_is_in_scope(earlier_user_text)):
+        return False
+    return _contains_term(latest, _FOLLOWUP_TERMS)
 
 
 def assistant_scope_reply(payload: AssistantChatRequest) -> str | None:
-    """Return a local, no-provider reply when a public-chat request is clearly outside the service scope."""
-    latest_user_text = next(
-        (message.content for message in reversed(payload.messages) if message.role == "user"),
-        "",
-    )
+    """Return a local no-provider reply when the latest request is outside scope.
+
+    Classification deliberately starts with the newest user message.  A prior
+    supplier question must not become a permanent pass that lets a later request
+    about cars, recipes or coding consume paid API budget.
+    """
+    user_messages = [message.content for message in payload.messages if message.role == "user"]
+    latest_user_text = user_messages[-1] if user_messages else ""
     if _requests_specific_vendor(latest_user_text):
         return localized_error(payload.language, "vendor")
 
-    user_history = " ".join(message.content for message in payload.messages if message.role == "user")
-    normalised_history = _normalise_scope_text(user_history)
     latest_normalised = _normalise_scope_text(latest_user_text)
-
-    # Any strong commercial-dispute cue in the current conversation keeps short follow-ups in scope.
-    if _contains_term(normalised_history, _SCOPE_STRONG_TERMS):
-        return None
-
-    # A China reference alone is not enough: travel, politics, language and culture are not this service's scope.
-    has_china_context = _contains_term(normalised_history, _CHINA_TERMS)
-    has_commercial_context = any(
-        token in normalised_history
-        for token in ("buy", "order", "goods", "product", "payment", "business", "trade", "покуп", "товар", "оплат", "бизнес", "торгов")
-    )
-    if has_china_context and has_commercial_context:
-        return None
-
-    if _contains_term(latest_normalised, _OFF_TOPIC_TERMS):
+    # Explicit unrelated intent (repair instructions, code, entertainment or
+    # prompt extraction) wins even when the text mentions a supplier. Product
+    # nouns alone are not blocked, so a real defect dispute remains in scope.
+    if _contains_term(latest_normalised, _HARD_OFF_TOPIC_TERMS + _PROMPT_ATTACK_TERMS):
         return localized_error(payload.language, "scope")
+    if _has_clear_commercial_scope(latest_user_text):
+        return None
+    if _latest_is_in_scope(latest_user_text):
+        return None
 
-    # Do not spend public API budget on generic chat. A concise redirect invites a relevant question.
+    earlier_user_text = " ".join(user_messages[:-1])
+    if _is_contextual_followup(latest_user_text, earlier_user_text):
+        return None
+
+    # Do not spend public API budget on generic chat. A concise redirect invites
+    # a relevant supplier-transaction question without pretending certainty.
     return localized_error(payload.language, "scope")
 
 

@@ -1,16 +1,28 @@
-# ChinaTradeResolve Document AI v3.7.18
+# ChinaTradeResolve Document AI v3.7.20
 
-Version 3.7.18 prevents normal voice use from being blocked after testing both voice entry points. The AI-assistant microphone and the application-description microphone now use separate short-window quotas, while a higher emergency request guard and the shared daily budget still protect the service from abuse. The strict public-assistant scope guard from v3.7.17 and the v3.7.16 interface fixes are retained.
+Version 3.7.20 closes the remaining short-follow-up and mixed-topic bypasses in the public assistant while preserving legitimate supplier and product-quality disputes. It accepts ordinary transaction language even when the visitor omits the words “China” or “supplier”, re-checks every new message so an earlier relevant question cannot unlock unrelated chat, separates personal daily allowances from larger site-wide emergency budgets, and shows a browser-supported live speech preview while audio is being recorded.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
+
+## Scope, budgets and live voice preview in v3.7.20
+
+- The latest message is always classified independently; explicit car, recipe, coding and other unrelated requests are blocked even after a valid supplier discussion.
+- Implicit transaction questions such as “I paid but the goods never arrived” and “How can I check a company before payment?” are accepted without requiring the visitor to repeat “Chinese supplier”.
+- Product names do not cause false rejections when the message clearly describes a supplier defect, refund or due-diligence issue; an unrelated repair tutorial remains outside scope.
+- Text chat uses a browser-session short-window limit plus a generous IP emergency flood guard, so people behind one office or mobile network do not normally block each other.
+- Assistant, voice-assistant and application-description daily usage has separate per-browser allowances and larger site-wide emergency ceilings.
+- Document analysis has a per-case daily allowance and a larger global emergency ceiling.
+- `/health` no longer publishes exact AI budgets or usage counts; `/ready` remains the deployment/readiness gate and Docker now checks it.
+- While recording, supported browsers show interim words and an elapsed timer. The final server transcription remains authoritative and editable.
+- Browsers without live speech recognition still record normally and display a clear fallback message.
 
 ## Voice transcription rate-limit fix in v3.7.18
 
 - Assistant voice questions and application-description dictation use separate rate-limit buckets.
 - Each purpose allows up to ten validated transcription attempts per thirty minutes per browser session.
 - A separate high-frequency guard still blocks automated request floods before expensive processing.
-- The shared daily transcription budget remains unchanged.
+- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.20.
 - Voice-specific rate-limit messages now explain that the restriction concerns recordings, not ordinary chat messages.
 
 ## Public AI scope control in v3.7.17
@@ -65,7 +77,7 @@ The public assistant now rejects unrelated general-chat requests locally before 
 ## Security, privacy and cost hardening in v3.6.8
 
 - PDF files are parsed with pikepdf, including compressed object streams; malformed, encrypted, active-content and embedded-file PDFs are rejected. Limits are 100 PDF pages per file and 200 per case.
-- Document analysis has an atomic database-backed daily budget (`MAX_DAILY_DOCUMENT_ANALYSES`), records provider token usage and sends PDFs with `detail=low` by default.
+- Document analysis has atomic per-case and site-wide budgets (`MAX_DAILY_DOCUMENT_ANALYSES_PER_CASE` and `MAX_DAILY_DOCUMENT_ANALYSES_GLOBAL`), records provider token usage and sends PDFs with `detail=low` by default.
 - Triage never automatically declines a person because of an evidence-handling keyword, and monetary escalation is currency-aware for USD, EUR, GBP, CNY and RSD.
 - Cloudflare Turnstile can protect the public application form when both keys are configured.
 - The private case link supports withdrawal of future AI consent, removal of the stored AI report and immediate permanent case deletion.
@@ -82,7 +94,7 @@ Version 3.7.0 adds a fail-closed public launch mode, a machine-readable `/ready`
 - The HTTPS email bridge now rejects non-HTTP schemes, remote plain HTTP, embedded credentials and control characters before any network access.
 - External support links reject embedded credentials and malformed whitespace; plain HTTP remains limited to loopback development addresses.
 - Notification SQL uses static statements for both SQLite and PostgreSQL lease paths.
-- The development test client uses the pinned `httpx2` compatibility package required by the current Starlette release.
+- The development test client uses the pinned official `httpx` package; the unused `httpx2` dependency was removed in v3.7.19.
 
 
 
@@ -334,7 +346,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.18
+cd ChinaTradeResolve_Document_AI_v3.7.20
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -360,11 +372,13 @@ OPENAI_MODEL=<model available in your OpenAI project>
 # Optional: use a different model for the assistant.
 OPENAI_ASSISTANT_MODEL=
 OPENAI_MODERATION_MODEL=omni-moderation-latest
-MAX_DAILY_AI_ASSISTANT_REQUESTS=40
+MAX_DAILY_AI_ASSISTANT_REQUESTS_PER_SESSION=20
+MAX_DAILY_AI_ASSISTANT_GLOBAL_REQUESTS=500
 ENABLE_VOICE_INPUT=true
 OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
 VOICE_MAX_SECONDS=120
-MAX_DAILY_VOICE_TRANSCRIPTIONS=20
+MAX_DAILY_VOICE_TRANSCRIPTIONS_PER_SESSION=10
+MAX_DAILY_VOICE_TRANSCRIPTIONS_GLOBAL=200
 ```
 
 Keep `OPENAI_BILLING_READY=false` while the API account is unfunded. When `OPENAI_ASSISTANT_MODEL` is empty, the assistant uses `OPENAI_MODEL`. After funding and deployment, `/health` must report `"openai_billing_ready": true` and `"ai_assistant_enabled": true`. Never place the API key in HTML, JavaScript, GitHub or screenshots.

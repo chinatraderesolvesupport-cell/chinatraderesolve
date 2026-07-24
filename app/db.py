@@ -1024,6 +1024,8 @@ def claim_document_analysis(
     document_count: int,
     allow_completed: bool = False,
     max_daily_analyses: int | None = None,
+    max_daily_analyses_per_case: int | None = None,
+    max_daily_analyses_global: int | None = None,
 ) -> str | None:
     """Atomically claim the single analysis slot and return its unique run token."""
     now = utcnow()
@@ -1044,9 +1046,15 @@ def claim_document_analysis(
             return None
         if current and current["status"] == "completed" and not allow_completed:
             return None
-        if max_daily_analyses:
-            counter_key = f"document_analysis:{datetime.now(timezone.utc).date().isoformat()}"
-            counter = execute(
+        # Keep a small per-case allowance and a much larger site-wide emergency
+        # budget.  One active user can no longer exhaust document analysis for
+        # every other case on the site.  ``max_daily_analyses`` remains as a
+        # backward-compatible alias for the global ceiling.
+        global_limit = max_daily_analyses_global or max_daily_analyses
+        case_limit = max_daily_analyses_per_case
+        today = datetime.now(timezone.utc).date().isoformat()
+        if case_limit:
+            case_counter = execute(
                 conn,
                 """
                 INSERT INTO usage_counters(counter_key,count) VALUES (?,1)
@@ -1054,10 +1062,23 @@ def claim_document_analysis(
                 WHERE usage_counters.count<?
                 RETURNING count
                 """,
-                (counter_key, int(max_daily_analyses)),
+                (f"document_analysis:case:{case_id}:{today}", int(case_limit)),
             ).fetchone()
-            if not counter:
-                raise DailyAnalysisLimitError("The daily document-analysis budget has been reached")
+            if not case_counter:
+                raise DailyAnalysisLimitError("The daily document-analysis allowance for this case has been reached")
+        if global_limit:
+            global_counter = execute(
+                conn,
+                """
+                INSERT INTO usage_counters(counter_key,count) VALUES (?,1)
+                ON CONFLICT(counter_key) DO UPDATE SET count=usage_counters.count+1
+                WHERE usage_counters.count<?
+                RETURNING count
+                """,
+                (f"document_analysis:global:{today}", int(global_limit)),
+            ).fetchone()
+            if not global_counter:
+                raise DailyAnalysisLimitError("The site-wide document-analysis emergency budget has been reached")
         if current:
             execute(
                 conn,
@@ -1077,7 +1098,7 @@ def claim_document_analysis(
 
 
 def get_daily_analysis_usage() -> int:
-    counter_key = f"document_analysis:{datetime.now(timezone.utc).date().isoformat()}"
+    counter_key = f"document_analysis:global:{datetime.now(timezone.utc).date().isoformat()}"
     with transaction() as conn:
         row = execute(
             conn, "SELECT count FROM usage_counters WHERE counter_key=?", (counter_key,)
@@ -1087,6 +1108,53 @@ def get_daily_analysis_usage() -> int:
 
 class DailyUsageLimitError(RuntimeError):
     """Raised when a public AI feature reaches its configured UTC-day budget."""
+
+
+def _claim_usage_counter(conn: Any, counter_key: str, maximum: int) -> int:
+    counter = execute(
+        conn,
+        """
+        INSERT INTO usage_counters(counter_key,count) VALUES (?,1)
+        ON CONFLICT(counter_key) DO UPDATE SET count=usage_counters.count+1
+        WHERE usage_counters.count<?
+        RETURNING count
+        """,
+        (counter_key, int(maximum)),
+    ).fetchone()
+    if not counter:
+        raise DailyUsageLimitError(f"The daily usage budget for {counter_key} has been reached")
+    return int(counter["count"])
+
+
+def claim_daily_usage_for_subject(
+    counter_name: str,
+    subject: str,
+    max_daily_for_subject: int,
+    max_daily_global: int,
+) -> tuple[int, int]:
+    """Atomically claim personal and global daily budgets for a public AI action.
+
+    ``subject`` is a short server-side hash of the browser session, never a raw
+    IP address or cookie value.  If either ceiling is exhausted the transaction
+    rolls back, so the other counter is not consumed accidentally.
+    """
+    if not re.fullmatch(r"[a-z][a-z0-9_]{1,63}", counter_name):
+        raise ValueError("Invalid usage-counter name")
+    if not re.fullmatch(r"[a-f0-9]{16,64}", subject):
+        raise ValueError("Invalid usage subject")
+    today = datetime.now(timezone.utc).date().isoformat()
+    with transaction() as conn:
+        personal = _claim_usage_counter(
+            conn,
+            f"{counter_name}:subject:{subject}:{today}",
+            max_daily_for_subject,
+        )
+        global_count = _claim_usage_counter(
+            conn,
+            f"{counter_name}:global:{today}",
+            max_daily_global,
+        )
+        return personal, global_count
 
 
 def claim_daily_usage(counter_name: str, max_daily: int) -> int:

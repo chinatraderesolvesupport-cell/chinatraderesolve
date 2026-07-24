@@ -119,10 +119,10 @@ def test_health_and_home_free_access():
     assert health.json()["document_analysis_enabled"] is False
     home = client.get("/")
     assert home.status_code == 200
-    assert "Заявки рассматриваются бесплатно" in home.text
+    assert "Ограниченный бесплатный доступ" in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
-    assert "Оплата услуг сейчас не принимается. Ключевые документы запрашиваются только после предварительного отбора заявки." in home.text
+    assert "Платные услуги пока не предоставляются. Документы загружаются только на закрытой странице дела." in home.text
     assert "Через этот прототип не принимаются платежи и документы" not in home.text
     assert "Статус прототипа" not in home.text
     assert health.json()["email_delivery_configured"] is False
@@ -1947,9 +1947,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.32"
+    assert health.json()["version"] == "3.7.33"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.32"
+    assert health.headers["x-app-version"] == "3.7.33"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4615,7 +4615,7 @@ def test_targeted_landing_copy_is_shorter_precise_and_transparent():
     response = client.get("/")
     assert response.status_code == 200
     assert "Что входит в предварительную оценку материалов" in response.text
-    assert "Отправьте материалы на предварительную оценку" in response.text
+    assert "Подайте заявку на предварительную оценку материалов" in response.text
     assert "Что входит в бесплатный анализ" not in response.text
     assert "Отправьте дело на бесплатный анализ" not in response.text
     assert 'class="final-cta"' not in response.text
@@ -4889,3 +4889,50 @@ def test_gitignore_protects_secrets_and_local_database():
     assert "data/*.db" in content
     assert ".venv/" in content
     assert "__pycache__/" in content
+
+
+def test_home_promotes_localized_guides_without_reintroducing_old_copy():
+    page = client.get('/?lang=ru')
+    assert page.status_code == 200
+    assert 'id="guides-preview"' in page.text
+    assert 'href="/ru/guides/alibaba-dispute-evidence"' in page.text
+    assert 'href="/ru/guides/supplier-not-shipped"' in page.text
+    assert 'href="/ru/guides/product-quality-dispute"' in page.text
+    assert 'data-i18n="nav_guides"' in page.text
+    assert 'Подайте заявку на предварительную оценку материалов' in page.text
+    assert 'Платные услуги пока не предоставляются.' in page.text
+    assert 'Основная заявка рассматривается без оплаты.' in page.text
+    for forbidden in (
+        'Отправьте дело на бесплатный анализ',
+        'Что входит в бесплатный анализ',
+        'Платёжный сервис подключается одной настройкой сервера',
+        'Через этот прототип не принимаются платежи и документы',
+    ):
+        assert forbidden not in page.text
+
+
+def test_home_guide_links_follow_server_and_client_language():
+    german = client.get('/?lang=de')
+    assert german.status_code == 200
+    assert 'href="/de/guides"' in german.text
+    assert 'href="/de/guides/alibaba-dispute-evidence"' in german.text
+    assert "document.querySelectorAll('[data-guide-slug]')" in german.text
+    assert "`/${lang}/guides/${link.dataset.guideSlug}`" in german.text
+
+
+def test_guide_cta_targets_real_application_section():
+    detail = client.get('/ru/guides/alibaba-dispute-evidence')
+    assert detail.status_code == 200
+    assert '/?lang=ru#submit' in detail.text
+    assert '#apply' not in detail.text
+
+
+def test_ci_workflow_is_packaged_and_runs_compile_and_tests():
+    workflow = Path(__file__).resolve().parent.parent / '.github' / 'workflows' / 'ci.yml'
+    assert workflow.exists()
+    content = workflow.read_text(encoding='utf-8')
+    assert 'actions/checkout@v4' in content
+    assert 'actions/setup-python@v5' in content
+    assert 'python -m pip install -r requirements-dev.txt' in content
+    assert 'python -m compileall -q app scripts tests' in content
+    assert 'python -m pytest -q' in content

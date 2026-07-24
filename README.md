@@ -1,13 +1,14 @@
-# ChinaTradeResolve Document AI v3.7.32
+# ChinaTradeResolve Document AI v3.7.33
 
-Version 3.7.32 separates container liveness from public-launch readiness: Docker checks the lightweight `/health` endpoint, while `/ready` remains fail-closed until every launch and indexing requirement is configured. It retains the multilingual guides, campaign attribution, feedback centre, mobile layout, document workflow, voice controls and all previous fixes.
+Version 3.7.33 improves the public landing page before promotion: it adds a visible multilingual guide preview, tightens wording about free access, documents and voluntary support, and fixes article calls to action so they jump to the real application section. It retains the `/health` Docker check, strict `/ready` launch gate and all previous security and document-workflow protections.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
 
-## Search, guides and attribution in v3.7.32
+## Landing page and guides in v3.7.33
 
+- The home page now promotes three practical guides and links to the full language-specific catalogue.
 - Four practical supplier-dispute guides are available in English, Russian, French, German, Spanish and Serbian.
 - Each localized page has a canonical URL, reciprocal `hreflang` links and an `x-default` fallback.
 - Guide pages include Article and Breadcrumb structured data, publication/modification dates and a dedicated organization logo.
@@ -393,7 +394,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.32
+cd ChinaTradeResolve_Document_AI_v3.7.33
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -551,4 +552,4 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.32 включает полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.33 включает полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.

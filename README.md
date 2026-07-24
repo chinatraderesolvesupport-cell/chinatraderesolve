@@ -1,11 +1,11 @@
-# ChinaTradeResolve Document AI v3.7.22
+# ChinaTradeResolve Document AI v3.7.23
 
-Version 3.7.22 keeps the voice stop control visible while live speech text grows on mobile, and also retains the multi-turn Responses API, scope, budget and live voice-preview protections introduced in the previous releases. It accepts ordinary transaction language even when the visitor omits the words “China” or “supplier”, re-checks every new message so an earlier relevant question cannot unlock unrelated chat, separates personal daily allowances from larger site-wide emergency budgets, and shows a browser-supported live speech preview while audio is being recorded.
+Version 3.7.23 clarifies that service payments are not currently accepted, that key documents are requested only after preliminary screening, and that voluntary project support is neither payment for services nor a factor in case priority. It also retains the always-visible voice stop controls, multi-turn Responses API fixes, scope filtering, personal budgets and live voice preview from the previous releases.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
-## Always-visible voice controls, scope and budgets in v3.7.22
+## Always-visible voice controls, scope and budgets in v3.7.23
 
 - During assistant dictation, the red “Stop recording” control remains sticky and visible while the live transcript scrolls.
 - During application-description dictation, the stop control is fixed above the mobile safe area until recording ends.
@@ -25,7 +25,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - Assistant voice questions and application-description dictation use separate rate-limit buckets.
 - Each purpose allows up to ten validated transcription attempts per thirty minutes per browser session.
 - A separate high-frequency guard still blocks automated request floods before expensive processing.
-- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.22.
+- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.23.
 - Voice-specific rate-limit messages now explain that the restriction concerns recordings, not ordinary chat messages.
 
 ## Public AI scope control in v3.7.17
@@ -349,7 +349,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.22
+cd ChinaTradeResolve_Document_AI_v3.7.23
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

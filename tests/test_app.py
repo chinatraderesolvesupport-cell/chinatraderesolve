@@ -120,6 +120,8 @@ def test_health_and_home_free_access():
     assert "Заявки рассматриваются бесплатно" in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
+    assert "Оплата услуг сейчас не принимается. Ключевые документы запрашиваются только после предварительного отбора заявки." in home.text
+    assert "Через этот прототип не принимаются платежи и документы" not in home.text
     assert health.json()["email_delivery_configured"] is False
     assert health.json()["secure_configuration"] is True
 
@@ -1859,9 +1861,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.22"
+    assert health.json()["version"] == "3.7.23"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.22"
+    assert health.headers["x-app-version"] == "3.7.23"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()

@@ -1,11 +1,11 @@
-# ChinaTradeResolve Document AI v3.7.20
+# ChinaTradeResolve Document AI v3.7.21
 
-Version 3.7.20 closes the remaining short-follow-up and mixed-topic bypasses in the public assistant while preserving legitimate supplier and product-quality disputes. It accepts ordinary transaction language even when the visitor omits the words “China” or “supplier”, re-checks every new message so an earlier relevant question cannot unlock unrelated chat, separates personal daily allowances from larger site-wide emergency budgets, and shows a browser-supported live speech preview while audio is being recorded.
+Version 3.7.21 fixes multi-turn Responses API history encoding, recognises Cyrillic “Алибаба” and common non-delivery wording, and retains the scope, budget and live voice-preview protections introduced in the previous release. It accepts ordinary transaction language even when the visitor omits the words “China” or “supplier”, re-checks every new message so an earlier relevant question cannot unlock unrelated chat, separates personal daily allowances from larger site-wide emergency budgets, and shows a browser-supported live speech preview while audio is being recorded.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
-## Scope, budgets and live voice preview in v3.7.20
+## Scope, budgets and live voice preview in v3.7.21
 
 - The latest message is always classified independently; explicit car, recipe, coding and other unrelated requests are blocked even after a valid supplier discussion.
 - Implicit transaction questions such as “I paid but the goods never arrived” and “How can I check a company before payment?” are accepted without requiring the visitor to repeat “Chinese supplier”.
@@ -22,7 +22,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - Assistant voice questions and application-description dictation use separate rate-limit buckets.
 - Each purpose allows up to ten validated transcription attempts per thirty minutes per browser session.
 - A separate high-frequency guard still blocks automated request floods before expensive processing.
-- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.20.
+- Per-browser daily allowances and larger site-wide emergency budgets are now separated in v3.7.21.
 - Voice-specific rate-limit messages now explain that the restriction concerns recordings, not ordinary chat messages.
 
 ## Public AI scope control in v3.7.17
@@ -346,7 +346,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.20
+cd ChinaTradeResolve_Document_AI_v3.7.21
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

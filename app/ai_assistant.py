@@ -181,7 +181,7 @@ _SCOPE_STRONG_TERMS = (
     "dispute", "complaint", "claim", "evidence", "document", "documents", "contract", "due diligence", "red flag",
     "free review", "free check", "free application", "case status", "suitable for my situation", "how does the service work", "how does it work", "chinatraderesolve",
     # Russian
-    "поставщик", "продавец", "фабрик", "производител", "маркетплейс", "заказ", "инвойс", "счёт",
+    "поставщик", "продавец", "фабрик", "производител", "маркетплейс", "алибаб", "заказ", "инвойс", "счёт",
     "поставк", "доставк", "инспекц", "спецификац", "брак", "подделк", "возврат", "спор",
     "жалоб", "претензи", "доказательств", "документ", "договор", "контракт", "проверить поставщика",
     "проверка поставщика", "красн", "заявк", "статус дела", "подходит ли сервис", "бесплатная проверка", "как проходит проверка", "как работает сервис",
@@ -221,7 +221,7 @@ _TRANSACTION_TERMS = (
 
 _DISPUTE_OR_CHECK_TERMS = (
     "not delivered", "not received", "never arrived", "did not send", "won't refund", "will not refund", "refund", "return my money", "defect", "wrong item", "wrong material", "wrong colour", "wrong color", "does not match", "not as specified", "not responding", "disappeared", "verify", "check the company", "before payment", "scam", "fraud", "risk",
-    "не прислал", "не прислали", "не достав", "не получил", "не получила", "не возвращ", "вернуть деньги", "возврат", "брак", "не тот", "не соответствует", "не совпадает", "другой цвет", "не отвечает", "пропал", "проверить компан", "перед оплат", "мошенн", "обман", "риск",
+    "не прислал", "не прислали", "не пришел", "не пришёл", "не пришли", "не достав", "не получил", "не получила", "не возвращ", "вернуть деньги", "возврат", "брак", "не тот", "не соответствует", "не совпадает", "другой цвет", "не отвечает", "пропал", "проверить компан", "перед оплат", "мошенн", "обман", "риск",
     "non livré", "non livre", "pas reçu", "pas recu", "ne rembourse", "remboursement", "défect", "defect", "vérifier", "verifier", "avant paiement", "fraude", "risque",
     "nicht geliefert", "nicht erhalten", "keine erstattung", "erstattung", "mangel", "falsch", "prüfen", "prufen", "vor der zahlung", "betrug", "risiko",
     "no entregado", "no recibido", "no reembolsa", "reembolso", "defecto", "incorrecto", "verificar", "antes de pagar", "fraude", "riesgo",
@@ -596,10 +596,15 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
         }
     ]
     for message in payload.messages[-settings.ai_assistant_history_messages :]:
+        # The Responses API distinguishes new input from prior model output.
+        # User messages are input_text; assistant history must be output_text.
+        # Sending an assistant message as input_text causes a 400 invalid_value
+        # error on the second turn of a conversation.
+        content_type = "output_text" if message.role == "assistant" else "input_text"
         input_messages.append(
             {
                 "role": message.role,
-                "content": [{"type": "input_text", "text": message.content}],
+                "content": [{"type": content_type, "text": message.content}],
             }
         )
 

@@ -903,6 +903,7 @@ def test_ai_assistant_scope_guard_allows_plain_language_quality_disputes():
         "Оплатил товар, но его не прислали. Что делать?",
         "Мне не возвращают деньги.",
         "Как проверить компанию перед оплатой?",
+        "Я купил на Алибабе товары, оплатил их, но они так и не пришли.",
     ):
         payload = AssistantChatRequest.model_validate(
             {"language": "ru", "messages": [{"role": "user", "content": request}]}
@@ -953,6 +954,7 @@ def test_ai_assistant_scope_guard_accepts_implicit_transaction_language_and_rech
         "Оплатил товар, но его не прислали. Что делать?",
         "Мне не возвращают деньги.",
         "Как проверить компанию перед оплатой?",
+        "Я купил на Алибабе товары, оплатил их, но они так и не пришли.",
     ):
         payload = AssistantChatRequest.model_validate({
             "language": "ru",
@@ -1230,7 +1232,9 @@ def test_ai_assistant_responses_api_mock(monkeypatch):
         {
             "language": "en",
             "messages": [
-                {"role": "user", "content": "What documents should I prepare?"}
+                {"role": "user", "content": "My supplier sent defective goods."},
+                {"role": "assistant", "content": "Preserve the written specification and photos."},
+                {"role": "user", "content": "What documents should I prepare?"},
             ],
         }
     )
@@ -1243,6 +1247,18 @@ def test_ai_assistant_responses_api_mock(monkeypatch):
     assert captured["body"]["reasoning"] == {"effort": "none"}
     assert captured["body"]["text"] == {"verbosity": "low"}
     assert captured["body"]["input"][0]["role"] == "developer"
+    assert captured["body"]["input"][1] == {
+        "role": "user",
+        "content": [{"type": "input_text", "text": "My supplier sent defective goods."}],
+    }
+    assert captured["body"]["input"][2] == {
+        "role": "assistant",
+        "content": [{"type": "output_text", "text": "Preserve the written specification and photos."}],
+    }
+    assert captured["body"]["input"][3] == {
+        "role": "user",
+        "content": [{"type": "input_text", "text": "What documents should I prepare?"}],
+    }
     assert "not legal advice" in captured["body"]["input"][0]["content"][0]["text"]
     assert "Answer only about commercial disputes" in captured["body"]["input"][0]["content"][0]["text"]
     assert "Never name, rank, advertise, endorse" in captured["body"]["input"][0]["content"][0]["text"]
@@ -1836,9 +1852,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.20"
+    assert health.json()["version"] == "3.7.21"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.20"
+    assert health.headers["x-app-version"] == "3.7.21"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()

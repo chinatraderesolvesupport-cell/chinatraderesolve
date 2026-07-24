@@ -1,29 +1,40 @@
 <!doctype html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="index,follow">
-  <title>Политика конфиденциальности</title>
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <title>{{ copy.title }} — ChinaTradeResolve</title>
+  <meta name="description" content="{{ copy.meta_description }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% for item in alternates %}<link rel="alternate" hreflang="{{ item.lang }}" href="{{ item.url }}">{% endfor %}
+  <link rel="alternate" hreflang="x-default" href="{{ base_url }}/privacy?lang=en">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ copy.title }}">
+  <meta property="og:description" content="{{ copy.meta_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:image" content="{{ base_url }}/static/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
   <style>body{font-family:Inter,Arial,sans-serif;background:#f8fafc;color:#0f172a;margin:0;line-height:1.6}.page{width:min(900px,92%);margin:40px auto;background:white;padding:clamp(24px,5vw,40px);border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 12px 36px #0001}h1{margin-top:0;line-height:1.2}h2{margin-top:28px}.notice{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:12px;border-radius:10px}a{color:#0f766e}.top{display:flex;justify-content:flex-end}.lang{padding:8px;border:1px solid #94a3b8;border-radius:8px;background:white}.controller{background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px}</style>
 </head>
 <body><div class="page">
-  <div class="top"><select id="lang" class="lang" aria-label="Язык"><option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option></select></div>
-  <h1 data-k="title">Политика конфиденциальности</h1>
-  <p class="notice" data-k="notice">Действует с 22 июля 2026 года. Политика описывает текущий бесплатный этап сервиса.</p>
-  <h2 data-k="h_controller">Кто обрабатывает данные</h2>
-  <p data-k="p_controller">ChinaTradeResolve — независимый проект коммерческой помощи в спорах.</p>
+  <div class="top"><label><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">{{ copy.language_label }}</span><select id="lang" class="lang" aria-label="{{ copy.language_label }}" onchange="location.href='/privacy?lang='+encodeURIComponent(this.value)">{% for code,name in language_names.items() %}<option value="{{ code }}" {% if code==lang %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label></div>
+  <h1>{{ copy.title }}</h1>
+  <p class="notice">{{ copy.notice }}</p>
+  <h2>{{ copy.h_controller }}</h2>
+  <p>{{ copy.p_controller }}</p>
   {% if privacy_configuration_complete %}
   <div class="controller"><strong>{{ controller_name }}</strong><br>{{ controller_address }}{% if controller_registration %}<br>{{ controller_registration }}{% endif %}<br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
   {% else %}
-  <div class="controller"><strong>{{ controller_name }}</strong><br><span data-k="development_notice">This local preview is not accepting public applications. Operator details must be configured before public launch.</span><br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
+  <div class="controller"><strong>{{ controller_name }}</strong><br><span>{{ copy.development_notice }}</span><br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
   {% endif %}
-  <h2 data-k="h_data">Какие данные собираются</h2><p data-k="p_data">На этапе заявки собираются имя, электронная почта, страна, язык, сведения о заказе и краткое описание спора. После отбора могут быть отдельно запрошены до 20 ключевых файлов. Платёжные данные банковских карт не собираются.</p>
-  <h2 data-k="h_purpose">Зачем используются данные</h2><p data-k="p_purpose">Данные используются для регистрации заявки, предварительной классификации, связи с заявителем, рассмотрения дела, защиты сервиса от злоупотреблений и выполнения обязательных требований закона.</p>
-  <h2 data-k="h_ai">Использование ИИ</h2><p data-k="p_ai">При отдельном добровольном согласии ИИ может систематизировать документы. Публичный помощник также может расшифровать голосовую запись: аудио передаётся только для расшифровки, не сохраняется в базе дел и удаляется из памяти сервера сразу после обработки. Редактируемый текст передаётся помощнику только после нажатия «Отправить». Важные выводы требуют человеческой проверки.</p>
-  <h2 data-k="h_share">Кому могут передаваться данные</h2><p data-k="p_share">Доступ получают только необходимые поставщики инфраструктуры, электронной почты и настроенного ИИ. Данные не продаются и не передаются поставщику или площадке без вашего решения.</p>
-  <h2 data-k="h_store">Хранение и удаление</h2><p data-k="p_store">Закрытые дела обезличиваются через {{ retention_days }} дней, любые неактивные дела — через {{ inactive_retention_days }} дней. По секретной ссылке статуса можно немедленно удалить дело и его файлы.</p>
-  <h2 data-k="h_rights">Ваши права</h2><p data-k="p_rights">По секретной ссылке можно отозвать согласие на будущую ИИ-обработку и удалить сохранённый ИИ-отчёт либо безвозвратно удалить всё дело. Для доступа и исправления напишите на контактный адрес и укажите номер дела.</p>
-  <h2 data-k="h_security">Безопасность</h2><p data-k="p_security">Не отправляйте пароли, seed-фразы, приватные ключи, полные номера банковских карт или материалы, не относящиеся к спору. Интернет-передача данных не может быть абсолютно безопасной.</p>
-  <p><a data-k="back" data-back href="/">Вернуться на сайт</a></p>
-</div><script src="/static/legal-i18n-v2.js"></script><script>CTR_BOOT_LEGAL("privacy");</script></body></html>
+  <h2>{{ copy.h_data }}</h2><p>{{ copy.p_data }}</p>
+  <h2>{{ copy.h_purpose }}</h2><p>{{ copy.p_purpose }}</p>
+  <h2>{{ copy.h_ai }}</h2><p>{{ copy.p_ai }}</p>
+  <h2>{{ copy.h_share }}</h2><p>{{ copy.p_share }}</p>
+  <h2>{{ copy.h_store }}</h2><p>{{ copy.p_store }}</p>
+  <h2>{{ copy.h_rights }}</h2><p>{{ copy.p_rights }}</p>
+  <h2>{{ copy.h_security }}</h2><p>{{ copy.p_security }}</p>
+  <p><a href="/?lang={{ lang }}">{{ copy.back }}</a></p>
+</div></body></html>

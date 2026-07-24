@@ -53,6 +53,7 @@ from .db import (
     DocumentLimitError,
     get_audit,
     get_case,
+    get_case_acquisition,
     get_case_by_public,
     get_case_document,
     get_document_analysis,
@@ -72,7 +73,9 @@ from .db import (
     save_feedback,
     set_document_analysis_status,
     soft_delete_expired,
+    traffic_source_counts,
     update_status,
+    using_postgres,
 )
 from .document_analysis import (
     DocumentAnalysisConfigurationError,
@@ -95,6 +98,7 @@ from .notifications import (
     deliver_pending,
     email_delivery_is_configured,
 )
+from .privacy_content import PRIVACY_COPY, SUPPORTED_PRIVACY_LANGUAGES
 from .schemas import (
     ApplicationCreate,
     AssistantChatRequest,
@@ -103,6 +107,16 @@ from .schemas import (
     VoiceTranscriptionResponse,
 )
 from .security import SlidingWindowRateLimiter, client_key
+from .seo_content import (
+    GUIDE_CARD_COPY,
+    GUIDE_DETAIL_COPY,
+    GUIDE_HUB_COPY,
+    GUIDE_MODIFIED_DATE,
+    GUIDE_PUBLISHED_DATE,
+    GUIDES,
+    HOME_SEO,
+    SUPPORTED_LANGUAGES,
+)
 from .triage import merge_triage, rules_triage
 from .voice_transcription import (
     LANGUAGE_CODES,
@@ -116,8 +130,17 @@ from .voice_transcription import (
 )
 
 
+PUBLIC_LANGUAGE_NAMES = {
+    "en": "English",
+    "ru": "Русский",
+    "fr": "Français",
+    "de": "Deutsch",
+    "es": "Español",
+    "sr": "Srpski",
+}
+
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.28"
+APP_VERSION = "3.7.32"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -334,11 +357,7 @@ def privacy_configuration_is_complete() -> bool:
 
 
 def database_is_available() -> bool:
-    """Return whether the configured database accepts a minimal query.
-
-    Readiness must include the application's persistent store. Configuration-only
-    checks can otherwise advertise an instance as ready during a database outage.
-    """
+    """Return whether the selected database backend accepts a minimal query."""
     try:
         conn = connect()
         try:
@@ -351,6 +370,15 @@ def database_is_available() -> bool:
         return False
 
 
+def database_backend_name() -> str:
+    return "postgresql" if using_postgres() else "sqlite"
+
+
+def persistent_database_is_ready() -> bool:
+    """Require PostgreSQL for launch readiness; SQLite is local/test storage only."""
+    return bool(using_postgres() and database_is_available())
+
+
 def launch_readiness_checks() -> dict[str, bool]:
     """Expose non-secret pre-launch requirements in one auditable place."""
     return {
@@ -359,7 +387,7 @@ def launch_readiness_checks() -> dict[str, bool]:
         "https_public_url": settings.public_base_url.startswith("https://"),
         "email_delivery": email_delivery_is_configured(),
         "bot_protection": turnstile_is_enabled(),
-        "database_storage": database_is_available(),
+        "database_storage": persistent_database_is_ready(),
     }
 
 
@@ -1194,6 +1222,16 @@ def public_case_progress(
 def home(request: Request) -> HTMLResponse:
     if public_launch_is_blocked():
         return unavailable_until_configured(request)
+    requested_language = (request.query_params.get("lang") or "ru").strip().lower()
+    page_language = requested_language if requested_language in SUPPORTED_LANGUAGES else "ru"
+    seo = HOME_SEO[page_language]
+    base_url = settings.public_base_url.rstrip("/")
+    canonical_url = base_url + ("/" if page_language == "ru" else f"/?lang={page_language}")
+    language_alternates = [
+        {"lang": code, "url": base_url + ("/" if code == "ru" else f"/?lang={code}")}
+        for code in SUPPORTED_LANGUAGES
+    ]
+    x_default_url = base_url + "/"
     wallets = crypto_wallets()
     return templates.TemplateResponse(
         request=request,
@@ -1211,9 +1249,123 @@ def home(request: Request) -> HTMLResponse:
             "document_analysis_enabled": document_analysis_is_enabled(),
             "email_delivery_configured": email_delivery_is_configured(),
             "turnstile_site_key": settings.turnstile_site_key if turnstile_is_enabled() else "",
-            "canonical_url": settings.public_base_url + "/",
+            "canonical_url": canonical_url,
+            "page_language": page_language,
+            "seo": seo,
+            "language_alternates": language_alternates,
+            "x_default_url": x_default_url,
+            "social_image_url": base_url + "/static/social-preview.png",
+            "logo_url": base_url + "/static/logo-512.png",
+            "google_site_verification": (settings.google_site_verification or "").strip(),
+            "bing_site_verification": (settings.bing_site_verification or "").strip(),
             "operator_credentials": (settings.operator_credentials or "").strip(),
             "operator_registration": (settings.data_controller_registration or "").strip(),
+        },
+    )
+
+
+@app.get("/{language}/guides", response_class=HTMLResponse)
+def guides_index(language: str, request: Request) -> HTMLResponse:
+    if public_launch_is_blocked():
+        return unavailable_until_configured(request)
+    if language not in SUPPORTED_LANGUAGES:
+        raise HTTPException(status_code=404, detail="Language not found")
+    base_url = settings.public_base_url.rstrip("/")
+    cards = GUIDE_CARD_COPY[language]
+    alternates = [
+        {"lang": code, "url": f"{base_url}/{code}/guides"}
+        for code in SUPPORTED_LANGUAGES
+    ]
+    structured_data = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": GUIDE_HUB_COPY[language]["title"],
+        "description": GUIDE_HUB_COPY[language]["intro"],
+        "url": f"{base_url}/{language}/guides",
+        "inLanguage": language,
+        "isPartOf": {"@type": "WebSite", "name": "ChinaTradeResolve", "url": base_url + "/"},
+        "hasPart": [
+            {"@type": "Article", "name": item["title"], "url": f"{base_url}/{language}/guides/{slug}"}
+            for slug, item in cards.items()
+        ],
+    }
+    return templates.TemplateResponse(
+        request=request,
+        name="guides_index.html",
+        context={
+            "lang": language,
+            "detail_lang": language,
+            "copy": GUIDE_HUB_COPY[language],
+            "cards": cards,
+            "base_url": base_url,
+            "canonical_url": f"{base_url}/{language}/guides",
+            "alternates": alternates,
+            "language_names": PUBLIC_LANGUAGE_NAMES,
+            "structured_data": structured_data,
+        },
+    )
+
+
+@app.get("/{language}/guides/{slug}", response_class=HTMLResponse)
+def guide_detail(language: str, slug: str, request: Request) -> HTMLResponse:
+    if public_launch_is_blocked():
+        return unavailable_until_configured(request)
+    if language not in GUIDES or slug not in GUIDES[language]:
+        raise HTTPException(status_code=404, detail="Guide not found")
+    guide = GUIDES[language][slug]
+    base_url = settings.public_base_url.rstrip("/")
+    canonical_url = f"{base_url}/{language}/guides/{slug}"
+    alternates = [
+        {"lang": code, "url": f"{base_url}/{code}/guides/{slug}"}
+        for code in SUPPORTED_LANGUAGES
+    ]
+    related_guides = [
+        {"slug": related_slug, **GUIDE_CARD_COPY[language][related_slug]}
+        for related_slug in GUIDE_CARD_COPY[language]
+        if related_slug != slug
+    ]
+    article_data = {
+        "@type": "Article",
+        "headline": guide["title"],
+        "description": guide["description"],
+        "inLanguage": language,
+        "mainEntityOfPage": canonical_url,
+        "image": [base_url + "/static/social-preview.png"],
+        "datePublished": GUIDE_PUBLISHED_DATE,
+        "dateModified": GUIDE_MODIFIED_DATE,
+        "author": {"@type": "Organization", "name": "ChinaTradeResolve", "url": base_url + "/"},
+        "publisher": {
+            "@type": "Organization",
+            "name": "ChinaTradeResolve",
+            "url": base_url + "/",
+            "logo": {"@type": "ImageObject", "url": base_url + "/static/logo-512.png"},
+        },
+    }
+    breadcrumb_data = {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": GUIDE_DETAIL_COPY[language]["home"], "item": base_url + "/"},
+            {"@type": "ListItem", "position": 2, "name": GUIDE_DETAIL_COPY[language]["all_guides"], "item": f"{base_url}/{language}/guides"},
+            {"@type": "ListItem", "position": 3, "name": guide["title"], "item": canonical_url},
+        ],
+    }
+    structured_data = {"@context": "https://schema.org", "@graph": [article_data, breadcrumb_data]}
+    return templates.TemplateResponse(
+        request=request,
+        name="guide_detail.html",
+        context={
+            "lang": language,
+            "slug": slug,
+            "guide": guide,
+            "copy": GUIDE_DETAIL_COPY[language],
+            "base_url": base_url,
+            "canonical_url": canonical_url,
+            "alternates": alternates,
+            "language_names": PUBLIC_LANGUAGE_NAMES,
+            "related_guides": related_guides,
+            "published_date": GUIDE_PUBLISHED_DATE,
+            "modified_date": GUIDE_MODIFIED_DATE,
+            "structured_data": structured_data,
         },
     )
 
@@ -1249,6 +1401,8 @@ def health() -> dict[str, Any]:
         "bot_protection_enabled": turnstile_is_enabled(),
         "public_launch_mode": settings.public_launch_mode,
         "public_launch_ready": all(readiness.values()),
+        "database_backend": database_backend_name(),
+        "database_persistent": using_postgres(),
         "readiness_checks": readiness,
     }
 
@@ -1261,6 +1415,14 @@ def readiness() -> JSONResponse:
         {"status": "ready" if ready else "not_ready", "version": APP_VERSION, "checks": checks},
         status_code=200 if ready else 503,
     )
+
+
+@app.get("/indexnow/{key}.txt", response_class=PlainTextResponse)
+def indexnow_key_file(key: str) -> PlainTextResponse:
+    configured = (settings.indexnow_key or "").strip()
+    if not configured or key != configured:
+        raise HTTPException(status_code=404, detail="Not found")
+    return PlainTextResponse(configured, headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
@@ -1284,22 +1446,49 @@ def robots() -> PlainTextResponse:
 
 @app.get("/sitemap.xml")
 def sitemap() -> Response:
-    base_url = xml_escape(settings.public_base_url.rstrip("/"))
-    public_paths = (
-        "/",
-        "/privacy",
-        "/static/terms.html",
-        "/static/refund.html",
-        "/static/ai-notice.html",
-        "/static/disclaimer.html",
-    )
-    urls = "".join(
-        f"<url><loc>{base_url}{path}</loc></url>" for path in public_paths
-    )
+    base_url = settings.public_base_url.rstrip("/")
+
+    def entry(path: str, alternates: dict[str, str] | None = None, *, lastmod: str = GUIDE_MODIFIED_DATE) -> str:
+        alternate_links = "".join(
+            f'<xhtml:link rel="alternate" hreflang="{xml_escape(language)}" href="{xml_escape(base_url + alternate_path)}"/>'
+            for language, alternate_path in (alternates or {}).items()
+        )
+        return (
+            f"<url><loc>{xml_escape(base_url + path)}</loc>"
+            f"<lastmod>{xml_escape(lastmod)}</lastmod>{alternate_links}</url>"
+        )
+
+    home_paths = {
+        language: "/" if language == "ru" else f"/?lang={language}"
+        for language in SUPPORTED_LANGUAGES
+    }
+    home_alternates = {**home_paths, "x-default": "/"}
+    urls: list[str] = [entry(path, home_alternates) for path in home_paths.values()]
+
+    privacy_paths = {
+        language: "/privacy" if language == "ru" else f"/privacy?lang={language}"
+        for language in SUPPORTED_PRIVACY_LANGUAGES
+    }
+    privacy_alternates = {**privacy_paths, "x-default": "/privacy?lang=en"}
+    urls.extend(entry(path, privacy_alternates) for path in privacy_paths.values())
+
+    hub_paths = {language: f"/{language}/guides" for language in SUPPORTED_LANGUAGES}
+    hub_alternates = {**hub_paths, "x-default": "/en/guides"}
+    urls.extend(entry(path, hub_alternates) for path in hub_paths.values())
+
+    for slug in GUIDES["en"]:
+        detail_paths = {
+            language: f"/{language}/guides/{slug}"
+            for language in SUPPORTED_LANGUAGES
+        }
+        detail_alternates = {**detail_paths, "x-default": f"/en/guides/{slug}"}
+        urls.extend(entry(path, detail_alternates) for path in detail_paths.values())
+
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"{urls}</urlset>"
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+        f"{''.join(urls)}</urlset>"
     )
     return Response(
         body,
@@ -1308,21 +1497,46 @@ def sitemap() -> Response:
     )
 
 
+def _request_language(request: Request, supported: tuple[str, ...], default: str = "en") -> str:
+    """Select a deterministic server-rendered language from the explicit query."""
+    query_language = (request.query_params.get("lang") or "").strip().lower().split("-")[0]
+    return query_language if query_language in supported else default
+
+
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_page(request: Request) -> HTMLResponse:
     if public_launch_is_blocked():
         return unavailable_until_configured(request)
+    language = _request_language(request, SUPPORTED_PRIVACY_LANGUAGES, default="ru")
+    base_url = settings.public_base_url.rstrip("/")
+    canonical_path = "/privacy" if language == "ru" else f"/privacy?lang={language}"
+    copy = dict(PRIVACY_COPY[language])
+    copy["p_store"] = copy["p_store"].format(
+        retention_days=settings.retention_days,
+        inactive_retention_days=settings.inactive_retention_days,
+    )
+    alternates = [
+        {
+            "lang": code,
+            "url": base_url + ("/privacy" if code == "ru" else f"/privacy?lang={code}"),
+        }
+        for code in SUPPORTED_PRIVACY_LANGUAGES
+    ]
     return templates.TemplateResponse(
         request=request,
         name="privacy.html",
         context={
+            "lang": language,
+            "copy": copy,
+            "base_url": base_url,
+            "canonical_url": base_url + canonical_path,
+            "alternates": alternates,
+            "language_names": PUBLIC_LANGUAGE_NAMES,
             "controller_name": (settings.data_controller_name or "ChinaTradeResolve").strip(),
             "controller_address": (settings.data_controller_address or "").strip(),
             "controller_registration": (settings.data_controller_registration or "").strip(),
             "privacy_configuration_complete": privacy_configuration_is_complete(),
             "contact_email": settings.contact_email,
-            "retention_days": settings.retention_days,
-            "inactive_retention_days": settings.inactive_retention_days,
         },
     )
 
@@ -2023,6 +2237,14 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
         context={
             "cases": cases,
             "counts": dashboard_counts(),
+            "traffic_sources": traffic_source_counts(),
+            "search_indexing_enabled": public_launch_is_ready(),
+            "google_verification_configured": bool((settings.google_site_verification or "").strip()),
+            "bing_verification_configured": bool((settings.bing_site_verification or "").strip()),
+            "indexnow_configured": bool((settings.indexnow_key or "").strip()),
+            "database_backend": database_backend_name(),
+            "database_persistent": using_postgres(),
+            "database_available": database_is_available(),
             "status_filter": status or "",
             "risk_filter": risk or "",
             "status_labels": STATUS_LABELS,
@@ -2083,6 +2305,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
         name="admin_case.html",
         context={
             "case": case,
+            "acquisition": get_case_acquisition(case_id),
             "triage": json.loads(case["triage_json"]),
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),

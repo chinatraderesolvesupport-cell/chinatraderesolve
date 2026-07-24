@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import os
 import tempfile
 
@@ -17,6 +18,7 @@ os.environ["BTC_ADDRESS"] = "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9"
 os.environ["ETH_ADDRESS"] = "0x69ACE684f28B0A66157aB62aD06e93761a713c6b"
 os.environ["USDT_TRC20_ADDRESS"] = "TV3CgZaUqRqQSAYnzyGaMH3M27AwZwGJNp"
 os.environ["SOL_ADDRESS"] = "Er2tJEVwokTtCBroUi9eAbCRnYCxwVaBqbPDiNaQtMYg"
+os.environ["INDEXNOW_KEY"] = "a0d2be8a24fd4d8798f0af9d9a8e2a72"
 
 from fastapi.testclient import TestClient
 from app.main import app
@@ -1945,9 +1947,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.28"
+    assert health.json()["version"] == "3.7.32"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.28"
+    assert health.headers["x-app-version"] == "3.7.32"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4481,10 +4483,12 @@ def test_privacy_route_exposes_configuration_status():
     assert health["privacy_configuration_complete"] is False
 
 
-def test_container_healthcheck_uses_readiness_endpoint():
+def test_container_healthcheck_uses_liveness_endpoint_not_readiness_gate():
     dockerfile = (Path(__file__).resolve().parent.parent / "Dockerfile").read_text(encoding="utf-8")
-    assert "/ready" in dockerfile
-    assert "urlopen('http://127.0.0.1:'" in dockerfile
+    healthcheck_line = next(line for line in dockerfile.splitlines() if line.startswith("HEALTHCHECK "))
+    assert "/health" in healthcheck_line
+    assert "/ready" not in healthcheck_line
+    assert "urlopen('http://127.0.0.1:'" in healthcheck_line
 
 
 def test_launch_readiness_endpoint_is_fail_closed_by_default():
@@ -4532,6 +4536,10 @@ def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>http://127.0.0.1:8000/</loc>" in sitemap.text
     assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
+    assert "?lang=en" in sitemap.text
+    assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in sitemap.text
+    assert '<lastmod>2026-07-24</lastmod>' in sitemap.text
+    assert "/static/terms.html" not in sitemap.text
     assert "/admin" not in sitemap.text
     assert "/case/" not in sitemap.text
 
@@ -4683,3 +4691,201 @@ def test_application_response_reports_email_delivery_capability():
     )
     assert response.status_code == 201
     assert response.json()["email_delivery_configured"] is False
+
+
+def test_seo_home_metadata_and_language_alternates():
+    page = client.get("/?lang=en")
+    assert page.status_code == 200
+    assert '<html lang="en">' in page.text
+    assert "help with disputes involving Chinese suppliers" in page.text
+    assert 'hreflang="ru"' in page.text
+    assert 'twitter:card" content="summary_large_image"' in page.text
+    assert 'hreflang="x-default" href="http://127.0.0.1:8000/"' in page.text
+    assert "/static/social-preview.png" in page.text
+    assert '"logo": "http://127.0.0.1:8000/static/logo-512.png"' in page.text
+
+
+def test_public_guides_and_sitemap_are_indexable():
+    expected = {
+        "en": "Practical guides for supplier disputes",
+        "ru": "Практические руководства",
+        "fr": "Guides pratiques",
+        "de": "Praktische Leitfäden",
+        "es": "Guías prácticas",
+        "sr": "Praktični vodiči",
+    }
+    related_labels = (
+        "Related guides", "Другие руководства", "Guides associés",
+        "Weitere Ratgeber", "Guías relacionadas", "Povezani vodiči",
+    )
+    for language, fragment in expected.items():
+        hub = client.get(f"/{language}/guides")
+        assert hub.status_code == 200
+        assert fragment in hub.text
+        guide = client.get(f"/{language}/guides/alibaba-dispute-evidence")
+        assert guide.status_code == 200
+        assert f'<html lang="{language}">' in guide.text
+        assert f'hreflang="{language}"' in guide.text
+        assert 'datePublished' in guide.text
+        assert '/static/logo-512.png' in guide.text
+        assert any(label in guide.text for label in related_labels)
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "/fr/guides/alibaba-dispute-evidence" in sitemap.text
+    assert "/de/guides/organize-dispute-documents" in sitemap.text
+    assert "/es/guides/product-quality-dispute" in sitemap.text
+    assert "/sr/guides/supplier-not-shipped" in sitemap.text
+    assert 'hreflang="x-default"' in sitemap.text
+
+def test_indexnow_key_file():
+    response = client.get("/indexnow/a0d2be8a24fd4d8798f0af9d9a8e2a72.txt")
+    assert response.status_code == 200
+    assert response.text == "a0d2be8a24fd4d8798f0af9d9a8e2a72"
+
+
+def test_campaign_attribution_is_sanitized_and_visible_to_admin():
+    response = client.post(
+        "/api/applications",
+        json=valid_payload(
+            email="campaign@example.com",
+            utm_source=" reddit\n ",
+            utm_medium="community",
+            utm_campaign="launch",
+            landing_path="https://evil.example/en/guides?lang=en&utm_source=reddit&secret=drop-me#fragment",
+            referrer="https://www.reddit.com/r/Alibaba/?private=query",
+        ),
+    )
+    assert response.status_code == 201
+
+    from app.db import get_audit, get_case_by_public
+    reference, token = response.json()["status_url"].rstrip("/").split("/")[-2:]
+    case = get_case_by_public(reference, token)
+    created_event = next(item for item in get_audit(case["id"]) if item["event_type"] == "application_created")
+    details = json.loads(created_event["details_json"])
+    assert details["utm_source"] == "reddit"
+    assert details["landing_path"] == "/en/guides?lang=en&utm_source=reddit"
+    assert details["referrer"] == "https://www.reddit.com"
+
+    client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"})
+    dashboard = client.get("/admin")
+    assert "Источники заявок" in dashboard.text
+    assert "reddit" in dashboard.text
+    detail = client.get(f"/admin/case/{case['id']}")
+    assert "Источник обращения" in detail.text
+    assert "https://www.reddit.com" in detail.text
+    assert "private=query" not in detail.text
+
+
+
+def test_tracking_disclosure_and_legal_search_visibility():
+    privacy = client.get("/privacy?lang=ru")
+    assert privacy.status_code == 200
+    assert "метки рекламной кампании" in privacy.text
+    assert "какие публикации и каналы" in privacy.text
+    for path in ("/static/terms.html", "/static/refund.html", "/static/ai-notice.html", "/static/disclaimer.html"):
+        page = client.get(path)
+        assert page.status_code == 200
+        assert 'name="robots" content="noindex,follow"' in page.text
+
+
+def test_admin_dashboard_explains_when_search_indexing_is_blocked():
+    client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"})
+    page = client.get("/admin")
+    assert page.status_code == 200
+    assert "Индексация в поисковых системах" in page.text
+    assert "Заблокирована" in page.text
+    assert "/ready" in page.text
+
+
+
+def test_guide_hubs_use_truthful_localized_read_labels_and_accessibility():
+    expected = {
+        "fr": ("Lire le guide", "Langue"),
+        "de": ("Leitfaden lesen", "Sprache"),
+        "es": ("Leer la guía", "Idioma"),
+        "sr": ("Pročitaj vodič", "Jezik"),
+    }
+    forbidden = ("en anglais", "auf Englisch", "en inglés", "na engleskom")
+    for language, (read_label, aria_label) in expected.items():
+        page = client.get(f"/{language}/guides")
+        assert page.status_code == 200
+        assert read_label in page.text
+        assert f'aria-label="{aria_label}"' in page.text
+        assert not any(value in page.text for value in forbidden)
+
+
+def test_guide_detail_localizes_navigation_accessibility_and_german_refund_text():
+    detail = client.get("/de/guides/supplier-not-shipped")
+    assert detail.status_code == 200
+    assert 'aria-label="Sprache"' in detail.text
+    assert 'aria-label="Brotkrümelnavigation"' in detail.text
+    assert "eine versprochene Rückerstattung" in detail.text
+    assert "versprochenes Refund" not in detail.text
+
+
+def test_privacy_is_server_rendered_localized_and_has_search_metadata():
+    page = client.get("/privacy?lang=de")
+    assert page.status_code == 200
+    assert '<html lang="de">' in page.text
+    assert "Datenschutzerklärung — ChinaTradeResolve" in page.text
+    assert 'name="description"' in page.text
+    assert 'rel="canonical" href="http://127.0.0.1:8000/privacy?lang=de"' in page.text
+    assert 'hreflang="fr"' in page.text
+    assert 'hreflang="x-default" href="http://127.0.0.1:8000/privacy?lang=en"' in page.text
+    assert 'aria-label="Sprache"' in page.text
+    assert "Wer Daten verarbeitet" in page.text
+    assert "CTR_BOOT_LEGAL" not in page.text
+
+
+def test_privacy_without_query_has_stable_russian_default():
+    page = client.get("/privacy", headers={"accept-language": "fr-FR,fr;q=0.9,en;q=0.5"})
+    assert page.status_code == 200
+    assert '<html lang="ru">' in page.text
+    assert "Политика конфиденциальности" in page.text
+    assert 'rel="canonical" href="http://127.0.0.1:8000/privacy"' in page.text
+
+
+def test_launch_readiness_requires_persistent_postgresql(monkeypatch):
+    import app.main as module
+
+    monkeypatch.setattr(module, "using_postgres", lambda: False)
+    monkeypatch.setattr(module, "database_is_available", lambda: True)
+    assert module.persistent_database_is_ready() is False
+    assert module.launch_readiness_checks()["database_storage"] is False
+
+    monkeypatch.setattr(module, "using_postgres", lambda: True)
+    assert module.persistent_database_is_ready() is True
+
+
+def test_health_and_admin_expose_database_mode_without_database_url():
+    health = client.get("/health")
+    assert health.status_code == 200
+    assert health.json()["database_backend"] == "sqlite"
+    assert health.json()["database_persistent"] is False
+
+    client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"})
+    dashboard = client.get("/admin")
+    assert dashboard.status_code == 200
+    assert "SQLite" in dashboard.text
+    assert "DATABASE_URL" in dashboard.text
+
+
+def test_privacy_sitemap_contains_language_alternates():
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "<loc>http://127.0.0.1:8000/privacy?lang=en</loc>" in sitemap.text
+    assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
+    assert 'hreflang="de" href="http://127.0.0.1:8000/privacy?lang=de"' in sitemap.text
+
+
+def test_local_run_script_is_executable():
+    script = Path(__file__).resolve().parent.parent / "run_local.sh"
+    assert script.stat().st_mode & 0o111
+
+
+def test_gitignore_protects_secrets_and_local_database():
+    content = (Path(__file__).resolve().parent.parent / ".gitignore").read_text(encoding="utf-8")
+    assert ".env" in content
+    assert "data/*.db" in content
+    assert ".venv/" in content
+    assert "__pycache__/" in content

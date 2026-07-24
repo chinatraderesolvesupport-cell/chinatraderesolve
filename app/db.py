@@ -7,6 +7,7 @@ import secrets
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from typing import Any, Iterator
+from urllib.parse import urlsplit
 
 from .config import settings
 from .documents import unique_display_filename
@@ -487,7 +488,16 @@ def create_case(
         else:
             cur = execute(conn, insert_sql, values)
             case_id = int(cur.lastrowid)
-        add_audit(conn, case_id, "system", "application_created", {"status": status})
+        campaign = {
+            "status": status,
+            "utm_source": str(payload.get("utm_source", ""))[:120],
+            "utm_medium": str(payload.get("utm_medium", ""))[:120],
+            "utm_campaign": str(payload.get("utm_campaign", ""))[:160],
+            "utm_content": str(payload.get("utm_content", ""))[:160],
+            "landing_path": str(payload.get("landing_path", ""))[:500],
+            "referrer": str(payload.get("referrer", ""))[:500],
+        }
+        add_audit(conn, case_id, "system", "application_created", campaign)
         add_audit(conn, case_id, "triage", "triage_completed", triage)
         _insert_notifications(conn, case_id, notifications)
         row = execute(conn, "SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
@@ -510,6 +520,60 @@ def get_case(case_id: int) -> dict[str, Any] | None:
         return dict(row) if row else None
 
 
+def _parse_acquisition(details_json: str | None) -> dict[str, str]:
+    try:
+        raw = json.loads(details_json or "{}")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        raw = {}
+    details = {
+        "utm_source": str(raw.get("utm_source", ""))[:120],
+        "utm_medium": str(raw.get("utm_medium", ""))[:120],
+        "utm_campaign": str(raw.get("utm_campaign", ""))[:160],
+        "utm_content": str(raw.get("utm_content", ""))[:160],
+        "landing_path": str(raw.get("landing_path", ""))[:500],
+        "referrer": str(raw.get("referrer", ""))[:500],
+    }
+    source = details["utm_source"].strip().lower()
+    if not source and details["referrer"]:
+        try:
+            source = (urlsplit(details["referrer"]).hostname or "").lower()
+        except ValueError:
+            source = ""
+    details["source_label"] = source or "direct"
+    return details
+
+
+def get_case_acquisition(case_id: int) -> dict[str, str]:
+    with transaction() as conn:
+        row = execute(
+            conn,
+            "SELECT details_json FROM audit_log WHERE case_id=? AND event_type='application_created' ORDER BY id ASC LIMIT 1",
+            (case_id,),
+        ).fetchone()
+        return _parse_acquisition(row["details_json"] if row else "{}")
+
+
+def traffic_source_counts() -> list[dict[str, Any]]:
+    with transaction() as conn:
+        rows = execute(
+            conn,
+            """
+            SELECT a.details_json
+            FROM audit_log a
+            JOIN cases c ON c.id=a.case_id
+            WHERE a.event_type='application_created' AND c.deleted_at IS NULL
+            """,
+        ).fetchall()
+    counts: dict[str, int] = {}
+    for row in rows:
+        source = _parse_acquisition(row["details_json"])["source_label"]
+        counts[source] = counts.get(source, 0) + 1
+    return [
+        {"source": source, "count": count}
+        for source, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
 def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[str, Any]]:
     query = """
         SELECT c.*, f.rating AS feedback_rating, f.updated_at AS feedback_updated_at
@@ -526,7 +590,17 @@ def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[
         args.append(risk)
     query += " ORDER BY CASE c.risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, c.priority DESC, c.created_at DESC"
     with transaction() as conn:
-        return [dict(r) for r in execute(conn, query, args).fetchall()]
+        cases = [dict(r) for r in execute(conn, query, args).fetchall()]
+        acquisition_rows = execute(
+            conn,
+            "SELECT case_id,details_json FROM audit_log WHERE event_type='application_created' ORDER BY id ASC",
+        ).fetchall()
+    acquisition_by_case: dict[int, dict[str, str]] = {}
+    for row in acquisition_rows:
+        acquisition_by_case.setdefault(int(row["case_id"]), _parse_acquisition(row["details_json"]))
+    for case in cases:
+        case["acquisition"] = acquisition_by_case.get(int(case["id"]), _parse_acquisition("{}"))
+    return cases
 
 
 def list_feedback(rating: int | None = None, consent: str | None = None) -> list[dict[str, Any]]:

@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 
-<html lang="ru">
+<html lang="{{ page_language }}">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>ChinaTradeResolve — разбор споров с китайскими поставщиками</title>
-<meta content="Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий." name="description"/>
+<title>{{ seo.title }}</title>
+<meta content="{{ seo.description }}" name="description"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
 <meta content="same-origin" name="csrf-mode"/>
 <link rel="canonical" href="{{ canonical_url }}"/>
+{% for item in language_alternates %}<link rel="alternate" hreflang="{{ item.lang }}" href="{{ item.url }}"/>{% endfor %}
+<link rel="alternate" hreflang="x-default" href="{{ x_default_url }}"/>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
 <meta property="og:type" content="website"/>
-<meta property="og:title" content="ChinaTradeResolve — разбор споров с китайскими поставщиками"/>
-<meta property="og:description" content="Предварительная оценка позиции, доказательств и следующих действий без завышенных обещаний."/>
+<meta property="og:title" content="{{ seo.title }}"/>
+<meta property="og:description" content="{{ seo.og_description }}"/>
 <meta property="og:url" content="{{ canonical_url }}"/>
-<meta name="twitter:card" content="summary"/>
+<meta property="og:image" content="{{ social_image_url }}"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+{% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}"/>{% endif %}
+{% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}"/>{% endif %}
 <style>
 :root{
   --bg:#0f172a;--panel:#172033;--panel2:#132238;--navy:#17324D;--teal:#14B8A6;
@@ -244,7 +251,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 </style>
-<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"Service","name":"ChinaTradeResolve","url":canonical_url,"description":"Commercial support for buyers in disputes with Chinese suppliers.","provider":{"@type":"Organization","name":"ChinaTradeResolve","email":contact_email}}|tojson }}</script>
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"ChinaTradeResolve","url":x_default_url},{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
 {% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skip_content">Перейти к содержанию</a>
@@ -267,6 +274,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a data-i18n="nav_pricing" href="#services">Что вы получите</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
+<a class="guides-nav-link" href="/ru/guides">Руководства</a>
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
 </div>
 <div class="actions">
@@ -287,6 +295,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a data-i18n="nav_pricing" href="#services">Что вы получите</a>
 <a data-i18n="nav_about" href="#about">О проекте</a>
 <a data-i18n="nav_faq" href="#faq">FAQ</a>
+<a class="guides-nav-link" href="/ru/guides">Руководства</a>
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
 </div>
 </div>
@@ -522,7 +531,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div><div class="small" data-i18n="footer_text">Коммерческая помощь покупателям, работающим с китайскими поставщиками.</div></div>
-<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
+<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a><a class="guides-footer-link" href="/ru/guides">Руководства</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
 <div class="small">© 2026 ChinaTradeResolve</div>
 </div>
 </footer>
@@ -804,6 +813,13 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   data.forEach((value,key)=>{payload[key]=value});
   ['free_access_terms','sharing_authority','ai_consent','no_guarantee'].forEach(k=>payload[k]=data.has(k));
   payload.turnstile_token=String(data.get('cf-turnstile-response')||'');
+  const params=new URLSearchParams(window.location.search);
+  payload.utm_source=String(params.get('utm_source')||sessionStorage.getItem('ctr_utm_source')||'').slice(0,120);
+  payload.utm_medium=String(params.get('utm_medium')||sessionStorage.getItem('ctr_utm_medium')||'').slice(0,120);
+  payload.utm_campaign=String(params.get('utm_campaign')||sessionStorage.getItem('ctr_utm_campaign')||'').slice(0,160);
+  payload.utm_content=String(params.get('utm_content')||sessionStorage.getItem('ctr_utm_content')||'').slice(0,160);
+  payload.landing_path=String(sessionStorage.getItem('ctr_landing_path')||window.location.pathname+window.location.search).slice(0,500);
+  payload.referrer=String(sessionStorage.getItem('ctr_referrer')||document.referrer||'').slice(0,500);
   const controller=new AbortController();
   const timeoutId=window.setTimeout(()=>controller.abort(),25000);
   try{
@@ -864,6 +880,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
 const translations=window.CTR_TRANSLATIONS||{};
 const supportedLanguages=['en','fr','de','es','ru','sr'];
 const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};
+const guideLabels={en:'Guides',fr:'Guides',de:'Ratgeber',es:'Guías',ru:'Руководства',sr:'Vodiči'};
 const pageMeta={
   en:{title:'ChinaTradeResolve — review of disputes with Chinese suppliers',description:'Describe a dispute with a Chinese supplier and receive a preliminary view of your position, missing evidence and practical next steps.'},
   fr:{title:'ChinaTradeResolve — analyse des litiges avec des fournisseurs chinois',description:'Décrivez un litige avec un fournisseur chinois et recevez une première évaluation de votre position, des preuves manquantes et des prochaines actions.'},
@@ -872,6 +889,13 @@ const pageMeta={
   ru:{title:'ChinaTradeResolve — разбор споров с китайскими поставщиками',description:'Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий.'},
   sr:{title:'ChinaTradeResolve — pregled sporova sa kineskim dobavljačima',description:'Opišite spor sa kineskim dobavljačem i dobijte početnu procenu pozicije, dokaza koji nedostaju i praktičnih sledećih koraka.'}
 };
+try{
+  const ctrParams=new URLSearchParams(window.location.search);
+  ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(key=>{const value=ctrParams.get(key);if(value)sessionStorage.setItem('ctr_'+key,value)});
+  if(!sessionStorage.getItem('ctr_landing_path'))sessionStorage.setItem('ctr_landing_path',window.location.pathname+window.location.search);
+  if(!sessionStorage.getItem('ctr_referrer')&&document.referrer)sessionStorage.setItem('ctr_referrer',document.referrer);
+}catch(_error){}
+
 const languageUi={
   en:{submitting:'Submitting and screening the application…',timeout:'The server did not respond in time. Please try again.',fallback:'Please check the form fields and try again.',prefix:'Check these fields: ',unable:'Unable to submit the application.',fields:{full_name:'Full name',email:'Email',description:'Short description',free_access_terms:'Free-access terms',sharing_authority:'Authority to share information',no_guarantee:'No-guarantee confirmation'}},
   fr:{submitting:'Envoi et analyse automatique de la demande…',timeout:'Le serveur n’a pas répondu à temps. Veuillez réessayer.',fallback:'Vérifiez les champs du formulaire et réessayez.',prefix:'Vérifiez les champs suivants : ',unable:'Impossible d’envoyer la demande.',fields:{full_name:'Nom complet',email:'Adresse e-mail',description:'Brève description',free_access_terms:'Conditions de l’accès gratuit',sharing_authority:'Droit de partager les informations',no_guarantee:'Confirmation d’absence de garantie'}},
@@ -904,6 +928,7 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
   if(description)description.setAttribute('content',meta.description);
   const preferred=document.getElementById('preferred');
   if(preferred&&syncPreferred&&!preferred.dataset.userChanged)preferred.value=preferredLanguageValues[lang];
+  document.querySelectorAll('.guides-nav-link,.guides-footer-link').forEach(link=>{link.textContent=guideLabels[lang]||guideLabels.en;link.setAttribute('href',`/${lang}/guides`)});
   document.querySelectorAll('[data-lang-link]').forEach(link=>{
     try{const url=new URL(link.getAttribute('href'),window.location.origin);url.searchParams.set('lang',lang);link.setAttribute('href',url.pathname+url.search+url.hash)}catch(_e){}
   });

@@ -1,8 +1,21 @@
-# ChinaTradeResolve Document AI v3.7.28
+# ChinaTradeResolve Document AI v3.7.32
 
-Version 3.7.28 adds a visible administrator feedback centre with review icons, ratings, filters and summary analytics. Version 3.7.27 makes the mobile AI launcher permanently compact and positions it above the fixed application CTA, preventing overlap with primary actions while preserving full accessibility. It retains the public/email copy consistency, upload progress, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
+Version 3.7.32 separates container liveness from public-launch readiness: Docker checks the lightweight `/health` endpoint, while `/ready` remains fail-closed until every launch and indexing requirement is configured. It retains the multilingual guides, campaign attribution, feedback centre, mobile layout, document workflow, voice controls and all previous fixes.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
+
+
+
+## Search, guides and attribution in v3.7.32
+
+- Four practical supplier-dispute guides are available in English, Russian, French, German, Spanish and Serbian.
+- Each localized page has a canonical URL, reciprocal `hreflang` links and an `x-default` fallback.
+- Guide pages include Article and Breadcrumb structured data, publication/modification dates and a dedicated organization logo.
+- `sitemap.xml` contains every localized guide and language alternate.
+- Campaign source, medium, campaign, first landing page and referring origin are sanitized, saved with the application and shown to the administrator.
+- The administrator dashboard shows whether search indexing is currently enabled and whether Google, Bing and IndexNow are configured.
+- IndexNow no longer ships with a shared default key; generate a unique key for the production site.
+- Utility legal pages that should not compete in search use `noindex,follow`; the privacy page remains indexable.
 
 
 
@@ -47,7 +60,7 @@ On screens up to 700 px wide, the AI launcher is rendered as a 52 px icon-only c
 - Text chat uses a browser-session short-window limit plus a generous IP emergency flood guard, so people behind one office or mobile network do not normally block each other.
 - Assistant, voice-assistant and application-description daily usage has separate per-browser allowances and larger site-wide emergency ceilings.
 - Document analysis has a per-case daily allowance and a larger global emergency ceiling.
-- `/health` no longer publishes exact AI budgets or usage counts; `/ready` remains the deployment/readiness gate and Docker now checks it.
+- `/health` is the lightweight liveness endpoint used by Docker HEALTHCHECK; `/ready` remains the separate, fail-closed public-launch and search-indexing gate and may return HTTP 503 until every launch requirement is configured.
 - While recording, supported browsers show interim words and an elapsed timer. The final server transcription remains authoritative and editable.
 - Browsers without live speech recognition still record normally and display a clear fallback message.
 
@@ -380,7 +393,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.28
+cd ChinaTradeResolve_Document_AI_v3.7.32
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -514,7 +527,7 @@ For deployment, create a persistent Neon PostgreSQL database and set:
 DATABASE_URL=postgresql://...
 ```
 
-When `DATABASE_URL` is present, the app automatically creates and uses PostgreSQL tables. When it is absent, local development and tests continue to use SQLite.
+When `DATABASE_URL` is present, the app automatically creates and uses PostgreSQL tables. When it is absent, local development and tests continue to use SQLite. SQLite is intentionally not accepted by `/ready` for a public launch; Render must use a persistent PostgreSQL `DATABASE_URL`.
 
 ## Render deployment notes
 
@@ -534,3 +547,8 @@ EMAIL_BRIDGE_SECRET=the-same-secret-stored-in-Apps-Script
 ```
 
 When both variables are present, queued confirmation and admin-alert emails are delivered through the HTTPS bridge. SMTP remains available as a local or non-Render fallback.
+
+
+## SEO и продвижение
+
+Версия 3.7.32 включает полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.

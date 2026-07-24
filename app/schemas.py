@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Literal
+import re
+from urllib.parse import parse_qsl, urlencode, urlsplit
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
@@ -18,6 +20,12 @@ class ApplicationCreate(BaseModel):
     requested_result: str = Field(default="Not sure", max_length=120)
     description: str = Field(min_length=50, max_length=8000)
     company_website: str = Field(default="", max_length=200)
+    utm_source: str = Field(default="", max_length=120)
+    utm_medium: str = Field(default="", max_length=120)
+    utm_campaign: str = Field(default="", max_length=160)
+    utm_content: str = Field(default="", max_length=160)
+    landing_path: str = Field(default="", max_length=500)
+    referrer: str = Field(default="", max_length=500)
     turnstile_token: str = Field(default="", max_length=2048, exclude=True)
     free_access_terms: bool
     sharing_authority: bool
@@ -34,6 +42,48 @@ class ApplicationCreate(BaseModel):
     def normalize_description(cls, value: object) -> str:
         text = " ".join(str(value or "").split())
         return text.strip()
+
+    @field_validator("utm_source", "utm_medium", "utm_campaign", "utm_content", mode="before")
+    @classmethod
+    def normalize_campaign_value(cls, value: object) -> str:
+        text = re.sub(r"[\x00-\x1f\x7f]+", "", str(value or ""))
+        return " ".join(text.split()).strip()
+
+    @field_validator("landing_path", mode="before")
+    @classmethod
+    def normalize_landing_path(cls, value: object) -> str:
+        text = str(value or "").strip()
+        if not text:
+            return ""
+        try:
+            parsed = urlsplit(text)
+        except ValueError:
+            return ""
+        path = parsed.path if parsed.path.startswith("/") else "/"
+        allowed = {"lang", "utm_source", "utm_medium", "utm_campaign", "utm_content"}
+        query = [(key, val) for key, val in parse_qsl(parsed.query, keep_blank_values=False) if key in allowed]
+        return path + ("?" + urlencode(query) if query else "")
+
+    @field_validator("referrer", mode="before")
+    @classmethod
+    def normalize_referrer(cls, value: object) -> str:
+        text = str(value or "").strip()
+        if not text:
+            return ""
+        try:
+            parsed = urlsplit(text)
+        except ValueError:
+            return ""
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            return ""
+        host = parsed.hostname.lower()
+        try:
+            port = parsed.port
+        except ValueError:
+            return ""
+        default_port = 80 if parsed.scheme == "http" else 443
+        authority = f"{host}:{port}" if port and port != default_port else host
+        return f"{parsed.scheme}://{authority}"
 
     @field_validator("free_access_terms", "sharing_authority", "no_guarantee")
     @classmethod

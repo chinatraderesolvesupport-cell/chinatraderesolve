@@ -234,6 +234,9 @@ class Settings:
     data_controller_registration: str | None = os.getenv("DATA_CONTROLLER_REGISTRATION")
     operator_profile: str | None = os.getenv("OPERATOR_PROFILE")
     operator_credentials: str | None = os.getenv("OPERATOR_CREDENTIALS")
+    google_site_verification: str | None = os.getenv("GOOGLE_SITE_VERIFICATION")
+    bing_site_verification: str | None = os.getenv("BING_SITE_VERIFICATION")
+    indexnow_key: str = os.getenv("INDEXNOW_KEY", "").strip()
 
 
 settings = Settings()

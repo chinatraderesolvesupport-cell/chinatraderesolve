@@ -1,9 +1,18 @@
-# ChinaTradeResolve Document AI v3.7.27
+# ChinaTradeResolve Document AI v3.7.28
 
-Version 3.7.27 makes the mobile AI launcher permanently compact and positions it above the fixed application CTA, preventing overlap with primary actions while preserving full accessibility. It retains the public/email copy consistency, upload progress, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
+Version 3.7.28 adds a visible administrator feedback centre with review icons, ratings, filters and summary analytics. Version 3.7.27 makes the mobile AI launcher permanently compact and positions it above the fixed application CTA, preventing overlap with primary actions while preserving full accessibility. It retains the public/email copy consistency, upload progress, localized document errors, duplicate-file feedback, voice controls and all previous fixes.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
+
+
+## Administrator feedback centre in v3.7.28
+
+- The administrator header and dashboard now show a visible feedback icon with the current review count.
+- Each case row displays a review badge and rating when feedback has been received.
+- `/admin/feedback` provides all reviews in one place, average rating, rating distribution, testimonial-consent counts and filters.
+- Review links open the exact case and jump directly to the client-feedback section.
+- Feedback remains private by default and is never published automatically.
 
 ## Mobile launcher layout in v3.7.27
 
@@ -371,7 +380,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.27
+cd ChinaTradeResolve_Document_AI_v3.7.28
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt

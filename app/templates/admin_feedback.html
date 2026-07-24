@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отзывы клиентов — ChinaTradeResolve</title>
+<style>
+:root{--teal:#14b8a6;--teal-dark:#0f766e;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--amber:#f59e0b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--light);color:var(--ink);line-height:1.5}a{color:var(--teal-dark)}.wrap{width:min(1120px,94%);margin:28px auto}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{font-weight:900;font-size:22px}.brand span{color:var(--teal)}
+.card{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;margin:16px 0;box-shadow:0 8px 24px #0f172a0a}.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:9px;border:1px solid #94a3b8;background:white;color:var(--ink);font-weight:800;text-decoration:none;cursor:pointer}.btn.primary{background:var(--teal);border-color:var(--teal);color:#062c28}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:white;border:1px solid var(--line);border-radius:12px;padding:16px}.metric strong{display:block;font-size:27px}.muted{color:var(--muted)}.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:white}.stars{color:#b45309;letter-spacing:2px;font-size:20px}.feedback-list{display:grid;gap:14px}.feedback-card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 8px 24px #0f172a08}.feedback-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}.feedback-text{font-size:17px;white-space:pre-wrap}.meta{display:flex;gap:8px 16px;flex-wrap:wrap;color:var(--muted);font-size:14px}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800}.consent-yes{background:#dcfce7;color:#166534}.consent-no{background:#f1f5f9;color:#475569}.distribution{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.distribution span{padding:5px 9px;border-radius:999px;background:#fffbeb;border:1px solid #fde68a;font-size:13px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}}@media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="brand">ChinaTrade<span>Resolve</span></div><a href="/admin">← Вернуться в очередь дел</a><h1>💬 Отзывы клиентов</h1><p class="muted">Все оценки и комментарии в одном месте. Ничего не публикуется автоматически.</p></div>
+    <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn">Выйти</button></form>
+  </div>
+
+  <div class="grid">
+    <div class="metric"><span>Всего отзывов</span><strong>{{ total_feedback }}</strong></div>
+    <div class="metric"><span>Средняя оценка</span><strong>{{ average_rating }}/5</strong></div>
+    <div class="metric"><span>Разрешены для публикации</span><strong>{{ consent_count }}</strong></div>
+    <div class="metric"><span>Показано по фильтру</span><strong>{{ feedback_items|length }}</strong></div>
+  </div>
+
+  <div class="card">
+    <strong>Распределение оценок</strong>
+    <div class="distribution">{% for value in [5,4,3,2,1] %}<span>{{ value }} ★ — {{ distribution[value] }}</span>{% endfor %}</div>
+  </div>
+
+  <div class="card">
+    <form method="get" class="filters">
+      <label>Оценка<select name="rating"><option value="">Все оценки</option>{% for value in [5,4,3,2,1] %}<option value="{{ value }}" {% if rating_filter==value %}selected{% endif %}>{{ value }} из 5</option>{% endfor %}</select></label>
+      <label>Согласие на публикацию<select name="consent"><option value="">Все отзывы</option><option value="yes" {% if consent_filter=='yes' %}selected{% endif %}>Есть согласие</option><option value="no" {% if consent_filter=='no' %}selected{% endif %}>Нет согласия</option></select></label>
+      <button class="btn primary">Применить</button>
+    </form>
+  </div>
+
+  <div class="feedback-list">
+    {% for item in feedback_items %}
+      <article class="feedback-card">
+        <div class="feedback-head">
+          <div>
+            <div class="stars" aria-label="Оценка {{ item.rating }} из 5">{% for _ in range(item.rating) %}★{% endfor %}{% for _ in range(5-item.rating) %}☆{% endfor %}</div>
+            <div class="meta"><span>Получен: {{ item.updated_at }}</span><span>Язык: {{ language_labels.get(item.preferred_language, item.preferred_language) }}</span></div>
+          </div>
+          <a class="btn" href="/admin/case/{{ item.case_id }}#client-feedback">Открыть дело {{ item.case_reference }}</a>
+        </div>
+        <p class="feedback-text">{{ item.feedback_text }}</p>
+        <div class="meta">
+          <span><strong>Имя в отзыве:</strong> {{ item.display_name or 'не указано' }}</span>
+          <span><strong>Проблема:</strong> {{ problem_labels.get(item.main_problem, item.main_problem) }}</span>
+          <span><strong>Статус дела:</strong> {{ status_labels.get(item.case_status, item.case_status) }}</span>
+          {% if item.testimonial_consent %}<span class="badge consent-yes">Можно рассмотреть для публикации</span>{% else %}<span class="badge consent-no">Только внутренний отзыв</span>{% endif %}
+        </div>
+      </article>
+    {% else %}
+      <div class="card"><p class="muted">По выбранным фильтрам отзывов нет.</p></div>
+    {% endfor %}
+  </div>
+</div>
+</body>
+</html>

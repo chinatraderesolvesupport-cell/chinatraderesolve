@@ -511,15 +511,42 @@ def get_case(case_id: int) -> dict[str, Any] | None:
 
 
 def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[str, Any]]:
-    query = "SELECT * FROM cases WHERE deleted_at IS NULL"
+    query = """
+        SELECT c.*, f.rating AS feedback_rating, f.updated_at AS feedback_updated_at
+        FROM cases c
+        LEFT JOIN feedback f ON f.case_id=c.id
+        WHERE c.deleted_at IS NULL
+    """
     args: list[Any] = []
     if status:
-        query += " AND status=?"
+        query += " AND c.status=?"
         args.append(status)
     if risk:
-        query += " AND risk_level=?"
+        query += " AND c.risk_level=?"
         args.append(risk)
-    query += " ORDER BY CASE risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, priority DESC, created_at DESC"
+    query += " ORDER BY CASE c.risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, c.priority DESC, c.created_at DESC"
+    with transaction() as conn:
+        return [dict(r) for r in execute(conn, query, args).fetchall()]
+
+
+def list_feedback(rating: int | None = None, consent: str | None = None) -> list[dict[str, Any]]:
+    """Return feedback with enough case context for the administrator review centre."""
+    query = """
+        SELECT f.*, c.case_reference, c.status AS case_status, c.full_name,
+               c.preferred_language, c.main_problem
+        FROM feedback f
+        JOIN cases c ON c.id=f.case_id
+        WHERE c.deleted_at IS NULL
+    """
+    args: list[Any] = []
+    if rating is not None:
+        query += " AND f.rating=?"
+        args.append(int(rating))
+    if consent == "yes":
+        query += " AND f.testimonial_consent=1"
+    elif consent == "no":
+        query += " AND f.testimonial_consent=0"
+    query += " ORDER BY f.updated_at DESC, f.id DESC"
     with transaction() as conn:
         return [dict(r) for r in execute(conn, query, args).fetchall()]
 

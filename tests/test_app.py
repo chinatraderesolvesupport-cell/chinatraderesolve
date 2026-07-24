@@ -317,6 +317,23 @@ def test_admin_auth_queue_close_and_feedback():
     admin_case = client.get(f"/admin/case/{case_id}")
     assert "The chronology and next-step checklist" in admin_case.text
     assert "Согласие на публикацию:</b> да" in admin_case.text
+    assert 'id="client-feedback"' in admin_case.text
+
+    dashboard_with_feedback = client.get("/admin")
+    assert "Открыть и проанализировать" in dashboard_with_feedback.text
+    assert f'href="/admin/case/{case_id}#client-feedback"' in dashboard_with_feedback.text
+    assert "> 5/5</a>" in dashboard_with_feedback.text
+
+    feedback_centre = client.get("/admin/feedback")
+    assert feedback_centre.status_code == 200
+    assert "Отзывы клиентов" in feedback_centre.text
+    assert "Средняя оценка" in feedback_centre.text
+    assert "5.0/5" in feedback_centre.text
+    assert "The chronology and next-step checklist" in feedback_centre.text
+    assert "Можно рассмотреть для публикации" in feedback_centre.text
+
+    filtered_feedback = client.get("/admin/feedback?rating=4")
+    assert "По выбранным фильтрам отзывов нет." in filtered_feedback.text
 
 
 def test_ai_triage_structured_response_mock(monkeypatch):
@@ -1928,9 +1945,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.27"
+    assert health.json()["version"] == "3.7.28"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.27"
+    assert health.headers["x-app-version"] == "3.7.28"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()

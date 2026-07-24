@@ -63,6 +63,7 @@ from .db import (
     init_db,
     list_case_documents,
     list_cases,
+    list_feedback,
     claim_daily_usage_for_subject,
     replace_triage,
     record_audit,
@@ -116,7 +117,7 @@ from .voice_transcription import (
 
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.27"
+APP_VERSION = "3.7.28"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -2027,6 +2028,43 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
             "status_labels": STATUS_LABELS,
             "risk_labels": RISK_LABELS,
             "problem_labels": PROBLEM_LABELS,
+            "csrf_token": admin_csrf_token(request),
+        },
+    )
+
+
+@app.get("/admin/feedback", response_class=HTMLResponse)
+def admin_feedback_centre(
+    request: Request, rating: int | None = None, consent: str | None = None
+) -> HTMLResponse:
+    if not is_admin(request):
+        return RedirectResponse("/admin/login", status_code=303)
+    if rating not in {None, 1, 2, 3, 4, 5}:
+        rating = None
+    if consent not in {None, "yes", "no"}:
+        consent = None
+    all_feedback = list_feedback()
+    feedback_items = list_feedback(rating=rating, consent=consent)
+    total = len(all_feedback)
+    average = round(sum(int(item["rating"]) for item in all_feedback) / total, 1) if total else 0
+    distribution = {value: 0 for value in range(1, 6)}
+    for item in all_feedback:
+        distribution[int(item["rating"])] += 1
+    consent_count = sum(1 for item in all_feedback if item.get("testimonial_consent"))
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_feedback.html",
+        context={
+            "feedback_items": feedback_items,
+            "total_feedback": total,
+            "average_rating": average,
+            "distribution": distribution,
+            "consent_count": consent_count,
+            "rating_filter": rating,
+            "consent_filter": consent or "",
+            "status_labels": STATUS_LABELS,
+            "problem_labels": PROBLEM_LABELS,
+            "language_labels": LANGUAGE_LABELS,
             "csrf_token": admin_csrf_token(request),
         },
     )

@@ -1,9 +1,27 @@
-# ChinaTradeResolve Document AI v3.7.35
+# ChinaTradeResolve Document AI v3.7.37
 
-Version 3.7.35 improves mobile usability, CSP enforcement and production PDF verification: the submit button now reflects every required field, consent and Turnstile state; voice and chat requests have safe timeouts; microphones are released when the page is hidden; and multiline dispute descriptions keep their paragraph structure. It also synchronises every visible version marker.
+Version 3.7.37 closes the remaining pre-launch visibility gap: when strict public launch mode is enabled but readiness checks have not passed, the support page and its PayPal/crypto QR assets now fail closed together with the main public site. Temporary 503 pages and assets use `Cache-Control: no-store` and `Retry-After: 300`, preventing browsers or proxies from retaining the maintenance response after configuration is corrected. Deployment and promotion documentation now points to the current release, and generated test caches are excluded from the distribution archive.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
+
+
+## Public launch consistency in v3.7.37
+
+- `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
+- Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
+- Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
+- Deployment and promotion instructions use the current `3.7.37` release markers.
+- Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
+- Generated Python and pytest caches are removed before packaging.
+
+
+## Narrow-screen AI chat fix retained from v3.7.36
+
+- At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
+- The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
+- The message field explicitly uses the available width without forcing horizontal compression.
+- A regression test verifies the responsive CSS; the release markers are synchronised for `3.7.37`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -15,7 +33,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - AI chat and both voice-transcription flows stop waiting after 45 seconds and show a localized retry message.
 - Active microphone streams are released when the page is hidden or left.
 - Server-side description cleaning preserves paragraphs while removing control characters and excessive blank lines.
-- `APP_VERSION`, `VERSION.txt`, README, changelog and regression tests now consistently report `3.7.35`.
+- `APP_VERSION`, `VERSION.txt`, README, changelog and regression tests remain synchronised.
 
 The multilingual guide catalogue, `/health` liveness check, strict `/ready` launch gate, document protections and all earlier features remain included.
 
@@ -394,7 +412,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.35
+cd ChinaTradeResolve_Document_AI_v3.7.37
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -552,7 +570,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.35 включает усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.37 включает согласованный строгий режим запуска, исправленную мобильную форму ИИ-чата, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

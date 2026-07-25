@@ -1947,9 +1947,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.35"
+    assert health.json()["version"] == "3.7.37"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.35"
+    assert health.headers["x-app-version"] == "3.7.37"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4582,14 +4582,41 @@ def test_public_launch_mode_blocks_incomplete_site_without_leaking_config(monkey
     try:
         home = client.get("/")
         privacy = client.get("/privacy")
+        support = client.get("/support")
+        paypal_qr = client.get("/support/paypal-qr.png")
+        crypto_qr = client.get("/support/qr/btc.png")
         submission = client.post(
             "/api/applications",
             json=valid_payload(email="blocked-launch@example.com"),
             headers={"x-forwarded-for": "192.0.2.240"},
         )
-        assert home.status_code == privacy.status_code == submission.status_code == 503
+        assert home.status_code == privacy.status_code == support.status_code == 503
+        assert paypal_qr.status_code == crypto_qr.status_code == submission.status_code == 503
+        for response in (home, privacy, support, paypal_qr, crypto_qr):
+            assert response.headers["cache-control"] == "no-store"
+            assert response.headers["retry-after"] == "300"
         assert "DATA_CONTROLLER" not in home.text
         assert "TURNSTILE" not in home.text
+        assert "paypal.com" not in support.text.lower()
+        assert "1BafLn5NLdKwyv8rvuPJVZUKwQnHyuMej9" not in support.text
+        assert paypal_qr.headers.get("content-type") != "image/png"
+        assert crypto_qr.headers.get("content-type") != "image/png"
+    finally:
+        object.__setattr__(module.settings, "public_launch_mode", original)
+
+
+def test_public_launch_mode_exposes_site_and_support_after_readiness(monkeypatch):
+    import app.main as module
+
+    original = module.settings.public_launch_mode
+    object.__setattr__(module.settings, "public_launch_mode", True)
+    monkeypatch.setattr(module, "public_launch_is_ready", lambda: True)
+    try:
+        for path in ("/", "/privacy", "/support", "/support/paypal-qr.png", "/support/qr/btc.png"):
+            response = client.get(path)
+            assert response.status_code == 200, path
+        assert client.get("/support/paypal-qr.png").headers["content-type"] == "image/png"
+        assert client.get("/support/qr/btc.png").headers["content-type"] == "image/png"
     finally:
         object.__setattr__(module.settings, "public_launch_mode", original)
 
@@ -4980,11 +5007,21 @@ def test_v3734_description_normalization_preserves_paragraphs():
     assert application.description == "First paragraph with enough detail for validation.\n\nSecond paragraph with more evidence."
 
 
-def test_v3735_version_markers_are_synchronised():
+def test_v3737_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.35"
-    assert "v3.7.35" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.35" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.37"
+    assert "v3.7.37" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.37" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.37" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.37" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+
+
+def test_v3737_ai_chat_stacks_send_button_on_very_narrow_screens():
+    page = client.get("/?lang=ru")
+    assert page.status_code == 200
+    assert "@media(max-width:360px){.ai-chat-form{grid-template-columns:minmax(0,1fr)" in page.text
+    assert ".ai-chat-form textarea{width:100%}" in page.text
+    assert ".ai-chat-send{grid-column:1/-1;width:100%;min-height:44px}" in page.text
 
 
 def test_v3735_mobile_layout_table_hint_and_copy_are_present():

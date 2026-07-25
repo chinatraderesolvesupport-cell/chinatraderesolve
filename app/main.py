@@ -142,7 +142,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.35"
+APP_VERSION = "3.7.37"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -433,6 +433,15 @@ def unavailable_until_configured(request: Request) -> HTMLResponse:
         name="service_unavailable.html",
         context={"contact_email": settings.contact_email},
         status_code=503,
+        headers={"Cache-Control": "no-store", "Retry-After": "300"},
+    )
+
+
+def unavailable_public_asset() -> Response:
+    """Fail closed for public support assets without exposing configuration."""
+    return Response(
+        status_code=503,
+        headers={"Cache-Control": "no-store", "Retry-After": "300"},
     )
 
 
@@ -1672,6 +1681,8 @@ async def public_voice_transcription(
 
 @app.get("/support", response_class=HTMLResponse)
 def support_page(request: Request) -> HTMLResponse:
+    if public_launch_is_blocked():
+        return unavailable_until_configured(request)
     if not support_is_available():
         raise HTTPException(status_code=404, detail="Voluntary support is not currently available")
     return templates.TemplateResponse(
@@ -1688,6 +1699,8 @@ def support_page(request: Request) -> HTMLResponse:
 
 @app.get("/support/paypal-qr.png")
 def paypal_support_qr() -> Response:
+    if public_launch_is_blocked():
+        return unavailable_public_asset()
     paypal_url = safe_paypal_support_url()
     if not settings.enable_voluntary_support or not paypal_url:
         raise HTTPException(status_code=404, detail="PayPal support is disabled")
@@ -1703,6 +1716,8 @@ def paypal_support_qr() -> Response:
 
 @app.get("/support/qr/{wallet_id}.png")
 def support_qr(wallet_id: str) -> Response:
+    if public_launch_is_blocked():
+        return unavailable_public_asset()
     if not settings.enable_voluntary_support:
         raise HTTPException(status_code=404, detail="Support is disabled")
     wallet = next((item for item in crypto_wallets() if item["id"] == wallet_id), None)

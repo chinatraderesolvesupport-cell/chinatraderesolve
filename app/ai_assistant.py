@@ -346,11 +346,27 @@ _PROMPT_ATTACK_TERMS = (
 
 _FOLLOWUP_TERMS = (
     "what next", "what should i do", "and then", "what about", "can i", "is that enough", "how long",
+    "please continue", "go ahead", "draft it", "write it", "prepare it", "do that",
     "что дальше", "что делать", "а потом", "а если", "этого достаточно", "сколько времени",
-    "et ensuite", "que faire", "et si", "est-ce suffisant",
-    "was nun", "was soll ich tun", "und dann", "reicht das",
-    "qué hago", "que hago", "y después", "y despues", "es suficiente",
+    "продолжай", "продолжите", "составь", "составьте", "напиши", "напишите", "подготовь",
+    "подготовьте", "сделай это", "сделайте это",
+    "et ensuite", "que faire", "et si", "est-ce suffisant", "continuez", "rédigez-le", "redigez-le",
+    "was nun", "was soll ich tun", "und dann", "reicht das", "weiter", "entwerfen sie es",
+    "qué hago", "que hago", "y después", "y despues", "es suficiente", "continúe", "continue",
+    "redáctalo", "redactalo",
     "šta dalje", "sta dalje", "šta da radim", "sta da radim", "da li je dovoljno",
+    "nastavi", "sastavi", "napiši", "napisi",
+)
+
+# Exact short replies are handled separately. Substring matching would make
+# Russian "да" match unrelated words such as "задача".
+_FOLLOWUP_EXACT_TERMS = (
+    "yes", "yes please", "ok", "okay", "please do",
+    "да", "да пожалуйста", "хорошо", "согласен", "согласна",
+    "oui", "oui s'il vous plaît", "d'accord",
+    "ja", "ja bitte",
+    "sí", "si", "sí por favor", "si por favor", "de acuerdo",
+    "da", "da molim", "u redu",
 )
 
 
@@ -445,6 +461,13 @@ def _is_contextual_followup(latest_text: str, earlier_user_text: str) -> bool:
         return False
     if not (_contains_term(earlier, _SCOPE_STRONG_TERMS) or _latest_is_in_scope(earlier_user_text)):
         return False
+    latest_exact = re.sub(r"[^\w]+", " ", latest, flags=re.UNICODE).strip()
+    exact_terms = {
+        re.sub(r"[^\w]+", " ", _normalise_scope_text(value), flags=re.UNICODE).strip()
+        for value in _FOLLOWUP_EXACT_TERMS
+    }
+    if latest_exact in exact_terms:
+        return True
     return _contains_term(latest, _FOLLOWUP_TERMS)
 
 

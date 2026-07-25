@@ -1,0 +1,6 @@
+ChinaTradeResolve Document AI v3.7.41
+
+1. Исправлено продолжение ИИ-диалога после коротких ответов: «да», «да, пожалуйста», «составь», «продолжай» и аналогов на EN/FR/DE/ES/SR.
+2. CI-тесты Telegram-монитора переведены на asyncio.run и больше не требуют незаявленный pytest-asyncio.
+3. На production Render публичные ссылки и ссылки в письмах закреплены за https://chinatraderesolve.com.
+4. /health безопасно показывает public_base_url и email_link_base_url.

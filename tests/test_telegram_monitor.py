@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 
 from app.telegram_monitor_core import (
@@ -109,8 +110,7 @@ def test_monitor_rejects_missing_secret(monkeypatch):
         telegram_monitor.load_telegram_monitor_settings()
 
 
-@pytest.mark.asyncio
-async def test_connected_monitor_sends_relevant_public_channel_alert(monkeypatch):
+def test_connected_monitor_sends_relevant_public_channel_alert(monkeypatch):
     import sys
     import types
     from app import telegram_monitor
@@ -190,7 +190,7 @@ async def test_connected_monitor_sends_relevant_public_channel_alert(monkeypatch
         exclude_phrases=(),
         startup_notice=False,
     )
-    await telegram_monitor._connected_monitor(settings)
+    asyncio.run(telegram_monitor._connected_monitor(settings))
 
     assert len(sent) == 1
     assert "Public Group" in sent[0]
@@ -198,8 +198,7 @@ async def test_connected_monitor_sends_relevant_public_channel_alert(monkeypatch
     assert telegram_monitor._runtime.alerts_sent == 1
 
 
-@pytest.mark.asyncio
-async def test_connected_monitor_ignores_direct_message(monkeypatch):
+def test_connected_monitor_ignores_direct_message(monkeypatch):
     import sys
     import types
     from app import telegram_monitor
@@ -265,12 +264,11 @@ async def test_connected_monitor_ignores_direct_message(monkeypatch):
     settings = telegram_monitor.TelegramMonitorSettings(
         True, 123, "hash", "session", "token", "chat", (), (), (), False
     )
-    await telegram_monitor._connected_monitor(settings)
+    asyncio.run(telegram_monitor._connected_monitor(settings))
     assert sent == []
 
 
-@pytest.mark.asyncio
-async def test_connected_monitor_can_temporarily_accept_own_public_message(monkeypatch):
+def test_connected_monitor_can_temporarily_accept_own_public_message(monkeypatch):
     import sys
     import types
     from app import telegram_monitor
@@ -337,13 +335,12 @@ async def test_connected_monitor_can_temporarily_accept_own_public_message(monke
         True, 123, "hash", "session", "token", "chat", (), (), (), False,
         test_own_messages=True,
     )
-    await telegram_monitor._connected_monitor(settings)
+    asyncio.run(telegram_monitor._connected_monitor(settings))
     assert len(sent) == 1
     assert "Public Test" in sent[0]
 
 
-@pytest.mark.asyncio
-async def test_connected_monitor_ignores_own_message_by_default(monkeypatch):
+def test_connected_monitor_ignores_own_message_by_default(monkeypatch):
     import sys
     import types
     from app import telegram_monitor
@@ -410,7 +407,7 @@ async def test_connected_monitor_ignores_own_message_by_default(monkeypatch):
     settings = telegram_monitor.TelegramMonitorSettings(
         True, 123, "hash", "session", "token", "chat", (), (), (), False
     )
-    await telegram_monitor._connected_monitor(settings)
+    asyncio.run(telegram_monitor._connected_monitor(settings))
     assert sent == []
     assert telegram_monitor._runtime.ignored_own == 1
 

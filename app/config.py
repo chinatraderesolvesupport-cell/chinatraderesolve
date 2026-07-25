@@ -17,6 +17,10 @@ DEFAULT_ETH_ADDRESS = "0x2F8a2773F8254d061ef286Bac8BF922344a2A494"
 DEFAULT_USDT_TRC20_ADDRESS = "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R"
 DEFAULT_SOL_ADDRESS = "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm"
 
+# Canonical production domain used for public links and transactional email.
+CANONICAL_PUBLIC_BASE_URL = "https://chinatraderesolve.com"
+_RENDER_SERVICE_HOSTS = frozenset({"chinatraderesolve.onrender.com"})
+
 INSECURE_ADMIN_TOKENS = frozenset({
     "",
     DEFAULT_ADMIN_TOKEN,
@@ -129,13 +133,21 @@ def _valid_base_url(raw: str | None) -> str | None:
 
 
 def configured_public_base_url() -> str:
-    # Render exposes the production HTTPS URL automatically. An explicit valid
-    # PUBLIC_BASE_URL still takes precedence for a custom domain.
-    return (
-        _valid_base_url(os.getenv("PUBLIC_BASE_URL"))
-        or _valid_base_url(os.getenv("RENDER_EXTERNAL_URL"))
-        or "http://127.0.0.1:8000"
-    )
+    # An explicit valid value always wins. On the known production Render service,
+    # use the canonical custom domain so emails, sitemaps and private case links
+    # never fall back to the temporary *.onrender.com hostname.
+    explicit = _valid_base_url(os.getenv("PUBLIC_BASE_URL"))
+    if explicit:
+        return explicit
+
+    render_url = _valid_base_url(os.getenv("RENDER_EXTERNAL_URL"))
+    if render_url:
+        hostname = (urlparse(render_url).hostname or "").casefold()
+        if hostname in _RENDER_SERVICE_HOSTS:
+            return CANONICAL_PUBLIC_BASE_URL
+        return render_url
+
+    return "http://127.0.0.1:8000"
 
 
 @dataclass(frozen=True)

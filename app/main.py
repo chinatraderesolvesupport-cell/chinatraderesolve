@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.40"
+APP_VERSION = "3.7.41"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -1413,6 +1413,8 @@ def health() -> dict[str, Any]:
         "openai_billing_ready": settings.openai_billing_ready,
         "secure_configuration": admin_configuration_is_secure(),
         "public_url_https": settings.public_base_url.startswith("https://"),
+        "public_base_url": settings.public_base_url,
+        "email_link_base_url": settings.public_base_url,
         "email_delivery_configured": email_delivery_is_configured(),
         "privacy_configuration_complete": privacy_configuration_is_complete(),
         "bot_protection_enabled": turnstile_is_enabled(),

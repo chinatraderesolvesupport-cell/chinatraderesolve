@@ -846,7 +846,37 @@ def test_ai_assistant_scope_guard_allows_relevant_questions_and_contextual_follo
     )
     assert assistant_scope_reply(followup) is None
 
+    for short_reply in (
+        "да",
+        "Да, пожалуйста",
+        "составь",
+        "продолжай",
+        "yes",
+        "please do",
+        "draft it",
+    ):
+        contextual = AssistantChatRequest.model_validate(
+            {
+                "language": "ru" if any("а" <= char.lower() <= "я" for char in short_reply) else "en",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Поставщик Alibaba прислал товар с дефектами и отказывается вернуть деньги.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Хотите, я составлю письменную претензию поставщику?",
+                    },
+                    {"role": "user", "content": short_reply},
+                ],
+            }
+        )
+        assert assistant_scope_reply(contextual) is None, short_reply
 
+    isolated_yes = AssistantChatRequest.model_validate(
+        {"language": "ru", "messages": [{"role": "user", "content": "да"}]}
+    )
+    assert assistant_scope_reply(isolated_yes) is not None
 
 
 def test_ai_assistant_scope_guard_allows_car_part_supplier_disputes_but_not_repairs():
@@ -1947,10 +1977,11 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.40"
+    assert health.json()["version"] == "3.7.41"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.40"
+    assert health.headers["x-app-version"] == "3.7.41"
     assert health.json()["voice_max_seconds"] == 120
+    assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
     assert "ai_assistant_daily_limit" not in health.json()
@@ -2264,6 +2295,14 @@ def test_render_external_url_is_used_when_public_base_url_is_missing(monkeypatch
     monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://example-service.onrender.com/")
     assert configured_public_base_url() == "https://example-service.onrender.com"
+
+
+def test_production_render_service_uses_canonical_domain_for_email_links(monkeypatch):
+    from app.config import configured_public_base_url
+
+    monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://chinatraderesolve.onrender.com/")
+    assert configured_public_base_url() == "https://chinatraderesolve.com"
 
 
 def test_feedback_form_has_no_autofill_prone_honeypot():
@@ -5010,11 +5049,11 @@ def test_v3734_description_normalization_preserves_paragraphs():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.40"
-    assert "v3.7.40" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.40" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.40" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.40" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.41"
+    assert "v3.7.41" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.41" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.41" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.41" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

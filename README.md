@@ -1,19 +1,20 @@
-# ChinaTradeResolve Document AI v3.7.43
+# ChinaTradeResolve Document AI v3.7.44
 
-Version 3.7.43 fixes voice-preview fallbacks, compacts the application voice-consent panel, and restores a visible case-status button after submission.
+Version 3.7.44 fixes the five issues found during the final Russian-language user journey: stray foreign text in AI replies, repeated chat CAPTCHA prompts, unclear document-upload guidance, a two-click voice-consent flow and an easy-to-miss application warning.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
 
 
-## Voice and confirmation interface fixes in v3.7.43
+## Final AI, CAPTCHA, voice and form-flow fixes in v3.7.44
 
-- Browser live speech recognition no longer replaces already visible words with a misleading “unavailable” message after a temporary network or browser-service error.
-- The final server-side transcription remains independent and still completes after recording stops.
-- The voice-consent area collapses after consent and Turnstile verification instead of reserving a large empty block.
-- The case-status action after submission uses a dark visible label on the light confirmation panel.
-- Regression checks cover the preserved live preview, compact verified voice panel and visible status link.
+- Russian AI replies remove a lone accidental Latin tail after a completed sentence while retaining legitimate names such as Alibaba, Nappa, OpenAI and ChinaTradeResolve.
+- Questions such as “куда отправлять документы?” receive a direct, localized explanation: submit the short application first, then upload up to twenty PDF or image files through the private case link.
+- One successful Turnstile challenge is reused for AI chat and voice transcription in the same signed browser session for up to thirty minutes; application submission still requires its own security check.
+- A first microphone click can wait for consent or Turnstile and starts recording automatically as soon as the required confirmation is complete, so the visitor does not need to discover a second click.
+- The incomplete-application warning is now high-contrast and briefly pulses when the second step opens or an invalid submission is attempted, with reduced-motion support.
+- Earlier v3.7.43 fixes remain included: live speech preview is preserved after browser-recognition errors, the verified voice panel is compact and the case-status button is visible.
 
 ## Production verification and CI reliability in v3.7.38
 
@@ -30,7 +31,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.43 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.44 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -40,7 +41,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.43`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.44`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -431,7 +432,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.43
+cd ChinaTradeResolve_Document_AI_v3.7.44
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -589,7 +590,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.43 включает исправление коротких продолжений ИИ-диалога, надёжные CI-тесты, канонический домен в письмах и пассивный Telegram-монитор и согласованный строгий режим запуска, исправленную мобильную форму ИИ-чата, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.44 включает устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

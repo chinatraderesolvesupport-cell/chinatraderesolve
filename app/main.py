@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.43"
+APP_VERSION = "3.7.44"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -657,8 +657,36 @@ def support_is_available() -> bool:
     )
 
 
+TURNSTILE_AI_SESSION_TTL_SECONDS = 30 * 60
+
+
 def turnstile_is_enabled() -> bool:
     return bool(settings.turnstile_site_key and settings.turnstile_secret_key)
+
+
+def ai_turnstile_session_is_valid(request: Request) -> bool:
+    """Allow one successful AI/voice challenge to cover the current browser session briefly."""
+    if not turnstile_is_enabled():
+        return True
+    try:
+        verified_at = float(request.session.get("ai_turnstile_verified_at") or 0)
+    except (TypeError, ValueError):
+        return False
+    return verified_at > 0 and (time.time() - verified_at) < TURNSTILE_AI_SESSION_TTL_SECONDS
+
+
+def mark_ai_turnstile_session_verified(request: Request) -> None:
+    request.session["ai_turnstile_verified_at"] = time.time()
+
+
+async def verify_ai_turnstile(token: str, request: Request) -> bool:
+    """Verify Turnstile once, then reuse the signed server session for AI and voice."""
+    if ai_turnstile_session_is_valid(request):
+        return True
+    if not await verify_turnstile(token, request):
+        return False
+    mark_ai_turnstile_session_verified(request)
+    return True
 
 
 async def verify_turnstile(token: str, request: Request) -> bool:
@@ -1266,6 +1294,7 @@ def home(request: Request) -> HTMLResponse:
             "document_analysis_enabled": document_analysis_is_enabled(),
             "email_delivery_configured": email_delivery_is_configured(),
             "turnstile_site_key": settings.turnstile_site_key if turnstile_is_enabled() else "",
+            "ai_turnstile_session_verified": ai_turnstile_session_is_valid(request),
             "canonical_url": canonical_url,
             "page_language": page_language,
             "seo": seo,
@@ -1570,6 +1599,8 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
     # unrelated messages therefore cannot waste the visitor's quota.
     local_scope_reply = assistant_scope_reply(payload)
     if local_scope_reply is not None:
+        if not await verify_ai_turnstile(payload.turnstile_token, request):
+            raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
         return AssistantChatResponse(reply=local_scope_reply)
 
     session_key = public_rate_session_key(request)
@@ -1580,7 +1611,7 @@ async def public_ai_assistant(payload: AssistantChatRequest, request: Request) -
     # session buckets above.
     if not assistant_ip_flood_limiter.allow(f"assistant-ip:{client_key(request)}"):
         raise HTTPException(status_code=429, detail=localized_error(payload.language, "rate"))
-    if not await verify_turnstile(payload.turnstile_token, request):
+    if not await verify_ai_turnstile(payload.turnstile_token, request):
         raise HTTPException(status_code=400, detail=localized_error(payload.language, "bot"))
     try:
         claim_daily_usage_for_subject(
@@ -1628,7 +1659,7 @@ async def public_voice_transcription(
     except VoiceValidationError as exc:
         status_code = 413 if exc.kind == "too_large" else 415
         raise HTTPException(status_code=status_code, detail=localized_error(language_code, "voice_invalid"))
-    if not await verify_turnstile(turnstile_token, request):
+    if not await verify_ai_turnstile(turnstile_token, request):
         raise HTTPException(status_code=400, detail=localized_error(language_code, "bot"))
     if not voice_limiter.allow(f"voice:{voice_purpose}:{session_key}"):
         raise HTTPException(status_code=429, detail=localized_error(language_code, "voice_rate"))

@@ -22,6 +22,7 @@ os.environ["INDEXNOW_KEY"] = "a0d2be8a24fd4d8798f0af9d9a8e2a72"
 
 from fastapi.testclient import TestClient
 from app.main import app
+from app.config import settings
 
 
 client = TestClient(app)
@@ -698,7 +699,14 @@ def test_ai_assistant_frontend_and_disabled_endpoint(monkeypatch):
     assert "descriptionVoiceButtonHint.hidden=Boolean(recording)" in home.text
     assert "let recognition=null,active=false,finalText='',restartTimer=null,hasText=false" in home.text
     assert "function disableLivePreview(){active=false;if(!hasText)onUnavailable()}" in home.text
+    assert "aiTurnstileSessionVerified" in home.text
+    assert "aiTurnstileSatisfied()" in home.text
+    assert "aiVoiceStartPending" in home.text
+    assert "descriptionVoiceStartPending" in home.text
+    assert "drawFormReadinessAttention" in home.text
+    assert "form-readiness-attention" in home.text
     assert "if(preview){hasText=true;onText(preview)}" in home.text
+    assert '.description-voice-turnstile.is-verified{display:none}' in home.text
     assert '.description-voice-turnstile.is-verified .description-voice-turnstile-widget{display:none}' in home.text
     assert '.description-voice-panel.is-ready .description-voice-help' in home.text
     assert '.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px' not in home.text
@@ -879,10 +887,35 @@ def test_ai_assistant_scope_guard_allows_relevant_questions_and_contextual_follo
         )
         assert assistant_scope_reply(contextual) is None, short_reply
 
+    upload_question = AssistantChatRequest.model_validate(
+        {
+            "language": "ru",
+            "messages": [
+                {"role": "user", "content": "Поставщик не отправил товар."},
+                {"role": "assistant", "content": "Соберите документы."},
+                {"role": "user", "content": "Ну а куда мне это всё отправлять? Я до сих пор не понял."},
+            ],
+        }
+    )
+    upload_reply = assistant_scope_reply(upload_question)
+    assert "приватную ссылку" in upload_reply
+    assert "до 20" in upload_reply
+
     isolated_yes = AssistantChatRequest.model_validate(
         {"language": "ru", "messages": [{"role": "user", "content": "да"}]}
     )
     assert assistant_scope_reply(isolated_yes) is not None
+
+
+def test_ai_assistant_removes_isolated_english_tail_from_russian_output():
+    from app.ai_assistant import _strip_unexpected_foreign_tail
+
+    assert _strip_unexpected_foreign_tail(
+        "Не размещайте здесь номера заказов или конфиденциальные данные. crescent", "ru"
+    ) == "Не размещайте здесь номера заказов или конфиденциальные данные."
+    assert _strip_unexpected_foreign_tail(
+        "Материал был заявлен как Nappa.", "ru"
+    ) == "Материал был заявлен как Nappa."
 
 
 def test_ai_assistant_scope_guard_allows_car_part_supplier_disputes_but_not_repairs():
@@ -1274,6 +1307,50 @@ def test_voice_transcription_provider_request_and_validation(monkeypatch):
         module.validate_voice_audio(b"x" * (module.MAX_VOICE_AUDIO_BYTES + 1), "audio/webm")
 
 
+def test_ai_turnstile_session_reuses_one_successful_challenge(monkeypatch):
+    import app.main as main_module
+
+    calls = {"count": 0}
+
+    async def passed_verification(_token, _request):
+        calls["count"] += 1
+        return True
+
+    async def assistant_answer(_payload):
+        return "Preserve the order, payment proof and supplier messages."
+
+    monkeypatch.setattr(main_module, "turnstile_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "verify_turnstile", passed_verification)
+    monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
+    monkeypatch.setattr(main_module, "assistant_reply", assistant_answer)
+    with TestClient(main_module.app) as session_client:
+        first = session_client.get("/")
+        assert 'data-turnstile-session-verified="false"' in first.text
+        first_response = session_client.post(
+            "/api/assistant",
+            json={
+                "language": "en",
+                "messages": [{"role": "user", "content": "How should I organise evidence for a supplier dispute?"}],
+                "turnstile_token": "one-valid-token",
+            },
+        )
+        assert first_response.status_code == 200
+        assert calls["count"] == 1
+
+        second_response = session_client.post(
+            "/api/assistant",
+            json={
+                "language": "en",
+                "messages": [{"role": "user", "content": "What should I do next?"}],
+                "turnstile_token": "",
+            },
+        )
+        assert second_response.status_code == 200
+        assert calls["count"] == 1
+        second_home = session_client.get("/")
+        assert 'data-turnstile-session-verified="true"' in second_home.text
+
+
 def test_ai_assistant_requires_turnstile_when_configured(monkeypatch):
     import app.main as main_module
 
@@ -1281,7 +1358,7 @@ def test_ai_assistant_requires_turnstile_when_configured(monkeypatch):
         return False
 
     monkeypatch.setattr(main_module, "assistant_is_enabled", lambda: True)
-    monkeypatch.setattr(main_module, "verify_turnstile", failed_verification)
+    monkeypatch.setattr(main_module, "verify_ai_turnstile", failed_verification)
     response = client.post(
         "/api/assistant",
         json={
@@ -1999,9 +2076,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.43"
+    assert health.json()["version"] == "3.7.44"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.43"
+    assert health.headers["x-app-version"] == "3.7.44"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5073,11 +5150,11 @@ def test_v3734_description_normalization_preserves_paragraphs():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.43"
-    assert "v3.7.43" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.43" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.43" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.43" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.44"
+    assert "v3.7.44" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.44" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.44" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.44" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

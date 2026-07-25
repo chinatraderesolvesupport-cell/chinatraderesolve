@@ -108,7 +108,7 @@ section{padding:44px 0;scroll-margin-top:130px}.light{background:var(--light);co
 input,select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
 textarea{min-height:118px;resize:vertical}.hint{font-size:11px;color:#64748b;line-height:1.4}.error{color:#b91c1c;font-size:13px}.submit-status{display:none;margin-top:10px;padding:11px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
 input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:#dc2626;box-shadow:0 0 0 2px rgba(220,38,38,.10)}
-.form-readiness{grid-column:1/-1;display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:11px;background:#fff7ed;color:#9a3412;border:1px solid #fdba74;font-size:13px;line-height:1.4}.form-readiness:before{content:"!";display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:#fed7aa;font-weight:950}.form-readiness.ready{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}.form-readiness.ready:before{content:"✓";background:#a7f3d0}.application-turnstile-status{min-height:18px;color:#475569;font-size:12px}.application-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.application-turnstile-status[data-state="required"],.application-turnstile-status[data-state="error"]{color:#b45309;font-weight:800}
+.form-readiness{grid-column:1/-1;display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border-radius:12px;background:#fff1f2;color:#991b1b;border:2px solid #ef4444;font-size:14px;font-weight:850;line-height:1.45;box-shadow:0 8px 22px rgba(220,38,38,.12)}.form-readiness:before{content:"!";display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#dc2626;color:#fff;font-weight:950}.form-readiness.needs-attention{animation:form-readiness-attention 1.05s ease-in-out 3}.form-readiness.ready{background:#ecfdf5;color:#065f46;border-color:#10b981;box-shadow:none;font-weight:800}.form-readiness.ready:before{content:"✓";background:#10b981}.application-turnstile-status{min-height:18px;color:#475569;font-size:12px}.application-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.application-turnstile-status[data-state="required"],.application-turnstile-status[data-state="error"]{color:#b45309;font-weight:800}
 .form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:3px}.btn.dark{color:#0f172a;border-color:#94a3b8}
 .form-choice-intro{grid-column:1/-1;display:grid;gap:3px;padding:13px 14px;border:1px solid #99f6e4;border-radius:13px;background:linear-gradient(135deg,#ecfeff,#f0fdfa);color:#134e4a}
 .form-choice-intro strong{font-size:16px}.form-choice-intro span{font-size:13px;line-height:1.4}
@@ -203,7 +203,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}
 .ai-chat-turnstile.needs-attention{background:#fff7ed;box-shadow:inset 0 0 0 2px #f59e0b}
 .ai-message-content{display:block}
-@keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}@keyframes consent-attention{0%{transform:scale(.99);background:#fef3c7}45%{transform:scale(1.01);background:#fffbeb}100%{transform:scale(1);background:#fff7ed}}
+@keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}
+@keyframes consent-attention{0%{transform:scale(.99);background:#fef3c7}45%{transform:scale(1.01);background:#fffbeb}100%{transform:scale(1);background:#fff7ed}}
+@keyframes form-readiness-attention{0%,100%{transform:scale(1)}45%{transform:scale(1.012);box-shadow:0 0 0 5px rgba(239,68,68,.18),0 10px 28px rgba(220,38,38,.18)}}
 .ai-chat-privacy{padding:0 13px 11px;background:#fff;color:#64748b;font-size:10px;line-height:1.4}
 @media(max-width:700px){.ai-chat-launcher{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));width:52px;height:52px;max-width:52px;padding:0;justify-content:center}.ai-chat-launcher .launcher-label{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.ai-chat-launcher .spark{width:30px;height:30px}.ai-chat-panel{right:4%;bottom:12px;width:92%;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);touch-action:pan-y}.ai-chat-open .mobile{display:none!important}}
 .ai-chat-launcher.is-compact{width:52px;height:52px;padding:0;justify-content:center}
@@ -235,7 +237,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .description-voice-panel{display:grid;gap:7px;margin-top:7px;padding:10px 12px;border:1px solid #f59e0b;border-radius:11px;background:#fff7ed;color:#475569;font-size:12px;line-height:1.4}
 .description-voice-panel[hidden]{display:none}.description-voice-panel.needs-attention{box-shadow:0 0 0 3px rgba(245,158,11,.28)}.description-voice-panel.is-ready{gap:4px;padding:9px 12px}.description-voice-panel.is-ready .description-voice-help,.description-voice-panel.is-ready>.voice-live-note{display:none}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-panel.is-ready .description-voice-consent{align-items:center}.description-voice-consent input{width:auto;margin-top:2px}
 .description-voice-status{min-height:17px;color:#0f766e}.description-voice-status[data-state="error"],.description-voice-status[data-state="required"]{color:#b45309;font-weight:800}.description-voice-panel .voice-live-preview{margin-top:0}
-.description-voice-turnstile{display:grid;gap:5px;padding-top:2px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:0;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget:empty{display:none}.description-voice-turnstile.is-verified .description-voice-turnstile-widget{display:none}.description-voice-turnstile-widget iframe{max-width:100%!important}
+.description-voice-turnstile{display:grid;gap:5px;padding-top:2px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:0;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget:empty{display:none}.description-voice-turnstile.is-verified{display:none}.description-voice-turnstile.is-verified .description-voice-turnstile-widget{display:none}.description-voice-turnstile-widget iframe{max-width:100%!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
 
 .sample-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-gutter:stable;border-radius:8px}
@@ -467,7 +469,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 <div class="form-step" id="stepTwo">
 <div class="form-choice-intro"><strong data-i18n="description_mode_title">Как вам удобнее описать ситуацию?</strong><span data-i18n="description_mode_text">Напишите в поле ниже или нажмите «Рассказать голосом». Расшифровку можно исправить перед отправкой.</span></div>
-<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
+<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
@@ -578,7 +580,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </footer>
 <a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
 
-<div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-enabled="{{ 'true' if voice_input_enabled else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
+<div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-enabled="{{ 'true' if voice_input_enabled else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
 <button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
 <section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
@@ -655,6 +657,13 @@ function setApplicationFieldValidity(field,force=false){if(!field)return;const s
 function applicationReady(){
   return !applicationSubmitting&&requiredApplicationFields.every(applicationFieldValid)&&requiredConsentInputs.every(input=>input.checked)&&applicationTurnstileVerified;
 }
+function drawFormReadinessAttention(){
+  if(!formReadiness||formReadiness.classList.contains('ready'))return;
+  formReadiness.classList.remove('needs-attention');
+  void formReadiness.offsetWidth;
+  formReadiness.classList.add('needs-attention');
+  window.setTimeout(()=>formReadiness.classList.remove('needs-attention'),3400);
+}
 function updateSubmitAvailability(){
   const ready=applicationReady();
   formSubmitButton.disabled=!ready;
@@ -672,6 +681,9 @@ function updateDescriptionCount(){descriptionCount.textContent=`${descriptionFie
 requiredApplicationFields.forEach(field=>{field.addEventListener('blur',()=>{field.dataset.touched='true';setApplicationFieldValidity(field);updateSubmitAvailability()});field.addEventListener('input',()=>{setApplicationFieldValidity(field);updateSubmitAvailability()})});
 descriptionField.addEventListener('input',updateDescriptionCount);
 caseFormElement.addEventListener('change',updateSubmitAvailability);
+if(formReadiness&&'IntersectionObserver' in window){
+  new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)&&!applicationReady())drawFormReadinessAttention()},{threshold:.6}).observe(formReadiness);
+}
 updateDescriptionCount();
 
 const CTRSpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition||null;
@@ -724,19 +736,22 @@ const descriptionVoiceTurnstileMount=document.getElementById('descriptionVoiceTu
 const descriptionVoiceTurnstileResponse=document.getElementById('descriptionVoiceTurnstileResponse');
 const descriptionVoiceVerificationStatus=document.getElementById('descriptionVoiceVerificationStatus');
 let descriptionVoiceRecorder=null,descriptionVoiceStream=null,descriptionVoiceChunks=[],descriptionVoiceTimer=null,descriptionVoiceElapsedTimer=null,descriptionVoiceStartedAt=0,descriptionVoiceBusy=false,descriptionVoiceDiscard=false,descriptionVoiceRecognition=null,descriptionVoiceBaseText='';
-let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPending=false,descriptionVoiceTurnstileLoadAttempts=0;
+let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPending=false,descriptionVoiceTurnstileLoadAttempts=0,descriptionVoiceStartPending=false;
+let descriptionVoiceTurnstileSessionVerified=Boolean(descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileSessionVerified==='true');
 const descriptionVoiceMaxSeconds=Math.max(15,Number(descriptionVoicePanel&&descriptionVoicePanel.dataset.voiceMaxSeconds)||120);
 function descriptionVoiceCopy(key){const copy=window.CTR_TRANSLATIONS||{};const lang=document.documentElement.lang||'en';return(copy[lang]&&copy[lang][key])||(copy.en&&copy.en[key])||''}
 function setDescriptionVoiceStatus(key,state=''){if(!descriptionVoiceStatus)return;descriptionVoiceStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceStatus.dataset.state=state}
-function updateDescriptionVoicePanelState(){if(!descriptionVoicePanel)return;const turnstileRequired=descriptionVoicePanel.dataset.turnstileRequired==='true';const verified=!turnstileRequired||Boolean(descriptionVoiceToken());const ready=Boolean(descriptionVoiceConsent&&descriptionVoiceConsent.checked&&verified);descriptionVoicePanel.classList.toggle('is-ready',ready);const turnstile=document.getElementById('descriptionVoiceTurnstile');if(turnstile)turnstile.classList.toggle('is-verified',verified)}
+function updateDescriptionVoicePanelState(){if(!descriptionVoicePanel)return;const verified=descriptionVoiceVerificationSatisfied();const ready=Boolean(descriptionVoiceConsent&&descriptionVoiceConsent.checked&&verified);descriptionVoicePanel.classList.toggle('is-ready',ready);const turnstile=document.getElementById('descriptionVoiceTurnstile');if(turnstile)turnstile.classList.toggle('is-verified',verified)}
 function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state;updateDescriptionVoicePanelState()}
 function setDescriptionLiveText(text,unavailable=false){if(!descriptionVoiceLive||!descriptionVoiceLiveText)return;descriptionVoiceLive.hidden=false;descriptionVoiceLiveText.textContent=text||(unavailable?descriptionVoiceCopy('voice_live_unavailable'):'')}
 function hideDescriptionLiveText(){if(descriptionVoiceLive)descriptionVoiceLive.hidden=true;if(descriptionVoiceLiveText)descriptionVoiceLiveText.textContent=''}
 function descriptionVoiceToken(){return descriptionVoiceTurnstileResponse?String(descriptionVoiceTurnstileResponse.value||''):''}
+function descriptionVoiceVerificationSatisfied(){return !descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||descriptionVoiceTurnstileSessionVerified||Boolean(descriptionVoiceToken())}
+function markDescriptionVoiceTurnstileSessionVerified(){descriptionVoiceTurnstileSessionVerified=true;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoicePanelState();document.dispatchEvent(new Event('ctr:ai-turnstile-session-verified'))}
 function updateDescriptionVoiceButton(){if(!descriptionVoiceButton)return;const recording=descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording';descriptionVoiceButton.disabled=descriptionVoiceBusy&&!recording;descriptionVoiceButton.classList.toggle('recording',Boolean(recording));descriptionVoiceButton.setAttribute('aria-pressed',recording?'true':'false');descriptionVoiceButton.setAttribute('aria-label',descriptionVoiceCopy(recording?'description_voice_stop_label':'description_voice_start_label'));if(descriptionVoiceButtonText)descriptionVoiceButtonText.textContent=descriptionVoiceCopy(recording?'description_voice_stop_label':'description_voice_cta');if(descriptionVoiceButtonHint){descriptionVoiceButtonHint.hidden=Boolean(recording);descriptionVoiceButtonHint.textContent=descriptionVoiceCopy('description_voice_cta_hint')}}
 function updateDescriptionRecordingClock(){if(!descriptionVoiceStatus||!descriptionVoiceStartedAt)return;const elapsed=(Date.now()-descriptionVoiceStartedAt)/1000;descriptionVoiceStatus.textContent=`${descriptionVoiceCopy('description_voice_recording')} ${ctrVoiceElapsed(elapsed)}`;descriptionVoiceStatus.dataset.state='recording'}
 function ensureDescriptionVoiceTurnstile(){
-  if(!descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||!descriptionVoiceTurnstileMount||descriptionVoiceTurnstileWidgetId!==null||descriptionVoiceTurnstileRenderPending)return;
+  if(!descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||descriptionVoiceTurnstileSessionVerified||!descriptionVoiceTurnstileMount||descriptionVoiceTurnstileWidgetId!==null||descriptionVoiceTurnstileRenderPending)return;
   if(descriptionVoicePanel.hidden)return;
   if(!window.turnstile||typeof window.turnstile.render!=='function'){
     descriptionVoiceTurnstileLoadAttempts+=1;
@@ -749,7 +764,7 @@ function ensureDescriptionVoiceTurnstile(){
     descriptionVoiceTurnstileWidgetId=window.turnstile.render(descriptionVoiceTurnstileMount,{
       sitekey:descriptionVoiceTurnstileMount.dataset.sitekey,
       size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'interaction-only',language:document.documentElement.lang||'auto','response-field':false,
-      callback:token=>{descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified')},
+      callback:token=>{descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoicePanelState();if(descriptionVoiceStartPending&&descriptionVoiceConsent&&descriptionVoiceConsent.checked)window.setTimeout(startDescriptionVoiceRecording,80)},
       'expired-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_expired','required')},
       'error-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
     });
@@ -758,6 +773,7 @@ function ensureDescriptionVoiceTurnstile(){
 }
 function resetDescriptionVoiceTurnstile(){
   if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';
+  if(descriptionVoiceTurnstileSessionVerified){updateDescriptionVoicePanelState();return}
   updateDescriptionVoicePanelState();
   if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
     try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId);setDescriptionVoiceVerificationStatus('description_voice_verification_loading')}catch(_e){setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
@@ -773,7 +789,7 @@ function stopDescriptionVoiceRecording(discard=false){
 async function uploadDescriptionVoice(blob,baseText){
   const turnstileRequired=descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true';
   const token=descriptionVoiceToken();
-  if(turnstileRequired&&!token){setDescriptionVoiceStatus('description_voice_verification_required','required');return}
+  if(turnstileRequired&&!descriptionVoiceVerificationSatisfied()){setDescriptionVoiceStatus('description_voice_verification_required','required');return}
   setDescriptionVoiceStatus('description_voice_transcribing');
   const data=new FormData();
   data.append('audio',blob,blob.type.includes('mp4')?'description.m4a':'description.webm');
@@ -783,7 +799,8 @@ async function uploadDescriptionVoice(blob,baseText){
   try{
     const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});
     const result=await response.json().catch(()=>({}));
-    if(!response.ok){throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
+    if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
+    markDescriptionVoiceTurnstileSessionVerified();
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
     const combined=(baseText.trim()?baseText.trim()+'\n\n':'')+transcript;
     descriptionField.value=combined.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));
@@ -794,8 +811,9 @@ async function uploadDescriptionVoice(blob,baseText){
 async function startDescriptionVoiceRecording(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
   descriptionVoicePanel.hidden=false;descriptionVoicePanel.classList.add('needs-attention');window.setTimeout(()=>descriptionVoicePanel.classList.remove('needs-attention'),1800);ensureDescriptionVoiceTurnstile();
-  if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
-  if(descriptionVoicePanel.dataset.turnstileRequired==='true'&&!descriptionVoiceToken()){setDescriptionVoiceStatus('description_voice_verification_required','required');descriptionVoiceTurnstileMount&&descriptionVoiceTurnstileMount.scrollIntoView({behavior:'smooth',block:'nearest'});return}
+  if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
+  if(!descriptionVoiceVerificationSatisfied()){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_verification_required','required');ensureDescriptionVoiceTurnstile();descriptionVoiceTurnstileMount&&descriptionVoiceTurnstileMount.scrollIntoView({behavior:'smooth',block:'nearest'});return}
+  descriptionVoiceStartPending=false;
   if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setDescriptionVoiceStatus('description_voice_unsupported','error');return}
   try{
     descriptionVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
@@ -816,11 +834,12 @@ async function startDescriptionVoiceRecording(){
   }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
 }
 if(descriptionVoiceButton)descriptionVoiceButton.addEventListener('click',()=>{if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(false);else startDescriptionVoiceRecording()});
-if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{updateDescriptionVoicePanelState();if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');ensureDescriptionVoiceTurnstile()}});
+if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{updateDescriptionVoicePanelState();if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');if(descriptionVoiceStartPending&&descriptionVoiceVerificationSatisfied())window.setTimeout(startDescriptionVoiceRecording,80);else ensureDescriptionVoiceTurnstile()}else descriptionVoiceStartPending=false});
+document.addEventListener('ctr:ai-turnstile-session-verified',()=>{descriptionVoiceTurnstileSessionVerified=true;setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoicePanelState()});
 document.addEventListener('ctr:language-changed',()=>{stopDescriptionVoiceRecording(true);setDescriptionVoiceStatus('');hideDescriptionLiveText();if(descriptionVoicePanel&&!descriptionVoicePanel.hidden){if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileLoadAttempts=0;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_loading');ensureDescriptionVoiceTurnstile()}updateDescriptionVoiceButton()});
 window.addEventListener('pagehide',()=>stopDescriptionVoiceRecording(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(true)});
-updateDescriptionVoiceButton();updateDescriptionVoicePanelState();
+if(descriptionVoiceTurnstileSessionVerified)setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoiceButton();updateDescriptionVoicePanelState();
 
 const privateAccessCopy={
   en:{copied:'Private link copied.',copy_failed:'Copy was not available. Select the link and copy it manually.',email_on:'A confirmation email has been queued. Save this link as a backup.',email_off:'Email delivery is unavailable. This private link is the only way to reopen the case.'},
@@ -850,7 +869,7 @@ nextButton.addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
   const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').hidden=ok;
   if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
-  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
+  if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.setTimeout(drawFormReadinessAttention,180);window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
 });
 stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
 document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active');window.requestAnimationFrame(()=>scrollElementToFormTop(stepOne,{offset:88,behavior:'smooth'}))});
@@ -864,6 +883,8 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
     statusBox.textContent=ui.fallback;
+    drawFormReadinessAttention();
+    formReadiness&&formReadiness.scrollIntoView({behavior:'smooth',block:'center'});
     form.reportValidity();
     const logicalInvalid=requiredApplicationFields.find(field=>!applicationFieldValid(field));
     const invalid=form.querySelector(':invalid');
@@ -1061,6 +1082,7 @@ if(aiChatRoot){
   const aiTurnstileResponse=document.getElementById('aiTurnstileResponse');
   const aiTurnstileStatus=document.getElementById('aiChatTurnstileStatus');
   const aiTurnstileRequired=aiChatRoot.dataset.turnstileRequired==='true';
+  let aiTurnstileSessionVerified=aiChatRoot.dataset.turnstileSessionVerified==='true';
   const aiVoiceMaxSeconds=Math.max(15,Number(aiChatRoot.dataset.voiceMaxSeconds)||120);
   let aiChatHistory=[];
   let aiChatBusy=false;
@@ -1077,6 +1099,7 @@ if(aiChatRoot){
   let aiTurnstileWidgetId=null;
   let aiTurnstileRenderPending=false;
   let aiTurnstileLoadAttempts=0;
+  let aiVoiceStartPending=false;
 
   function showAiQuickQuestions(){
     if(aiTurnstileSection)aiTurnstileSection.hidden=true;
@@ -1109,8 +1132,8 @@ if(aiChatRoot){
     aiChatPanel.hidden=false;
     aiChatRoot.classList.add('is-open');
     aiChatLauncher.setAttribute('aria-expanded','true');
-    if(aiTurnstileRequired&&!aiTurnstileToken()&&aiChatHistory.length===0)showAiVerification();else showAiQuickQuestions();
-    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(!aiTurnstileRequired||aiTurnstileToken())window.setTimeout(()=>aiChatInput.focus({preventScroll:true}),40)});
+    if(!aiTurnstileSatisfied()&&aiChatHistory.length===0)showAiVerification();else showAiQuickQuestions();
+    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(aiTurnstileSatisfied())window.setTimeout(()=>aiChatInput.focus({preventScroll:true}),40)});
   }
   function closeAiChat(restoreFocus=true,goToApplication=false){
     if(aiChatAbortController)aiChatAbortController.abort();
@@ -1151,6 +1174,14 @@ if(aiChatRoot){
   function aiTurnstileToken(){
     return aiTurnstileResponse?String(aiTurnstileResponse.value||''):'';
   }
+  function aiTurnstileSatisfied(){return !aiTurnstileRequired||aiTurnstileSessionVerified||Boolean(aiTurnstileToken())}
+  function markAiTurnstileSessionVerified(){
+    aiTurnstileSessionVerified=true;
+    if(aiTurnstileResponse)aiTurnstileResponse.value='';
+    if(aiTurnstileSection)aiTurnstileSection.hidden=true;
+    setAiTurnstileStatus('ai_turnstile_ready','verified');
+    document.dispatchEvent(new Event('ctr:ai-turnstile-session-verified'));
+  }
   function setAiTurnstileStatus(key,state=''){
     if(!aiTurnstileStatus)return;
     aiTurnstileStatus.textContent=key?aiCopy(key):'';
@@ -1163,7 +1194,7 @@ if(aiChatRoot){
     if(aiVoiceButton)aiVoiceButton.disabled=aiChatBusy||aiVoiceBusy&&!(aiVoiceRecorder&&aiVoiceRecorder.state==='recording');
   }
   function showAiTurnstileRequired(){
-    if(!aiTurnstileRequired)return;
+    if(!aiTurnstileRequired||aiTurnstileSessionVerified)return;
     showAiVerification();
     ensureAiTurnstile();
     setAiTurnstileStatus('ai_turnstile_required','required');
@@ -1173,7 +1204,7 @@ if(aiChatRoot){
     }
   }
   function ensureAiTurnstile(){
-    if(!aiTurnstileRequired||!aiTurnstileMount||aiTurnstileWidgetId!==null||aiTurnstileRenderPending)return;
+    if(!aiTurnstileRequired||aiTurnstileSessionVerified||!aiTurnstileMount||aiTurnstileWidgetId!==null||aiTurnstileRenderPending)return;
     if(aiChatPanel.hidden)return;
     if(!window.turnstile||typeof window.turnstile.render!=='function'){
       aiTurnstileLoadAttempts+=1;
@@ -1198,6 +1229,7 @@ if(aiChatRoot){
           aiTurnstileSection&&aiTurnstileSection.classList.remove('needs-attention');
           showAiQuickQuestions();
           updateAiControls();
+          if(aiVoiceStartPending&&aiVoiceConsent&&aiVoiceConsent.checked)window.setTimeout(startVoiceRecording,80);
         },
         'expired-callback':()=>{
           if(aiTurnstileResponse)aiTurnstileResponse.value='';
@@ -1219,6 +1251,7 @@ if(aiChatRoot){
   }
   function resetAiTurnstile({silent=true}={}){
     if(aiTurnstileResponse)aiTurnstileResponse.value='';
+    if(aiTurnstileSessionVerified){if(aiTurnstileSection)aiTurnstileSection.hidden=true;updateAiControls();return}
     if(silent){
       if(aiTurnstileSection)aiTurnstileSection.hidden=true;
       aiChatQuick.hidden=true;
@@ -1277,7 +1310,8 @@ if(aiChatRoot){
   }
   async function uploadVoiceRecording(blob){
     const token=aiTurnstileToken();
-    if(aiTurnstileRequired&&!token){
+    if(!aiTurnstileSatisfied()){
+      aiVoiceStartPending=true;
       showAiTurnstileRequired();
       return;
     }
@@ -1299,10 +1333,12 @@ if(aiChatRoot){
       });
       const result=await response.json().catch(()=>({}));
       if(!response.ok){
+        if(response.status===400){aiTurnstileSessionVerified=false;aiVoiceStartPending=true;showAiTurnstileRequired()}
         const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_voice_error');
         aiVoiceStatus.textContent=detail||aiCopy('ai_voice_error');
         return;
       }
+      markAiTurnstileSessionVerified();
       const transcript=String(result.transcript||'').trim();
       if(!transcript)throw new Error('empty transcript');
       aiChatInput.value=transcript.slice(0,1500);
@@ -1320,15 +1356,18 @@ if(aiChatRoot){
     if(!aiVoiceButton||aiVoiceBusy)return;
     if(aiVoicePanel){revealAiVoicePanel();aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
     if(!aiVoiceConsent||!aiVoiceConsent.checked){
+      aiVoiceStartPending=true;
       setVoiceStatus('ai_voice_consent_required');
       aiVoiceConsent&&aiVoiceConsent.focus({preventScroll:true});
       window.requestAnimationFrame(()=>aiChatForm.scrollTo({top:aiChatForm.scrollHeight,behavior:'smooth'}));
       return;
     }
-    if(aiTurnstileRequired&&!aiTurnstileToken()){
+    if(!aiTurnstileSatisfied()){
+      aiVoiceStartPending=true;
       showAiTurnstileRequired();
       return;
     }
+    aiVoiceStartPending=false;
     if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
       setVoiceStatus('ai_voice_unsupported');
       return;
@@ -1403,7 +1442,7 @@ if(aiChatRoot){
       aiTurnstileMount&&aiTurnstileMount.replaceChildren();
     }
     setAiTurnstileStatus('ai_turnstile_loading');
-    if(aiTurnstileRequired)showAiVerification();else showAiQuickQuestions();
+    if(!aiTurnstileSatisfied())showAiVerification();else showAiQuickQuestions();
     if(!aiChatPanel.hidden)window.requestAnimationFrame(ensureAiTurnstile);
     aiChatMessages.replaceChildren();
     appendAiMessage('assistant',aiCopy('ai_chat_welcome'));
@@ -1413,7 +1452,7 @@ if(aiChatRoot){
     const text=String(rawText||'').trim();
     if(!text||aiChatBusy)return;
     const turnstileToken=aiTurnstileToken();
-    if(aiTurnstileRequired&&!turnstileToken){
+    if(!aiTurnstileSatisfied()){
       showAiTurnstileRequired();
       return;
     }
@@ -1442,10 +1481,12 @@ if(aiChatRoot){
       const result=await response.json().catch(()=>({}));
       thinking.remove();
       if(!response.ok){
+        if(response.status===400){aiTurnstileSessionVerified=false;showAiTurnstileRequired()}
         const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_chat_error');
         appendAiMessage('assistant',detail||aiCopy('ai_chat_error'),'','start');
         return;
       }
+      markAiTurnstileSessionVerified();
       const reply=String(result.reply||'').trim();
       if(!reply)throw new Error('empty reply');
       appendAiMessage('assistant',reply,'','start');
@@ -1472,17 +1513,18 @@ if(aiChatRoot){
       }
     }
   }
+  document.addEventListener('ctr:ai-turnstile-session-verified',()=>{aiTurnstileSessionVerified=true;if(aiTurnstileSection)aiTurnstileSection.hidden=true;updateAiControls()});
   document.addEventListener('ctr:language-changed',resetAiChatForLanguageChange);
   document.addEventListener('ctr:form-engaged',()=>{if(!aiChatPanel.hidden)closeAiChat(false)});
   aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat(false,true));
   aiChatClose.addEventListener('click',()=>closeAiChat(false,true));
-  if(aiVoiceConsent)aiVoiceConsent.addEventListener('change',()=>{if(aiVoiceConsent.checked){setVoiceStatus('');aiVoicePanel&&aiVoicePanel.classList.remove('needs-attention')}});
+  if(aiVoiceConsent)aiVoiceConsent.addEventListener('change',()=>{if(aiVoiceConsent.checked){setVoiceStatus('');aiVoicePanel&&aiVoicePanel.classList.remove('needs-attention');if(aiVoiceStartPending&&aiTurnstileSatisfied())window.setTimeout(startVoiceRecording,80);else ensureAiTurnstile()}else aiVoiceStartPending=false});
   if(aiVoiceButton)aiVoiceButton.addEventListener('click',()=>{
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(false);
     else startVoiceRecording();
   });
   aiChatQuick.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
-    if(aiTurnstileRequired&&!aiTurnstileToken()){showAiTurnstileRequired();return}
+    if(!aiTurnstileSatisfied()){showAiTurnstileRequired();return}
     sendAiMessage(button.textContent);
   }));
   aiChatForm.addEventListener('submit',event=>{event.preventDefault();sendAiMessage(aiChatInput.value)});

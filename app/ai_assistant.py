@@ -106,6 +106,16 @@ ERROR_COPY = {
 }
 
 
+UPLOAD_DESTINATION_COPY = {
+    "en": "Submit the short application using the website’s application form. After it is saved, you will receive a private case link. Open that link to upload up to 20 key PDF or image files. Do not paste full documents or confidential order details into this public chat.",
+    "fr": "Envoyez d’abord la demande courte au moyen du formulaire du site. Une fois enregistrée, vous recevrez un lien privé vers le dossier. Ouvrez ce lien pour téléverser jusqu’à 20 fichiers PDF ou images essentiels. Ne collez pas de documents complets ni de données confidentielles dans ce chat public.",
+    "de": "Senden Sie zuerst den kurzen Antrag über das Formular auf der Website. Nach dem Speichern erhalten Sie einen privaten Falllink. Über diesen Link können Sie bis zu 20 wichtige PDF- oder Bilddateien hochladen. Fügen Sie keine vollständigen Dokumente oder vertraulichen Bestelldaten in diesen öffentlichen Chat ein.",
+    "es": "Primero envíe la solicitud breve mediante el formulario del sitio. Después de guardarla recibirá un enlace privado del caso. Abra ese enlace para subir hasta 20 archivos PDF o imágenes clave. No pegue documentos completos ni datos confidenciales del pedido en este chat público.",
+    "ru": "Сначала отправьте короткую заявку через форму «Отправить заявку» на сайте. После сохранения заявки вы получите приватную ссылку на дело. Откройте её и загрузите до 20 ключевых PDF-файлов или изображений. Полные документы и конфиденциальные номера заказа в этот публичный чат не отправляйте.",
+    "sr": "Prvo pošaljite kratku prijavu putem obrasca na sajtu. Nakon čuvanja dobićete privatni link slučaja. Otvorite taj link i otpremite do 20 ključnih PDF ili slikovnih fajlova. Ne šaljite pune dokumente niti poverljive podatke o porudžbini u ovaj javni razgovor.",
+}
+
+
 class AssistantProviderError(RuntimeError):
     """Raised when the external AI provider cannot return a usable answer."""
 
@@ -321,7 +331,7 @@ _HARD_OFF_TOPIC_TERMS = (
     "python-код", "python код", "программирован", "домашн", "реши уравнение", "сколько будет",
     "симптом", "диагноз", "болит", "отношени", "гороскоп", "стих", "анекдот",
     "посоветуй фильм", "маршрут путешествия", "политическ", "кто такой наполеон",
-    "квантов", "составь резюме",
+    "квантов", "составь резюме", "составь мне резюме",
     "réparer ma voiture", "reparer ma voiture", "réparer le moteur", "reparer le moteur",
     "recette", "cuisiner", "météo", "meteo", "programmation", "écrire du code", "ecrire du code",
     "devoir", "diagnostic médical", "diagnostic medical", "horoscope", "poème", "poeme", "blague",
@@ -346,17 +356,38 @@ _PROMPT_ATTACK_TERMS = (
 
 _FOLLOWUP_TERMS = (
     "what next", "what should i do", "and then", "what about", "can i", "is that enough", "how long",
+    "where do i send", "where should i send", "where can i upload", "how do i send", "i don't understand", "i do not understand",
     "please continue", "go ahead", "draft it", "write it", "prepare it", "do that",
     "что дальше", "что делать", "а потом", "а если", "этого достаточно", "сколько времени",
+    "куда отправлять", "куда мне это", "куда это отправить", "куда отправить", "где загрузить", "как отправить", "не понял", "не поняла",
     "продолжай", "продолжите", "составь", "составьте", "напиши", "напишите", "подготовь",
     "подготовьте", "сделай это", "сделайте это",
-    "et ensuite", "que faire", "et si", "est-ce suffisant", "continuez", "rédigez-le", "redigez-le",
-    "was nun", "was soll ich tun", "und dann", "reicht das", "weiter", "entwerfen sie es",
-    "qué hago", "que hago", "y después", "y despues", "es suficiente", "continúe", "continue",
+    "et ensuite", "que faire", "et si", "est-ce suffisant", "où envoyer", "ou envoyer", "où téléverser", "ou televerser", "je ne comprends pas", "continuez", "rédigez-le", "redigez-le",
+    "was nun", "was soll ich tun", "und dann", "reicht das", "wohin senden", "wo hochladen", "ich verstehe nicht", "weiter", "entwerfen sie es",
+    "qué hago", "que hago", "y después", "y despues", "es suficiente", "dónde enviar", "donde enviar", "dónde subir", "donde subir", "no entiendo", "continúe", "continue",
     "redáctalo", "redactalo",
     "šta dalje", "sta dalje", "šta da radim", "sta da radim", "da li je dovoljno",
+    "gde da pošaljem", "gde da posaljem", "gde da otpremim", "ne razumem", "nisam razumeo", "nisam razumela",
     "nastavi", "sastavi", "napiši", "napisi",
 )
+
+_UPLOAD_DESTINATION_TERMS = (
+    "where do i send", "where should i send", "where can i upload", "how do i upload the documents",
+    "куда отправлять", "куда мне это", "куда это отправить", "куда отправить документы", "где загрузить документы", "как загрузить документы",
+    "où envoyer", "ou envoyer", "où téléverser", "ou televerser",
+    "wohin senden", "wo hochladen",
+    "dónde enviar", "donde enviar", "dónde subir", "donde subir",
+    "gde da pošaljem", "gde da posaljem", "gde da otpremim",
+)
+_UPLOAD_OBJECT_TERMS = (
+    "document", "documents", "materials", "files", "evidence", "case",
+    "документ", "материал", "файл", "доказательств", "дело", "заявк",
+    "document", "documents", "dossier", "preuves", "fichiers",
+    "dokument", "unterlagen", "dateien", "fall",
+    "documento", "documentos", "archivos", "pruebas", "caso",
+    "dokument", "materijal", "fajl", "dokaz", "slučaj", "slucaj", "prijav",
+)
+
 
 # Exact short replies are handled separately. Substring matching would make
 # Russian "да" match unrelated words such as "задача".
@@ -480,10 +511,16 @@ def assistant_scope_reply(payload: AssistantChatRequest) -> str | None:
     """
     user_messages = [message.content for message in payload.messages if message.role == "user"]
     latest_user_text = user_messages[-1] if user_messages else ""
+    latest_normalised = _normalise_scope_text(latest_user_text)
+    earlier_user_text = " ".join(user_messages[:-1])
+    if _contains_term(latest_normalised, _UPLOAD_DESTINATION_TERMS) and (
+        _contains_term(latest_normalised, _UPLOAD_OBJECT_TERMS)
+        or _latest_is_in_scope(earlier_user_text)
+    ):
+        return UPLOAD_DESTINATION_COPY.get(payload.language, UPLOAD_DESTINATION_COPY["en"])
     if _requests_specific_vendor(latest_user_text):
         return localized_error(payload.language, "vendor")
 
-    latest_normalised = _normalise_scope_text(latest_user_text)
     # Explicit unrelated intent (repair instructions, code, entertainment or
     # prompt extraction) wins even when the text mentions a supplier. Product
     # nouns alone are not blocked, so a real defect dispute remains in scope.
@@ -494,7 +531,6 @@ def assistant_scope_reply(payload: AssistantChatRequest) -> str | None:
     if _latest_is_in_scope(latest_user_text):
         return None
 
-    earlier_user_text = " ".join(user_messages[:-1])
     if _is_contextual_followup(latest_user_text, earlier_user_text):
         return None
 
@@ -541,11 +577,36 @@ def _clean_output_text(text: str) -> str:
     return result.strip()
 
 
+_ALLOWED_RUSSIAN_ASCII_TAIL_WORDS = frozenset({
+    "alibaba", "aliexpress", "chinatraderesolve", "openai", "paypal", "telegram",
+    "turnstile", "nappa", "pdf", "jpg", "jpeg", "png", "webp", "url", "email",
+})
+
+
+def _strip_unexpected_foreign_tail(text: str, language: str) -> str:
+    """Remove one isolated English-looking artefact after a completed Russian sentence.
+
+    Proper names and normal Latin abbreviations remain allowed.  The narrow rule
+    intentionally applies only to Russian output and only when a single Latin
+    word is appended after sentence punctuation, for example ``"данные. crescent"``.
+    """
+    if language != "ru" or sum("а" <= char.casefold() <= "я" or char.casefold() == "ё" for char in text) < 24:
+        return text
+    match = re.search(r"([.!?…])\s+([A-Za-z][A-Za-z'-]{2,30})([.!?…]?)$", text)
+    if not match:
+        return text
+    token = match.group(2).casefold()
+    if token in _ALLOWED_RUSSIAN_ASCII_TAIL_WORDS:
+        return text
+    return text[: match.start(2)].rstrip()
+
+
 def _developer_prompt(language: str) -> str:
     language_name = LANGUAGE_NAMES.get(language, "English")
     return f"""
 You are the public AI information assistant for ChinaTradeResolve.
 Answer in {language_name}. Be calm, clear and concise. Usually stay under 220 words.
+Do not append isolated foreign-language words, internal labels, translation markers or model artefacts. Proper names such as Alibaba and ChinaTradeResolve are allowed.
 
 SERVICE FACTS YOU MAY RELY ON:
 - ChinaTradeResolve provides independent commercial support for buyers in disputes with Chinese suppliers and marketplaces. It is not a bank, payment provider or law firm.
@@ -575,6 +636,7 @@ RULES:
 8. If asked how to prepare a case, prioritise: written order/specification, invoice/payment proof, supplier messages, delivery/inspection evidence, marketplace decisions, and a dated chronology.
 9. Do not provide instructions for moving cryptocurrency. You may only explain that project support is voluntary and that the user must verify the exact asset and network shown on the support page.
 10. When a user describes a dispute, briefly separate: the situation, factors that strengthen or weaken it, missing evidence and practical next steps. Never give a numerical probability or a "chance of winning"; explain that reliable prospects require the documents and human review.
+11. If asked where to send materials, answer directly: submit the short application through the website form, then use the private case link received after submission to upload up to twenty key PDF or image files. Never tell the user to paste full documents into public chat.
 """.strip()
 
 
@@ -718,7 +780,9 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
         raise AssistantProviderError("AI provider returned an invalid response") from exc
 
     # Keep accidental provider verbosity under control and remove invalid Unicode artefacts.
-    cleaned_answer = _clean_output_text(answer[:5000])
+    cleaned_answer = _strip_unexpected_foreign_tail(
+        _clean_output_text(answer[:5000]), payload.language
+    )
     if not cleaned_answer:
         raise AssistantProviderError("AI provider returned only invalid output")
     return cleaned_answer

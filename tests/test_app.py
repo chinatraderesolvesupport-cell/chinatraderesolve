@@ -1947,9 +1947,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.33"
+    assert health.json()["version"] == "3.7.35"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.33"
+    assert health.headers["x-app-version"] == "3.7.35"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4629,7 +4629,7 @@ def test_targeted_landing_copy_is_shorter_precise_and_transparent():
     assert 'id="submitBtn" type="submit"' in response.text
     assert 'aria-disabled="true"' in response.text
     assert 'function applicationReady()' in response.text
-    assert "descriptionField.value.trim().length>=50" in response.text
+    assert "field===descriptionField)return field.value.trim().length>=50" in response.text
     assert "requiredConsentInputs.every(input=>input.checked)" in response.text
 
     assert "aiLauncherButton.classList.toggle('is-compact',formInView)" in response.text
@@ -4880,12 +4880,6 @@ def test_privacy_sitemap_contains_language_alternates():
 
 def test_local_run_script_is_executable():
     script = Path(__file__).resolve().parent.parent / "run_local.sh"
-    assert script.exists()
-
-    if os.name == "nt":
-        assert script.read_text(encoding="utf-8").startswith("#!")
-        return
-
     assert script.stat().st_mode & 0o111
 
 
@@ -4942,3 +4936,101 @@ def test_ci_workflow_is_packaged_and_runs_compile_and_tests():
     assert 'python -m pip install -r requirements-dev.txt' in content
     assert 'python -m compileall -q app scripts tests' in content
     assert 'python -m pytest -q' in content
+
+
+def test_v3734_application_form_tracks_all_required_states():
+    template = (Path(__file__).parents[1] / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert 'id="formReadiness"' in template
+    assert 'data-callback="ctrApplicationTurnstileSuccess"' in template
+    assert 'data-expired-callback="ctrApplicationTurnstileExpired"' in template
+    assert 'data-timeout-callback="ctrApplicationTurnstileTimeout"' in template
+    assert 'data-unsupported-callback="ctrApplicationTurnstileUnsupported"' in template
+    assert "window.turnstile.reset('#applicationTurnstileWidget')" in template
+    assert 'data-error-callback="ctrApplicationTurnstileError"' in template
+    assert "requiredApplicationFields.every(applicationFieldValid)" in template
+    assert "requiredConsentInputs.every(input=>input.checked)" in template
+    assert "applicationTurnstileVerified" in template
+    assert "let applicationSubmitting=false" in template
+    assert "if(applicationSubmitting)return" in template
+    translations = json.loads((Path(__file__).parents[1] / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8"))
+    for language in ("en", "ru", "sr", "fr", "de", "es"):
+        assert translations[language]["form_incomplete_status"].strip()
+        assert translations[language]["form_incomplete_status_no_bot"].strip()
+        assert translations[language]["form_ready_status"].strip()
+        assert translations[language]["application_turnstile_ready"].strip()
+        assert translations[language]["ai_chat_timeout"].strip()
+        assert translations[language]["voice_timeout"].strip()
+
+
+def test_v3734_voice_and_chat_requests_have_timeouts_and_release_microphone():
+    template = (Path(__file__).parents[1] / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert template.count("window.setTimeout(()=>controller.abort(),45000)") >= 2
+    assert "requestTimedOut=true;controller.abort()" in template
+    assert "window.addEventListener('pagehide',()=>stopDescriptionVoiceRecording(true))" in template
+    assert "window.addEventListener('pagehide',()=>{if(aiChatAbortController)aiChatAbortController.abort();stopVoiceRecording(true)})" in template
+    assert template.count("document.addEventListener('visibilitychange'") >= 2
+
+
+def test_v3734_description_normalization_preserves_paragraphs():
+    from app.schemas import ApplicationCreate
+
+    payload = valid_payload()
+    payload["description"] = " First paragraph with enough detail for validation.  \r\n\r\n  Second   paragraph with more evidence. \x00\x07 "
+    application = ApplicationCreate.model_validate(payload)
+    assert application.description == "First paragraph with enough detail for validation.\n\nSecond paragraph with more evidence."
+
+
+def test_v3735_version_markers_are_synchronised():
+    root = Path(__file__).parents[1]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.35"
+    assert "v3.7.35" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.35" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+
+
+def test_v3735_mobile_layout_table_hint_and_copy_are_present():
+    page = client.get("/?lang=en")
+    assert page.status_code == 200
+    assert ".ai-chat-launcher.is-compact{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:52px;opacity:0" in page.text
+    assert "#situations .g4,#services .compact-grid,.guides-preview-grid{display:flex;max-width:100%;min-width:0;overflow-x:auto" in page.text
+    assert 'data-i18n="table_swipe_hint" id="tableSwipeHint"' in page.text
+    assert 'data-i18n-aria-label="sample_table_label"' in page.text
+    translations = json.loads((Path(__file__).resolve().parent.parent / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8"))
+    assert translations["en"]["consent2"] == "I voluntarily allow AI assistance with mandatory human review. Without consent, rules-based review and, where needed, manual review will be used."
+
+
+def test_csp_uses_per_response_nonce_and_blocks_inline_handlers():
+    import re
+    first = client.get("/")
+    second = client.get("/")
+    first_csp = first.headers["content-security-policy"]
+    second_csp = second.headers["content-security-policy"]
+    assert "script-src 'self' 'unsafe-inline'" not in first_csp
+    assert "style-src 'self' 'unsafe-inline'" not in first_csp
+    assert "script-src-attr 'none'" in first_csp
+    assert "style-src-attr 'none'" in first_csp
+    assert "object-src 'none'" in first_csp
+    first_nonce = re.search(r"'nonce-([^']+)'", first_csp)
+    second_nonce = re.search(r"'nonce-([^']+)'", second_csp)
+    assert first_nonce and second_nonce and first_nonce.group(1) != second_nonce.group(1)
+    assert f'nonce="{first_nonce.group(1)}"' in first.text
+    assert not re.search(r"\son[a-z]+=", first.text)
+
+
+def test_static_legal_pages_do_not_require_inline_javascript():
+    import re
+    for path in ["terms.html", "refund.html", "ai-notice.html", "disclaimer.html", "sample_case_assessment.html"]:
+        text = (Path(__file__).resolve().parent.parent / "app" / "static" / path).read_text(encoding="utf-8")
+        assert "CTR_BOOT_LEGAL(" not in text
+        assert not re.search(r"<script(?![^>]*src=)[^>]*>\s*\S", text)
+    legal_js = (Path(__file__).resolve().parent.parent / "app" / "static" / "legal-i18n-v2.js").read_text(encoding="utf-8")
+    assert "dataset?.legalPage" in legal_js
+
+
+def test_pdf_security_is_an_explicit_launch_readiness_gate(monkeypatch):
+    import app.main as module
+    monkeypatch.setattr(module, "pdf_security_self_test", lambda: False)
+    assert module.launch_readiness_checks()["pdf_security"] is False
+    monkeypatch.setattr(module, "pdf_security_self_test", lambda: True)
+    assert module.launch_readiness_checks()["pdf_security"] is True
+    script = Path(__file__).resolve().parent.parent / "scripts" / "verify_pdf_security.py"
+    assert script.exists()

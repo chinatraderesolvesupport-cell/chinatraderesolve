@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Очередь дел — ChinaTradeResolve</title>
-<style>
+<style nonce="{{ request.state.csp_nonce }}">
 :root{--teal:#14b8a6;--teal-dark:#0f766e;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--amber:#f59e0b}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--light);color:var(--ink);line-height:1.5}a{color:var(--teal-dark)}
 .wrap{width:min(1180px,94%);margin:28px auto}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -13,7 +13,7 @@
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800}.risk-critical,.risk-high{background:#fee2e2;color:#991b1b}.risk-medium{background:#fef3c7;color:#92400e}.risk-low{background:#d1fae5;color:#065f46}
 table{width:100%;border-collapse:collapse;background:white}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:var(--muted)}
 input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}textarea{min-height:100px}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.metric{background:white;border:1px solid var(--line);border-radius:12px;padding:15px}.metric strong{display:block;font-size:25px}.metric-link{display:block;color:inherit;text-decoration:none;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.metric-link:hover,.metric-link:focus-visible{transform:translateY(-2px);border-color:#fbbf24;box-shadow:0 10px 24px #b4530917;outline:none}.metric-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.review-icon{font-size:21px}.feedback-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid #fcd34d;border-radius:999px;background:#fffbeb;color:#92400e;text-decoration:none;font-weight:800;white-space:nowrap}.feedback-empty{color:#94a3b8}
-.muted{color:var(--muted)}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.login{width:min(420px,92%);margin:10vh auto}.traffic-list{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.source-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;font-weight:800}.source-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#0e7490;color:white;font-size:12px}.source-cell{max-width:190px}.source-name{font-weight:800;color:#155e75;word-break:break-word}
+.muted{color:var(--muted)}.section-title{margin:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.login{width:min(420px,92%);margin:10vh auto}.traffic-list{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.source-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;font-weight:800}.source-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#0e7490;color:white;font-size:12px}.source-cell{max-width:190px}.source-name{font-weight:800;color:#155e75;word-break:break-word}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.row{grid-template-columns:1fr}table{display:block;overflow-x:auto}}@media(max-width:520px){.grid{grid-template-columns:1fr}.top-actions{width:100%}.top-actions .btn{flex:1;justify-content:center}}
 </style>
 </head>
@@ -42,14 +42,14 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-ra
   </div>
 
   <div class="card">
-    <h2 style="margin:0">Индексация в поисковых системах</h2>
+    <h2 class="section-title">Индексация в поисковых системах</h2>
     {% if search_indexing_enabled %}<p><span class="badge risk-low">Разрешена</span> Поисковые роботы могут обходить публичные страницы сайта.</p>{% else %}<p><span class="badge risk-high">Заблокирована</span> Файл <code>/robots.txt</code> пока запрещает индексацию, потому что не пройдены все проверки <a href="/ready" target="_blank" rel="noopener">/ready</a>.</p>{% endif %}
     <p class="muted">Google: {{ 'подтверждение настроено' if google_verification_configured else 'подтверждение не настроено' }} · Bing: {{ 'подтверждение настроено' if bing_verification_configured else 'подтверждение не настроено' }} · IndexNow: {{ 'ключ настроен' if indexnow_configured else 'ключ не настроен' }}</p>
     {% if database_persistent and database_available %}<p><span class="badge risk-low">PostgreSQL</span> Заявки сохраняются в постоянной базе данных.</p>{% elif database_backend == 'sqlite' %}<p><span class="badge risk-high">SQLite</span> Это локальное хранилище. Для Render задайте <code>DATABASE_URL</code>, иначе после перезапуска данные могут быть потеряны и индексация останется заблокированной.</p>{% else %}<p><span class="badge risk-high">База недоступна</span> PostgreSQL настроен, но проверочный запрос не выполнен.</p>{% endif %}
   </div>
 
   <div class="card">
-    <h2 style="margin:0">Источники заявок</h2>
+    <h2 class="section-title">Источники заявок</h2>
     <p class="muted">Показывает, откуда пришли люди с UTM-ссылками или по домену предыдущего сайта. «direct» означает прямой переход без определённого источника.</p>
     <div class="traffic-list">{% for item in traffic_sources %}<span class="source-pill">{{ item.source }} <span class="source-count">{{ item.count }}</span></span>{% else %}<span class="muted">Данных об источниках пока нет.</span>{% endfor %}</div>
   </div>

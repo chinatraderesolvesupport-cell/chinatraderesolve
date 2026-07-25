@@ -40,8 +40,20 @@ class ApplicationCreate(BaseModel):
     @field_validator("description", mode="before")
     @classmethod
     def normalize_description(cls, value: object) -> str:
-        text = " ".join(str(value or "").split())
-        return text.strip()
+        """Clean user text without destroying useful paragraph structure."""
+        text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+        text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]+", "", text)
+        lines = [" ".join(line.split()) for line in text.split("\n")]
+        cleaned: list[str] = []
+        blank_run = 0
+        for line in lines:
+            if line:
+                cleaned.append(line)
+                blank_run = 0
+            elif cleaned and blank_run < 1:
+                cleaned.append("")
+                blank_run += 1
+        return "\n".join(cleaned).strip()
 
     @field_validator("utm_source", "utm_medium", "utm_campaign", "utm_content", mode="before")
     @classmethod

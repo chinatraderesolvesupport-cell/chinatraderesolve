@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image"/>
 {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}"/>{% endif %}
 {% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}"/>{% endif %}
-<style>
+<style nonce="{{ request.state.csp_nonce }}">
 :root{
   --bg:#0f172a;--panel:#172033;--panel2:#132238;--navy:#17324D;--teal:#14B8A6;
   --teal2:#2DD4BF;--light:#F8FAFC;--text:#F8FAFC;--muted:#CBD5E1;--muted2:#94A3B8;
@@ -31,7 +31,7 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-body.ai-chat-open{overscroll-behavior:none}
+html.ai-chat-open,body.ai-chat-open{overflow:hidden;overscroll-behavior:none}
 a{text-decoration:none;color:inherit}
 button,input,select,textarea{font:inherit}
 .skip-link{position:fixed;left:12px;top:12px;z-index:200;transform:translateY(-160%);padding:10px 14px;border-radius:9px;background:#fff;color:#0f172a;font-weight:900}.skip-link:focus{transform:translateY(0)}
@@ -106,7 +106,9 @@ section{padding:44px 0;scroll-margin-top:130px}.light{background:var(--light);co
 .form-step{display:none;scroll-margin-top:88px}.form-step.active{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}#stepOne.active{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px}.step-one-problem{grid-column:span 2}.step-one-actions{grid-column:auto;display:flex;align-items:flex-end;justify-content:flex-end;margin:0}.step-one-actions .btn{width:100%;min-height:41px}
 .field{display:flex;flex-direction:column;gap:3px;min-width:0}.field>label{font-size:12px;font-weight:800}.full{grid-column:1/-1}
 input,select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
-textarea{min-height:118px;resize:vertical}.hint{font-size:11px;color:#64748b;line-height:1.4}.error{color:#b91c1c;font-size:13px;display:none}.submit-status{display:none;margin-top:10px;padding:11px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+textarea{min-height:118px;resize:vertical}.hint{font-size:11px;color:#64748b;line-height:1.4}.error{color:#b91c1c;font-size:13px}.submit-status{display:none;margin-top:10px;padding:11px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:#dc2626;box-shadow:0 0 0 2px rgba(220,38,38,.10)}
+.form-readiness{grid-column:1/-1;display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:11px;background:#fff7ed;color:#9a3412;border:1px solid #fdba74;font-size:13px;line-height:1.4}.form-readiness:before{content:"!";display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:#fed7aa;font-weight:950}.form-readiness.ready{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}.form-readiness.ready:before{content:"✓";background:#a7f3d0}.application-turnstile-status{min-height:18px;color:#475569;font-size:12px}.application-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.application-turnstile-status[data-state="required"],.application-turnstile-status[data-state="error"]{color:#b45309;font-weight:800}
 .form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:3px}.btn.dark{color:#0f172a;border-color:#94a3b8}
 .form-choice-intro{grid-column:1/-1;display:grid;gap:3px;padding:13px 14px;border:1px solid #99f6e4;border-radius:13px;background:linear-gradient(135deg,#ecfeff,#f0fdfa);color:#134e4a}
 .form-choice-intro strong{font-size:16px}.form-choice-intro span{font-size:13px;line-height:1.4}
@@ -212,8 +214,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .guides-preview-grid .card p{flex:1}
 .guide-card-link{display:inline-flex;align-items:center;gap:7px;margin-top:8px;color:var(--teal2);font-weight:900}
 .guides-preview-actions{display:flex;justify-content:flex-start;margin-top:22px}
-@media(max-width:980px){.links{display:none}.menu-btn{display:block}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}#stepOne.active{grid-template-columns:1fr 1fr}.step-one-problem,.step-one-actions{grid-column:1/-1}}
-@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active,#stepOne.active{grid-template-columns:1fr}.full,.step-one-problem,.step-one-actions{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:52px}}
+@media(max-width:1400px){.links{display:none}.menu-btn{display:block}}
+@media(max-width:980px){.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}#stepOne.active{grid-template-columns:1fr 1fr}.step-one-problem,.step-one-actions{grid-column:1/-1}}
+@media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active,#stepOne.active{grid-template-columns:1fr}.full,.step-one-problem,.step-one-actions{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:52px;opacity:0;visibility:hidden;pointer-events:none}}
 
 .anchor-alias{display:block;position:relative;top:-130px;visibility:hidden}
 .service-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:24px;align-items:start;margin-top:26px}
@@ -224,7 +227,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .trust-principles{margin-top:22px}.trust-principles .card{background:rgba(255,255,255,.055)}
 .trust-note{margin-top:18px;padding:14px 16px;border:1px solid #99f6e4;background:#f0fdfa;border-radius:12px;color:#134e4a}
 .consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
-.consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important}
+.consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important;width:auto}
 .description-compose{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
 .description-compose textarea{min-width:0}
 .description-voice-button{width:100%;min-height:48px;border:1px solid #0f766e;border-radius:11px;background:linear-gradient(135deg,#ecfeff,#ccfbf1);color:#0f766e;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;padding:9px 14px}
@@ -234,9 +237,25 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .description-voice-status{min-height:17px;color:#0f766e}.description-voice-status[data-state="error"],.description-voice-status[data-state="required"]{color:#b45309;font-weight:800}.description-voice-panel .voice-live-preview{margin-top:0}
 .description-voice-turnstile{display:grid;gap:6px;padding-top:3px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget iframe{max-width:100%!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.sample-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-gutter:stable;border-radius:8px}
+.sample-table-wrap table{min-width:620px;margin-top:0}
+.table-swipe-hint{display:none;margin:7px 0 0;color:#64748b;font-size:11px;line-height:1.35}
+@media(max-width:700px){
+ section{padding:32px 0}.hero{padding:44px 0 36px}
+ .service-layout,.trust-box{grid-template-columns:minmax(0,1fr);min-width:0}.service-layout>*,.trust-box>*{min-width:0}
+ #situations .g4,#services .compact-grid,.guides-preview-grid{display:flex;max-width:100%;min-width:0;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;padding:2px 8vw 12px 0;overscroll-behavior-inline:contain;scrollbar-width:thin}
+ #situations .g4>.card,#services .compact-grid>.card,.guides-preview-grid>.card{flex:0 0 min(82vw,340px);min-height:0;scroll-snap-align:start}
+ .guides-preview-grid .card{min-height:190px}
+ .steps{gap:12px}.step{padding-top:40px}.step p{margin-bottom:0}
+ .service-layout{gap:16px}.scope-card,.operator,.sample-page{padding:18px}
+ .trust-box{gap:16px}.trust-principles{margin-top:14px}
+ .sample-table-wrap{margin-top:8px}.table-swipe-hint{display:block}
+ #faq .wrap{gap:9px}#faq details{padding:13px 14px}
+}
 @media(max-width:520px){.form-shell{padding:15px}.description-voice-button{min-height:50px}.ai-chat-panel{bottom:8px;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}}
 #faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
-#confirmation{scroll-margin-top:145px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
+#confirmation{scroll-margin-top:145px}.case-decision{margin-top:8px}.status-link-row{margin-top:10px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
 .private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
 @media(min-width:981px) and (max-height:820px){
 #submit{padding:32px 0}
@@ -256,8 +275,8 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 </style>
-<script type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"ChinaTradeResolve","url":x_default_url},{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
-{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
+<script nonce="{{ request.state.csp_nonce }}" type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"ChinaTradeResolve","url":x_default_url},{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
+{% if turnstile_site_key %}<script nonce="{{ request.state.csp_nonce }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skip_content">Перейти к содержанию</a>
 <div class="prototype-banner" data-i18n="prototype">Ограниченный бесплатный доступ: заявки принимаются по мере доступной мощности.</div>
@@ -410,11 +429,13 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="sample-score" data-i18n="sample_status">Проверено человеком</div>
 </div>
 <div class="sample-tags"><span data-i18n="sample_tag1">Хронология</span><span data-i18n="sample_tag2">Индекс доказательств</span><span data-i18n="sample_tag3">Анализ рисков</span></div>
+<div class="sample-table-wrap" role="region" tabindex="0" aria-label="Таблица примера доказательств" data-i18n-aria-label="sample_table_label" aria-describedby="tableSwipeHint">
 <table>
 <tr><th data-i18n="table_issue">Проблема</th><th data-i18n="table_evidence">Доказательства</th><th data-i18n="table_risk">Риск</th></tr>
 <tr><td data-i18n="table_row1">Неверный материал</td><td data-i18n="table_row2">EX-03 заказ + EX-07 сообщение поставщика</td><td data-i18n="table_row3">Терминология может оспариваться</td></tr>
 <tr><td data-i18n="table_row4">Недостающий компонент</td><td data-i18n="table_row5">EX-02 инвойс + EX-11 фотографии</td><td data-i18n="table_row6">Нужно подтвердить финальную спецификацию</td></tr>
 </table>
+</div><p class="table-swipe-hint" data-i18n="table_swipe_hint" id="tableSwipeHint">Проведите по таблице в сторону, чтобы увидеть все столбцы.</p>
 </div>
 <a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
 </div>
@@ -440,7 +461,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
 <div class="field"><label data-i18n="amount" for="amountDispute">Сумма, которую вы хотите вернуть</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
 <div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option><option data-i18n="opt_problem_other" value="Other or multiple issues">Другая или несколько проблем</option></select></div>
-<div class="field full"><div class="error" data-i18n="form_error" id="stepError">Укажите имя и корректный email.</div></div>
+<div class="field full"><div class="error" data-i18n="form_error" hidden id="stepError">Укажите имя и корректный email.</div></div>
 <div class="field form-actions step-one-actions"><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
 </div>
 <div class="form-step" id="stepTwo">
@@ -453,20 +474,21 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
 <aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">Перед отправкой</h3><p data-i18n="submit_summary_data">Мы сохраним контактные данные, сведения о покупке и споре, описание ситуации и выбранные согласия. Документы на этом шаге не передаются; при выборе ИИ-помощи текст заявки может обрабатываться настроенным ИИ-провайдером.</p><p data-i18n="submit_summary_response">Ориентир первого ответа человека — в течение 2 рабочих дней.</p></aside>
 <div class="consent-group">
-<div class="consent-row"><label><input name="free_access_terms" required="" style="width:auto" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
-<div class="consent-row"><label><input name="sharing_authority" required="" style="width:auto" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
-<div class="consent-row"><label><input name="ai_consent" style="width:auto" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
-<div class="consent-row"><label><input name="no_guarantee" required="" style="width:auto" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
+<div class="consent-row"><label><input name="free_access_terms" required="" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
+<div class="consent-row"><label><input name="sharing_authority" required="" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
+<div class="consent-row"><label><input name="ai_consent" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
+<div class="consent-row"><label><input name="no_guarantee" required="" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
 </div>
-{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-size="flexible" data-response-field-name="cf-turnstile-response"></div></div>{% endif %}
+<div aria-live="polite" class="form-readiness" data-i18n="form_incomplete_status" id="formReadiness" role="status">Заполните обязательные поля, отметьте три обязательных согласия и завершите проверку безопасности.</div>
+{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-callback="ctrApplicationTurnstileSuccess" data-error-callback="ctrApplicationTurnstileError" data-expired-callback="ctrApplicationTurnstileExpired" data-response-field-name="cf-turnstile-response" data-size="flexible" data-sitekey="{{ turnstile_site_key }}" data-timeout-callback="ctrApplicationTurnstileTimeout" data-unsupported-callback="ctrApplicationTurnstileUnsupported" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_loading" id="applicationTurnstileStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">Отправить бесплатную заявку</button></div>
 </div>
 </form>
-<div id="confirmation" style="display:none" tabindex="-1">
+<div id="confirmation" hidden tabindex="-1">
 <h3 data-i18n="received">Бесплатная заявка сохранена</h3>
 <p data-i18n="received_text">Заявка сохранена и автоматически проверена.</p>
-<div class="notice"><strong id="caseNumber"></strong><div id="caseDecision" style="margin-top:8px"></div></div>
+<div class="notice"><strong id="caseNumber"></strong><div class="case-decision" id="caseDecision"></div></div>
 <div class="private-access">
   <strong data-i18n="private_link_title">Сохраните приватную ссылку</strong>
   <p data-i18n="private_link_warning">Без этой ссылки нельзя повторно открыть дело и документы. Не пересылайте её посторонним.</p>
@@ -474,7 +496,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
   <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">Скопировать ссылку</button></div>
   <div class="copy-result" id="copyResult" role="status" aria-live="polite"></div>
   <p class="email-state" id="emailDeliveryState"></p>
-  <div style="margin-top:10px"><a class="btn" data-i18n="view_case_status" id="statusLink" style="display:none">Посмотреть статус дела</a></div>
+  <div class="status-link-row"><a class="btn" data-i18n="view_case_status" hidden id="statusLink">Посмотреть статус дела</a></div>
 </div>
 </div>
 </div>
@@ -568,9 +590,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе дел. Последние сообщения передаются ИИ‑провайдеру; применяются его правила обработки и хранения. Голосовая запись удаляется из памяти сразу после расшифровки.</div>
 </section>
 </div>
-<script src="/static/translations-v2.js"></script>
-<script src="/static/launch-i18n-v3.js"></script>
-<script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js"></script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/launch-i18n-v3.js"></script>
+<script nonce="{{ request.state.csp_nonce }}">
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
 const aiLauncherButton=document.getElementById('aiChatLauncher');
@@ -602,11 +624,8 @@ caseFormElement.addEventListener('focusin',markFormEngaged);
 caseFormElement.addEventListener('pointerdown',markFormEngaged);
 function scrollElementToFormTop(element,{offset=88}={}){
   if(!element)return;
-  const root=document.documentElement,previous=root.style.scrollBehavior;
-  root.style.scrollBehavior='auto';
   const top=Math.max(0,window.scrollY+element.getBoundingClientRect().top-offset);
-  window.scrollTo(0,top);
-  window.requestAnimationFrame(()=>{root.style.scrollBehavior=previous});
+  window.scrollTo({top,behavior:'auto'});
 }
 const formShell=document.querySelector('.form-shell');
 function scrollToFormStart(){markFormEngaged();window.requestAnimationFrame(()=>scrollElementToFormTop(formShell||document.getElementById('stepOne'),{offset:88,behavior:'auto'}))}
@@ -622,16 +641,34 @@ if('IntersectionObserver' in window){
 const descriptionField=document.getElementById('description');
 const descriptionCount=document.getElementById('descriptionCount');
 const formSubmitButton=document.getElementById('submitBtn');
+const formReadiness=document.getElementById('formReadiness');
+const applicationTurnstileStatus=document.getElementById('applicationTurnstileStatus');
+const applicationTurnstileRequired=Boolean(applicationTurnstileStatus);
+let applicationTurnstileVerified=!applicationTurnstileRequired;
+let applicationSubmitting=false;
 const requiredConsentInputs=[...caseFormElement.querySelectorAll('input[name="free_access_terms"],input[name="sharing_authority"],input[name="no_guarantee"]')];
+const requiredApplicationFields=[document.getElementById('fullName'),document.getElementById('email'),descriptionField];
+function applicationCopy(key){const copy=(window.CTR_TRANSLATIONS&&window.CTR_TRANSLATIONS[document.documentElement.lang])||(window.CTR_TRANSLATIONS&&window.CTR_TRANSLATIONS.en)||{};return copy[key]||''}
+function applicationFieldValid(field){if(!field)return false;if(field===document.getElementById('fullName'))return field.value.trim().length>=2&&field.validity.valid;if(field===descriptionField)return field.value.trim().length>=50&&field.validity.valid;return field.validity.valid}
+function setApplicationFieldValidity(field,force=false){if(!field)return;const show=force||field.dataset.touched==='true';field.setAttribute('aria-invalid',show&&!applicationFieldValid(field)?'true':'false')}
 function applicationReady(){
-  return descriptionField.value.trim().length>=50&&requiredConsentInputs.every(input=>input.checked);
+  return !applicationSubmitting&&requiredApplicationFields.every(applicationFieldValid)&&requiredConsentInputs.every(input=>input.checked)&&applicationTurnstileVerified;
 }
 function updateSubmitAvailability(){
   const ready=applicationReady();
   formSubmitButton.disabled=!ready;
   formSubmitButton.setAttribute('aria-disabled',ready?'false':'true');
+  if(formReadiness){const key=ready?'form_ready_status':(applicationTurnstileRequired?'form_incomplete_status':'form_incomplete_status_no_bot');formReadiness.classList.toggle('ready',ready);formReadiness.textContent=applicationCopy(key)}
 }
+function setApplicationTurnstileStatus(key,state=''){if(!applicationTurnstileStatus)return;applicationTurnstileStatus.textContent=applicationCopy(key);applicationTurnstileStatus.dataset.state=state}
+function resetApplicationTurnstile(){if(!applicationTurnstileRequired)return;applicationTurnstileVerified=false;try{if(window.turnstile&&typeof window.turnstile.reset==='function')window.turnstile.reset('#applicationTurnstileWidget')}catch(_error){}setApplicationTurnstileStatus('application_turnstile_loading');updateSubmitAvailability()}
+window.ctrApplicationTurnstileSuccess=token=>{applicationTurnstileVerified=Boolean(String(token||'').trim());setApplicationTurnstileStatus('application_turnstile_ready','verified');updateSubmitAvailability()};
+window.ctrApplicationTurnstileExpired=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_required','required');updateSubmitAvailability()};
+window.ctrApplicationTurnstileTimeout=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_required','required');updateSubmitAvailability()};
+window.ctrApplicationTurnstileUnsupported=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');updateSubmitAvailability()};
+window.ctrApplicationTurnstileError=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');updateSubmitAvailability()};
 function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`;updateSubmitAvailability()}
+requiredApplicationFields.forEach(field=>{field.addEventListener('blur',()=>{field.dataset.touched='true';setApplicationFieldValidity(field);updateSubmitAvailability()});field.addEventListener('input',()=>{setApplicationFieldValidity(field);updateSubmitAvailability()})});
 descriptionField.addEventListener('input',updateDescriptionCount);
 caseFormElement.addEventListener('change',updateSubmitAvailability);
 updateDescriptionCount();
@@ -736,16 +773,18 @@ async function uploadDescriptionVoice(blob,baseText){
   const data=new FormData();
   data.append('audio',blob,blob.type.includes('mp4')?'description.m4a':'description.webm');
   data.append('language',document.documentElement.lang||'en');data.append('voice_consent','true');data.append('turnstile_token',token);data.append('purpose','description');
+  const controller=new AbortController();
+  const timeoutId=window.setTimeout(()=>controller.abort(),45000);
   try{
-    const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data});
+    const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});
     const result=await response.json().catch(()=>({}));
     if(!response.ok){throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
     const combined=(baseText.trim()?baseText.trim()+'\n\n':'')+transcript;
     descriptionField.value=combined.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));
     hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');descriptionField.focus();
-  }catch(error){descriptionVoiceStatus.textContent=error.message||descriptionVoiceCopy('description_voice_error');descriptionVoiceStatus.dataset.state='error'}
-  finally{resetDescriptionVoiceTurnstile()}
+  }catch(error){descriptionVoiceStatus.textContent=error.name==='AbortError'?descriptionVoiceCopy('voice_timeout'):(error.message||descriptionVoiceCopy('description_voice_error'));descriptionVoiceStatus.dataset.state='error'}
+  finally{window.clearTimeout(timeoutId);resetDescriptionVoiceTurnstile()}
 }
 async function startDescriptionVoiceRecording(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
@@ -774,6 +813,8 @@ async function startDescriptionVoiceRecording(){
 if(descriptionVoiceButton)descriptionVoiceButton.addEventListener('click',()=>{if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(false);else startDescriptionVoiceRecording()});
 if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');ensureDescriptionVoiceTurnstile()}});
 document.addEventListener('ctr:language-changed',()=>{stopDescriptionVoiceRecording(true);setDescriptionVoiceStatus('');hideDescriptionLiveText();if(descriptionVoicePanel&&!descriptionVoicePanel.hidden){if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileLoadAttempts=0;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_loading');ensureDescriptionVoiceTurnstile()}updateDescriptionVoiceButton()});
+window.addEventListener('pagehide',()=>stopDescriptionVoiceRecording(true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(true)});
 updateDescriptionVoiceButton();
 
 const privateAccessCopy={
@@ -802,7 +843,7 @@ const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog
 const nextButton=document.getElementById('nextBtn');
 nextButton.addEventListener('click',()=>{
   const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
-  const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').style.display=ok?'none':'block';
+  const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').hidden=ok;
   if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
 });
@@ -812,15 +853,22 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const form=e.target;
   const statusBox=document.getElementById('submitStatus');
-  if(!form.checkValidity()){
+  if(applicationSubmitting)return;
+  requiredApplicationFields.forEach(field=>{field.dataset.touched='true';setApplicationFieldValidity(field,true)});
+  if(!applicationReady()){
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
     statusBox.textContent=ui.fallback;
     form.reportValidity();
+    const logicalInvalid=requiredApplicationFields.find(field=>!applicationFieldValid(field));
     const invalid=form.querySelector(':invalid');
-    if(invalid)invalid.focus();
+    if(logicalInvalid)logicalInvalid.focus();
+    else if(invalid)invalid.focus();
+    else if(applicationTurnstileRequired){setApplicationTurnstileStatus('application_turnstile_required','required');applicationTurnstileStatus.scrollIntoView({behavior:'smooth',block:'center'})}
+    updateSubmitAvailability();
     return;
   }
+  applicationSubmitting=true;
   const submitButton=form.querySelector('button[type="submit"]');
   submitButton.disabled=true;
   submitButton.setAttribute('aria-disabled','true');
@@ -867,16 +915,16 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       }
       throw new Error(message||ui.fallback);
     }
-    form.style.display='none';
+    form.hidden=true;
     const confirmation=document.getElementById('confirmation');
-    confirmation.style.display='block';
+    confirmation.hidden=false;
     document.getElementById('caseNumber').textContent=result.case_reference;
     document.getElementById('caseDecision').textContent=result.public_message||'';
     if(result.status_url){
       const absoluteStatusUrl=new URL(result.status_url,window.location.origin).href;
       const link=document.getElementById('statusLink');
       link.href=result.status_url;
-      link.style.display='inline-flex';
+      link.hidden=false;
       document.getElementById('privateStatusUrl').value=absoluteStatusUrl;
       const accessCopy=privateAccessCopy[document.documentElement.lang]||privateAccessCopy.en;
       const emailState=document.getElementById('emailDeliveryState');
@@ -889,9 +937,11 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
     statusBox.textContent=error.name==='AbortError'?ui.timeout:(error.message||ui.unable);
-    updateSubmitAvailability();
+    resetApplicationTurnstile();
   }finally{
+    applicationSubmitting=false;
     window.clearTimeout(timeoutId);
+    updateSubmitAvailability();
   }
 });
 
@@ -959,6 +1009,7 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
       history.replaceState(null,'',url.pathname+url.search+url.hash);
     }catch(_e){}
   }
+  updateSubmitAvailability();
 }
 const langSelect=document.getElementById('langSelect');
 const mobileLangSelect=document.getElementById('mobileLangSelect');
@@ -1022,7 +1073,6 @@ if(aiChatRoot){
   let aiTurnstileRenderPending=false;
   let aiTurnstileLoadAttempts=0;
 
-  let aiPageScrollY=0;
   function showAiQuickQuestions(){
     if(aiTurnstileSection)aiTurnstileSection.hidden=true;
     aiChatQuick.hidden=aiChatHistory.length>0;
@@ -1032,25 +1082,12 @@ if(aiChatRoot){
     if(aiTurnstileSection)aiTurnstileSection.hidden=false;
   }
   function lockAiPageScroll(){
+    document.documentElement.classList.add('ai-chat-open');
     document.body.classList.add('ai-chat-open');
-    if(!window.matchMedia('(max-width:700px)').matches)return;
-    aiPageScrollY=window.scrollY;
-    document.body.style.position='fixed';
-    document.body.style.top=`-${aiPageScrollY}px`;
-    document.body.style.left='0';
-    document.body.style.right='0';
-    document.body.style.width='100%';
   }
   function unlockAiPageScroll(){
-    const wasLocked=document.body.style.position==='fixed';
+    document.documentElement.classList.remove('ai-chat-open');
     document.body.classList.remove('ai-chat-open');
-    if(!wasLocked)return;
-    document.body.style.position='';
-    document.body.style.top='';
-    document.body.style.left='';
-    document.body.style.right='';
-    document.body.style.width='';
-    window.scrollTo(0,aiPageScrollY);
   }
   function collapseAiVoicePanel(){
     if(aiVoicePanel)aiVoicePanel.hidden=true;
@@ -1071,6 +1108,7 @@ if(aiChatRoot){
     window.requestAnimationFrame(()=>{ensureAiTurnstile();if(!aiTurnstileRequired||aiTurnstileToken())window.setTimeout(()=>aiChatInput.focus({preventScroll:true}),40)});
   }
   function closeAiChat(restoreFocus=true,goToApplication=false){
+    if(aiChatAbortController)aiChatAbortController.abort();
     stopVoiceRecording(true);
     collapseAiVoicePanel();
     aiChatPanel.hidden=true;
@@ -1245,11 +1283,14 @@ if(aiChatRoot){
     data.append('voice_consent','true');
     data.append('turnstile_token',token);
     data.append('purpose','assistant');
+    const controller=new AbortController();
+    const timeoutId=window.setTimeout(()=>controller.abort(),45000);
     try{
       const response=await fetch('/api/assistant/transcribe',{
         method:'POST',
         credentials:'same-origin',
-        body:data
+        body:data,
+        signal:controller.signal
       });
       const result=await response.json().catch(()=>({}));
       if(!response.ok){
@@ -1263,9 +1304,10 @@ if(aiChatRoot){
       hideAiLiveText();
       setVoiceStatus('ai_voice_review');
       collapseAiVoicePanel();
-    }catch(_error){
-      setVoiceStatus('ai_voice_error');
+    }catch(error){
+      setVoiceStatus(error.name==='AbortError'?'voice_timeout':'ai_voice_error');
     }finally{
+      window.clearTimeout(timeoutId);
       resetAiTurnstile();
     }
   }
@@ -1381,6 +1423,8 @@ if(aiChatRoot){
     updateAiControls();
     const thinking=appendAiMessage('assistant',aiCopy('ai_chat_thinking'),'thinking');
     const controller=new AbortController();
+    let requestTimedOut=false;
+    const timeoutId=window.setTimeout(()=>{requestTimedOut=true;controller.abort()},45000);
     aiChatAbortController=controller;
     try{
       const response=await fetch('/api/assistant',{
@@ -1404,8 +1448,10 @@ if(aiChatRoot){
       aiChatHistory=aiChatHistory.slice(-8);
     }catch(error){
       if(thinking.isConnected)thinking.remove();
-      if(error.name!=='AbortError')appendAiMessage('assistant',aiCopy('ai_chat_error'),'','start');
+      if(requestTimedOut)appendAiMessage('assistant',aiCopy('ai_chat_timeout'),'','start');
+      else if(error.name!=='AbortError')appendAiMessage('assistant',aiCopy('ai_chat_error'),'','start');
     }finally{
+      window.clearTimeout(timeoutId);
       if(aiChatAbortController===controller){
         aiChatAbortController=null;
         aiChatBusy=false;
@@ -1439,6 +1485,8 @@ if(aiChatRoot){
   aiChatInput.addEventListener('keydown',event=>{
     if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage(aiChatInput.value)}
   });
+  window.addEventListener('pagehide',()=>{if(aiChatAbortController)aiChatAbortController.abort();stopVoiceRecording(true)});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(true)});
   document.addEventListener('keydown',event=>{
     if(aiChatPanel.hidden)return;
     if(event.key==='Escape'){closeAiChat();return;}

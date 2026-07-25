@@ -85,6 +85,7 @@ from .document_analysis import (
     document_analysis_is_enabled,
 )
 from .documents import (
+    pdf_security_self_test,
     MAX_CONCURRENT_DOCUMENT_PROCESSORS,
     MAX_DOCUMENTS_PER_CASE,
     MAX_PDF_PAGES_PER_DOCUMENT,
@@ -141,7 +142,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.33"
+APP_VERSION = "3.7.35"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -414,6 +415,7 @@ def launch_readiness_checks() -> dict[str, bool]:
         "email_delivery": email_delivery_is_configured(),
         "bot_protection": turnstile_is_enabled(),
         "database_storage": persistent_database_is_ready(),
+        "pdf_security": pdf_security_self_test(),
     }
 
 
@@ -708,6 +710,8 @@ def _qr_png(payload: str) -> bytes:
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
+    csp_nonce = secrets.token_urlsafe(18)
+    request.state.csp_nonce = csp_nonce
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-App-Version", APP_VERSION)
@@ -717,9 +721,9 @@ async def security_headers(request: Request, call_next):
     turnstile_sources = " https://challenges.cloudflare.com" if turnstile_is_enabled() else ""
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; style-src 'self' 'unsafe-inline'; "
-        f"script-src 'self' 'unsafe-inline'{turnstile_sources}; "
-        "img-src 'self' data:; "
+        f"default-src 'self'; style-src 'self' 'nonce-{csp_nonce}'; style-src-attr 'none'; "
+        f"script-src 'self' 'nonce-{csp_nonce}'{turnstile_sources}; script-src-attr 'none'; "
+        "object-src 'none'; img-src 'self' data:; "
         f"connect-src 'self'{turnstile_sources}; frame-src 'self'{turnstile_sources}; "
         "form-action 'self'; frame-ancestors 'none'; base-uri 'self'",
     )

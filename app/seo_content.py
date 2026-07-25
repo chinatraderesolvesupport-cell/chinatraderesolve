@@ -176,7 +176,7 @@ GUIDE_CARD_COPY = {
     },
 }
 
-# Full multilingual guide content and shared detail-page labels (v3.7.33).
+# Full multilingual guide content and shared detail-page labels (v3.7.35).
 GUIDES.update({'fr': {'alibaba-dispute-evidence': {'title': 'Liste de preuves pour un litige Alibaba',
                                      'description': 'Comment rassembler les conditions de commande, les messages, le '
                                                     'paiement, les contrôles et une demande de remboursement claire.',

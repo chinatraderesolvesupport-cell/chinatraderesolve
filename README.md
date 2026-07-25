@@ -1,23 +1,23 @@
-# ChinaTradeResolve Document AI v3.7.33
+# ChinaTradeResolve Document AI v3.7.35
 
-Version 3.7.33 improves the public landing page before promotion: it adds a visible multilingual guide preview, tightens wording about free access, documents and voluntary support, and fixes article calls to action so they jump to the real application section. It retains the `/health` Docker check, strict `/ready` launch gate and all previous security and document-workflow protections.
+Version 3.7.35 improves mobile usability, CSP enforcement and production PDF verification: the submit button now reflects every required field, consent and Turnstile state; voice and chat requests have safe timeouts; microphones are released when the page is hidden; and multiline dispute descriptions keep their paragraph structure. It also synchronises every visible version marker.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
 
-## Landing page and guides in v3.7.33
+## Safer application, voice and chat flow in v3.7.35
 
-- The home page now promotes three practical guides and links to the full language-specific catalogue.
-- Four practical supplier-dispute guides are available in English, Russian, French, German, Spanish and Serbian.
-- Each localized page has a canonical URL, reciprocal `hreflang` links and an `x-default` fallback.
-- Guide pages include Article and Breadcrumb structured data, publication/modification dates and a dedicated organization logo.
-- `sitemap.xml` contains every localized guide and language alternate.
-- Campaign source, medium, campaign, first landing page and referring origin are sanitized, saved with the application and shown to the administrator.
-- The administrator dashboard shows whether search indexing is currently enabled and whether Google, Bing and IndexNow are configured.
-- IndexNow no longer ships with a shared default key; generate a unique key for the production site.
-- Utility legal pages that should not compete in search use `noindex,follow`; the privacy page remains indexable.
+- The application submit button stays disabled until the full name, valid email, minimum description, three required confirmations and configured Turnstile check are all complete.
+- A localized readiness message explains whether the application is incomplete or ready to send; invalid required fields expose `aria-invalid` for assistive technology.
+- Main-form Turnstile now reports loading, verified, expired and failed states instead of failing only after submission.
+- Duplicate browser submissions are blocked while the request is running, and the form becomes usable again after a network error.
+- AI chat and both voice-transcription flows stop waiting after 45 seconds and show a localized retry message.
+- Active microphone streams are released when the page is hidden or left.
+- Server-side description cleaning preserves paragraphs while removing control characters and excessive blank lines.
+- `APP_VERSION`, `VERSION.txt`, README, changelog and regression tests now consistently report `3.7.35`.
 
+The multilingual guide catalogue, `/health` liveness check, strict `/ready` launch gate, document protections and all earlier features remain included.
 
 
 ## Administrator feedback centre in v3.7.28
@@ -394,7 +394,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.33
+cd ChinaTradeResolve_Document_AI_v3.7.35
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -552,4 +552,9 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.33 включает полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.35 включает усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+
+
+## PDF security verification
+
+Run `python scripts/verify_pdf_security.py` after dependencies are installed. Public readiness remains false if this production-engine self-test fails.

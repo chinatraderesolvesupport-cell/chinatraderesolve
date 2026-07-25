@@ -16,10 +16,10 @@
   <meta property="og:url" content="{{ canonical_url }}">
   <meta property="og:image" content="{{ base_url }}/static/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
-  <style>body{font-family:Inter,Arial,sans-serif;background:#f8fafc;color:#0f172a;margin:0;line-height:1.6}.page{width:min(900px,92%);margin:40px auto;background:white;padding:clamp(24px,5vw,40px);border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 12px 36px #0001}h1{margin-top:0;line-height:1.2}h2{margin-top:28px}.notice{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:12px;border-radius:10px}a{color:#0f766e}.top{display:flex;justify-content:flex-end}.lang{padding:8px;border:1px solid #94a3b8;border-radius:8px;background:white}.controller{background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px}</style>
+  <style nonce="{{ request.state.csp_nonce }}">body{font-family:Inter,Arial,sans-serif;background:#f8fafc;color:#0f172a;margin:0;line-height:1.6}.page{width:min(900px,92%);margin:40px auto;background:white;padding:clamp(24px,5vw,40px);border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 12px 36px #0001}h1{margin-top:0;line-height:1.2}h2{margin-top:28px}.notice{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:12px;border-radius:10px}a{color:#0f766e}.top{display:flex;justify-content:flex-end}.lang{padding:8px;border:1px solid #94a3b8;border-radius:8px;background:white}.controller{background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px}.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
 </head>
 <body><div class="page">
-  <div class="top"><label><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">{{ copy.language_label }}</span><select id="lang" class="lang" aria-label="{{ copy.language_label }}" onchange="location.href='/privacy?lang='+encodeURIComponent(this.value)">{% for code,name in language_names.items() %}<option value="{{ code }}" {% if code==lang %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label></div>
+  <div class="top"><label><span class="visually-hidden">{{ copy.language_label }}</span><select id="lang" class="lang" aria-label="{{ copy.language_label }}">{% for code,name in language_names.items() %}<option value="{{ code }}" {% if code==lang %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label></div>
   <h1>{{ copy.title }}</h1>
   <p class="notice">{{ copy.notice }}</p>
   <h2>{{ copy.h_controller }}</h2>
@@ -37,4 +37,4 @@
   <h2>{{ copy.h_rights }}</h2><p>{{ copy.p_rights }}</p>
   <h2>{{ copy.h_security }}</h2><p>{{ copy.p_security }}</p>
   <p><a href="/?lang={{ lang }}">{{ copy.back }}</a></p>
-</div></body></html>
+</div><script nonce="{{ request.state.csp_nonce }}">document.getElementById("lang")?.addEventListener("change",event=>{location.href="/privacy?lang="+encodeURIComponent(event.target.value)});</script></body></html>

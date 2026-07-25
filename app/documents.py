@@ -5,6 +5,7 @@ import hashlib
 import re
 import threading
 from dataclasses import dataclass
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 
@@ -203,6 +204,58 @@ def validate_pdf_and_count_pages(data: bytes) -> tuple[bytes, int]:
 def _validate_pdf(data: bytes) -> bytes:
     """Backward-compatible wrapper retained for scripts and existing tests."""
     return validate_pdf_and_count_pages(data)[0]
+
+
+@lru_cache(maxsize=1)
+def pdf_security_self_test() -> bool:
+    """Exercise the production PDF engine with safe, active, embedded and encrypted files."""
+    try:
+        safe_output = BytesIO()
+        with pikepdf.Pdf.new() as pdf:
+            pdf.add_blank_page(page_size=(595, 842))
+            pdf.save(safe_output)
+        if validate_pdf_and_count_pages(safe_output.getvalue())[1] != 1:
+            return False
+
+        unsafe_outputs: list[bytes] = []
+        active_output = BytesIO()
+        with pikepdf.Pdf.new() as pdf:
+            pdf.add_blank_page(page_size=(595, 842))
+            action = pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS=pikepdf.String("app.alert('unsafe')"))
+            pdf.Root.OpenAction = pdf.make_indirect(action)
+            pdf.save(active_output, object_stream_mode=pikepdf.ObjectStreamMode.generate)
+        unsafe_outputs.append(active_output.getvalue())
+
+        attachment_output = BytesIO()
+        with pikepdf.Pdf.new() as pdf:
+            pdf.add_blank_page(page_size=(595, 842))
+            pdf.attachments["self-test.txt"] = b"embedded payload"
+            pdf.save(attachment_output, object_stream_mode=pikepdf.ObjectStreamMode.generate)
+        unsafe_outputs.append(attachment_output.getvalue())
+
+        for unsafe in unsafe_outputs:
+            try:
+                validate_pdf_and_count_pages(unsafe)
+            except DocumentValidationError as exc:
+                if "active or embedded" not in str(exc):
+                    return False
+            else:
+                return False
+
+        encrypted_output = BytesIO()
+        with pikepdf.Pdf.new() as pdf:
+            pdf.add_blank_page(page_size=(595, 842))
+            pdf.save(encrypted_output, encryption=pikepdf.Encryption(user="self-test", owner="owner-self-test", R=6))
+        try:
+            validate_pdf_and_count_pages(encrypted_output.getvalue())
+        except DocumentValidationError as exc:
+            if "Password-protected" not in str(exc):
+                return False
+        else:
+            return False
+        return True
+    except Exception:
+        return False
 
 
 def _process_document_bytes_unbounded(raw: bytes, detected: str) -> tuple[bytes, str, int]:

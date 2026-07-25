@@ -11,3 +11,5 @@ venv
 data/*.db
 data/*.db-*
 *.zip
+
+production_smoke_report.json

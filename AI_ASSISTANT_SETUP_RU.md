@@ -52,7 +52,7 @@ OPENAI_ASSISTANT_MODEL=
 Откройте:
 
 ```text
-https://chinatraderesolve.onrender.com/health
+https://chinatraderesolve.com/health
 ```
 
 Ожидаемый фрагмент ответа:

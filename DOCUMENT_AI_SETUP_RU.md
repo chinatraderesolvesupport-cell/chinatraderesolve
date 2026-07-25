@@ -63,7 +63,7 @@ MAX_DAILY_DOCUMENT_ANALYSES_GLOBAL=100
 Откройте:
 
 ```text
-https://chinatraderesolve.onrender.com/health
+https://chinatraderesolve.com/health
 ```
 
 Ожидаемое поле:

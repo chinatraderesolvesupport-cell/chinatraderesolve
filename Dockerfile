@@ -3,6 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
+RUN chmod +x /app/run_local.sh /app/scripts/*.py
 RUN groupadd --system app && useradd --system --gid app --home-dir /app app \
     && mkdir -p /app/data && chown -R app:app /app
 ENV DATABASE_PATH=/app/data/ctr.db

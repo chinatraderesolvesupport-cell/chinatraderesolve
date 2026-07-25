@@ -1947,9 +1947,9 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.37"
+    assert health.json()["version"] == "3.7.38"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.37"
+    assert health.headers["x-app-version"] == "3.7.38"
     assert health.json()["voice_max_seconds"] == 120
     assert "voice_transcriptions_daily_limit" not in health.json()
     assert "voice_transcriptions_used_today" not in health.json()
@@ -4958,8 +4958,9 @@ def test_ci_workflow_is_packaged_and_runs_compile_and_tests():
     workflow = Path(__file__).resolve().parent.parent / '.github' / 'workflows' / 'ci.yml'
     assert workflow.exists()
     content = workflow.read_text(encoding='utf-8')
-    assert 'actions/checkout@v4' in content
-    assert 'actions/setup-python@v5' in content
+    assert 'actions/checkout@v6' in content
+    assert 'actions/setup-python@v6' in content
+    assert 'chmod +x run_local.sh scripts/*.py' in content
     assert 'python -m pip install -r requirements-dev.txt' in content
     assert 'python -m compileall -q app scripts tests' in content
     assert 'python -m pytest -q' in content
@@ -5007,16 +5008,16 @@ def test_v3734_description_normalization_preserves_paragraphs():
     assert application.description == "First paragraph with enough detail for validation.\n\nSecond paragraph with more evidence."
 
 
-def test_v3737_version_markers_are_synchronised():
+def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.37"
-    assert "v3.7.37" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.37" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.37" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.37" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.38"
+    assert "v3.7.38" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.38" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.38" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.38" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
-def test_v3737_ai_chat_stacks_send_button_on_very_narrow_screens():
+def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
     page = client.get("/?lang=ru")
     assert page.status_code == 200
     assert "@media(max-width:360px){.ai-chat-form{grid-template-columns:minmax(0,1fr)" in page.text
@@ -5071,3 +5072,27 @@ def test_pdf_security_is_an_explicit_launch_readiness_gate(monkeypatch):
     assert module.launch_readiness_checks()["pdf_security"] is True
     script = Path(__file__).resolve().parent.parent / "scripts" / "verify_pdf_security.py"
     assert script.exists()
+
+
+def test_v3738_production_smoke_assets_are_packaged():
+    root = Path(__file__).parents[1]
+    script = root / "scripts" / "production_smoke_test.py"
+    guide = root / "PRODUCTION_SMOKE_TEST_RU.md"
+    voice = root / "tests" / "fixtures" / "production-smoke-voice.wav"
+    assert script.exists() and script.stat().st_mode & 0o111
+    content = script.read_text(encoding="utf-8")
+    assert "--confirm-live" in content
+    assert "public_ready" in content
+    assert "email_delivery" in content
+    assert "openai_assistant" in content
+    assert "voice_transcription" in content
+    assert guide.exists()
+    assert voice.read_bytes().startswith(b"RIFF")
+
+
+def test_v3738_docker_and_ci_restore_zip_permissions():
+    root = Path(__file__).parents[1]
+    dockerfile = (root / "Dockerfile").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "chmod +x /app/run_local.sh /app/scripts/*.py" in dockerfile
+    assert "chmod +x run_local.sh scripts/*.py" in workflow

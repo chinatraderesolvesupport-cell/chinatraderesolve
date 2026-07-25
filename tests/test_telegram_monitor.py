@@ -120,6 +120,8 @@ async def test_connected_monitor_sends_relevant_public_channel_alert(monkeypatch
     class FakeEvent:
         raw_text = "Alibaba supplier refuses refund after defective goods"
         is_channel = True
+        out = False
+        sender_id = 888
         id = 42
         chat_id = -100123
 
@@ -207,6 +209,8 @@ async def test_connected_monitor_ignores_direct_message(monkeypatch):
     class FakeEvent:
         raw_text = "Alibaba supplier refuses refund"
         is_channel = False
+        out = False
+        sender_id = 888
         id = 1
         chat_id = 99
 
@@ -263,3 +267,161 @@ async def test_connected_monitor_ignores_direct_message(monkeypatch):
     )
     await telegram_monitor._connected_monitor(settings)
     assert sent == []
+
+
+@pytest.mark.asyncio
+async def test_connected_monitor_can_temporarily_accept_own_public_message(monkeypatch):
+    import sys
+    import types
+    from app import telegram_monitor
+
+    sent: list[str] = []
+
+    class FakeEvent:
+        raw_text = "Alibaba supplier has not shipped my order and refuses a refund"
+        is_channel = True
+        out = True
+        sender_id = 777
+        id = 55
+        chat_id = -100555
+
+        async def get_chat(self):
+            return types.SimpleNamespace(username="public_test", title="Public Test")
+
+    class FakeClient:
+        def __init__(self, *_args, **_kwargs):
+            self.handler = None
+
+        def on(self, _builder):
+            def decorator(func):
+                self.handler = func
+                return func
+            return decorator
+
+        async def connect(self):
+            pass
+
+        async def is_user_authorized(self):
+            return True
+
+        async def get_me(self):
+            return types.SimpleNamespace(id=777)
+
+        async def run_until_disconnected(self):
+            await self.handler(FakeEvent())
+
+        async def disconnect(self):
+            pass
+
+    class FakeEvents:
+        @staticmethod
+        def NewMessage(**_kwargs):
+            return object()
+
+    telethon_module = types.ModuleType("telethon")
+    telethon_module.TelegramClient = FakeClient
+    telethon_module.events = FakeEvents
+    errors_module = types.ModuleType("telethon.errors")
+    errors_module.FloodWaitError = type("FakeFloodWaitError", (Exception,), {"seconds": 1})
+    sessions_module = types.ModuleType("telethon.sessions")
+    sessions_module.StringSession = lambda value: value
+    monkeypatch.setitem(sys.modules, "telethon", telethon_module)
+    monkeypatch.setitem(sys.modules, "telethon.errors", errors_module)
+    monkeypatch.setitem(sys.modules, "telethon.sessions", sessions_module)
+
+    async def fake_send(_settings, text):
+        sent.append(text)
+
+    monkeypatch.setattr(telegram_monitor, "_send_bot_message", fake_send)
+    settings = telegram_monitor.TelegramMonitorSettings(
+        True, 123, "hash", "session", "token", "chat", (), (), (), False,
+        test_own_messages=True,
+    )
+    await telegram_monitor._connected_monitor(settings)
+    assert len(sent) == 1
+    assert "Public Test" in sent[0]
+
+
+@pytest.mark.asyncio
+async def test_connected_monitor_ignores_own_message_by_default(monkeypatch):
+    import sys
+    import types
+    from app import telegram_monitor
+
+    sent: list[str] = []
+
+    class FakeEvent:
+        raw_text = "Alibaba supplier refuses refund"
+        is_channel = True
+        out = True
+        sender_id = 777
+        id = 56
+        chat_id = -100556
+
+        async def get_chat(self):
+            raise AssertionError("Own event must be ignored before chat lookup")
+
+    class FakeClient:
+        def __init__(self, *_args, **_kwargs):
+            self.handler = None
+
+        def on(self, _builder):
+            def decorator(func):
+                self.handler = func
+                return func
+            return decorator
+
+        async def connect(self):
+            pass
+
+        async def is_user_authorized(self):
+            return True
+
+        async def get_me(self):
+            return types.SimpleNamespace(id=777)
+
+        async def run_until_disconnected(self):
+            await self.handler(FakeEvent())
+
+        async def disconnect(self):
+            pass
+
+    class FakeEvents:
+        @staticmethod
+        def NewMessage(**_kwargs):
+            return object()
+
+    telethon_module = types.ModuleType("telethon")
+    telethon_module.TelegramClient = FakeClient
+    telethon_module.events = FakeEvents
+    errors_module = types.ModuleType("telethon.errors")
+    errors_module.FloodWaitError = type("FakeFloodWaitError", (Exception,), {"seconds": 1})
+    sessions_module = types.ModuleType("telethon.sessions")
+    sessions_module.StringSession = lambda value: value
+    monkeypatch.setitem(sys.modules, "telethon", telethon_module)
+    monkeypatch.setitem(sys.modules, "telethon.errors", errors_module)
+    monkeypatch.setitem(sys.modules, "telethon.sessions", sessions_module)
+
+    async def fake_send(_settings, text):
+        sent.append(text)
+
+    monkeypatch.setattr(telegram_monitor, "_send_bot_message", fake_send)
+    telegram_monitor._runtime.ignored_own = 0
+    settings = telegram_monitor.TelegramMonitorSettings(
+        True, 123, "hash", "session", "token", "chat", (), (), (), False
+    )
+    await telegram_monitor._connected_monitor(settings)
+    assert sent == []
+    assert telegram_monitor._runtime.ignored_own == 1
+
+
+def test_health_exposes_diagnostics_without_secrets(monkeypatch):
+    from app import telegram_monitor
+
+    monkeypatch.setenv("TELEGRAM_MONITOR_ENABLED", "true")
+    monkeypatch.setenv("TELEGRAM_MONITOR_TEST_OWN_MESSAGES", "true")
+    health = telegram_monitor.telegram_monitor_health()
+    assert health["test_own_messages"] is True
+    assert "ignored_since_start" in health
+    rendered = repr(health)
+    assert "TELEGRAM_SESSION_STRING" not in rendered

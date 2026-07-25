@@ -26,6 +26,8 @@ TELEGRAM_MONITOR_CHATS=
 TELEGRAM_MONITOR_KEYWORDS=
 TELEGRAM_MONITOR_EXCLUDE_KEYWORDS=
 TELEGRAM_MONITOR_STARTUP_NOTICE=false
+TELEGRAM_MONITOR_TEST_OWN_MESSAGES=false
+TELEGRAM_MONITOR_SELF_TEST_ON_STARTUP=false
 ```
 
 - Пустой `TELEGRAM_MONITOR_CHATS` означает: отслеживать все публичные каналы и группы, уже доступные аккаунту.
@@ -65,3 +67,17 @@ Remove-Item "$HOME\Downloads\telegram_session_secret.txt" -Force
 ```
 
 Если StringSession раскрыта, завершите соответствующий сеанс в Telegram: **Настройки → Конфиденциальность и безопасность → Устройства**, затем создайте новую сессию.
+
+
+## Диагностический тест
+
+Для одноразовой проверки без второго Telegram-аккаунта временно задайте:
+
+```env
+TELEGRAM_MONITOR_TEST_OWN_MESSAGES=true
+TELEGRAM_MONITOR_SELF_TEST_ON_STARTUP=true
+```
+
+После deploy бот должен получить сообщение `🧪 ТЕСТ МОНИТОРА`. Затем опубликуйте тестовую фразу в собственном публичном канале или публичной мегагруппе. После успешной проверки верните обе переменные в `false` и выполните deploy ещё раз.
+
+`/health` показывает безопасные счётчики увиденных, отброшенных и отправленных сообщений, но никогда не показывает Telegram-секреты.

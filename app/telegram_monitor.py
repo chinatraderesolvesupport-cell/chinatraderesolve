@@ -5,6 +5,7 @@ import logging
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -32,6 +33,8 @@ class TelegramMonitorSettings:
     extra_phrases: tuple[str, ...]
     exclude_phrases: tuple[str, ...]
     startup_notice: bool
+    test_own_messages: bool = False
+    self_test_on_startup: bool = False
 
 
 class _RuntimeState:
@@ -39,7 +42,19 @@ class _RuntimeState:
         self.configured = False
         self.connected = False
         self.account_id: int | None = None
+        self.events_seen = 0
+        self.relevant_matches = 0
         self.alerts_sent = 0
+        self.self_tests_sent = 0
+        self.ignored_empty = 0
+        self.ignored_own = 0
+        self.ignored_non_channel = 0
+        self.ignored_private = 0
+        self.ignored_not_allowed = 0
+        self.ignored_irrelevant = 0
+        self.ignored_duplicate = 0
+        self.last_event_at: str | None = None
+        self.last_alert_at: str | None = None
         self.last_error: str | None = None
 
 
@@ -106,6 +121,8 @@ def load_telegram_monitor_settings() -> TelegramMonitorSettings:
         extra_phrases=parse_csv(os.getenv("TELEGRAM_MONITOR_KEYWORDS")),
         exclude_phrases=parse_csv(os.getenv("TELEGRAM_MONITOR_EXCLUDE_KEYWORDS")),
         startup_notice=_env_bool("TELEGRAM_MONITOR_STARTUP_NOTICE", False),
+        test_own_messages=_env_bool("TELEGRAM_MONITOR_TEST_OWN_MESSAGES", False),
+        self_test_on_startup=_env_bool("TELEGRAM_MONITOR_SELF_TEST_ON_STARTUP", False),
     )
 
 
@@ -115,7 +132,22 @@ def telegram_monitor_health() -> dict[str, Any]:
         "enabled": enabled,
         "configured": bool(_runtime.configured),
         "connected": bool(_runtime.connected),
+        "test_own_messages": _env_bool("TELEGRAM_MONITOR_TEST_OWN_MESSAGES", False),
+        "events_seen_since_start": int(_runtime.events_seen),
+        "relevant_matches_since_start": int(_runtime.relevant_matches),
         "alerts_sent_since_start": int(_runtime.alerts_sent),
+        "self_tests_sent_since_start": int(_runtime.self_tests_sent),
+        "ignored_since_start": {
+            "empty": int(_runtime.ignored_empty),
+            "own": int(_runtime.ignored_own),
+            "non_channel": int(_runtime.ignored_non_channel),
+            "private": int(_runtime.ignored_private),
+            "not_allowed": int(_runtime.ignored_not_allowed),
+            "irrelevant": int(_runtime.ignored_irrelevant),
+            "duplicate": int(_runtime.ignored_duplicate),
+        },
+        "last_event_at": _runtime.last_event_at,
+        "last_alert_at": _runtime.last_alert_at,
         "last_error": _runtime.last_error,
     }
 
@@ -148,26 +180,41 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
         settings.api_hash,
     )
 
-    @client.on(events.NewMessage(incoming=True))
+    @client.on(events.NewMessage())
     async def on_message(event) -> None:
         try:
+            _runtime.events_seen += 1
+            _runtime.last_event_at = datetime.now(timezone.utc).isoformat()
+
             text = (event.raw_text or "").strip()
             if not text:
+                _runtime.ignored_empty += 1
+                return
+
+            sender_id = getattr(event, "sender_id", None)
+            is_own = bool(getattr(event, "out", False)) or (
+                _runtime.account_id is not None and sender_id == _runtime.account_id
+            )
+            if is_own and not settings.test_own_messages:
+                _runtime.ignored_own += 1
                 return
 
             if not getattr(event, "is_channel", False):
                 # Ignore direct messages and legacy private groups. Public channels
                 # and public discussion groups are represented as channels/megagroups.
+                _runtime.ignored_non_channel += 1
                 return
 
             chat = await event.get_chat()
             username = (getattr(chat, "username", None) or "").strip()
             if not username:
                 # A channel/group without a public username is private.
+                _runtime.ignored_private += 1
                 return
 
             username_key = username.casefold().lstrip("@")
             if settings.allowed_chats and username_key not in settings.allowed_chats:
+                _runtime.ignored_not_allowed += 1
                 return
 
             result = classify_message(
@@ -176,11 +223,15 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
                 exclude_phrases=settings.exclude_phrases,
             )
             if not result.relevant:
+                _runtime.ignored_irrelevant += 1
                 return
+
+            _runtime.relevant_matches += 1
 
             chat_id = getattr(event, "chat_id", "unknown")
             fingerprint = message_fingerprint(chat_id, event.id)
             if not recent.add_if_new(fingerprint):
+                _runtime.ignored_duplicate += 1
                 return
 
             title = (
@@ -197,6 +248,7 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
             )
             await _send_bot_message(settings, alert)
             _runtime.alerts_sent += 1
+            _runtime.last_alert_at = datetime.now(timezone.utc).isoformat()
             logger.info("Sent Telegram monitor alert for @%s message %s", username, event.id)
         except FloodWaitError as exc:
             logger.warning("Telegram rate limit: sleeping %s seconds", exc.seconds)
@@ -225,6 +277,22 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
             settings,
             "✅ Telegram Monitor запущен. Отслеживаются только доступные аккаунту публичные каналы и группы; автоматические ответы отключены.",
         )
+
+    if settings.self_test_on_startup:
+        sample = "Alibaba supplier has not shipped the order and refuses a refund."
+        result = classify_message(sample)
+        alert = format_alert(
+            chat_title="ChinaTradeResolve — системный тест",
+            username=None,
+            text=sample,
+            labels=result.labels,
+            link=None,
+        )
+        await _send_bot_message(settings, "🧪 ТЕСТ МОНИТОРА\n\n" + alert)
+        _runtime.self_tests_sent += 1
+        _runtime.alerts_sent += 1
+        _runtime.last_alert_at = datetime.now(timezone.utc).isoformat()
+        logger.info("Telegram monitor self-test alert sent")
 
     try:
         await client.run_until_disconnected()

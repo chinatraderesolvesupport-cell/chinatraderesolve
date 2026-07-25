@@ -4880,6 +4880,12 @@ def test_privacy_sitemap_contains_language_alternates():
 
 def test_local_run_script_is_executable():
     script = Path(__file__).resolve().parent.parent / "run_local.sh"
+    assert script.exists()
+
+    if os.name == "nt":
+        assert script.read_text(encoding="utf-8").startswith("#!")
+        return
+
     assert script.stat().st_mode & 0o111
 
 

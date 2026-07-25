@@ -141,7 +141,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.34"
+APP_VERSION = "3.7.33"
 logger = logging.getLogger("chinatraderesolve")
 
 

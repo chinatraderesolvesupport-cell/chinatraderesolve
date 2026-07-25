@@ -2076,9 +2076,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.44"
+    assert health.json()["version"] == "3.7.45"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.44"
+    assert health.headers["x-app-version"] == "3.7.45"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5148,13 +5148,75 @@ def test_v3734_description_normalization_preserves_paragraphs():
     assert application.description == "First paragraph with enough detail for validation.\n\nSecond paragraph with more evidence."
 
 
+
+def _v3745_redirect_test_app():
+    from app.main import CanonicalHostRedirectMiddleware, body_limited_app
+
+    return CanonicalHostRedirectMiddleware(
+        body_limited_app,
+        canonical_base_url="https://chinatraderesolve.com",
+        source_hosts={"chinatraderesolve.onrender.com"},
+    )
+
+
+def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url():
+    technical_client = TestClient(
+        _v3745_redirect_test_app(),
+        base_url="https://chinatraderesolve.onrender.com",
+    )
+    response = technical_client.get(
+        "/case/CTR-2026-ABC/private-token?lang=ru&utm_source=old-link",
+        follow_redirects=False,
+    )
+    assert response.status_code == 308
+    assert response.headers["location"] == (
+        "https://chinatraderesolve.com/case/CTR-2026-ABC/private-token"
+        "?lang=ru&utm_source=old-link"
+    )
+    assert response.headers["vary"] == "Host"
+    assert response.headers["x-app-version"] == "3.7.45"
+
+
+def test_v3745_canonical_hostname_is_not_redirected():
+    canonical_client = TestClient(
+        _v3745_redirect_test_app(),
+        base_url="https://chinatraderesolve.com",
+    )
+    response = canonical_client.get("/health", follow_redirects=False)
+    assert response.status_code == 200
+    assert response.json()["version"] == "3.7.45"
+
+
+def test_v3745_unrelated_test_hostname_is_not_redirected():
+    unrelated_client = TestClient(
+        _v3745_redirect_test_app(),
+        base_url="https://example.test",
+    )
+    response = unrelated_client.get("/health", follow_redirects=False)
+    assert response.status_code == 200
+    assert "location" not in response.headers
+
+
+def test_v3745_local_fallback_does_not_redirect_render_host_to_localhost():
+    from app.main import CanonicalHostRedirectMiddleware, body_limited_app
+
+    local_app = CanonicalHostRedirectMiddleware(
+        body_limited_app,
+        canonical_base_url="http://127.0.0.1:8000",
+        source_hosts={"chinatraderesolve.onrender.com"},
+    )
+    local_client = TestClient(local_app, base_url="https://chinatraderesolve.onrender.com")
+    response = local_client.get("/health", follow_redirects=False)
+    assert response.status_code == 200
+    assert "location" not in response.headers
+
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.44"
-    assert "v3.7.44" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.44" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.44" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.44" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.45"
+    assert "v3.7.45" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.45" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.45" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.45" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

@@ -143,13 +143,108 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.44"
+APP_VERSION = "3.7.45"
 logger = logging.getLogger("chinatraderesolve")
 
 
 STANDARD_REQUEST_BODY_BYTES = 1 * 1024 * 1024
 DOCUMENT_UPLOAD_REQUEST_BODY_BYTES = 50 * 1024 * 1024
 VOICE_UPLOAD_REQUEST_BODY_BYTES = 5 * 1024 * 1024
+
+
+
+def _render_redirect_source_hosts() -> frozenset[str]:
+    """Return only trusted Render technical hostnames eligible for canonical redirect."""
+    hosts = {"chinatraderesolve.onrender.com"}
+    raw = (os.getenv("RENDER_EXTERNAL_URL") or "").strip()
+    try:
+        hostname = (urlparse(raw).hostname or "").casefold()
+    except ValueError:
+        hostname = ""
+    if hostname.endswith(".onrender.com"):
+        hosts.add(hostname)
+    return frozenset(hosts)
+
+
+class CanonicalHostRedirectMiddleware:
+    """Permanently redirect Render's technical hostname to the public custom domain.
+
+    The target origin is fixed by the validated ``PUBLIC_BASE_URL`` setting.  The
+    original path and query string are preserved exactly, and HTTP 308 keeps the
+    request method for the rare case where an old technical URL is submitted.
+    """
+
+    def __init__(self, app, *, canonical_base_url: str | None = None, source_hosts=None):
+        self.app = app
+        self.canonical_base_url = (canonical_base_url or settings.public_base_url).rstrip("/")
+        try:
+            parsed_canonical = urlparse(self.canonical_base_url)
+            self.canonical_host = (parsed_canonical.hostname or "").casefold()
+            canonical_scheme = parsed_canonical.scheme.casefold()
+        except ValueError:
+            self.canonical_host = ""
+            canonical_scheme = ""
+        self.source_hosts = frozenset(
+            str(item or "").strip().casefold()
+            for item in (source_hosts or _render_redirect_source_hosts())
+            if str(item or "").strip()
+        )
+        self.enabled = bool(
+            canonical_scheme == "https"
+            and self.canonical_host
+            and self.canonical_host not in self.source_hosts
+        )
+
+    @staticmethod
+    def _request_host(scope: dict[str, Any]) -> str:
+        for key, value in scope.get("headers", []):
+            if key.lower() != b"host":
+                continue
+            raw = value.decode("latin-1", errors="ignore").strip()
+            try:
+                return (urlparse("//" + raw).hostname or "").casefold()
+            except ValueError:
+                return ""
+        return ""
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request_host = self._request_host(scope)
+        if (
+            not self.enabled
+            or request_host == self.canonical_host
+            or request_host not in self.source_hosts
+        ):
+            await self.app(scope, receive, send)
+            return
+
+        raw_path = scope.get("raw_path")
+        if isinstance(raw_path, bytes) and raw_path:
+            path = raw_path.decode("ascii", errors="ignore")
+        else:
+            path = quote(str(scope.get("path") or "/"), safe="/%:@")
+        if not path.startswith("/"):
+            path = "/" + path
+
+        raw_query = scope.get("query_string", b"")
+        query = raw_query.decode("ascii", errors="ignore") if isinstance(raw_query, bytes) else ""
+        target = f"{self.canonical_base_url}{path}"
+        if query:
+            target += "?" + query
+
+        response = RedirectResponse(
+            target,
+            status_code=308,
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Vary": "Host",
+                "X-App-Version": APP_VERSION,
+            },
+        )
+        await response(scope, receive, send)
 
 
 class RequestBodyLimitMiddleware:
@@ -2534,6 +2629,9 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 
 # Keep the body-size guard outside FastAPI/Starlette exception handling so
 # streamed overflows reliably return HTTP 413 instead of being translated into
-# a generic body-parsing error. All route decorators above are already bound.
+# a generic body-parsing error. The canonical-host redirect is outermost, so an
+# old Render URL changes origin before route handling or request-body parsing.
+# All route decorators above are already bound to ``fastapi_app``.
 fastapi_app = app
-app = RequestBodyLimitMiddleware(fastapi_app)
+body_limited_app = RequestBodyLimitMiddleware(fastapi_app)
+app = CanonicalHostRedirectMiddleware(body_limited_app)

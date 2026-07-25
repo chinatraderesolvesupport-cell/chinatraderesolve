@@ -13,3 +13,7 @@ data/*.db-*
 *.zip
 
 production_smoke_report.json
+# Telegram local authentication artifacts
+*.session
+*.session-journal
+telegram_session_secret.txt

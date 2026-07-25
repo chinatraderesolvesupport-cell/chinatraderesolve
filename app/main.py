@@ -109,6 +109,7 @@ from .schemas import (
     VoiceTranscriptionResponse,
 )
 from .security import SlidingWindowRateLimiter, client_key
+from .telegram_monitor import run_telegram_monitor, telegram_monitor_health
 from .seo_content import (
     GUIDE_CARD_COPY,
     GUIDE_DETAIL_COPY,
@@ -142,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.38"
+APP_VERSION = "3.7.39"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -290,48 +291,25 @@ async def _maintenance_loop() -> None:
             logger.exception("Periodic maintenance failed")
         await asyncio.sleep(settings.maintenance_interval_seconds)
 
-async def _send_telegram_message(text: str) -> None:
-    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
-
-    if not token or not chat_id:
-        logger.warning("Telegram bot is not configured")
-        return
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.post(
-                f"https://api.telegram.org/bot{token}/sendMessage",
-                json={
-                    "chat_id": chat_id,
-                    "text": text,
-                    "disable_web_page_preview": True,
-                },
-            )
-            response.raise_for_status()
-    except Exception:
-        logger.exception("Failed to send Telegram message")
-
-
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Apply retention, recover abandoned jobs and start periodic maintenance."""
-    await _send_telegram_message(
-        "✅ ChinaTradeResolve Monitor подключён и готов к работе."
-    )
+    """Start maintenance and the optional public Telegram monitor."""
     soft_delete_expired(settings.retention_days, settings.inactive_retention_days)
     recovered = fail_running_document_analyses_on_startup(_document_analysis_stale_seconds())
     if recovered:
         logger.warning("Marked %s stale document analyses as failed", recovered)
     maintenance_task = asyncio.create_task(_maintenance_loop())
+    telegram_monitor_task = asyncio.create_task(run_telegram_monitor())
     try:
         yield
     finally:
-        maintenance_task.cancel()
-        try:
-            await maintenance_task
-        except asyncio.CancelledError:
-            pass
+        for task in (telegram_monitor_task, maintenance_task):
+            task.cancel()
+        for task in (telegram_monitor_task, maintenance_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app = FastAPI(
@@ -1438,6 +1416,7 @@ def health() -> dict[str, Any]:
         "email_delivery_configured": email_delivery_is_configured(),
         "privacy_configuration_complete": privacy_configuration_is_complete(),
         "bot_protection_enabled": turnstile_is_enabled(),
+        "telegram_monitor": telegram_monitor_health(),
         "public_launch_mode": settings.public_launch_mode,
         "public_launch_ready": all(readiness.values()),
         "database_backend": database_backend_name(),

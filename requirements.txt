@@ -12,3 +12,5 @@ pikepdf==10.10.0
 eth-utils==5.3.1
 eth-hash[pycryptodome]==0.8.0
 pycryptodome==3.23.0
+
+telethon==1.44.0

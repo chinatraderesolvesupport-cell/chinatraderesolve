@@ -1,10 +1,22 @@
-# ChinaTradeResolve Document AI v3.7.38
+# ChinaTradeResolve Document AI v3.7.39
 
-Version 3.7.38 fixes ZIP-to-GitHub executable-permission drift and adds a deep, administrator-run production smoke test. The check verifies the public readiness endpoints, creates and cleans up a real test case, uploads safe PDF/PNG evidence, delivers the client and administrator notifications, calls the configured OpenAI assistant, and transcribes a bundled voice fixture.
+Version 3.7.39 adds an optional passive Telegram monitor for public supplier-dispute discussions, removes repeated unconditional startup messages, exposes non-secret monitor health, and keeps the existing production smoke-test and CI hardening.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
 
+
+
+## Passive Telegram monitor in v3.7.39
+
+- Uses an authorised Telethon StringSession stored only in Render secrets.
+- Watches incoming messages only in public channels and groups accessible to that account.
+- Requires a supplier/China signal plus a dispute, refund, non-shipment, defect or fraud signal, with multilingual matching.
+- Sends a short excerpt and public message link to the existing owner bot.
+- Never replies, reacts, joins chats, contacts authors or stores a bulk Telegram archive.
+- Optional `TELEGRAM_MONITOR_CHATS` restricts monitoring to selected public usernames; empty means all public chats already available to the account.
+- `/health` exposes only enabled/configured/connected state, alert count and a bounded error message; no Telegram secrets are returned.
+- See `TELEGRAM_MONITOR_RU.md` for setup and safety instructions.
 
 ## Production verification and CI reliability in v3.7.38
 
@@ -21,7 +33,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions use the current `3.7.38` release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.39 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -31,7 +43,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the release markers are synchronised for `3.7.38`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.39`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -422,7 +434,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.38
+cd ChinaTradeResolve_Document_AI_v3.7.39
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -580,7 +592,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.38 включает согласованный строгий режим запуска, исправленную мобильную форму ИИ-чата, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.39 включает пассивный Telegram-монитор и согласованный строгий режим запуска, исправленную мобильную форму ИИ-чата, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

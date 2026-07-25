@@ -922,9 +922,9 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     document.getElementById('caseNumber').textContent=result.case_reference;
     document.getElementById('caseDecision').textContent=result.public_message||'';
     if(result.status_url){
-      const absoluteStatusUrl=new URL(result.status_url,window.location.origin).href;
+      const absoluteStatusUrl=result.absolute_status_url||new URL(result.status_url,window.location.origin).href;
       const link=document.getElementById('statusLink');
-      link.href=result.status_url;
+      link.href=absoluteStatusUrl;
       link.hidden=false;
       document.getElementById('privateStatusUrl').value=absoluteStatusUrl;
       const accessCopy=privateAccessCopy[document.documentElement.lang]||privateAccessCopy.en;

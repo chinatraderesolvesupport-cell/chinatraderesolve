@@ -1974,12 +1974,28 @@ def test_public_document_limit_uses_forty_five_megabytes_in_javascript():
     assert "total > 25 * 1024 * 1024" not in page.text
 
 
+def test_application_response_exposes_canonical_absolute_status_url():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="canonical-link@example.com"),
+        headers={"x-forwarded-for": "198.51.100.241"},
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert body["status_url"].startswith("/case/")
+    assert body["absolute_status_url"] == settings.public_base_url.rstrip("/") + body["status_url"]
+
+    index_page = client.get("/")
+    assert "result.absolute_status_url||new URL(result.status_url,window.location.origin).href" in index_page.text
+    assert "link.href=absoluteStatusUrl" in index_page.text
+
+
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.41"
+    assert health.json()["version"] == "3.7.42"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.41"
+    assert health.headers["x-app-version"] == "3.7.42"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5049,11 +5065,11 @@ def test_v3734_description_normalization_preserves_paragraphs():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.41"
-    assert "v3.7.41" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.41" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.41" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.41" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.42"
+    assert "v3.7.42" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.42" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.42" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.42" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

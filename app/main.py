@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.41"
+APP_VERSION = "3.7.42"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -1802,12 +1802,14 @@ async def submit_application(
     )
     background_tasks.add_task(deliver_pending)
     status_url = f"/case/{reference}/{public_token}"
+    absolute_status_url = f"{settings.public_base_url.rstrip('/')}{status_url}"
     return JSONResponse(
         {
             "case_reference": reference,
             "status": case["status"],
             "public_message": case["public_message"],
             "status_url": status_url,
+            "absolute_status_url": absolute_status_url,
             "email_delivery_configured": email_delivery_is_configured(),
         },
         status_code=201,

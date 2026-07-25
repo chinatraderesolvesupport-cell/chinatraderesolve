@@ -422,3 +422,179 @@ def test_health_exposes_diagnostics_without_secrets(monkeypatch):
     assert "ignored_since_start" in health
     rendered = repr(health)
     assert "TELEGRAM_SESSION_STRING" not in rendered
+
+
+
+def test_connection_error_codes_are_specific():
+    from app import telegram_monitor
+
+    duplicated = type("AuthKeyDuplicatedError", (Exception,), {})
+    reset = ConnectionResetError("Connection reset by peer")
+    timeout = TimeoutError("Telegram heartbeat timed out")
+
+    assert telegram_monitor._connection_error_code(duplicated("duplicate")) == "session_used_from_multiple_locations"
+    assert telegram_monitor._connection_error_code(reset) == "network_connection_reset"
+    assert telegram_monitor._connection_error_code(timeout) == "network_timeout"
+
+
+def test_connection_error_detail_redacts_secrets():
+    from app import telegram_monitor
+
+    secret = "A" * 80
+    detail = telegram_monitor._safe_error_detail(
+        RuntimeError(f"failed at https://example.com/path token 123456:abcdefghijklmno session {secret} from 203.0.113.8")
+    )
+    assert "example.com" not in detail
+    assert "abcdefghijklmno" not in detail
+    assert secret not in detail
+    assert "203.0.113.8" not in detail
+    assert "[url]" in detail
+    assert "[bot-token]" in detail
+    assert "[secret]" in detail
+    assert "[ip]" in detail
+
+
+def test_health_exposes_reconnect_state_without_credentials(monkeypatch):
+    from app import telegram_monitor
+
+    monkeypatch.setenv("TELEGRAM_MONITOR_ENABLED", "true")
+    monkeypatch.setenv("TELEGRAM_MONITOR_HEARTBEAT_SECONDS", "50")
+    monkeypatch.setenv("TELEGRAM_MONITOR_MAX_RETRY_SECONDS", "150")
+    runtime = telegram_monitor._runtime
+    runtime.connection_state = "retry_wait"
+    runtime.connection_attempts = 4
+    runtime.successful_connections = 2
+    runtime.disconnects = 2
+    runtime.consecutive_failures = 1
+    runtime.last_error = "network_timeout"
+    runtime.last_error_type = "TimeoutError"
+    runtime.last_error_detail = "TimeoutError: Telegram heartbeat timed out"
+    runtime.next_retry_at = "2026-07-25T22:00:00+00:00"
+    runtime.retry_delay_seconds = 10.0
+
+    health = telegram_monitor.telegram_monitor_health()
+    assert health["connection_state"] == "retry_wait"
+    assert health["connection_attempts_since_start"] == 4
+    assert health["reconnect_attempts_since_start"] == 3
+    assert health["successful_connections_since_start"] == 2
+    assert health["heartbeat_interval_seconds"] == 50
+    assert health["max_retry_delay_seconds"] == 150
+    assert health["last_error"] == "network_timeout"
+    assert health["last_error_type"] == "TimeoutError"
+    assert health["retry_delay_seconds"] == 10.0
+    rendered = repr(health)
+    assert "TELEGRAM_API_HASH" not in rendered
+    assert "TELEGRAM_SESSION_STRING" not in rendered
+
+
+def test_retry_delay_is_slow_for_unrecoverable_session_error(monkeypatch):
+    from app import telegram_monitor
+
+    monkeypatch.setattr(telegram_monitor.random, "uniform", lambda _a, _b: 0.0)
+    session_error = type("SessionRevokedError", (Exception,), {})
+    network_error = ConnectionResetError("reset")
+    assert telegram_monitor._retry_delay_for_error(session_error("revoked"), 5, 120) == 300.0
+    assert telegram_monitor._retry_delay_for_error(network_error, 5, 120) == 5.0
+
+
+def test_connected_monitor_passes_resilient_telethon_options(monkeypatch):
+    import sys
+    import types
+    from app import telegram_monitor
+
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, *_args, **kwargs):
+            captured.update(kwargs)
+            self.handler = None
+
+        def on(self, _builder):
+            def decorator(func):
+                self.handler = func
+                return func
+            return decorator
+
+        async def connect(self):
+            pass
+
+        async def is_user_authorized(self):
+            return True
+
+        async def get_me(self):
+            return types.SimpleNamespace(id=777)
+
+        async def run_until_disconnected(self):
+            return None
+
+        async def disconnect(self):
+            pass
+
+        def is_connected(self):
+            return True
+
+    class FakeEvents:
+        @staticmethod
+        def NewMessage(**_kwargs):
+            return object()
+
+    telethon_module = types.ModuleType("telethon")
+    telethon_module.TelegramClient = FakeClient
+    telethon_module.events = FakeEvents
+    errors_module = types.ModuleType("telethon.errors")
+    errors_module.FloodWaitError = type("FakeFloodWaitError", (Exception,), {"seconds": 1})
+    sessions_module = types.ModuleType("telethon.sessions")
+    sessions_module.StringSession = lambda value: value
+    monkeypatch.setitem(sys.modules, "telethon", telethon_module)
+    monkeypatch.setitem(sys.modules, "telethon.errors", errors_module)
+    monkeypatch.setitem(sys.modules, "telethon.sessions", sessions_module)
+
+    settings = telegram_monitor.TelegramMonitorSettings(
+        True, 123, "hash", "session", "token", "chat", (), (), (), False,
+        heartbeat_seconds=45,
+        max_retry_seconds=120,
+    )
+    asyncio.run(telegram_monitor._connected_monitor(settings))
+
+    assert captured["connection_retries"] == 10
+    assert captured["request_retries"] == 5
+    assert captured["retry_delay"] == 2
+    assert captured["auto_reconnect"] is True
+    assert captured["timeout"] == 15
+    assert captured["sequential_updates"] is True
+
+
+def test_connection_watchdog_detects_disconnected_client(monkeypatch):
+    from app import telegram_monitor
+
+    class FakeClient:
+        def is_connected(self):
+            return False
+
+        async def get_me(self):
+            raise AssertionError("get_me must not run after disconnected state")
+
+    async def no_wait(_seconds):
+        return None
+
+    monkeypatch.setattr(telegram_monitor.asyncio, "sleep", no_wait)
+    with pytest.raises(ConnectionError, match="not connected"):
+        asyncio.run(telegram_monitor._connection_watchdog(FakeClient(), 45))
+
+
+def test_record_connection_error_sets_retry_metadata():
+    from app import telegram_monitor
+
+    runtime = telegram_monitor._runtime
+    runtime.connected = False
+    runtime.consecutive_failures = 0
+    telegram_monitor._record_connection_error(
+        ConnectionResetError("Connection reset by peer"),
+        12.5,
+    )
+    assert runtime.connection_state == "retry_wait"
+    assert runtime.last_error == "network_connection_reset"
+    assert runtime.last_error_type == "ConnectionResetError"
+    assert runtime.retry_delay_seconds == 12.5
+    assert runtime.next_retry_at is not None
+    assert runtime.consecutive_failures == 1

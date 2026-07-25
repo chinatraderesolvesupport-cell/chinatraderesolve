@@ -696,6 +696,12 @@ def test_ai_assistant_frontend_and_disabled_endpoint(monkeypatch):
     assert 'id="descriptionVoiceButtonText"' in home.text
     assert 'setAiVoiceButtonState(true)' in home.text
     assert "descriptionVoiceButtonHint.hidden=Boolean(recording)" in home.text
+    assert "let recognition=null,active=false,finalText='',restartTimer=null,hasText=false" in home.text
+    assert "function disableLivePreview(){active=false;if(!hasText)onUnavailable()}" in home.text
+    assert "if(preview){hasText=true;onText(preview)}" in home.text
+    assert '.description-voice-turnstile.is-verified .description-voice-turnstile-widget{display:none}' in home.text
+    assert '.description-voice-panel.is-ready .description-voice-help' in home.text
+    assert '.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px' not in home.text
 
     translations = json.loads(client.get("/static/translations-v2.json").text)
     for language in ("en", "fr", "de", "es", "ru", "sr"):
@@ -1993,9 +1999,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.42"
+    assert health.json()["version"] == "3.7.43"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.42"
+    assert health.headers["x-app-version"] == "3.7.43"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -4688,6 +4694,8 @@ def test_home_exposes_truthful_features_accessibility_and_private_link_ui():
         'value="Other or multiple issues"',
         'id="privateStatusUrl"',
         'id="copyStatusLink"',
+        'class="btn dark" data-i18n="view_case_status"',
+        '.status-link-row .btn{color:#0f172a;background:#fff;border-color:#0f766e}',
         'aria-modal="true"',
     ):
         assert expected in response.text
@@ -5065,11 +5073,11 @@ def test_v3734_description_normalization_preserves_paragraphs():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.42"
-    assert "v3.7.42" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.42" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.42" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.42" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.43"
+    assert "v3.7.43" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.43" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.43" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.43" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

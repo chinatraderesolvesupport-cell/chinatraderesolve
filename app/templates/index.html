@@ -232,10 +232,10 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .description-compose textarea{min-width:0}
 .description-voice-button{width:100%;min-height:48px;border:1px solid #0f766e;border-radius:11px;background:linear-gradient(135deg,#ecfeff,#ccfbf1);color:#0f766e;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;padding:9px 14px}
 .description-voice-button .mic-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 24px}.description-voice-button .mic-icon svg{width:24px;height:24px;display:block}.description-voice-button .voice-button-copy{display:grid;text-align:left;line-height:1.2}.description-voice-button .voice-button-copy small{font-size:10px;font-weight:700;color:#475569;margin-top:2px}.description-voice-button:hover{background:#ccfbf1}.description-voice-button.recording{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));z-index:96;width:min(520px,calc(100vw - 24px));transform:translateX(-50%);background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite;box-shadow:0 12px 34px rgba(127,29,29,.28)}.description-voice-button:disabled{opacity:.55;cursor:not-allowed}
-.description-voice-panel{display:grid;gap:8px;margin-top:7px;padding:11px 12px;border:1px solid #f59e0b;border-radius:11px;background:#fff7ed;color:#475569;font-size:12px;line-height:1.4}
-.description-voice-panel[hidden]{display:none}.description-voice-panel.needs-attention{box-shadow:0 0 0 3px rgba(245,158,11,.28)}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-consent input{width:auto;margin-top:2px}
+.description-voice-panel{display:grid;gap:7px;margin-top:7px;padding:10px 12px;border:1px solid #f59e0b;border-radius:11px;background:#fff7ed;color:#475569;font-size:12px;line-height:1.4}
+.description-voice-panel[hidden]{display:none}.description-voice-panel.needs-attention{box-shadow:0 0 0 3px rgba(245,158,11,.28)}.description-voice-panel.is-ready{gap:4px;padding:9px 12px}.description-voice-panel.is-ready .description-voice-help,.description-voice-panel.is-ready>.voice-live-note{display:none}.description-voice-consent{display:flex;align-items:flex-start;gap:8px}.description-voice-panel.is-ready .description-voice-consent{align-items:center}.description-voice-consent input{width:auto;margin-top:2px}
 .description-voice-status{min-height:17px;color:#0f766e}.description-voice-status[data-state="error"],.description-voice-status[data-state="required"]{color:#b45309;font-weight:800}.description-voice-panel .voice-live-preview{margin-top:0}
-.description-voice-turnstile{display:grid;gap:6px;padding-top:3px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget iframe{max-width:100%!important}
+.description-voice-turnstile{display:grid;gap:5px;padding-top:2px}.description-voice-turnstile-widget{width:100%;min-width:0;min-height:0;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.description-voice-turnstile-widget:empty{display:none}.description-voice-turnstile.is-verified .description-voice-turnstile-widget{display:none}.description-voice-turnstile-widget iframe{max-width:100%!important}
 .description-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.char-count{font-size:12px;color:#64748b;white-space:nowrap;font-variant-numeric:tabular-nums}
 
 .sample-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-gutter:stable;border-radius:8px}
@@ -256,7 +256,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(max-width:520px){.form-shell{padding:15px}.description-voice-button{min-height:50px}.ai-chat-panel{bottom:8px;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}}
 @media(max-width:360px){.ai-chat-form{grid-template-columns:minmax(0,1fr);padding-left:10px;padding-right:10px}.ai-chat-form textarea{width:100%}.ai-chat-send{grid-column:1/-1;width:100%;min-height:44px}}
 #faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
-#confirmation{scroll-margin-top:145px}.case-decision{margin-top:8px}.status-link-row{margin-top:10px}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
+#confirmation{scroll-margin-top:145px}.case-decision{margin-top:8px}.status-link-row{margin-top:10px}.status-link-row .btn{color:#0f172a;background:#fff;border-color:#0f766e}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
 .private-access{margin-top:16px;padding:16px;border:2px solid #0f766e;border-radius:12px;background:#f0fdfa}.private-access label{display:block;font-weight:900;margin-bottom:7px}.private-link-row{display:grid;grid-template-columns:1fr auto;gap:8px}.private-link-row input{font-family:ui-monospace,monospace;font-size:12px}.email-state{font-size:13px;margin:10px 0 0;color:#334155}.copy-result{min-height:1.5em;color:#065f46;font-weight:800;font-size:13px;margin-top:7px}
 @media(min-width:981px) and (max-height:820px){
 #submit{padding:32px 0}
@@ -467,7 +467,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 <div class="form-step" id="stepTwo">
 <div class="form-choice-intro"><strong data-i18n="description_mode_title">Как вам удобнее описать ситуацию?</strong><span data-i18n="description_mode_text">Напишите в поле ниже или нажмите «Рассказать голосом». Расшифровку можно исправить перед отправкой.</span></div>
-<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
+<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
@@ -497,7 +497,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
   <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">Скопировать ссылку</button></div>
   <div class="copy-result" id="copyResult" role="status" aria-live="polite"></div>
   <p class="email-state" id="emailDeliveryState"></p>
-  <div class="status-link-row"><a class="btn" data-i18n="view_case_status" hidden id="statusLink">Посмотреть статус дела</a></div>
+  <div class="status-link-row"><a class="btn dark" data-i18n="view_case_status" hidden id="statusLink">Посмотреть статус дела</a></div>
 </div>
 </div>
 </div>
@@ -679,7 +679,8 @@ const ctrSpeechLocales={en:'en-US',fr:'fr-FR',de:'de-DE',es:'es-ES',ru:'ru-RU',s
 function ctrVoiceElapsed(seconds){const value=Math.max(0,Math.floor(seconds));return `${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`}
 function createCtrLiveRecognition(onText,onUnavailable){
   if(!CTRSpeechRecognition){onUnavailable();return null}
-  let recognition=null,active=false,finalText='',restartTimer=null;
+  let recognition=null,active=false,finalText='',restartTimer=null,hasText=false;
+  function disableLivePreview(){active=false;if(!hasText)onUnavailable()}
   function build(){
     recognition=new CTRSpeechRecognition();
     recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;
@@ -691,20 +692,21 @@ function createCtrLiveRecognition(onText,onUnavailable){
         if(!phrase)continue;
         if(event.results[i].isFinal)finalText=`${finalText} ${phrase}`.trim();else interim=`${interim} ${phrase}`.trim();
       }
-      onText(`${finalText} ${interim}`.trim());
+      const preview=`${finalText} ${interim}`.trim();
+      if(preview){hasText=true;onText(preview)}
     });
     recognition.addEventListener('error',event=>{
       const code=String(event.error||'');
-      if(['not-allowed','service-not-allowed','audio-capture','network'].includes(code)){active=false;onUnavailable()}
+      if(['not-allowed','service-not-allowed','audio-capture','network'].includes(code))disableLivePreview();
     });
     recognition.addEventListener('end',()=>{
       if(!active)return;
-      restartTimer=window.setTimeout(()=>{if(active){try{recognition.start()}catch(_error){active=false;onUnavailable()}}},180);
+      restartTimer=window.setTimeout(()=>{if(active){try{recognition.start()}catch(_error){disableLivePreview()}}},180);
     });
   }
   build();
   return {
-    start(){active=true;finalText='';recognition.lang=ctrSpeechLocales[document.documentElement.lang]||'en-US';try{recognition.start()}catch(_error){active=false;onUnavailable()}},
+    start(){active=true;finalText='';hasText=false;recognition.lang=ctrSpeechLocales[document.documentElement.lang]||'en-US';try{recognition.start()}catch(_error){disableLivePreview()}},
     stop(){active=false;if(restartTimer){window.clearTimeout(restartTimer);restartTimer=null}try{recognition.stop()}catch(_error){}},
     abort(){active=false;if(restartTimer){window.clearTimeout(restartTimer);restartTimer=null}try{recognition.abort()}catch(_error){}},
   };
@@ -726,7 +728,8 @@ let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPendin
 const descriptionVoiceMaxSeconds=Math.max(15,Number(descriptionVoicePanel&&descriptionVoicePanel.dataset.voiceMaxSeconds)||120);
 function descriptionVoiceCopy(key){const copy=window.CTR_TRANSLATIONS||{};const lang=document.documentElement.lang||'en';return(copy[lang]&&copy[lang][key])||(copy.en&&copy.en[key])||''}
 function setDescriptionVoiceStatus(key,state=''){if(!descriptionVoiceStatus)return;descriptionVoiceStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceStatus.dataset.state=state}
-function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state}
+function updateDescriptionVoicePanelState(){if(!descriptionVoicePanel)return;const turnstileRequired=descriptionVoicePanel.dataset.turnstileRequired==='true';const verified=!turnstileRequired||Boolean(descriptionVoiceToken());const ready=Boolean(descriptionVoiceConsent&&descriptionVoiceConsent.checked&&verified);descriptionVoicePanel.classList.toggle('is-ready',ready);const turnstile=document.getElementById('descriptionVoiceTurnstile');if(turnstile)turnstile.classList.toggle('is-verified',verified)}
+function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state;updateDescriptionVoicePanelState()}
 function setDescriptionLiveText(text,unavailable=false){if(!descriptionVoiceLive||!descriptionVoiceLiveText)return;descriptionVoiceLive.hidden=false;descriptionVoiceLiveText.textContent=text||(unavailable?descriptionVoiceCopy('voice_live_unavailable'):'')}
 function hideDescriptionLiveText(){if(descriptionVoiceLive)descriptionVoiceLive.hidden=true;if(descriptionVoiceLiveText)descriptionVoiceLiveText.textContent=''}
 function descriptionVoiceToken(){return descriptionVoiceTurnstileResponse?String(descriptionVoiceTurnstileResponse.value||''):''}
@@ -755,6 +758,7 @@ function ensureDescriptionVoiceTurnstile(){
 }
 function resetDescriptionVoiceTurnstile(){
   if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';
+  updateDescriptionVoicePanelState();
   if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
     try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId);setDescriptionVoiceVerificationStatus('description_voice_verification_loading')}catch(_e){setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
   }
@@ -812,11 +816,11 @@ async function startDescriptionVoiceRecording(){
   }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
 }
 if(descriptionVoiceButton)descriptionVoiceButton.addEventListener('click',()=>{if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(false);else startDescriptionVoiceRecording()});
-if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');ensureDescriptionVoiceTurnstile()}});
+if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{updateDescriptionVoicePanelState();if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');ensureDescriptionVoiceTurnstile()}});
 document.addEventListener('ctr:language-changed',()=>{stopDescriptionVoiceRecording(true);setDescriptionVoiceStatus('');hideDescriptionLiveText();if(descriptionVoicePanel&&!descriptionVoicePanel.hidden){if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileLoadAttempts=0;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_loading');ensureDescriptionVoiceTurnstile()}updateDescriptionVoiceButton()});
 window.addEventListener('pagehide',()=>stopDescriptionVoiceRecording(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(true)});
-updateDescriptionVoiceButton();
+updateDescriptionVoiceButton();updateDescriptionVoicePanelState();
 
 const privateAccessCopy={
   en:{copied:'Private link copied.',copy_failed:'Copy was not available. Select the link and copy it manually.',email_on:'A confirmation email has been queued. Save this link as a backup.',email_off:'Email delivery is unavailable. This private link is the only way to reopen the case.'},

@@ -4,8 +4,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN chmod +x /app/run_local.sh /app/scripts/*.py
-RUN groupadd --system app && useradd --system --gid app --home-dir /app app \
-    && mkdir -p /app/data && chown -R app:app /app
+RUN groupadd --system app && useradd --system --gid app --home-dir /app --shell /bin/bash app \
+    && mkdir -p /app/data /app/.ssh \
+    && chown -R app:app /app \
+    && chmod 0700 /app/.ssh
 ENV DATABASE_PATH=/app/data/ctr.db
 EXPOSE 8000
 USER app

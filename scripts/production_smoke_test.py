@@ -26,9 +26,12 @@ from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw
 
 from app import main as main_module
-from app.ai_assistant import assistant_reply
+from app.ai_assistant import assistant_reply, assistant_scope_reply
 from app.config import settings
-from app.db import delete_case_now, execute, get_case_by_public, transaction
+from app.db import (
+    delete_case_now, execute, get_case_by_public, get_document_analysis,
+    list_case_documents, transaction,
+)
 from app.notifications import deliver_pending
 from app.schemas import AssistantChatRequest
 from app.voice_transcription import transcribe_audio
@@ -113,6 +116,26 @@ def wait_for_notifications(case_id: int, timeout_seconds: float = 35) -> list[di
 
 
 async def run_provider_checks(report: dict[str, Any], voice_file: Path) -> None:
+    try:
+        guidance_payload = AssistantChatRequest(
+            language="ru",
+            messages=[
+                {
+                    "role": "user",
+                    "content": "Где загрузить материалы и прикрепить PDF по делу с китайским поставщиком?",
+                }
+            ],
+        )
+        guidance = assistant_scope_reply(guidance_payload) or ""
+        record(
+            report,
+            "local_upload_guidance",
+            "приватную ссылку" in guidance and "до 20" in guidance,
+            reply=guidance,
+        )
+    except Exception as exc:
+        record(report, "local_upload_guidance", False, error=safe_error(exc))
+
     try:
         payload = AssistantChatRequest(
             language="ru",
@@ -259,6 +282,56 @@ def run_application_flow(report: dict[str, Any], email: str, base_url: str, clea
                 redirect=location,
             )
 
+            stored_documents = list_case_documents(case_id, include_content=False)
+            download_results = []
+            for document in stored_documents:
+                download = client.get(
+                    f"{status_path}/documents/{document['id']}"
+                )
+                expected_disposition = (
+                    "attachment" if document["content_type"] == "application/pdf" else "inline"
+                )
+                download_results.append({
+                    "filename": document["original_name"],
+                    "status_code": download.status_code,
+                    "content_type": download.headers.get("content-type", ""),
+                    "content_disposition": download.headers.get("content-disposition", ""),
+                    "size_bytes": len(download.content),
+                    "ok": (
+                        download.status_code == 200
+                        and expected_disposition in download.headers.get("content-disposition", "")
+                        and len(download.content) > 0
+                    ),
+                })
+            record(
+                report,
+                "document_download",
+                len(download_results) == 2 and all(item["ok"] for item in download_results),
+                documents=download_results,
+            )
+
+            analysis = client.post(
+                f"{status_path}/documents/analyse",
+                data={"analysis_consent": "true"},
+                follow_redirects=False,
+            )
+            analysis_row = get_document_analysis(case_id)
+            analysis_ok = bool(
+                analysis.status_code == 303
+                and analysis_row
+                and analysis_row.get("status") == "completed"
+            )
+            record(
+                report,
+                "document_analysis",
+                analysis_ok,
+                status_code=analysis.status_code,
+                redirect=analysis.headers.get("location", ""),
+                analysis_status=(analysis_row or {}).get("status"),
+                model=(analysis_row or {}).get("model"),
+                error=(analysis_row or {}).get("error"),
+            )
+
             rows = wait_for_notifications(case_id)
             public_host = urlparse(base_url).netloc
             expected_count = 2 if settings.admin_email else 1
@@ -367,6 +440,44 @@ def main() -> int:
                 status_code=robots.status_code,
                 body=robots.text[:500],
             )
+
+            page_results = {}
+            for language in ("en", "ru", "fr", "de", "es", "sr"):
+                page = public_client.get(args.base_url.rstrip("/") + f"/?lang={language}")
+                page_results[language] = {
+                    "status_code": page.status_code,
+                    "x_app_version": page.headers.get("x-app-version"),
+                    "has_brand": "ChinaTradeResolve" in page.text,
+                }
+            support = public_client.get(args.base_url.rstrip("/") + "/support")
+            record(
+                report,
+                "public_pages_and_languages",
+                all(
+                    item["status_code"] == 200
+                    and item["x_app_version"] == report["version"]
+                    and item["has_brand"]
+                    for item in page_results.values()
+                ) and support.status_code == 200,
+                languages=page_results,
+                support_status=support.status_code,
+            )
+
+            technical_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip()
+            if technical_url and urlparse(technical_url).hostname != urlparse(args.base_url).hostname:
+                redirect = public_client.get(
+                    technical_url.rstrip("/") + "/?lang=ru&utm_source=smoke",
+                    follow_redirects=False,
+                )
+                record(
+                    report,
+                    "technical_hostname_redirect",
+                    redirect.status_code == 308
+                    and redirect.headers.get("location")
+                    == args.base_url.rstrip("/") + "/?lang=ru&utm_source=smoke",
+                    status_code=redirect.status_code,
+                    location=redirect.headers.get("location"),
+                )
     except Exception as exc:
         record(report, "public_network_exception", False, error=safe_error(exc))
 

@@ -372,12 +372,16 @@ _FOLLOWUP_TERMS = (
 )
 
 _UPLOAD_DESTINATION_TERMS = (
-    "where do i send", "where should i send", "where can i upload", "how do i upload the documents",
-    "куда отправлять", "куда мне это", "куда это отправить", "куда отправить документы", "где загрузить документы", "как загрузить документы",
-    "où envoyer", "ou envoyer", "où téléverser", "ou televerser",
-    "wohin senden", "wo hochladen",
-    "dónde enviar", "donde enviar", "dónde subir", "donde subir",
-    "gde da pošaljem", "gde da posaljem", "gde da otpremim",
+    # Broad action phrases are safe here because a document/material/case object
+    # is required below, or the earlier conversation must already be in scope.
+    "where do i send", "where should i send", "where can i upload", "where do i upload",
+    "how do i send", "how do i upload", "where can i attach", "how do i attach",
+    "куда отправлять", "куда мне это", "куда мне отправ", "куда это отправ", "куда направ", "куда послать",
+    "куда загруз", "где загруз", "как загруз", "где прикреп", "как прикреп",
+    "où envoyer", "ou envoyer", "où téléverser", "ou televerser", "où joindre", "ou joindre",
+    "wohin senden", "wo hochladen", "hochlad", "wo anhängen", "wo anhangen", "anhang",
+    "dónde enviar", "donde enviar", "dónde subir", "donde subir", "dónde adjuntar", "donde adjuntar",
+    "gde da pošaljem", "gde da posaljem", "gde da otpremim", "gde da priložim", "gde da prilozim",
 )
 _UPLOAD_OBJECT_TERMS = (
     "document", "documents", "materials", "files", "evidence", "case",

@@ -901,6 +901,36 @@ def test_ai_assistant_scope_guard_allows_relevant_questions_and_contextual_follo
     assert "приватную ссылку" in upload_reply
     assert "до 20" in upload_reply
 
+    for natural_upload_question in (
+        "Куда мне отправлять документы по спору с поставщиком?",
+        "Где загрузить материалы по делу?",
+        "Как прикрепить файлы с доказательствами?",
+        "Куда направить PDF по моей заявке?",
+    ):
+        natural_payload = AssistantChatRequest.model_validate(
+            {
+                "language": "ru",
+                "messages": [{"role": "user", "content": natural_upload_question}],
+            }
+        )
+        natural_reply = assistant_scope_reply(natural_payload)
+        assert "приватную ссылку" in natural_reply, natural_upload_question
+        assert "до 20" in natural_reply, natural_upload_question
+
+    from app.ai_assistant import UPLOAD_DESTINATION_COPY
+    multilingual_upload_questions = {
+        "en": "Where can I attach the evidence files for my supplier case?",
+        "fr": "Où joindre les documents de mon dossier fournisseur ?",
+        "de": "Wo kann ich die Unterlagen für meinen Lieferantenfall anhängen?",
+        "es": "¿Dónde adjuntar los documentos de mi caso con el proveedor?",
+        "sr": "Gde da priložim dokumenta za slučaj sa dobavljačem?",
+    }
+    for language, question in multilingual_upload_questions.items():
+        multilingual_payload = AssistantChatRequest.model_validate(
+            {"language": language, "messages": [{"role": "user", "content": question}]}
+        )
+        assert assistant_scope_reply(multilingual_payload) == UPLOAD_DESTINATION_COPY[language], question
+
     isolated_yes = AssistantChatRequest.model_validate(
         {"language": "ru", "messages": [{"role": "user", "content": "да"}]}
     )
@@ -2076,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.46"
+    assert health.json()["version"] == "3.7.47"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.46"
+    assert health.headers["x-app-version"] == "3.7.47"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5174,7 +5204,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.46"
+    assert response.headers["x-app-version"] == "3.7.47"
 
 
 def test_v3745_canonical_hostname_is_not_redirected():
@@ -5184,7 +5214,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.46"
+    assert response.json()["version"] == "3.7.47"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5212,11 +5242,11 @@ def test_v3745_local_fallback_does_not_redirect_render_host_to_localhost():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.46"
-    assert "v3.7.46" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.46" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.46" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.46" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.47"
+    assert "v3.7.47" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.47" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.47" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.47" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

@@ -405,8 +405,19 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
                 _runtime.ignored_not_allowed += 1
                 return
 
+            title = (
+                getattr(chat, "title", None)
+                or getattr(chat, "first_name", None)
+                or username
+            )
+            source_type = (
+                "публичная группа"
+                if bool(getattr(chat, "megagroup", False))
+                else "публичный канал"
+            )
             result = classify_message(
                 text,
+                context_text=f"{title} @{username}",
                 extra_phrases=settings.extra_phrases,
                 exclude_phrases=settings.exclude_phrases,
             )
@@ -422,17 +433,31 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
                 _runtime.ignored_duplicate += 1
                 return
 
-            title = (
-                getattr(chat, "title", None)
-                or getattr(chat, "first_name", None)
-                or username
-            )
+            author_name = None
+            author_username = None
+            try:
+                sender = await event.get_sender()
+                if sender is not None:
+                    first_name = (getattr(sender, "first_name", None) or "").strip()
+                    last_name = (getattr(sender, "last_name", None) or "").strip()
+                    author_name = " ".join(
+                        value for value in (first_name, last_name) if value
+                    ) or (getattr(sender, "title", None) or "").strip() or None
+                    author_username = (getattr(sender, "username", None) or "").strip() or None
+            except Exception:
+                logger.debug("Telegram sender details are unavailable", exc_info=True)
+
             alert = format_alert(
                 chat_title=str(title),
                 username=username,
                 text=text,
                 labels=result.labels,
                 link=public_message_link(username, event.id),
+                author_name=author_name,
+                author_username=author_username,
+                source_type=source_type,
+                message_time=getattr(event, "date", None),
+                match_reason=result.reason,
             )
             await _send_bot_message(settings, alert)
             _runtime.alerts_sent += 1
@@ -485,8 +510,10 @@ async def _connected_monitor(settings: TelegramMonitorSettings) -> None:
             text=sample,
             labels=result.labels,
             link=None,
+            match_reason=result.reason,
+            test_mode=True,
         )
-        await _send_bot_message(settings, "🧪 ТЕСТ МОНИТОРА\n\n" + alert)
+        await _send_bot_message(settings, alert)
         _runtime.self_tests_sent += 1
         _runtime.alerts_sent += 1
         _runtime.last_alert_at = _now_iso()

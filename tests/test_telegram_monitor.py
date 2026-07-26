@@ -598,3 +598,145 @@ def test_record_connection_error_sets_retry_metadata():
     assert runtime.retry_delay_seconds == 12.5
     assert runtime.next_retry_at is not None
     assert runtime.consecutive_failures == 1
+
+
+@pytest.mark.parametrize(
+    ("text", "context"),
+    [
+        # Russian — natural wording and common commercial problems.
+        ("Из Китая пришли бракованные товары, половину невозможно продать.", None),
+        ("Заказал партию у китайской фабрики, часть товара повреждена.", None),
+        ("На Alibaba оплатил заказ, но продавец не отправил товар.", None),
+        ("На 1688 прислали другой материал, не тот, который был в образце.", None),
+        ("Китайский поставщик прислал меньше товара, чем было оплачено.", None),
+        ("Товар из Китая не совпадает с образцом и имеет дефекты.", None),
+        ("Alibaba закрыла спор, а деньги так и не вернули.", None),
+        ("Перечислил предоплату китайскому продавцу, после этого он пропал.", None),
+        ("Мне не вернули деньги, что делать?", "Закупки из Китая @china_sourcing"),
+        ("Продавец перестал отвечать и заблокировал меня.", "Поставщики из Китая"),
+        ("Пришла партия с ужасным качеством, куда жаловаться?", "Бизнес с Китаем"),
+        ("Не тот цвет и размер, поставщик игнорирует претензию.", "Китайские поставщики"),
+        ("Сертификат оказался недействительным, товар застрял на таможне.", "Импорт из Китая"),
+        ("Алибаба отказала в возврате после закрытия спора.", None),
+        ("Заказ с Алиэкспресс не доставлен, продавец не отвечает.", None),
+        ("На Taobao оплатил товар, но посылка так и не пришла.", None),
+        ("Поставщик из Китая недоложил часть комплектующих.", None),
+        ("Китайский производитель сделал товар из другого материала.", None),
+        ("Взяли депозит за заказ в Китае и исчезли.", None),
+        ("Кто сталкивался: Alibaba спор закрыт в пользу продавца, возврата нет?", None),
+        # English.
+        ("The goods from China arrived defective and cannot be sold.", None),
+        ("A Chinese supplier sent the wrong material and stopped replying.", None),
+        ("Alibaba closed my dispute and I received no refund.", None),
+        ("I paid a factory in China but the order was never shipped.", None),
+        ("The shipment from China contains missing items and damaged products.", None),
+        ("The product does not match the sample. What should I do?", "China sourcing group"),
+        ("The seller kept my deposit and blocked me.", "Chinese suppliers and factories"),
+        ("1688 delivered poor quality goods and refuses to refund.", None),
+        ("Trade Assurance rejected my claim after the supplier disappeared.", None),
+        ("The fake certificate caused a customs problem.", "Importing goods from China"),
+        # Serbian.
+        ("Roba iz Kine je stigla neispravna i lošeg kvaliteta.", None),
+        ("Kineski dobavljač nije poslao porudžbinu i ne vraća novac.", None),
+        ("Prodavac na Alibaba ne odgovara, a spor je zatvoren.", None),
+        ("Platio sam depozit fabrici u Kini, ali je prodavac nestao.", None),
+        ("Stiglo je manje robe nego što je plaćeno. Šta da radim?", "Nabavka iz Kine"),
+        ("Materijal ne odgovara uzorku i roba je oštećena.", "Kineski dobavljači"),
+        ("Lažni sertifikat je napravio problem na carini.", "Uvoz iz Kine"),
+        ("1688 nije isporučio robu i odbijen je povraćaj.", None),
+        # French.
+        ("La marchandise de Chine est arrivée défectueuse et endommagée.", None),
+        ("Le fournisseur chinois n'a pas expédié la commande.", None),
+        ("Alibaba a rejeté le litige et aucun remboursement n'a été reçu.", None),
+        ("J'ai payé un acompte à une usine en Chine, puis le vendeur a disparu.", None),
+        ("Le produit ne correspond pas à l'échantillon. Que faire ?", "Achats en Chine"),
+        ("Il manque des articles et le vendeur ne répond pas.", "Fournisseurs chinois"),
+        ("Le faux certificat a bloqué la marchandise à la douane.", "Import de Chine"),
+        ("1688 a livré un mauvais matériau et refuse le remboursement.", None),
+        # German.
+        ("Die Ware aus China ist mangelhaft und beschädigt angekommen.", None),
+        ("Der chinesische Lieferant hat die Bestellung nicht versendet.", None),
+        ("Alibaba hat den Streitfall abgelehnt und das Geld nicht zurückgezahlt.", None),
+        ("Ich habe eine Anzahlung an eine Fabrik in China geleistet, dann war der Verkäufer verschwunden.", None),
+        ("Das Produkt entspricht nicht dem Muster. Was soll ich tun?", "Einkauf aus China"),
+        ("Es fehlt Ware und der Lieferant antwortet nicht.", "Chinesische Lieferanten"),
+        ("Ein ungültiges Zertifikat führte zu Problemen beim Zoll.", "Import aus China"),
+        ("1688 lieferte falsches Material und verweigert die Rückerstattung.", None),
+        # Spanish.
+        ("La mercancía de China llegó defectuosa y dañada.", None),
+        ("El proveedor chino no envió el pedido.", None),
+        ("Alibaba cerró la disputa y no devolvió el dinero.", None),
+        ("Pagué un depósito a una fábrica en China y el vendedor desapareció.", None),
+        ("El producto no coincide con la muestra. ¿Qué puedo hacer?", "Compras en China"),
+        ("Faltan productos y el proveedor no responde.", "Proveedores chinos"),
+        ("El certificado falso causó un problema en la aduana.", "Importación de China"),
+        ("1688 entregó material equivocado y rechazó el reembolso.", None),
+    ],
+)
+def test_broad_multilingual_supplier_dispute_phrasing_is_relevant(text, context):
+    result = classify_message(text, context_text=context)
+    assert result.relevant, (text, context, result)
+    assert result.reason in {
+        "direct_china_supplier_phrase",
+        "source_and_problem",
+        "chat_context_and_specific_problem",
+        "source_help_and_transaction",
+    }
+
+
+@pytest.mark.parametrize(
+    ("text", "context"),
+    [
+        ("Мне не вернули деньги за аренду квартиры.", None),
+        ("Продавец автомобиля не отвечает.", None),
+        ("Сегодня обсуждаем Китай и его историю.", None),
+        ("Китайская кухня была отличной.", None),
+        ("Нашли хорошего китайского поставщика для новой коллекции.", None),
+        ("Alibaba stock rose after the earnings report.", None),
+        ("Акции Alibaba сегодня выросли на бирже.", None),
+        ("Webinar: how to open an Alibaba dispute.", None),
+        ("Ищем сотрудника по закупкам из Китая.", None),
+        ("Курс обучения работе с поставщиками Китая.", None),
+        ("The seller of my used car blocked me.", None),
+        ("I need a refund for a hotel booking.", None),
+        ("Chinese factory tour starts tomorrow.", None),
+        ("We found a reliable supplier in China.", None),
+        ("Roba je stigla na vreme i odličnog je kvaliteta.", "Nabavka iz Kine"),
+        ("Treba mi savet za putovanje u Kinu.", None),
+        ("Le vendeur de ma voiture ne répond pas.", None),
+        ("La Chine a annoncé de nouvelles règles commerciales.", None),
+        ("Wir suchen einen Lieferanten in China.", None),
+        ("Alibaba Aktie Analyse und Prognose.", None),
+        ("El vendedor de mi coche no responde.", None),
+        ("Busco un proveedor chino confiable.", None),
+        ("Мне нужен юрист по спору с арендодателем.", None),
+        ("Поставщик прислал каталог и цены.", "Бизнес с Китаем"),
+        ("Кто был в Китае и что посмотреть?", None),
+        ("Нужен возврат билета на поезд.", "Закупки из Китая"),
+    ],
+)
+def test_broad_filter_rejects_unrelated_or_positive_messages(text, context):
+    result = classify_message(text, context_text=context)
+    assert not result.relevant, (text, context, result)
+
+
+def test_real_alert_explains_source_author_time_and_action():
+    from datetime import datetime, timezone
+
+    alert = format_alert(
+        chat_title="China Importers",
+        username="china_importers",
+        text="Alibaba closed my dispute and did not refund the order.",
+        labels=("alibaba", "dispute", "did not refund"),
+        link="https://t.me/china_importers/99",
+        author_name="Anna Buyer",
+        author_username="anna_buyer",
+        source_type="публичная группа",
+        message_time=datetime(2026, 7, 26, 8, 30, tzinfo=timezone.utc),
+        match_reason="source_and_problem",
+    )
+    assert "РЕАЛЬНАЯ НАХОДКА" in alert
+    assert "Anna Buyer (@anna_buyer)" in alert
+    assert "публичная группа" in alert
+    assert "26.07.2026 08:30 UTC" in alert
+    assert "https://t.me/china_importers/99" in alert

@@ -1,6 +1,6 @@
-# ChinaTradeResolve Document AI v3.7.48
+# ChinaTradeResolve Document AI v3.7.49
 
-Version 3.7.48 expands the passive Telegram monitor from a narrow keyword check to a multilingual context-aware supplier-dispute classifier, adds clearer real-alert details, and retains all security, voice, document and recovery improvements from v3.7.47.
+Version 3.7.49 adds eight substantial Russian and English search-intent guides, query-focused titles, visible editorial authorship, FAQ structured data, accurate multilingual alternates and a Search Console launch checklist, while retaining the context-aware Telegram monitor and all security, voice and document features from v3.7.48.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 
@@ -8,7 +8,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 
 
 
-## Context-aware Telegram opportunity detection in v3.7.48
+## Context-aware Telegram opportunity detection in v3.7.49
 
 - Detects natural descriptions of non-shipment, defective or damaged goods, wrong material/specification, shortages, refund refusal, seller disappearance, dispute rejection, certificate and customs problems.
 - Uses three signal groups: China/platform source, commercial problem, and help/transaction context.
@@ -19,7 +19,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - 88 broad positive/negative phrase cases are covered in addition to the existing live-monitor tests.
 
 
-## Natural document-upload guidance in v3.7.48
+## Natural document-upload guidance in v3.7.49
 
 - Natural Russian questions such as “Куда мне отправлять документы по спору?”, “Где загрузить материалы по делу?” and “Как прикрепить файлы с доказательствами?” are recognised locally without spending provider tokens.
 - Equivalent send, upload and attach wording is covered in every supported language.
@@ -70,7 +70,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.48 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.49 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -80,7 +80,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.48`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.49`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -471,7 +471,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.48
+cd ChinaTradeResolve_Document_AI_v3.7.49
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -629,7 +629,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.48 включает безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.49 включает безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

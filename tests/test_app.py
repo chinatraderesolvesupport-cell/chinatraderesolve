@@ -2106,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.48"
+    assert health.json()["version"] == "3.7.49"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.48"
+    assert health.headers["x-app-version"] == "3.7.49"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -4706,7 +4706,7 @@ def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
     assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
     assert "?lang=en" in sitemap.text
     assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in sitemap.text
-    assert '<lastmod>2026-07-24</lastmod>' in sitemap.text
+    assert '<lastmod>2026-07-26</lastmod>' in sitemap.text
     assert "/static/terms.html" not in sitemap.text
     assert "/admin" not in sitemap.text
     assert "/case/" not in sitemap.text
@@ -5204,7 +5204,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.48"
+    assert response.headers["x-app-version"] == "3.7.49"
 
 
 def test_v3745_canonical_hostname_is_not_redirected():
@@ -5214,7 +5214,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.48"
+    assert response.json()["version"] == "3.7.49"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5242,11 +5242,11 @@ def test_v3745_local_fallback_does_not_redirect_render_host_to_localhost():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.48"
-    assert "v3.7.48" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.48" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.48" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.48" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.49"
+    assert "v3.7.49" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.49" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.49" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.49" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5328,3 +5328,45 @@ def test_v3738_docker_and_ci_restore_zip_permissions():
     workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     assert "chmod +x /app/run_local.sh /app/scripts/*.py" in dockerfile
     assert "chmod +x run_local.sh scripts/*.py" in workflow
+
+
+def test_v3749_search_intent_guides_are_substantial_and_indexable():
+    expected_slugs = {
+        "supplier-not-refunding",
+        "supplier-disappeared-after-payment",
+        "damaged-or-short-shipment",
+        "wrong-material-size-color",
+        "alibaba-dispute-closed-no-refund",
+        "supplier-certificate-problem",
+        "customs-clearance-problem",
+        "order-not-delivered-tracking-problem",
+    }
+    for language in ("ru", "en"):
+        hub = client.get(f"/{language}/guides")
+        assert hub.status_code == 200
+        for slug in expected_slugs:
+            assert f'/{language}/guides/{slug}' in hub.text
+            page = client.get(f"/{language}/guides/{slug}")
+            assert page.status_code == 200
+            assert 'name="robots" content="index,follow,max-image-preview:large"' in page.text
+            assert 'FAQPage' in page.text
+            assert 'dateModified' in page.text
+            assert page.text.count('<h2>') >= 5
+            assert len(page.text) > 7000
+
+    # Do not advertise translations that have not received editorial review.
+    assert client.get('/fr/guides/supplier-not-refunding').status_code == 404
+    sitemap = client.get('/sitemap.xml')
+    assert '/ru/guides/supplier-not-refunding' in sitemap.text
+    assert '/en/guides/supplier-not-refunding' in sitemap.text
+    assert '/fr/guides/supplier-not-refunding' not in sitemap.text
+    assert '<lastmod>2026-07-26</lastmod>' in sitemap.text
+
+
+def test_v3749_related_guides_are_limited_and_contextual():
+    page = client.get('/ru/guides/supplier-not-refunding')
+    assert page.status_code == 200
+    # One article URL may also occur in metadata; the visible related list must stay compact.
+    assert page.text.count('class="related"') == 1
+    assert 'Alibaba закрыла спор без возврата денег' in page.text
+    assert 'Китайский поставщик пропал после оплаты' in page.text

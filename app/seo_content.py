@@ -713,3 +713,407 @@ for _language, _labels in GUIDE_DETAIL_ACCESSIBILITY.items():
 
 GUIDE_PUBLISHED_DATE = "2026-07-24"
 GUIDE_MODIFIED_DATE = "2026-07-24"
+
+
+# Search-intent expansion for v3.7.49. These pages are deliberately published first
+# in Russian and English, where the editorial review is complete. Other language
+# alternatives are added only after a real translation exists; no fake hreflang pages.
+SEO_EXPANSION_GUIDES = {
+    "en": {
+        "supplier-not-refunding": {
+            "title": "Chinese supplier refuses to refund: what to do next",
+            "description": "A practical evidence and escalation checklist when a Chinese supplier or Alibaba seller refuses to return a deposit or payment.",
+            "intro": "A refund promise is not the same as a completed refund. Preserve the payment trail, the agreed cancellation or defect basis, and every deadline before deciding what to do next.",
+            "summary": "Keep the claim narrow: what was paid, why the refund is due, what the seller promised, what has actually been returned, and which deadline is still open.",
+            "sections": [
+                ("Confirm the refund basis", ["Identify the exact reason: non-shipment, cancellation accepted in writing, defective goods, wrong specification, shortage, or another documented breach.", "Save the order terms and the message in which the supplier accepted cancellation, acknowledged the problem, or promised a refund."]),
+                ("Trace the money", ["Keep the payment confirmation, beneficiary details, platform transaction record, refund status and bank statement showing that no credit arrived.", "For a partial refund, state the original payment, the amount already received and the exact balance still outstanding."]),
+                ("Use one written deadline", ["Send a concise demand with the order number, amount, reason, evidence list, requested payment method and a reasonable response date.", "Do not replace a platform claim with endless private promises. Preserve any open dispute, card, bank or insurance deadline."]),
+                ("Prepare the next route", ["Depending on the payment method and contract, possible routes may include the platform process, payment-provider dispute, bank inquiry, insurer, formal demand, mediation, arbitration or court.", "Do not state fraud as a fact unless the evidence supports it; describe the verifiable conduct instead."]),
+            ],
+            "mistakes": ["Closing a dispute before the refund reaches the account", "Sending extra money to unlock a promised refund", "Using different refund amounts in different messages", "Waiting until payment-provider or platform deadlines expire"],
+            "faq": [
+                ("Is a screenshot of the seller promising a refund enough?", "It helps, but combine it with the order, payment record, reason for cancellation or refund, and a bank or platform record showing that the money did not arrive."),
+                ("Should I keep negotiating privately?", "Only while it does not endanger a platform, bank, card or contractual deadline. Keep private negotiations short and in writing."),
+                ("Can ChinaTradeResolve guarantee recovery?", "No. The service can help organize the facts and evidence, but it cannot promise a refund or replace a lawyer or authority."),
+            ],
+            "related_slugs": ["alibaba-dispute-closed-no-refund", "supplier-disappeared-after-payment", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "supplier-disappeared-after-payment": {
+            "title": "Chinese supplier disappeared after payment: evidence and first steps",
+            "description": "What to preserve and check when a Chinese supplier stops replying after a deposit or full payment.",
+            "intro": "Silence after payment can have several explanations, but the immediate task is the same: preserve the transaction, identity and communication evidence before accounts or pages change.",
+            "summary": "Record who received the money, what was promised, the last confirmed production or shipment event, and every failed attempt to contact the supplier.",
+            "sections": [
+                ("Preserve identity and transaction records", ["Save the company name, registration information, Alibaba or marketplace profile, website, addresses, bank beneficiary and invoice.", "Export the complete chat where possible and keep message dates, names, attachments and voice-note context."]),
+                ("Check whether the account changed", ["Document deleted listings, changed company names, blocked accounts, bounced email and disconnected phone numbers.", "Do not rely on screenshots alone when an export, PDF order or bank document is available."]),
+                ("Contact through controlled channels", ["Send one clear written notice through the platform and the contractual contact address, asking for a status update or refund by a stated date.", "Avoid threats and repeated emotional messages; they make the timeline harder to review."]),
+                ("Protect remaining deadlines", ["Check marketplace, Trade Assurance, card, bank-transfer, insurance and contract deadlines immediately.", "A supplier's request to wait does not automatically extend a third party's filing deadline."]),
+            ],
+            "mistakes": ["Paying a new fee to release goods or a refund without verification", "Deleting the chat after taking a few screenshots", "Contacting unrelated people with public accusations", "Waiting weeks before checking dispute deadlines"],
+            "faq": [
+                ("Does silence prove fraud?", "No. It is evidence of non-response, not automatically proof of intent. Describe the facts precisely and preserve the payment and promise records."),
+                ("What is the most important document?", "Usually the combination of the order or invoice, payment proof, supplier identity and messages showing what should have happened after payment."),
+                ("Should I publish the supplier's details online?", "Public accusations can create legal and practical risks. Start with controlled evidence preservation and formal channels."),
+            ],
+            "related_slugs": ["supplier-not-refunding", "supplier-not-shipped", "organize-dispute-documents", "alibaba-dispute-evidence"],
+        },
+        "damaged-or-short-shipment": {
+            "title": "Damaged or missing goods from China: how to document a claim",
+            "description": "Evidence checklist for damaged cartons, broken goods, missing units, short shipment or incomplete delivery from a Chinese supplier.",
+            "intro": "Damage and shortage cases depend heavily on evidence created at receipt. Photograph the unopened condition, count method, labels and carrier records before repacking or distributing the goods.",
+            "summary": "Show the agreed quantity, the delivered quantity, the condition at receipt, the inspection method and the financial effect of the shortage or damage.",
+            "sections": [
+                ("Document the arrival condition", ["Photograph the container, pallet or cartons before opening, including seals, labels, dents, moisture and visible damage.", "Keep delivery receipts and note any reservation or damage remark made to the carrier."]),
+                ("Count and sample systematically", ["Use a written count sheet and identify carton numbers, SKU, batch and the person who performed the check.", "For damage, state how many units were inspected, how many failed and how the sample was selected."]),
+                ("Separate carrier and supplier issues", ["Compare packaging obligations, Incoterms, transport documents and the point at which risk passed under the agreement.", "Do not assume every transport loss is the supplier's responsibility or every packaging defect is the carrier's responsibility."]),
+                ("Calculate a supported remedy", ["Connect each missing or damaged unit to the invoice price and any documented inspection, disposal or repair cost.", "Preserve the goods and packaging until the relevant parties confirm whether inspection is required."]),
+            ],
+            "mistakes": ["Signing a clean delivery receipt despite obvious damage", "Discarding packaging before inspection", "Claiming the whole order is defective after checking only one unit", "Using an unexplained lump-sum refund demand"],
+            "faq": [
+                ("Should I open every carton?", "Use a defensible inspection plan and record what was checked. The correct scope depends on the shipment and dispute route."),
+                ("Who is responsible for transit damage?", "That depends on the contract, Incoterms, carrier documents, packaging obligations and the actual cause. Preserve evidence before deciding."),
+                ("Can a warehouse report help?", "Yes, especially when it records receipt time, seal condition, carton count, photographs and the inspection method."),
+            ],
+            "related_slugs": ["product-quality-dispute", "wrong-material-size-color", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "wrong-material-size-color": {
+            "title": "Supplier sent the wrong material, size or colour: how to prove it",
+            "description": "How to compare the approved specification, sample and delivered goods when material, dimensions, colour or model do not match.",
+            "intro": "A wrong-specification claim is strongest when the final approved requirement can be identified and the difference can be measured or independently verified.",
+            "summary": "Put the promise and the observed result side by side: final specification, approval date, test or measurement, affected quantity and requested remedy.",
+            "sections": [
+                ("Identify the final approved version", ["Save the final purchase order, drawings, colour code, material description, sample approval and any later revision.", "Resolve contradictions between an early chat message and the final signed or platform specification."]),
+                ("Measure the mismatch", ["Use calibrated tools, colour references, labels, laboratory or expert testing where the issue cannot be established visually.", "Record the method, date, sample identity and chain of custody for any external test."]),
+                ("Show commercial relevance", ["Explain why the difference affects use, compliance, resale, safety, compatibility or the agreed customer order.", "Avoid claiming that a difference is material if it has no documented effect on the transaction."]),
+                ("Choose a proportional remedy", ["State whether the mismatch justifies replacement, rework, price reduction, partial refund, rejection or cancellation under the applicable terms.", "Calculate the amount from the affected quantity and supported costs rather than a round estimate."]),
+            ],
+            "mistakes": ["Relying on screen colour to prove a colour-code mismatch", "Calling a material fake without testing or reliable documentation", "Ignoring a later approved specification change", "Failing to identify how many units are affected"],
+            "faq": [
+                ("Are photographs enough to prove the wrong material?", "Sometimes not. Material composition often requires labels, supplier admissions, technical documents or independent testing."),
+                ("What if the sample and purchase order conflict?", "Preserve both and identify which document was accepted as final. The sequence of approvals is important."),
+                ("Should I test every unit?", "Not always, but the sample must be representative and the method should be recorded."),
+            ],
+            "related_slugs": ["product-quality-dispute", "damaged-or-short-shipment", "supplier-certificate-problem", "alibaba-dispute-evidence"],
+        },
+        "alibaba-dispute-closed-no-refund": {
+            "title": "Alibaba closed the dispute without a refund: what to review",
+            "description": "A structured checklist for reviewing an Alibaba dispute decision, missed evidence, deadlines and possible next escalation routes.",
+            "intro": "A closed platform dispute does not by itself explain whether the evidence was insufficient, the claim was inconsistent, a deadline was missed or the decision can still be reviewed through another route.",
+            "summary": "Preserve the complete case file, identify the exact decision and rule cited, then compare the evidence submitted with the issue and remedy you asked Alibaba to decide.",
+            "sections": [
+                ("Save the complete dispute record", ["Download or capture the claim, seller response, platform questions, evidence list, status changes, decision and closure date.", "Keep the order page and the version of Trade Assurance or other terms that applied to the transaction."]),
+                ("Read the stated reason", ["Separate a procedural closure, deadline issue, insufficient evidence finding and substantive rejection.", "Do not assume the decision addressed a point that was never clearly raised or documented."]),
+                ("Audit your own submission", ["Check whether dates, amounts, requested remedy and main issue stayed consistent across all dispute rounds.", "Match each important statement to a specific file and note evidence that Alibaba requested but did not receive or discuss."]),
+                ("Map remaining options", ["Check whether review, appeal, complaint, payment-provider, insurer, formal demand, mediation, arbitration or court routes remain available.", "Deadlines and jurisdiction depend on the contract, entity, payment route and location; do not rely on a generic internet deadline."]),
+            ],
+            "mistakes": ["Deleting the closed-case pages", "Starting a new complaint with a different unsupported story", "Assuming a platform decision is the same as a court judgment", "Missing external payment or contractual deadlines while waiting for support"],
+            "faq": [
+                ("Can a closed Alibaba dispute be reopened?", "That depends on the case status, current platform procedure and available new evidence. Preserve the record and check the current options shown in the account."),
+                ("Does closure mean the supplier was proven right?", "Not necessarily. A case may close for procedural or evidentiary reasons. Read the exact wording and history."),
+                ("What should a review request contain?", "A concise chronology, the exact error alleged, the evidence that supports it and a specific requested outcome."),
+            ],
+            "related_slugs": ["alibaba-dispute-evidence", "supplier-not-refunding", "organize-dispute-documents", "product-quality-dispute"],
+        },
+        "supplier-certificate-problem": {
+            "title": "Wrong or invalid certificate from a Chinese supplier: what to check",
+            "description": "Evidence checklist when a certificate is missing, unrelated to the goods, unverifiable, expired or unsuitable for the destination market.",
+            "intro": "A logo or PDF labelled 'certificate' is not enough. The key questions are what document was promised, who issued it, which product and standard it covers, and whether it is valid for the intended market.",
+            "summary": "Compare the promised compliance document with the actual issuer, certificate number, product model, standard, scope, dates and destination requirements.",
+            "sections": [
+                ("Preserve what was promised", ["Save the messages, quotation and order term stating which certificate, test report, declaration or registration the supplier would provide.", "Record whether the document was a condition of payment, production approval, shipment or import."]),
+                ("Verify the document", ["Check issuer contact details, certificate number, product model, applicant, manufacturer, standard, issue and expiry dates and any online database.", "Contact the stated issuer through independently obtained contact information when verification matters."]),
+                ("Distinguish document types", ["A test report, certificate, declaration of conformity, factory audit and product registration are not interchangeable.", "Do not describe a document as forged unless there is reliable evidence; state the precise inconsistency or failed verification."]),
+                ("Connect it to the transaction", ["Explain why the missing or unsuitable document prevents lawful import, sale, installation or the agreed use.", "Preserve customs, laboratory, consultant or authority correspondence that identifies the problem."]),
+            ],
+            "mistakes": ["Accepting a certificate for a different model or manufacturer", "Relying only on a supplier-provided verification link", "Confusing a test report with market authorization", "Making a forgery allegation before verification"],
+            "faq": [
+                ("How can I verify a certificate?", "Check the issuer independently, the certificate number, scope, model and dates. Requirements differ by product and destination."),
+                ("Is a CE logo proof of compliance?", "No. A mark alone does not establish that all applicable conformity obligations and documentation are satisfied."),
+                ("Can this support cancellation or refund?", "Possibly, when the document was an agreed condition or the goods cannot lawfully be used as intended. The contract and evidence matter."),
+            ],
+            "related_slugs": ["customs-clearance-problem", "wrong-material-size-color", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "customs-clearance-problem": {
+            "title": "Goods from China are stuck at customs: supplier-dispute checklist",
+            "description": "How to organize evidence when Chinese goods are delayed or rejected by customs because of invoices, classification, certificates or markings.",
+            "intro": "A customs problem is not automatically a supplier breach. First identify the official reason, the importer of record, the agreed Incoterm and which party promised each document or compliance step.",
+            "summary": "Start with the written customs notice, then map each missing or incorrect item to the contract, shipping documents and responsible party.",
+            "sections": [
+                ("Obtain the official reason", ["Request the customs, broker, carrier or authority notice that states what is missing, inconsistent, prohibited or under review.", "Separate an ordinary document request from detention, seizure, rejection, return or destruction risk."]),
+                ("Map responsibilities", ["Check the Incoterm, importer of record, customs-broker instruction and contractual promises about classification, origin, value, certificates and markings.", "Do not assume 'door to door' transfers every legal obligation without reading the written agreement."]),
+                ("Preserve the document chain", ["Save the commercial invoice, packing list, bill of lading or airway bill, HS code, origin documents, certificates, declarations and supplier instructions.", "Record each corrected document and who issued it to avoid losing the audit trail."]),
+                ("Control costs and deadlines", ["Track storage, demurrage, broker, testing, return and destruction deadlines with supporting invoices or notices.", "Before paying a new supplier-requested fee, verify the recipient and obtain a written explanation of what the payment resolves."]),
+            ],
+            "mistakes": ["Relying only on the supplier's summary of the customs issue", "Changing invoices without preserving the original", "Ignoring storage or abandonment deadlines", "Assuming the supplier is responsible without checking the Incoterm and importer role"],
+            "faq": [
+                ("Who is responsible when customs stops the goods?", "It depends on the official reason, import law, importer role, Incoterm and contractual promises. The customs notice is the starting point."),
+                ("Should the supplier issue a new invoice?", "Only when a genuine error needs correction. Preserve the original and do not use false values or descriptions."),
+                ("Can customs costs be claimed from the supplier?", "Potentially, if a documented supplier breach caused them and the contract or applicable law supports recovery. Keep every cost record."),
+            ],
+            "related_slugs": ["supplier-certificate-problem", "order-not-delivered-tracking-problem", "supplier-not-shipped", "organize-dispute-documents"],
+        },
+        "order-not-delivered-tracking-problem": {
+            "title": "Order from China not delivered: tracking and evidence checklist",
+            "description": "What to collect when tracking is invalid, frozen, delivered to the wrong place or shows delivery that you did not receive.",
+            "intro": "Non-delivery after dispatch is different from non-shipment. Build a carrier-level timeline and identify the route, consignee, delivery scan and any exception or proof-of-delivery document.",
+            "summary": "Preserve the agreed destination, carrier record, tracking history, delivery evidence, communications and the point at which the shipment stopped or was misdelivered.",
+            "sections": [
+                ("Capture the tracking history", ["Save the carrier name, full tracking number and dated scan history rather than only the latest status.", "Verify the number on the carrier's official system and record any mismatch in destination, weight or service."]),
+                ("Request proof of delivery", ["Ask for the delivery address, recipient name, signature, photograph, GPS or local carrier record where available.", "A generic 'delivered' status may not show that the correct consignee received the goods."]),
+                ("Trace handovers", ["Identify freight forwarders, consolidators, customs brokers and last-mile carriers, including every replacement tracking number.", "Record when risk and responsibility passed under the contract and Incoterm."]),
+                ("Notify the right parties", ["Send timely written notice to the seller, platform, carrier, insurer and payment provider where applicable.", "Keep claim reference numbers and do not discard packaging or delivery documents for partial shipments."]),
+            ],
+            "mistakes": ["Using a tracking screenshot without the carrier name", "Waiting until the carrier claim period expires", "Confusing a warehouse delivery with delivery to the buyer", "Failing to record replacement tracking numbers"],
+            "faq": [
+                ("What if tracking says delivered but nothing arrived?", "Request detailed proof of delivery and compare the address, recipient, weight and local carrier record with the order."),
+                ("Is the seller always responsible for lost transit?", "Not always. Contract terms, Incoterms, insurance and the point of loss matter."),
+                ("What if the tracking number is fake?", "Document the official carrier response, inconsistencies and supplier messages. Avoid conclusions beyond the evidence."),
+            ],
+            "related_slugs": ["supplier-not-shipped", "customs-clearance-problem", "damaged-or-short-shipment", "alibaba-dispute-evidence"],
+        },
+    },
+    "ru": {
+        "supplier-not-refunding": {
+            "title": "Китайский поставщик не возвращает деньги: что делать",
+            "description": "Пошаговая проверка доказательств и вариантов действий, если поставщик из Китая или продавец Alibaba не возвращает предоплату или оплату.",
+            "intro": "Обещание вернуть деньги ещё не означает, что возврат состоялся. Сохраните платёжный след, основание возврата, переписку и все действующие сроки.",
+            "summary": "Сведите дело к пяти вопросам: сколько оплачено, почему деньги должны быть возвращены, что признал продавец, сколько фактически вернулось и какой срок ещё не пропущен.",
+            "sections": [
+                ("Определите основание возврата", ["Укажите конкретную причину: товар не отправлен, отмена согласована, товар бракованный, спецификация нарушена, есть недостача или другое подтверждённое нарушение.", "Сохраните условия заказа и сообщение, где продавец согласился на отмену, признал проблему или пообещал возврат."]),
+                ("Проследите движение денег", ["Сохраните подтверждение оплаты, данные получателя, запись операции на платформе, статус возврата и выписку, показывающую, что деньги не поступили.", "При частичном возврате отдельно укажите первоначальную сумму, уже полученную часть и точный остаток."]),
+                ("Установите один письменный срок", ["Направьте краткое требование с номером заказа, суммой, основанием, перечнем доказательств, способом возврата и датой ответа.", "Не заменяйте действующий спор бесконечными обещаниями в личной переписке и не пропускайте сроки банка, карты, страховщика или платформы."]),
+                ("Подготовьте следующий маршрут", ["В зависимости от договора и способа оплаты возможны процедура платформы, спор по платежу, обращение в банк, к страховщику, официальная претензия, медиация, арбитраж или суд.", "Не называйте действия мошенничеством без достаточных доказательств — описывайте проверяемые факты."]),
+            ],
+            "mistakes": ["Закрыть спор до фактического поступления денег", "Перевести дополнительную сумму ради обещанного возврата", "Указывать разные суммы требования в разных сообщениях", "Дождаться истечения сроков платформы или платёжного сервиса"],
+            "faq": [
+                ("Достаточно ли скриншота, где продавец обещает возврат?", "Он полезен, но его нужно соединить с заказом, оплатой, основанием отмены или возврата и доказательством того, что деньги не поступили."),
+                ("Стоит ли продолжать личные переговоры?", "Только пока они не угрожают срокам платформы, банка, карты или договора. Переговоры должны быть короткими и письменными."),
+                ("Гарантирует ли ChinaTradeResolve возврат?", "Нет. Сервис помогает организовать факты и доказательства, но не обещает возврат и не заменяет адвоката или государственный орган."),
+            ],
+            "related_slugs": ["alibaba-dispute-closed-no-refund", "supplier-disappeared-after-payment", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "supplier-disappeared-after-payment": {
+            "title": "Китайский поставщик пропал после оплаты: что сохранить и проверить",
+            "description": "Какие доказательства собрать и какие сроки проверить, если поставщик из Китая перестал отвечать после предоплаты или полной оплаты.",
+            "intro": "Молчание после оплаты может иметь разные причины, но первая задача одна: зафиксировать платёж, личность получателя, обещания и переписку до изменения аккаунтов и страниц.",
+            "summary": "Зафиксируйте, кому ушли деньги, что было обещано, какое событие производства или отправки подтверждено последним и когда продавец перестал отвечать.",
+            "sections": [
+                ("Сохраните данные поставщика и сделки", ["Скачайте название компании, регистрационные сведения, профиль Alibaba или другой площадки, сайт, адреса, банковского получателя и инвойс.", "Экспортируйте полный чат, сохранив даты, имена, вложения и контекст голосовых сообщений."]),
+                ("Проверьте изменения аккаунта", ["Зафиксируйте удалённые объявления, смену названия компании, блокировку аккаунта, недоставленные письма и отключённые телефоны.", "Не ограничивайтесь скриншотами, когда доступен экспорт переписки, PDF заказа или банковский документ."]),
+                ("Свяжитесь через контролируемые каналы", ["Отправьте одно понятное уведомление через платформу и договорной адрес с просьбой дать статус или вернуть деньги к конкретной дате.", "Избегайте угроз и десятков эмоциональных сообщений — они затрудняют анализ хронологии."]),
+                ("Защитите оставшиеся сроки", ["Сразу проверьте сроки площадки, Trade Assurance, банка, карты, страховки и договора.", "Просьба продавца подождать не продлевает автоматически срок обращения к третьей стороне."]),
+            ],
+            "mistakes": ["Оплатить новый сбор за разблокировку товара или возврата без проверки", "Удалить чат после нескольких скриншотов", "Публично обвинять непричастных лиц", "Неделями не проверять сроки открытия спора"],
+            "faq": [
+                ("Доказывает ли молчание мошенничество?", "Нет. Оно подтверждает отсутствие ответа, но не доказывает умысел. Точно описывайте факты и сохраняйте платёж и обещания."),
+                ("Какой документ самый важный?", "Обычно важна связка: заказ или инвойс, подтверждение оплаты, данные поставщика и сообщения о том, что должно было произойти после платежа."),
+                ("Нужно ли публиковать данные поставщика в интернете?", "Публичные обвинения могут создать правовые и практические риски. Сначала сохраните доказательства и используйте официальные каналы."),
+            ],
+            "related_slugs": ["supplier-not-refunding", "supplier-not-shipped", "organize-dispute-documents", "alibaba-dispute-evidence"],
+        },
+        "damaged-or-short-shipment": {
+            "title": "Из Китая пришёл повреждённый товар или недостача: как доказать",
+            "description": "Памятка по доказательствам при повреждении коробок и товара, нехватке единиц, неполной комплектации или недостаче в поставке из Китая.",
+            "intro": "В спорах о повреждении и недостаче особенно важны доказательства, созданные в момент получения. Снимите закрытую упаковку, пломбы, маркировку и процедуру подсчёта до переупаковки товара.",
+            "summary": "Покажите согласованное количество, фактически полученное количество, состояние при приёмке, метод проверки и финансовые последствия недостачи или повреждения.",
+            "sections": [
+                ("Зафиксируйте состояние при получении", ["Снимите контейнер, паллету или коробки до вскрытия: пломбы, этикетки, вмятины, влагу и видимые повреждения.", "Сохраните накладные и внесите оговорку о повреждении в документ перевозчика, когда это возможно."]),
+                ("Проведите понятный подсчёт", ["Используйте письменный лист подсчёта с номерами коробок, артикулами, партиями и именем проверяющего.", "Для брака укажите, сколько единиц проверено, сколько не прошло проверку и как выбиралась выборка."]),
+                ("Разделите ответственность перевозчика и поставщика", ["Сопоставьте требования к упаковке, Incoterms, транспортные документы и момент перехода риска.", "Не считайте автоматически любой транспортный ущерб ответственностью продавца, а любую плохую упаковку — ответственностью перевозчика."]),
+                ("Рассчитайте подтверждённое требование", ["Свяжите каждую недостающую или повреждённую единицу с ценой в инвойсе и подтверждёнными расходами на проверку, ремонт или утилизацию.", "Сохраните товар и упаковку до решения вопроса о необходимости осмотра."]),
+            ],
+            "mistakes": ["Подписать чистую накладную при заметном повреждении", "Выбросить упаковку до осмотра", "Заявить брак всей партии после проверки одной единицы", "Потребовать круглую сумму без расчёта"],
+            "faq": [
+                ("Нужно ли вскрывать все коробки?", "Используйте обоснованный план проверки и записывайте, что именно осмотрено. Масштаб зависит от партии и процедуры спора."),
+                ("Кто отвечает за повреждение в пути?", "Это зависит от договора, Incoterms, документов перевозчика, упаковочных обязанностей и фактической причины."),
+                ("Поможет ли акт склада?", "Да, особенно если в нём указаны время приёмки, состояние пломб, количество мест, фотографии и метод проверки."),
+            ],
+            "related_slugs": ["product-quality-dispute", "wrong-material-size-color", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "wrong-material-size-color": {
+            "title": "Поставщик прислал другой материал, размер или цвет: как доказать",
+            "description": "Как сравнить утверждённую спецификацию, образец и поставленный товар, если не совпадают материал, размеры, цвет или модель.",
+            "intro": "Претензия по неверной спецификации сильнее, когда можно определить окончательно согласованное требование и измерить или независимо подтвердить отличие.",
+            "summary": "Поставьте рядом обещание и результат: окончательная спецификация, дата утверждения, измерение или тест, количество затронутого товара и требование.",
+            "sections": [
+                ("Найдите окончательно утверждённую версию", ["Сохраните финальный заказ, чертежи, код цвета, описание материала, утверждение образца и последующие изменения.", "Разрешите противоречия между ранней перепиской и окончательной спецификацией на платформе или в подписанном документе."]),
+                ("Измерьте несоответствие", ["Используйте поверенные инструменты, цветовые эталоны, маркировку, лабораторный или экспертный тест, когда визуального сравнения недостаточно.", "Для внешнего теста запишите метод, дату, идентификацию образца и цепочку хранения."]),
+                ("Покажите коммерческое значение", ["Объясните, почему отличие влияет на применение, соответствие требованиям, перепродажу, безопасность, совместимость или заказ клиента.", "Не называйте отличие существенным, если его влияние на сделку ничем не подтверждено."]),
+                ("Выберите соразмерное требование", ["Укажите, требует ли отличие замены, переделки, снижения цены, частичного возврата, отказа от товара или отмены по условиям сделки.", "Рассчитайте сумму от количества затронутых единиц и подтверждённых затрат."]),
+            ],
+            "mistakes": ["Доказывать оттенок только по цвету экрана", "Называть материал поддельным без теста или надёжных документов", "Игнорировать позднее согласованное изменение", "Не указывать количество затронутых единиц"],
+            "faq": [
+                ("Достаточно ли фотографий для доказательства другого материала?", "Не всегда. Состав материала часто требует маркировки, признания продавца, технических документов или независимого теста."),
+                ("Что делать, если образец и заказ противоречат друг другу?", "Сохраните оба источника и установите, какой из них был принят как окончательный. Последовательность согласований имеет значение."),
+                ("Нужно ли тестировать каждую единицу?", "Не всегда, но выборка должна быть репрезентативной, а метод проверки — записан."),
+            ],
+            "related_slugs": ["product-quality-dispute", "damaged-or-short-shipment", "supplier-certificate-problem", "alibaba-dispute-evidence"],
+        },
+        "alibaba-dispute-closed-no-refund": {
+            "title": "Alibaba закрыла спор без возврата денег: что проверить",
+            "description": "Структурированная проверка решения Alibaba, представленных доказательств, сроков и возможных дальнейших маршрутов.",
+            "intro": "Закрытие спора не показывает само по себе, было ли недостаточно доказательств, пропущен срок, требование сформулировано непоследовательно или остаётся другой путь пересмотра.",
+            "summary": "Сохраните полное дело, найдите точную причину решения и сопоставьте поданные доказательства с вопросом и требованием, которые вы просили Alibaba рассмотреть.",
+            "sections": [
+                ("Сохраните полную историю спора", ["Скачайте или снимите заявление, ответ продавца, вопросы платформы, перечень доказательств, изменения статуса, решение и дату закрытия.", "Сохраните страницу заказа и редакцию Trade Assurance или других условий, действовавших для сделки."]),
+                ("Прочитайте указанную причину", ["Отделите процедурное закрытие, пропуск срока, недостаточность доказательств и отказ по существу.", "Не предполагайте, что решение рассмотрело вопрос, который не был ясно заявлен и подтверждён."]),
+                ("Проведите аудит своей подачи", ["Проверьте, совпадали ли даты, суммы, требование и главная проблема во всех этапах спора.", "Свяжите каждое важное утверждение с конкретным файлом и отметьте доказательства, которые Alibaba запрашивала, но не получила или не обсудила."]),
+                ("Определите оставшиеся варианты", ["Проверьте возможность пересмотра, жалобы, спора по платежу, обращения к страховщику, официальной претензии, медиации, арбитража или суда.", "Сроки и юрисдикция зависят от договора, юридического лица, платежа и места сторон — не полагайтесь на универсальный срок из интернета."]),
+            ],
+            "mistakes": ["Удалить страницы закрытого дела", "Начать новую жалобу с другой неподтверждённой версией", "Считать решение платформы судебным решением", "Пропустить внешние сроки, ожидая ответа поддержки"],
+            "faq": [
+                ("Можно ли открыть закрытый спор Alibaba заново?", "Это зависит от статуса дела, текущей процедуры платформы и новых доказательств. Сохраните дело и проверьте доступные действия в аккаунте."),
+                ("Означает ли закрытие, что продавец доказал свою правоту?", "Не обязательно. Дело может быть закрыто по процедуре или из-за доказательств. Важна точная формулировка решения."),
+                ("Что включить в просьбу о пересмотре?", "Краткую хронологию, точную предполагаемую ошибку, подтверждающие её доказательства и конкретный результат, которого вы просите."),
+            ],
+            "related_slugs": ["alibaba-dispute-evidence", "supplier-not-refunding", "organize-dispute-documents", "product-quality-dispute"],
+        },
+        "supplier-certificate-problem": {
+            "title": "Китайский поставщик дал неправильный или недействительный сертификат",
+            "description": "Что проверить, если сертификат отсутствует, относится к другому товару, не подтверждается, просрочен или не подходит для рынка назначения.",
+            "intro": "Логотип или PDF с названием certificate ещё ничего не доказывает. Нужно установить, какой документ обещали, кем он выдан, какой товар и стандарт охватывает и подходит ли рынку назначения.",
+            "summary": "Сопоставьте обещанный документ с фактическим органом, номером, моделью товара, стандартом, областью действия, датами и требованиями страны ввоза.",
+            "sections": [
+                ("Сохраните обещание продавца", ["Зафиксируйте сообщения, коммерческое предложение и условие заказа о конкретном сертификате, протоколе испытаний, декларации или регистрации.", "Укажите, был ли документ условием оплаты, запуска производства, отправки или импорта."]),
+                ("Проверьте документ", ["Проверьте контакты органа, номер документа, модель, заявителя, изготовителя, стандарт, даты выдачи и окончания, а также доступную официальную базу.", "При необходимости свяжитесь с указанным органом по контактам, найденным независимо от поставщика."]),
+                ("Различайте типы документов", ["Протокол испытаний, сертификат, декларация соответствия, аудит фабрики и регистрация товара не взаимозаменяемы.", "Не называйте документ поддельным без надёжного подтверждения — укажите конкретное несоответствие или неудачную проверку."]),
+                ("Свяжите проблему со сделкой", ["Объясните, почему отсутствующий или неподходящий документ препятствует законному импорту, продаже, установке или согласованному применению.", "Сохраните письма таможни, лаборатории, консультанта или органа, где описана проблема."]),
+            ],
+            "mistakes": ["Принять сертификат на другую модель или изготовителя", "Проверять документ только по ссылке продавца", "Путать протокол испытаний с разрешением на рынок", "Обвинять в подделке до проверки"],
+            "faq": [
+                ("Как проверить сертификат?", "Независимо проверьте орган, номер, область действия, модель и даты. Требования различаются по товару и стране."),
+                ("Доказывает ли знак CE соответствие?", "Нет. Сам знак не подтверждает выполнение всех применимых процедур и наличие правильной документации."),
+                ("Может ли проблема с сертификатом быть основанием для возврата?", "Возможно, если документ был согласованным условием или товар нельзя законно использовать по назначению. Важны договор и доказательства."),
+            ],
+            "related_slugs": ["customs-clearance-problem", "wrong-material-size-color", "alibaba-dispute-evidence", "organize-dispute-documents"],
+        },
+        "customs-clearance-problem": {
+            "title": "Товар из Китая застрял на таможне: что проверять в споре",
+            "description": "Как собрать документы, если груз задержан или не выпускается из-за инвойса, кода товара, сертификатов, маркировки или импортных требований.",
+            "intro": "Проблема на таможне не всегда означает нарушение поставщика. Сначала получите официальную причину, установите импортёра, Incoterm и письменные обязанности сторон по документам.",
+            "summary": "Начните с письменного уведомления таможни, затем свяжите каждый отсутствующий или неправильный документ с договором, перевозкой и ответственной стороной.",
+            "sections": [
+                ("Получите официальную причину", ["Запросите уведомление таможни, брокера, перевозчика или органа, где указано, что отсутствует, противоречит, запрещено или проверяется.", "Разделите обычный запрос документа, задержание, изъятие, отказ во ввозе, возврат и риск уничтожения."]),
+                ("Распределите обязанности", ["Проверьте Incoterm, импортёра, инструкции брокеру и обещания по классификации, происхождению, стоимости, сертификатам и маркировке.", "Не считайте, что формулировка door to door автоматически переносит все юридические обязанности без письменных условий."]),
+                ("Сохраните цепочку документов", ["Соберите коммерческий инвойс, упаковочный лист, коносамент или авианакладную, код ТН ВЭД/HS, происхождение, сертификаты, декларации и инструкции продавца.", "Сохраняйте каждую исправленную версию и её автора, чтобы не потерять историю."]),
+                ("Контролируйте расходы и сроки", ["Фиксируйте хранение, демередж, брокера, тестирование, возврат и сроки уничтожения с подтверждающими счетами и уведомлениями.", "Перед новой оплатой по просьбе поставщика проверьте получателя и письменное объяснение того, что именно решает платёж."]),
+            ],
+            "mistakes": ["Полагаться только на пересказ поставщика", "Менять инвойсы без сохранения оригинала", "Игнорировать сроки хранения или отказа от груза", "Назначить виновного без проверки Incoterm и роли импортёра"],
+            "faq": [
+                ("Кто отвечает, если таможня остановила груз?", "Это зависит от официальной причины, импортных правил, роли импортёра, Incoterm и договорных обещаний. Начинайте с уведомления таможни."),
+                ("Нужно ли просить новый инвойс?", "Только для исправления реальной ошибки. Сохраните оригинал и не используйте ложную стоимость или описание."),
+                ("Можно ли взыскать таможенные расходы с поставщика?", "Возможно, если их вызвало доказанное нарушение продавца и это допускают договор или применимые правила. Сохраняйте каждый расход."),
+            ],
+            "related_slugs": ["supplier-certificate-problem", "order-not-delivered-tracking-problem", "supplier-not-shipped", "organize-dispute-documents"],
+        },
+        "order-not-delivered-tracking-problem": {
+            "title": "Заказ из Китая не доставлен: трекинг и доказательства",
+            "description": "Что собрать, если трек-номер недействителен, не обновляется, показывает чужой адрес или доставку, которой не было.",
+            "intro": "Недоставка после передачи перевозчику отличается от неотправки. Нужна хронология перевозчика, маршрут, получатель, подтверждение вручения и сведения обо всех исключениях.",
+            "summary": "Сохраните согласованный адрес, перевозчика, историю трекинга, доказательство вручения, переписку и точку, где груз остановился или был доставлен не туда.",
+            "sections": [
+                ("Зафиксируйте полную историю трекинга", ["Сохраните перевозчика, полный номер и все датированные сканы, а не только последний статус.", "Проверьте номер на официальном сайте перевозчика и запишите различия в адресе, весе или услуге."]),
+                ("Запросите доказательство вручения", ["Попросите адрес доставки, имя получателя, подпись, фотографию, GPS или запись местного перевозчика, когда они доступны.", "Общий статус delivered не доказывает, что товар получил правильный адресат."]),
+                ("Проследите все передачи", ["Установите экспедиторов, консолидаторов, брокеров и последнюю милю, включая каждый новый трек-номер.", "Зафиксируйте момент перехода риска и ответственности по договору и Incoterm."]),
+                ("Уведомите нужные стороны", ["Своевременно письменно уведомите продавца, платформу, перевозчика, страховщика и платёжный сервис, когда это применимо.", "Сохраняйте номера обращений и не выбрасывайте упаковку или документы частичной доставки."]),
+            ],
+            "mistakes": ["Показать трекинг без названия перевозчика", "Пропустить срок претензии перевозчику", "Перепутать доставку на склад посредника с доставкой покупателю", "Не сохранить сменившиеся трек-номера"],
+            "faq": [
+                ("Что делать, если написано «доставлено», но товара нет?", "Запросите подробное подтверждение вручения и сравните адрес, получателя, вес и запись местного перевозчика с заказом."),
+                ("Всегда ли продавец отвечает за потерю в пути?", "Не всегда. Важны договор, Incoterms, страхование и место утраты."),
+                ("Что делать с поддельным трек-номером?", "Сохраните официальный ответ перевозчика, несоответствия и переписку продавца. Не делайте выводов шире доказательств."),
+            ],
+            "related_slugs": ["supplier-not-shipped", "customs-clearance-problem", "damaged-or-short-shipment", "alibaba-dispute-evidence"],
+        },
+    },
+}
+
+# Make the four original pages more query-oriented without changing their evidence-based body.
+GUIDES["en"]["alibaba-dispute-evidence"].update({
+    "title": "What evidence is needed for an Alibaba dispute?",
+    "description": "Alibaba dispute evidence checklist covering order terms, messages, payment records, inspection files, defects and a clear refund request.",
+    "summary": "Build a dated chronology and connect every important statement to a specific order term, message, payment record, photograph, video or inspection file.",
+    "related_slugs": ["alibaba-dispute-closed-no-refund", "supplier-not-refunding", "product-quality-dispute", "organize-dispute-documents"],
+})
+GUIDES["en"]["supplier-not-shipped"].update({
+    "title": "Chinese supplier did not ship a paid order: what to do",
+    "description": "Evidence and deadline checklist when a Chinese supplier has not shipped, falsely marked an order as shipped or missed the agreed dispatch date.",
+    "summary": "Prove the agreed dispatch deadline, payment, lack of carrier handover and every extension that you did or did not accept.",
+    "related_slugs": ["order-not-delivered-tracking-problem", "supplier-not-refunding", "supplier-disappeared-after-payment", "alibaba-dispute-evidence"],
+})
+GUIDES["en"]["product-quality-dispute"].update({
+    "title": "Defective goods from China: how to prove a quality dispute",
+    "description": "How to document defective goods, poor workmanship and wrong specifications by comparing the agreed standard with objective evidence.",
+    "summary": "Identify the final agreed standard, document the defect objectively, state the affected quantity and connect the requested remedy to the evidence.",
+    "related_slugs": ["wrong-material-size-color", "damaged-or-short-shipment", "alibaba-dispute-evidence", "organize-dispute-documents"],
+})
+GUIDES["en"]["organize-dispute-documents"].update({
+    "title": "How to organize evidence for a Chinese supplier dispute",
+    "description": "A practical folder, filename, chronology and evidence-index method for an Alibaba or Chinese-supplier dispute.",
+    "summary": "Keep originals unchanged, use dated file names, create an evidence index and prepare a one-page case summary linked to source files.",
+    "related_slugs": ["alibaba-dispute-evidence", "alibaba-dispute-closed-no-refund", "supplier-not-refunding", "product-quality-dispute"],
+})
+GUIDES["ru"]["alibaba-dispute-evidence"].update({
+    "title": "Какие доказательства нужны для спора на Alibaba",
+    "description": "Памятка по доказательствам для спора Alibaba: условия заказа, переписка, оплата, инспекция, брак и понятное требование о возврате.",
+    "summary": "Составьте хронологию и свяжите каждое важное утверждение с конкретным условием заказа, сообщением, оплатой, фотографией, видео или актом проверки.",
+    "related_slugs": ["alibaba-dispute-closed-no-refund", "supplier-not-refunding", "product-quality-dispute", "organize-dispute-documents"],
+})
+GUIDES["ru"]["supplier-not-shipped"].update({
+    "title": "Поставщик из Китая не отправил оплаченный товар: что делать",
+    "description": "Какие доказательства и сроки проверить, если поставщик из Китая не отправил заказ, поставил ложный статус отправки или сорвал согласованную дату.",
+    "summary": "Докажите согласованную дату отправки, оплату, отсутствие передачи перевозчику и каждое перенесение срока, которое вы приняли или отклонили.",
+    "related_slugs": ["order-not-delivered-tracking-problem", "supplier-not-refunding", "supplier-disappeared-after-payment", "alibaba-dispute-evidence"],
+})
+GUIDES["ru"]["product-quality-dispute"].update({
+    "title": "Из Китая пришёл бракованный товар: как доказать проблему",
+    "description": "Как документировать брак, плохое качество и несоответствие спецификации, сравнивая согласованный стандарт с объективными доказательствами.",
+    "summary": "Установите окончательный стандарт, объективно зафиксируйте дефект, укажите количество затронутого товара и свяжите требование с доказательствами.",
+    "related_slugs": ["wrong-material-size-color", "damaged-or-short-shipment", "alibaba-dispute-evidence", "organize-dispute-documents"],
+})
+GUIDES["ru"]["organize-dispute-documents"].update({
+    "title": "Как организовать доказательства для спора с китайским поставщиком",
+    "description": "Папки, названия файлов, хронология и индекс доказательств для спора на Alibaba или с поставщиком из Китая.",
+    "summary": "Храните оригиналы неизменными, используйте датированные имена файлов, составьте индекс доказательств и одностраничное резюме со ссылками на источники.",
+    "related_slugs": ["alibaba-dispute-evidence", "alibaba-dispute-closed-no-refund", "supplier-not-refunding", "product-quality-dispute"],
+})
+
+for _lang, _guide_map in SEO_EXPANSION_GUIDES.items():
+    GUIDES[_lang].update(_guide_map)
+
+# Rebuild cards after all guide additions and title refinements.
+for _lang in SUPPORTED_LANGUAGES:
+    GUIDE_CARD_COPY[_lang] = {
+        _slug: {"title": _data["title"], "description": _data["description"]}
+        for _slug, _data in GUIDES[_lang].items()
+    }
+
+GUIDE_DETAIL_COPY["en"].update({
+    "quick_answer": "Quick answer",
+    "faq": "Frequently asked questions",
+    "prepared_by": "Prepared by ChinaTradeResolve Case Review Team",
+    "editorial_note": "This guide explains evidence organization and practical next steps. It does not predict an outcome or replace legal advice.",
+})
+GUIDE_DETAIL_COPY["ru"].update({
+    "quick_answer": "Короткий ответ",
+    "faq": "Частые вопросы",
+    "prepared_by": "Подготовлено командой разбора дел ChinaTradeResolve",
+    "editorial_note": "Материал объясняет организацию доказательств и практические следующие шаги. Он не прогнозирует результат и не заменяет юридическую консультацию.",
+})
+for _lang in ("fr", "de", "es", "sr"):
+    GUIDE_DETAIL_COPY[_lang].setdefault("quick_answer", {
+        "fr": "Réponse courte", "de": "Kurzantwort", "es": "Respuesta breve", "sr": "Kratak odgovor"
+    }[_lang])
+    GUIDE_DETAIL_COPY[_lang].setdefault("faq", {
+        "fr": "Questions fréquentes", "de": "Häufige Fragen", "es": "Preguntas frecuentes", "sr": "Česta pitanja"
+    }[_lang])
+    GUIDE_DETAIL_COPY[_lang].setdefault("prepared_by", {
+        "fr": "Préparé par l’équipe d’examen ChinaTradeResolve",
+        "de": "Erstellt vom ChinaTradeResolve-Fallprüfungsteam",
+        "es": "Preparado por el equipo de revisión de ChinaTradeResolve",
+        "sr": "Pripremio ChinaTradeResolve tim za pregled slučajeva",
+    }[_lang])
+    GUIDE_DETAIL_COPY[_lang].setdefault("editorial_note", GUIDE_DETAIL_COPY[_lang]["fine"])
+
+GUIDE_MODIFIED_DATE = "2026-07-26"

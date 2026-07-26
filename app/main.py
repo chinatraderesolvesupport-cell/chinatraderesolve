@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.48"
+APP_VERSION = "3.7.49"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -1456,14 +1456,24 @@ def guide_detail(language: str, slug: str, request: Request) -> HTMLResponse:
     guide = GUIDES[language][slug]
     base_url = settings.public_base_url.rstrip("/")
     canonical_url = f"{base_url}/{language}/guides/{slug}"
+    available_languages = [code for code in SUPPORTED_LANGUAGES if slug in GUIDES.get(code, {})]
     alternates = [
         {"lang": code, "url": f"{base_url}/{code}/guides/{slug}"}
-        for code in SUPPORTED_LANGUAGES
+        for code in available_languages
     ]
+    preferred_related = guide.get("related_slugs") or []
+    related_slugs = [
+        related_slug for related_slug in preferred_related
+        if related_slug != slug and related_slug in GUIDE_CARD_COPY[language]
+    ]
+    if len(related_slugs) < 4:
+        related_slugs.extend(
+            related_slug for related_slug in GUIDE_CARD_COPY[language]
+            if related_slug != slug and related_slug not in related_slugs
+        )
     related_guides = [
         {"slug": related_slug, **GUIDE_CARD_COPY[language][related_slug]}
-        for related_slug in GUIDE_CARD_COPY[language]
-        if related_slug != slug
+        for related_slug in related_slugs[:4]
     ]
     article_data = {
         "@type": "Article",
@@ -1490,7 +1500,20 @@ def guide_detail(language: str, slug: str, request: Request) -> HTMLResponse:
             {"@type": "ListItem", "position": 3, "name": guide["title"], "item": canonical_url},
         ],
     }
-    structured_data = {"@context": "https://schema.org", "@graph": [article_data, breadcrumb_data]}
+    graph_data = [article_data, breadcrumb_data]
+    if guide.get("faq"):
+        graph_data.append({
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": question,
+                    "acceptedAnswer": {"@type": "Answer", "text": answer},
+                }
+                for question, answer in guide["faq"]
+            ],
+        })
+    structured_data = {"@context": "https://schema.org", "@graph": graph_data}
     return templates.TemplateResponse(
         request=request,
         name="guide_detail.html",
@@ -1620,12 +1643,21 @@ def sitemap() -> Response:
     hub_alternates = {**hub_paths, "x-default": "/en/guides"}
     urls.extend(entry(path, hub_alternates) for path in hub_paths.values())
 
-    for slug in GUIDES["en"]:
+    all_guide_slugs = sorted({slug for guide_map in GUIDES.values() for slug in guide_map})
+    for slug in all_guide_slugs:
+        available_languages = [
+            language for language in SUPPORTED_LANGUAGES
+            if slug in GUIDES.get(language, {})
+        ]
         detail_paths = {
             language: f"/{language}/guides/{slug}"
-            for language in SUPPORTED_LANGUAGES
+            for language in available_languages
         }
-        detail_alternates = {**detail_paths, "x-default": f"/en/guides/{slug}"}
+        default_language = "en" if "en" in detail_paths else available_languages[0]
+        detail_alternates = {
+            **detail_paths,
+            "x-default": detail_paths[default_language],
+        }
         urls.extend(entry(path, detail_alternates) for path in detail_paths.values())
 
     body = (

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production-safe SEO checks for ChinaTradeResolve v3.7.50.
+"""Production-safe SEO checks for ChinaTradeResolve v3.7.52.
 
 Usage:
     python scripts/seo_smoke_test.py
@@ -16,14 +16,14 @@ from urllib.parse import urljoin
 import httpx
 
 BASE_URL = os.getenv("CTR_BASE_URL", "https://chinatraderesolve.com").rstrip("/")
-EXPECTED_VERSION = "3.7.50"
+EXPECTED_VERSION = "3.7.52"
 SAMPLE_PATHS = [
     "/ru/guides",
     "/en/guides",
-    "/ru/guides/supplier-not-refunding",
-    "/en/guides/supplier-not-refunding",
-    "/ru/guides/alibaba-dispute-closed-no-refund",
-    "/en/guides/customs-clearance-problem",
+    "/fr/guides/supplier-not-refunding",
+    "/de/guides/alibaba-dispute-closed-no-refund",
+    "/es/guides/customs-clearance-problem",
+    "/sr/guides/order-not-delivered-tracking-problem",
 ]
 
 
@@ -79,7 +79,7 @@ def check(condition: bool, label: str, failures: list[str]) -> None:
 
 def main() -> int:
     failures: list[str] = []
-    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.7.50"}) as client:
+    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.7.52"}) as client:
         health = client.get(urljoin(BASE_URL + "/", "health"))
         check(health.status_code == 200, "health returns HTTP 200", failures)
         if health.status_code == 200:
@@ -96,7 +96,8 @@ def main() -> int:
         check(sitemap.status_code == 200, "sitemap.xml returns HTTP 200", failures)
         check("/ru/guides/supplier-not-refunding" in sitemap.text, "Russian refund guide is in sitemap", failures)
         check("/en/guides/supplier-not-refunding" in sitemap.text, "English refund guide is in sitemap", failures)
-        check("/fr/guides/supplier-not-refunding" not in sitemap.text, "unreviewed French translation is not advertised", failures)
+        for language in ("ru", "en", "fr", "de", "es", "sr"):
+            check(f"/{language}/guides/supplier-not-refunding" in sitemap.text, f"{language} refund guide is in sitemap", failures)
 
         for path in SAMPLE_PATHS:
             response = client.get(BASE_URL + path)

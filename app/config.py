@@ -251,6 +251,13 @@ class Settings:
     google_site_verification: str | None = os.getenv("GOOGLE_SITE_VERIFICATION")
     bing_site_verification: str | None = os.getenv("BING_SITE_VERIFICATION")
     yandex_site_verification: str | None = os.getenv("YANDEX_SITE_VERIFICATION")
+    # Search Console/Webmaster ownership can be confirmed through DNS or an
+    # external account and therefore cannot always be detected from page tags.
+    # These manual flags reflect the confirmed production state and can be
+    # overridden in Render if an integration is later disconnected.
+    google_search_console_connected: bool = _env_bool("GOOGLE_SEARCH_CONSOLE_CONNECTED", True)
+    yandex_webmaster_connected: bool = _env_bool("YANDEX_WEBMASTER_CONNECTED", True)
+    bing_webmaster_connected: bool = _env_bool("BING_WEBMASTER_CONNECTED", False)
     yandex_metrika_id: str = _env_digits("YANDEX_METRIKA_ID")
     indexnow_key: str = os.getenv("INDEXNOW_KEY", "").strip()
 

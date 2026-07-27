@@ -2106,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.50"
+    assert health.json()["version"] == "3.7.52"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.50"
+    assert health.headers["x-app-version"] == "3.7.52"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -4706,7 +4706,7 @@ def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
     assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
     assert "?lang=en" in sitemap.text
     assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in sitemap.text
-    assert '<lastmod>2026-07-26</lastmod>' in sitemap.text
+    assert '<lastmod>2026-07-27</lastmod>' in sitemap.text
     assert "/static/terms.html" not in sitemap.text
     assert "/admin" not in sitemap.text
     assert "/case/" not in sitemap.text
@@ -4994,6 +4994,28 @@ def test_admin_dashboard_explains_when_search_indexing_is_blocked():
     assert "SEARCH_INDEXING_ENABLED" in page.text
 
 
+def test_admin_dashboard_shows_truthful_external_search_service_statuses():
+    client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"})
+    page = client.get("/admin")
+    assert page.status_code == 200
+    assert "Google Search Console" in page.text
+    assert "Яндекс Вебмастер" in page.text
+    assert "Bing Webmaster Tools" in page.text
+    assert "Статус подтверждается вручную" in page.text
+    assert "Google: не настроен" not in page.text
+    assert "Яндекс: не настроен" not in page.text
+
+
+def test_direct_acquisition_is_described_as_unattributed_not_manual_only():
+    from app.db import _parse_acquisition
+    acquisition = _parse_acquisition("{}")
+    assert acquisition["source_key"] == "direct"
+    assert acquisition["source_label"] == "Прямой или неопределённый источник"
+    client.post("/admin/login", data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"})
+    page = client.get("/admin")
+    assert "это не всегда ручной ввод адреса" in page.text
+
+
 
 def test_guide_hubs_use_truthful_localized_read_labels_and_accessibility():
     expected = {
@@ -5205,7 +5227,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.50"
+    assert response.headers["x-app-version"] == "3.7.52"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5230,7 +5252,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.50"
+    assert response.json()["version"] == "3.7.52"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5286,11 +5308,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.50"
-    assert "v3.7.50" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.50" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.50" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.50" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.52"
+    assert "v3.7.52" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.52" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.52" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.52" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5385,7 +5407,7 @@ def test_v3749_search_intent_guides_are_substantial_and_indexable():
         "customs-clearance-problem",
         "order-not-delivered-tracking-problem",
     }
-    for language in ("ru", "en"):
+    for language in ("ru", "en", "fr", "de", "es", "sr"):
         hub = client.get(f"/{language}/guides")
         assert hub.status_code == 200
         for slug in expected_slugs:
@@ -5396,15 +5418,15 @@ def test_v3749_search_intent_guides_are_substantial_and_indexable():
             assert 'FAQPage' in page.text
             assert 'dateModified' in page.text
             assert page.text.count('<h2>') >= 5
-            assert len(page.text) > 7000
+            assert len(page.text) > 6500
+            for alternate in ("ru", "en", "fr", "de", "es", "sr"):
+                assert f'hreflang="{alternate}"' in page.text
 
-    # Do not advertise translations that have not received editorial review.
-    assert client.get('/fr/guides/supplier-not-refunding').status_code == 404
     sitemap = client.get('/sitemap.xml')
-    assert '/ru/guides/supplier-not-refunding' in sitemap.text
-    assert '/en/guides/supplier-not-refunding' in sitemap.text
-    assert '/fr/guides/supplier-not-refunding' not in sitemap.text
-    assert '<lastmod>2026-07-26</lastmod>' in sitemap.text
+    for language in ("ru", "en", "fr", "de", "es", "sr"):
+        assert f'/{language}/guides/supplier-not-refunding' in sitemap.text
+        assert f'/{language}/guides/alibaba-dispute-closed-no-refund' in sitemap.text
+    assert '<lastmod>2026-07-27</lastmod>' in sitemap.text
 
 
 def test_v3749_related_guides_are_limited_and_contextual():

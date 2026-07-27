@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.50"
+APP_VERSION = "3.7.52"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -2454,10 +2454,11 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
             "traffic_sources": traffic_source_counts(),
             "search_indexing_enabled": search_indexing_is_ready(),
             "search_indexing_checks": search_indexing_checks(),
-            "google_verification_configured": bool((settings.google_site_verification or "").strip()),
-            "bing_verification_configured": bool((settings.bing_site_verification or "").strip()),
-            "yandex_verification_configured": bool((settings.yandex_site_verification or "").strip()),
+            "google_search_console_connected": settings.google_search_console_connected,
+            "bing_webmaster_connected": settings.bing_webmaster_connected,
+            "yandex_webmaster_connected": settings.yandex_webmaster_connected,
             "yandex_metrika_configured": bool(settings.yandex_metrika_id),
+            "yandex_metrika_id": settings.yandex_metrika_id,
             "indexnow_configured": bool((settings.indexnow_key or "").strip()),
             "database_backend": database_backend_name(),
             "database_persistent": using_postgres(),

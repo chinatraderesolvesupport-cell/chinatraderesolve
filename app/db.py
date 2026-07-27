@@ -539,7 +539,11 @@ def _parse_acquisition(details_json: str | None) -> dict[str, str]:
             source = (urlsplit(details["referrer"]).hostname or "").lower()
         except ValueError:
             source = ""
-    details["source_label"] = source or "direct"
+    source_key = source or "direct"
+    details["source_key"] = source_key
+    details["source_label"] = (
+        "Прямой или неопределённый источник" if source_key == "direct" else source_key
+    )
     return details
 
 
@@ -566,10 +570,14 @@ def traffic_source_counts() -> list[dict[str, Any]]:
         ).fetchall()
     counts: dict[str, int] = {}
     for row in rows:
-        source = _parse_acquisition(row["details_json"])["source_label"]
+        source = _parse_acquisition(row["details_json"])["source_key"]
         counts[source] = counts.get(source, 0) + 1
     return [
-        {"source": source, "count": count}
+        {
+            "source": "Прямой или неопределённый источник" if source == "direct" else source,
+            "source_key": source,
+            "count": count,
+        }
         for source, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     ]
 

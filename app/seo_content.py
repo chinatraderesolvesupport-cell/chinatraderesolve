@@ -1082,6 +1082,14 @@ GUIDES["ru"]["organize-dispute-documents"].update({
 for _lang, _guide_map in SEO_EXPANSION_GUIDES.items():
     GUIDES[_lang].update(_guide_map)
 
+from app.seo_international_guides import INTERNATIONAL_GUIDES
+
+for _lang, _guide_map in INTERNATIONAL_GUIDES.items():
+    for _slug, _data in _guide_map.items():
+        _localized = dict(_data)
+        _localized["related_slugs"] = list(GUIDES["en"][_slug]["related_slugs"])
+        GUIDES[_lang][_slug] = _localized
+
 # Rebuild cards after all guide additions and title refinements.
 for _lang in SUPPORTED_LANGUAGES:
     GUIDE_CARD_COPY[_lang] = {
@@ -1116,4 +1124,4 @@ for _lang in ("fr", "de", "es", "sr"):
     }[_lang])
     GUIDE_DETAIL_COPY[_lang].setdefault("editorial_note", GUIDE_DETAIL_COPY[_lang]["fine"])
 
-GUIDE_MODIFIED_DATE = "2026-07-26"
+GUIDE_MODIFIED_DATE = "2026-07-27"

@@ -1,14 +1,23 @@
-# ChinaTradeResolve Document AI v3.7.52
+# ChinaTradeResolve Document AI v3.7.53
 
-Version 3.7.52 keeps the complete 72-page multilingual guide library and corrects the administrator search-integration dashboard so DNS/external-account verification is not confused with missing HTML meta tags. It also labels unattributed traffic accurately instead of implying every direct visit was typed manually.
+Version 3.7.53 is a focused pre-promotion quality release: the landing page is rendered in the requested language on the server, the tablet trust/report section no longer overflows, guide dates are synchronised, duplicate disclaimers are removed, and desktop navigation remains visible on more laptop-sized screens.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
+## Pre-promotion interface and international SEO fixes in v3.7.53
+
+- The initial HTML of `/?lang=en`, `fr`, `de`, `es` and `sr` now contains the requested language instead of Russian text replaced after JavaScript starts.
+- Language changes perform a normal page load, keeping visible text, title, description, canonical URL and `hreflang` consistent.
+- The trust/report section stacks at tablet widths and its children can shrink, preventing horizontal page overflow.
+- The full desktop navigation remains visible down to 1180 px instead of disappearing below 1400 px.
+- Every guide displays one editorial/legal-information notice instead of two overlapping notices.
+- Visible guide update dates, Article metadata and Sitemap `lastmod` are synchronised to 28 July 2026.
 
 
 
 
 
-## Context-aware Telegram opportunity detection in v3.7.52
+
+## Context-aware Telegram opportunity detection in v3.7.53
 
 - Detects natural descriptions of non-shipment, defective or damaged goods, wrong material/specification, shortages, refund refusal, seller disappearance, dispute rejection, certificate and customs problems.
 - Uses three signal groups: China/platform source, commercial problem, and help/transaction context.
@@ -19,7 +28,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - 88 broad positive/negative phrase cases are covered in addition to the existing live-monitor tests.
 
 
-## Natural document-upload guidance in v3.7.52
+## Natural document-upload guidance in v3.7.53
 
 - Natural Russian questions such as “Куда мне отправлять документы по спору?”, “Где загрузить материалы по делу?” and “Как прикрепить файлы с доказательствами?” are recognised locally without spending provider tokens.
 - Equivalent send, upload and attach wording is covered in every supported language.
@@ -70,7 +79,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.52 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.53 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -80,7 +89,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.52`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.53`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -471,7 +480,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.52
+cd ChinaTradeResolve_Document_AI_v3.7.53
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -629,7 +638,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.52 включает безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.53 включает безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

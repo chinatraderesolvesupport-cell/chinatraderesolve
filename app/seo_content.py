@@ -632,7 +632,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
                     'documents in the public chat.',
         'cta_button': 'Open the application form',
         'fine': 'Educational information, not legal advice. Check current platform rules and deadlines.',
-        'updated': 'Updated 24 July 2026',
+        'updated': 'Updated 28 July 2026',
         'related': 'Related guides',
         'home': 'Home'},
  'ru': {'all_guides': 'Все руководства',
@@ -642,7 +642,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
                     'публичный чат.',
         'cta_button': 'Перейти к заявке',
         'fine': 'Информационный материал, не юридическая консультация. Проверяйте актуальные правила площадки и сроки.',
-        'updated': 'Обновлено 24 июля 2026 года',
+        'updated': 'Обновлено 28 июля 2026 года',
         'related': 'Другие руководства',
         'home': 'Главная'},
  'fr': {'all_guides': 'Tous les guides',
@@ -653,7 +653,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
         'cta_button': 'Ouvrir le formulaire',
         'fine': 'Information générale, pas un conseil juridique. Vérifiez les règles et délais actuels de la '
                 'plateforme.',
-        'updated': 'Mis à jour le 24 juillet 2026',
+        'updated': 'Mis à jour le 28 juillet 2026',
         'related': 'Guides associés',
         'home': 'Accueil'},
  'de': {'all_guides': 'Alle Ratgeber',
@@ -663,7 +663,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
                     'vertraulichen Dokumente im öffentlichen Chat.',
         'cta_button': 'Antragsformular öffnen',
         'fine': 'Allgemeine Information, keine Rechtsberatung. Prüfen Sie aktuelle Plattformregeln und Fristen.',
-        'updated': 'Aktualisiert am 24. Juli 2026',
+        'updated': 'Aktualisiert am 28. Juli 2026',
         'related': 'Weitere Ratgeber',
         'home': 'Startseite'},
  'es': {'all_guides': 'Todas las guías',
@@ -674,7 +674,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
         'cta_button': 'Abrir el formulario',
         'fine': 'Información general, no asesoramiento jurídico. Compruebe las reglas y los plazos actuales de la '
                 'plataforma.',
-        'updated': 'Actualizado el 24 de julio de 2026',
+        'updated': 'Actualizado el 28 de julio de 2026',
         'related': 'Guías relacionadas',
         'home': 'Inicio'},
  'sr': {'all_guides': 'Svi vodiči',
@@ -684,7 +684,7 @@ GUIDE_DETAIL_COPY = {'en': {'all_guides': 'All guides',
                     'čet.',
         'cta_button': 'Otvori prijavni obrazac',
         'fine': 'Opšte informacije, ne pravni savet. Proverite aktuelna pravila platforme i rokove.',
-        'updated': 'Ažurirano 24. jula 2026.',
+        'updated': 'Ažurirano 28. jula 2026.',
         'related': 'Povezani vodiči',
         'home': 'Početna'}}
 
@@ -712,7 +712,7 @@ for _language, _labels in GUIDE_DETAIL_ACCESSIBILITY.items():
     GUIDE_DETAIL_COPY[_language].update(_labels)
 
 GUIDE_PUBLISHED_DATE = "2026-07-24"
-GUIDE_MODIFIED_DATE = "2026-07-24"
+GUIDE_MODIFIED_DATE = "2026-07-28"
 
 
 # Search-intent expansion for v3.7.49. These pages are deliberately published first
@@ -1124,4 +1124,10 @@ for _lang in ("fr", "de", "es", "sr"):
     }[_lang])
     GUIDE_DETAIL_COPY[_lang].setdefault("editorial_note", GUIDE_DETAIL_COPY[_lang]["fine"])
 
-GUIDE_MODIFIED_DATE = "2026-07-27"
+GUIDE_MODIFIED_DATE = "2026-07-28"
+
+# One visible editorial notice per guide; keep the message useful without duplication.
+GUIDE_DETAIL_COPY["fr"]["editorial_note"] = "Ce guide explique comment organiser les preuves et préparer les prochaines étapes pratiques. Il ne prédit pas l’issue du litige et ne remplace pas un conseil juridique. Vérifiez les règles et délais actuels de la plateforme."
+GUIDE_DETAIL_COPY["de"]["editorial_note"] = "Dieser Leitfaden erklärt, wie Sie Beweise ordnen und praktische nächste Schritte vorbereiten. Er sagt kein Ergebnis voraus und ersetzt keine Rechtsberatung. Prüfen Sie die aktuellen Plattformregeln und Fristen."
+GUIDE_DETAIL_COPY["es"]["editorial_note"] = "Esta guía explica cómo organizar las pruebas y preparar los siguientes pasos prácticos. No predice el resultado ni sustituye el asesoramiento jurídico. Compruebe las reglas y los plazos actuales de la plataforma."
+GUIDE_DETAIL_COPY["sr"]["editorial_note"] = "Ovaj vodič objašnjava kako da organizujete dokaze i pripremite praktične sledeće korake. Ne predviđa ishod i ne zamenjuje pravni savet. Proverite aktuelna pravila platforme i rokove."

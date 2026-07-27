@@ -502,7 +502,8 @@ def test_multilingual_frontend_assets_are_complete():
         assert f'value="{code}"' in home.text
     assert "/static/translations-v2.js" in home.text
     assert "ctr_lang_v20" in home.text
-    assert "navigator.languages" in home.text
+    assert "navigateToLanguage" in home.text
+    assert "navigator.languages" not in home.text
 
     translations = client.get("/static/translations-v2.json")
     assert translations.status_code == 200
@@ -2106,9 +2107,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.52"
+    assert health.json()["version"] == "3.7.53"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.52"
+    assert health.headers["x-app-version"] == "3.7.53"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -4706,7 +4707,7 @@ def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
     assert "<loc>http://127.0.0.1:8000/privacy</loc>" in sitemap.text
     assert "?lang=en" in sitemap.text
     assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in sitemap.text
-    assert '<lastmod>2026-07-27</lastmod>' in sitemap.text
+    assert '<lastmod>2026-07-28</lastmod>' in sitemap.text
     assert "/static/terms.html" not in sitemap.text
     assert "/admin" not in sitemap.text
     assert "/case/" not in sitemap.text
@@ -5227,7 +5228,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.52"
+    assert response.headers["x-app-version"] == "3.7.53"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5252,7 +5253,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.52"
+    assert response.json()["version"] == "3.7.53"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5308,11 +5309,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.52"
-    assert "v3.7.52" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.52" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.52" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.52" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.53"
+    assert "v3.7.53" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.53" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.53" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.53" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5426,8 +5427,48 @@ def test_v3749_search_intent_guides_are_substantial_and_indexable():
     for language in ("ru", "en", "fr", "de", "es", "sr"):
         assert f'/{language}/guides/supplier-not-refunding' in sitemap.text
         assert f'/{language}/guides/alibaba-dispute-closed-no-refund' in sitemap.text
-    assert '<lastmod>2026-07-27</lastmod>' in sitemap.text
+    assert '<lastmod>2026-07-28</lastmod>' in sitemap.text
 
+
+
+def test_v3753_landing_page_is_server_rendered_in_requested_language():
+    expected = {
+        "en": "Turn the dispute into facts and a clear next step.",
+        "fr": "Transformons le litige en faits et en prochaine étape claire.",
+        "de": "Wir ordnen den Streit nach Fakten und zeigen den nächsten Schritt.",
+        "es": "Ordenamos la disputa por hechos y mostramos el siguiente paso.",
+        "sr": "Razložićemo spor na činjenice i pokazati sledeći korak.",
+    }
+    russian_hero = "Разложим спор по фактам и покажем следующий шаг."
+    for language, hero in expected.items():
+        page = client.get(f"/?lang={language}")
+        assert page.status_code == 200
+        assert f'<html lang="{language}">' in page.text
+        assert f'<h1 data-i18n="hero_title">{hero}</h1>' in page.text
+        assert russian_hero not in page.text
+        assert "const pageMeta=" not in page.text
+        assert "navigateToLanguage" in page.text
+
+
+def test_v3753_tablet_layout_and_navigation_breakpoints_are_safe():
+    page = client.get("/?lang=ru")
+    assert page.status_code == 200
+    assert "@media(max-width:1040px){.trust-box{grid-template-columns:minmax(0,1fr)}.trust-box>*{min-width:0}}" in page.text
+    assert "@media(max-width:1180px){.links{display:none}.menu-btn{display:block}}" in page.text
+    assert "@media(max-width:1400px){.links{display:none}" not in page.text
+
+
+def test_v3753_guide_notice_and_dates_are_synchronised():
+    page = client.get("/fr/guides/supplier-not-refunding")
+    assert page.status_code == 200
+    assert page.text.count('class="fine"') == 1
+    assert "Mis à jour le 28 juillet 2026" in page.text
+    assert 'content="2026-07-28"' in page.text
+    assert '"dateModified": "2026-07-28"' in page.text
+    assert "Ce guide explique comment organiser les preuves" in page.text
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "<lastmod>2026-07-28</lastmod>" in sitemap.text
 
 def test_v3749_related_guides_are_limited_and_contextual():
     page = client.get('/ru/guides/supplier-not-refunding')

@@ -1,4 +1,4 @@
-# SEO и Google Search Console — действия после установки v3.7.52
+# SEO и Google Search Console — действия после установки v3.7.53
 
 ## Что уже сделано в коде
 

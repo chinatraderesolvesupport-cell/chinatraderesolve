@@ -219,8 +219,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .guides-preview-grid .card p{flex:1}
 .guide-card-link{display:inline-flex;align-items:center;gap:7px;margin-top:8px;color:var(--teal2);font-weight:900}
 .guides-preview-actions{display:flex;justify-content:flex-start;margin-top:22px}
-@media(max-width:1400px){.links{display:none}.menu-btn{display:block}}
-@media(max-width:980px){.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid{grid-template-columns:1fr 1fr}#stepOne.active{grid-template-columns:1fr 1fr}.step-one-problem,.step-one-actions{grid-column:1/-1}}
+@media(max-width:1180px){.links{display:none}.menu-btn{display:block}}
+@media(max-width:1040px){.trust-box{grid-template-columns:minmax(0,1fr)}.trust-box>*{min-width:0}}
+@media(max-width:980px){.hero-grid,.g4,.g3,.g2,.steps,.contact-grid{grid-template-columns:1fr 1fr}#stepOne.active{grid-template-columns:1fr 1fr}.step-one-problem,.step-one-actions{grid-column:1/-1}}
 @media(max-width:700px){body{padding-bottom:82px}.hero-grid,.g4,.g3,.g2,.steps,.trust-box,.contact-grid,.form-step.active,#stepOne.active{grid-template-columns:1fr}.full,.step-one-problem,.step-one-actions{grid-column:auto}.actions .primary,.actions>.lang{display:none}.brand{font-size:18px;gap:7px}.brand-logo{width:27px;height:27px;flex-basis:27px}.menu-btn{display:block;flex:0 0 auto}.actions{margin-left:auto}.mobile{display:flex;position:fixed;left:4%;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;text-align:center;width:92%;max-width:92%;min-width:0;white-space:normal}.hero{padding-top:50px}.mobile-panel .lang{display:block;width:100%;max-width:none;margin:8px 0 10px}.ai-chat-launcher.is-compact{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:52px;opacity:0;visibility:hidden;pointer-events:none}}
 
 .anchor-alias{display:block;position:relative;top:-130px;visibility:hidden}
@@ -285,8 +286,8 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 {% if turnstile_site_key %}<script nonce="{{ request.state.csp_nonce }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
 <body>
 {% if yandex_metrika_id %}<noscript><div><img src="https://mc.yandex.ru/watch/{{ yandex_metrika_id }}" class="metrika-pixel" alt=""></div></noscript>{% endif %}
-<a class="skip-link" href="#main-content" data-i18n="skip_content">Перейти к содержанию</a>
-<div class="prototype-banner" data-i18n="prototype">Ограниченный бесплатный доступ: заявки принимаются по мере доступной мощности.</div>
+<a class="skip-link" href="#main-content" data-i18n="skip_content">{{ home_copy['skip_content'] }}</a>
+<div class="prototype-banner" data-i18n="prototype">{{ home_copy['prototype'] }}</div>
 <header>
 <div class="wrap">
 <nav>
@@ -300,34 +301,34 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div>
 <div class="links">
-<a data-i18n="nav_services" href="#situations">Подходит ли вам</a>
-<a data-i18n="nav_process" href="#process">Как это работает</a>
-<a data-i18n="nav_pricing" href="#services">Что вы получите</a>
-<a data-i18n="nav_about" href="#about">О проекте</a>
-<a data-i18n="nav_faq" href="#faq">FAQ</a>
-<a class="guides-nav-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">Руководства</a>
-{% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
+<a data-i18n="nav_services" href="#situations">{{ home_copy['nav_services'] }}</a>
+<a data-i18n="nav_process" href="#process">{{ home_copy['nav_process'] }}</a>
+<a data-i18n="nav_pricing" href="#services">{{ home_copy['nav_pricing'] }}</a>
+<a data-i18n="nav_about" href="#about">{{ home_copy['nav_about'] }}</a>
+<a data-i18n="nav_faq" href="#faq">{{ home_copy['nav_faq'] }}</a>
+<a class="guides-nav-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>
+{% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy['nav_support'] }}</a>{% endif %}
 </div>
 <div class="actions">
-<select aria-label="Язык" class="lang" data-i18n-aria-label="language_label" id="langSelect">
+<select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="langSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
-<a class="btn primary" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
-<button aria-controls="mobilePanel" aria-expanded="false" aria-label="Открыть меню" class="menu-btn" data-i18n-aria-label="mobile_menu_open" id="menuBtn">☰</button>
+<a class="btn primary" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>
+<button aria-controls="mobilePanel" aria-expanded="false" aria-label="{{ home_copy['mobile_menu_open'] }}" class="menu-btn" data-i18n-aria-label="mobile_menu_open" id="menuBtn">☰</button>
 </div>
 </nav>
 <div class="mobile-panel" id="mobilePanel">
-<span class="mobile-lang-label" data-i18n="language_label">Язык</span>
-<select aria-label="Язык" class="lang" data-i18n-aria-label="language_label" id="mobileLangSelect">
+<span class="mobile-lang-label" data-i18n="language_label">{{ home_copy['language_label'] }}</span>
+<select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="mobileLangSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
-<a data-i18n="nav_services" href="#situations">Подходит ли вам</a>
-<a data-i18n="nav_process" href="#process">Как это работает</a>
-<a data-i18n="nav_pricing" href="#services">Что вы получите</a>
-<a data-i18n="nav_about" href="#about">О проекте</a>
-<a data-i18n="nav_faq" href="#faq">FAQ</a>
-<a class="guides-nav-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">Руководства</a>
-{% if support_enabled %}<a data-i18n="nav_support" href="#support">Поддержать</a>{% endif %}
+<a data-i18n="nav_services" href="#situations">{{ home_copy['nav_services'] }}</a>
+<a data-i18n="nav_process" href="#process">{{ home_copy['nav_process'] }}</a>
+<a data-i18n="nav_pricing" href="#services">{{ home_copy['nav_pricing'] }}</a>
+<a data-i18n="nav_about" href="#about">{{ home_copy['nav_about'] }}</a>
+<a data-i18n="nav_faq" href="#faq">{{ home_copy['nav_faq'] }}</a>
+<a class="guides-nav-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>
+{% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy['nav_support'] }}</a>{% endif %}
 </div>
 </div>
 </header>
@@ -335,175 +336,175 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <section class="hero">
 <div class="wrap hero-grid">
 <div>
-<div class="eyebrow" data-i18n="hero_eyebrow">Помощь в спорах с китайскими поставщиками</div>
-<h1 data-i18n="hero_title">Разложим спор по фактам и покажем следующий шаг.</h1>
-<p class="lead" data-i18n="hero_text">Опишите ситуацию без большого архива документов. Мы проверим, подходит ли дело, обозначим сильные и слабые стороны, недостающие доказательства и практичные следующие действия.</p>
+<div class="eyebrow" data-i18n="hero_eyebrow">{{ home_copy['hero_eyebrow'] }}</div>
+<h1 data-i18n="hero_title">{{ home_copy['hero_title'] }}</h1>
+<p class="lead" data-i18n="hero_text">{{ home_copy['hero_text'] }}</p>
 <div class="hero-buttons">
-<a class="btn primary" data-i18n="free_assessment" href="#submit">Отправить бесплатную заявку</a>
-<a class="btn" data-i18n="how_it_works" href="#process">Как это работает</a>
+<a class="btn primary" data-i18n="free_assessment" href="#submit">{{ home_copy['free_assessment'] }}</a>
+<a class="btn" data-i18n="how_it_works" href="#process">{{ home_copy['how_it_works'] }}</a>
 </div>
 <div class="trust-pills">
-<span data-i18n="trust_marker1">Проверяется человеком</span>
-<span data-i18n="trust_marker2">Конфиденциальный подход</span>
-<span data-i18n="trust_marker3">Без гарантии результата</span>
+<span data-i18n="trust_marker1">{{ home_copy['trust_marker1'] }}</span>
+<span data-i18n="trust_marker2">{{ home_copy['trust_marker2'] }}</span>
+<span data-i18n="trust_marker3">{{ home_copy['trust_marker3'] }}</span>
 </div>
-<div class="note" data-i18n="languages_note">Заявку можно подать на английском, французском, немецком, испанском, русском или сербском языке. Ключевые документы запрашиваются только после отбора.</div>
+<div class="note" data-i18n="languages_note">{{ home_copy['languages_note'] }}</div>
 </div>
 <aside class="hero-card">
-<div class="eyebrow" data-i18n="example_case">Пример обзора дела</div>
-<div class="row"><div class="label" data-i18n="issue">Проблема</div><div class="value" data-i18n="issue_value">Товар не соответствует спецификации</div></div>
-<div class="row"><div class="label" data-i18n="evidence">Доказательства</div><div class="value" data-i18n="evidence_items">Заказ · Инвойс · Переписка · Фотографии</div></div>
-<div class="row"><div class="label" data-i18n="status">Статус</div><div class="value status" data-i18n="status_value">Идёт анализ доказательств</div></div>
-<div class="row"><div class="label" data-i18n="next_step">Следующий шаг</div><div class="value" data-i18n="next_step_value">Письменная оценка и чек-лист действий</div></div>
+<div class="eyebrow" data-i18n="example_case">{{ home_copy['example_case'] }}</div>
+<div class="row"><div class="label" data-i18n="issue">{{ home_copy['issue'] }}</div><div class="value" data-i18n="issue_value">{{ home_copy['issue_value'] }}</div></div>
+<div class="row"><div class="label" data-i18n="evidence">{{ home_copy['evidence'] }}</div><div class="value" data-i18n="evidence_items">{{ home_copy['evidence_items'] }}</div></div>
+<div class="row"><div class="label" data-i18n="status">{{ home_copy['status'] }}</div><div class="value status" data-i18n="status_value">{{ home_copy['status_value'] }}</div></div>
+<div class="row"><div class="label" data-i18n="next_step">{{ home_copy['next_step'] }}</div><div class="value" data-i18n="next_step_value">{{ home_copy['next_step_value'] }}</div></div>
 </aside>
 </div>
 </section>
 <section id="situations">
 <div class="wrap">
-<div class="eyebrow" data-i18n="choose_situation">Выберите ситуацию</div>
-<h2 data-i18n="what_happened">Что произошло?</h2>
+<div class="eyebrow" data-i18n="choose_situation">{{ home_copy['choose_situation'] }}</div>
+<h2 data-i18n="what_happened">{{ home_copy['what_happened'] }}</h2>
 <div class="grid g4">
-<div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">Спор уже открыт</h3><p data-i18n="s1_text">Поставщик отказывается решать проблему или площадка отклонила претензию.</p></div>
-<div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">Товар не доставлен</h3><p data-i18n="s2_text">Отгрузка задержана, отменена или поставщик перестал отвечать.</p></div>
-<div class="card"><div class="icon">03</div><h3 data-i18n="s3_title">Проблема качества или спецификации</h3><p data-i18n="s3_text">Товар неисправен, неполный или отличается от заказа.</p></div>
-<div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">Поставщик отказывается вернуть деньги</h3><p data-i18n="s4_text">Проблема подтверждена, но поставщик затягивает решение или предлагает неприемлемые условия.</p></div>
+<div class="card"><div class="icon">01</div><h3 data-i18n="s1_title">{{ home_copy['s1_title'] }}</h3><p data-i18n="s1_text">{{ home_copy['s1_text'] }}</p></div>
+<div class="card"><div class="icon">02</div><h3 data-i18n="s2_title">{{ home_copy['s2_title'] }}</h3><p data-i18n="s2_text">{{ home_copy['s2_text'] }}</p></div>
+<div class="card"><div class="icon">03</div><h3 data-i18n="s3_title">{{ home_copy['s3_title'] }}</h3><p data-i18n="s3_text">{{ home_copy['s3_text'] }}</p></div>
+<div class="card"><div class="icon">04</div><h3 data-i18n="s4_title">{{ home_copy['s4_title'] }}</h3><p data-i18n="s4_text">{{ home_copy['s4_text'] }}</p></div>
 </div>
 </div>
 </section>
 <section class="light" id="services">
 <span class="anchor-alias" id="free-access" aria-hidden="true"></span>
 <div class="wrap">
-<div class="eyebrow" data-i18n="services_eyebrow">Что входит в предварительную оценку материалов</div>
-<h2 data-i18n="services_title">Один понятный результат без завышенных обещаний</h2>
-<p class="intro" data-i18n="services_note">Если заявка подходит по профилю и объёму, вы получите ограниченный первичный анализ. Полное ведение спора и общение от вашего имени в бесплатный объём не входят.</p>
+<div class="eyebrow" data-i18n="services_eyebrow">{{ home_copy['services_eyebrow'] }}</div>
+<h2 data-i18n="services_title">{{ home_copy['services_title'] }}</h2>
+<p class="intro" data-i18n="services_note">{{ home_copy['services_note'] }}</p>
 <div class="service-layout">
 <div>
-<div class="pilot-badge" data-i18n="pilot_badge">Бесплатно · без больших загрузок · приём с учётом доступной мощности</div>
+<div class="pilot-badge" data-i18n="pilot_badge">{{ home_copy['pilot_badge'] }}</div>
 <div class="grid g2 compact-grid">
-<div class="card"><h3 data-i18n="receive1">Краткая оценка позиции</h3><p data-i18n="receive1_text">Основные факты, сильные и слабые стороны вашей позиции.</p></div>
-<div class="card"><h3 data-i18n="receive2">Недостающие доказательства</h3><p data-i18n="receive2_text">Что необходимо найти или уточнить до продолжения спора.</p></div>
-<div class="card"><h3 data-i18n="receive3">Рекомендуемые действия</h3><p data-i18n="receive3_text">Понятный чек-лист следующих шагов без гарантии результата.</p></div>
-<div class="card"><h3 data-i18n="receive4">Одно уточнение</h3><p data-i18n="receive4_text">Один короткий раунд вопросов после выдачи первичной оценки.</p></div>
+<div class="card"><h3 data-i18n="receive1">{{ home_copy['receive1'] }}</h3><p data-i18n="receive1_text">{{ home_copy['receive1_text'] }}</p></div>
+<div class="card"><h3 data-i18n="receive2">{{ home_copy['receive2'] }}</h3><p data-i18n="receive2_text">{{ home_copy['receive2_text'] }}</p></div>
+<div class="card"><h3 data-i18n="receive3">{{ home_copy['receive3'] }}</h3><p data-i18n="receive3_text">{{ home_copy['receive3_text'] }}</p></div>
+<div class="card"><h3 data-i18n="receive4">{{ home_copy['receive4'] }}</h3><p data-i18n="receive4_text">{{ home_copy['receive4_text'] }}</p></div>
 </div>
 </div>
 <aside class="scope-card">
-<h3 data-i18n="pilot_limits_title">Границы предварительной оценки</h3>
+<h3 data-i18n="pilot_limits_title">{{ home_copy['pilot_limits_title'] }}</h3>
 <ul class="pilot-list">
-<li data-i18n="pilot_limit2">Мы не общаемся с поставщиком или площадкой от вашего имени.</li>
-<li data-i18n="pilot_limit3">Не принимаются срочные судебные, арбитражные дела и дела с истекающими сроками.</li>
-<li data-i18n="pilot_limit4">Сначала нужно только описание; после отбора — до 20 ключевых файлов.</li>
-<li data-i18n="pilot_limit5">Принятие зависит от профиля дела, доказательств и доступной мощности.</li>
+<li data-i18n="pilot_limit2">{{ home_copy['pilot_limit2'] }}</li>
+<li data-i18n="pilot_limit3">{{ home_copy['pilot_limit3'] }}</li>
+<li data-i18n="pilot_limit4">{{ home_copy['pilot_limit4'] }}</li>
+<li data-i18n="pilot_limit5">{{ home_copy['pilot_limit5'] }}</li>
 </ul>
-<div class="pilot-limit" data-i18n="pilot_selection">Подача заявки не гарантирует принятие. Если дело вне компетенции или требует срочной юридической помощи, мы прямо сообщим об этом.</div>
+<div class="pilot-limit" data-i18n="pilot_selection">{{ home_copy['pilot_selection'] }}</div>
 </aside>
 </div>
 </div>
 </section>
 <section class="navy" id="process">
 <div class="wrap">
-<div class="eyebrow" data-i18n="process_eyebrow">Как это работает</div>
-<h2 data-i18n="process_title">От краткого описания к ясному плану действий</h2>
+<div class="eyebrow" data-i18n="process_eyebrow">{{ home_copy['process_eyebrow'] }}</div>
+<h2 data-i18n="process_title">{{ home_copy['process_title'] }}</h2>
 <div class="steps">
-<div class="step" data-n="1"><h3 data-i18n="step1">Заявка</h3><p data-i18n="step1_text">Отправьте основные факты без загрузки документов.</p></div>
-<div class="step" data-n="2"><h3 data-i18n="step2">Отбор и документы</h3><p data-i18n="step2_text">Если дело подходит, мы запросим до 20 ключевых файлов.</p></div>
-<div class="step" data-n="3"><h3 data-i18n="step3">Разбор доказательств</h3><p data-i18n="step3_text">Сопоставим документы, даты, обещания и противоречия.</p></div>
-<div class="step" data-n="4"><h3 data-i18n="step4">Письменный результат</h3><p data-i18n="step4_text">Вы получите оценку позиции, недостающих доказательств и следующих действий.</p></div>
+<div class="step" data-n="1"><h3 data-i18n="step1">{{ home_copy['step1'] }}</h3><p data-i18n="step1_text">{{ home_copy['step1_text'] }}</p></div>
+<div class="step" data-n="2"><h3 data-i18n="step2">{{ home_copy['step2'] }}</h3><p data-i18n="step2_text">{{ home_copy['step2_text'] }}</p></div>
+<div class="step" data-n="3"><h3 data-i18n="step3">{{ home_copy['step3'] }}</h3><p data-i18n="step3_text">{{ home_copy['step3_text'] }}</p></div>
+<div class="step" data-n="4"><h3 data-i18n="step4">{{ home_copy['step4'] }}</h3><p data-i18n="step4_text">{{ home_copy['step4_text'] }}</p></div>
 </div>
 </div>
 </section>
 <section id="about">
 <div class="wrap">
-<div class="eyebrow" data-i18n="trust_eyebrow">Доверие и прозрачность</div>
-<h2 data-i18n="trust_title">Кто и как будет работать с вашей заявкой</h2>
+<div class="eyebrow" data-i18n="trust_eyebrow">{{ home_copy['trust_eyebrow'] }}</div>
+<h2 data-i18n="trust_title">{{ home_copy['trust_title'] }}</h2>
 <div class="trust-box">
 <div class="operator">
-<strong data-i18n="operator_title">Независимый сервис ChinaTradeResolve</strong>
-<p data-i18n="operator_text">Проект работает из Сербии и помогает структурировать коммерческие споры с китайскими поставщиками. ChinaTradeResolve не является юридической фирмой и не представляет клиентов в суде.</p>
-<p class="operator-profile" data-i18n="operator_payment_note">Платные услуги пока не предоставляются. Документы загружаются только на закрытой странице дела. Добровольная поддержка не влияет на решение или приоритет.</p>
+<strong data-i18n="operator_title">{{ home_copy['operator_title'] }}</strong>
+<p data-i18n="operator_text">{{ home_copy['operator_text'] }}</p>
+<p class="operator-profile" data-i18n="operator_payment_note">{{ home_copy['operator_payment_note'] }}</p>
 <ul class="operator-facts">
 <li><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></li>
 {% if operator_credentials %}<li>{{ operator_credentials }}</li>{% endif %}
 {% if operator_registration %}<li>{{ operator_registration }}</li>{% endif %}
-<li data-i18n="hours_text">Понедельник–пятница, 09:00–17:00 по времени Белграда (CET/CEST). Первичный ответ — в течение 2 рабочих дней.</li>
-<li data-i18n="operator_placeholder">Важные выводы проверяются человеком. Никакие документы не отправляются поставщику, площадке или другой третьей стороне без согласованного с вами действия.</li>
+<li data-i18n="hours_text">{{ home_copy['hours_text'] }}</li>
+<li data-i18n="operator_placeholder">{{ home_copy['operator_placeholder'] }}</li>
 </ul>
-<div class="trust-note" data-i18n="ai_text">ИИ может помогать организовывать материалы и отвечать на общие вопросы. Финальные выводы и исходящие документы требуют человеческой проверки.</div>
+<div class="trust-note" data-i18n="ai_text">{{ home_copy['ai_text'] }}</div>
 </div>
 <div class="sample">
 <div class="sample-page">
 <div class="sample-header">
-<div><strong data-i18n="sample_title">Пример оценки дела</strong><div class="mini" data-i18n="sample_sub">Обезличенный пример результата</div></div>
-<div class="sample-score" data-i18n="sample_status">Проверено человеком</div>
+<div><strong data-i18n="sample_title">{{ home_copy['sample_title'] }}</strong><div class="mini" data-i18n="sample_sub">{{ home_copy['sample_sub'] }}</div></div>
+<div class="sample-score" data-i18n="sample_status">{{ home_copy['sample_status'] }}</div>
 </div>
-<div class="sample-tags"><span data-i18n="sample_tag1">Хронология</span><span data-i18n="sample_tag2">Индекс доказательств</span><span data-i18n="sample_tag3">Анализ рисков</span></div>
-<div class="sample-table-wrap" role="region" tabindex="0" aria-label="Таблица примера доказательств" data-i18n-aria-label="sample_table_label" aria-describedby="tableSwipeHint">
+<div class="sample-tags"><span data-i18n="sample_tag1">{{ home_copy['sample_tag1'] }}</span><span data-i18n="sample_tag2">{{ home_copy['sample_tag2'] }}</span><span data-i18n="sample_tag3">{{ home_copy['sample_tag3'] }}</span></div>
+<div class="sample-table-wrap" role="region" tabindex="0" aria-label="{{ home_copy['sample_table_label'] }}" data-i18n-aria-label="sample_table_label" aria-describedby="tableSwipeHint">
 <table>
-<tr><th data-i18n="table_issue">Проблема</th><th data-i18n="table_evidence">Доказательства</th><th data-i18n="table_risk">Риск</th></tr>
-<tr><td data-i18n="table_row1">Неверный материал</td><td data-i18n="table_row2">EX-03 заказ + EX-07 сообщение поставщика</td><td data-i18n="table_row3">Терминология может оспариваться</td></tr>
-<tr><td data-i18n="table_row4">Недостающий компонент</td><td data-i18n="table_row5">EX-02 инвойс + EX-11 фотографии</td><td data-i18n="table_row6">Нужно подтвердить финальную спецификацию</td></tr>
+<tr><th data-i18n="table_issue">{{ home_copy['table_issue'] }}</th><th data-i18n="table_evidence">{{ home_copy['table_evidence'] }}</th><th data-i18n="table_risk">{{ home_copy['table_risk'] }}</th></tr>
+<tr><td data-i18n="table_row1">{{ home_copy['table_row1'] }}</td><td data-i18n="table_row2">{{ home_copy['table_row2'] }}</td><td data-i18n="table_row3">{{ home_copy['table_row3'] }}</td></tr>
+<tr><td data-i18n="table_row4">{{ home_copy['table_row4'] }}</td><td data-i18n="table_row5">{{ home_copy['table_row5'] }}</td><td data-i18n="table_row6">{{ home_copy['table_row6'] }}</td></tr>
 </table>
-</div><p class="table-swipe-hint" data-i18n="table_swipe_hint" id="tableSwipeHint">Проведите по таблице в сторону, чтобы увидеть все столбцы.</p>
+</div><p class="table-swipe-hint" data-i18n="table_swipe_hint" id="tableSwipeHint">{{ home_copy['table_swipe_hint'] }}</p>
 </div>
-<a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">Открыть пример отчёта</a>
+<a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">{{ home_copy['view_sample'] }}</a>
 </div>
 </div>
 </div>
 </section>
 <section id="submit">
 <div class="wrap">
-<div class="eyebrow" data-i18n="form_eyebrow">Бесплатная заявка</div>
-<h2 data-i18n="form_title">Подайте заявку на предварительную оценку материалов</h2>
-<p class="intro" data-i18n="form_intro">Начните с краткого описания. После отправки на закрытой странице дела можно безопасно добавить до 20 ключевых документов.</p>
-<div class="form-speed" data-i18n="form_speed">Около 3–5 минут · Без платы за услуги · Можно написать или рассказать голосом</div>
-{% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">Автоматическая систематизация документов доступна после загрузки и отдельного согласия.</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">Сейчас документы проверяются вручную; автоматический анализ не подключён.</div>{% endif %}
+<div class="eyebrow" data-i18n="form_eyebrow">{{ home_copy['form_eyebrow'] }}</div>
+<h2 data-i18n="form_title">{{ home_copy['form_title'] }}</h2>
+<p class="intro" data-i18n="form_intro">{{ home_copy['form_intro'] }}</p>
+<div class="form-speed" data-i18n="form_speed">{{ home_copy['form_speed'] }}</div>
+{% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">{{ home_copy['document_analysis_available'] }}</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">{{ home_copy['document_analysis_manual'] }}</div>{% endif %}
 <div class="form-shell">
-<div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">Основные данные</span><span data-i18n="form_stage2" id="label2">Информация о деле</span></div>
+<div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">{{ home_copy['form_stage1'] }}</span><span data-i18n="form_stage2" id="label2">{{ home_copy['form_stage2'] }}</span></div>
 <div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
 <form id="caseForm" novalidate="">
 <div class="form-step active" id="stepOne">
-<div class="field"><label data-i18n="full_name" for="fullName">Имя и фамилия</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
-<div class="field"><label data-i18n="email_label" for="email">Электронная почта</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
-<div class="field"><label data-i18n="country" for="country">Страна</label><input autocomplete="country-name" id="country" name="country"/></div>
-<div class="field"><label data-i18n="preferred_lang" for="preferred">Предпочитаемый язык</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">Английский</option><option data-i18n="opt_french" value="French">Французский</option><option data-i18n="opt_german" value="German">Немецкий</option><option data-i18n="opt_spanish" value="Spanish">Испанский</option><option data-i18n="opt_russian" value="Russian">Русский</option><option data-i18n="opt_serbian" value="Serbian">Сербский</option></select></div>
-<div class="field"><label data-i18n="channel" for="channel">Канал покупки</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">Прямой договор с поставщиком</option><option data-i18n="opt_other" value="Other">Другое</option></select></div>
-<div class="field"><label data-i18n="amount" for="amountDispute">Сумма, которую вы хотите вернуть</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="например, EUR 4 000"/></div>
-<div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">Основная проблема</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">Товар не доставлен</option><option data-i18n="opt_problem2" value="Poor quality or defects">Низкое качество или дефекты</option><option data-i18n="opt_problem3" value="Wrong material or specification">Неверный материал или спецификация</option><option data-i18n="opt_problem4" value="Questionable documents">Сомнительные документы</option><option data-i18n="opt_problem5" value="Supplier refuses refund">Поставщик отказывается возвращать деньги</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">Площадка отклонила претензию</option><option data-i18n="opt_problem_other" value="Other or multiple issues">Другая или несколько проблем</option></select></div>
-<div class="field full"><div class="error" data-i18n="form_error" hidden id="stepError">Укажите имя и корректный email.</div></div>
-<div class="field form-actions step-one-actions"><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">Продолжить</button></div>
+<div class="field"><label data-i18n="full_name" for="fullName">{{ home_copy['full_name'] }}</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
+<div class="field"><label data-i18n="email_label" for="email">{{ home_copy['email_label'] }}</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
+<div class="field"><label data-i18n="country" for="country">{{ home_copy['country'] }}</label><input autocomplete="country-name" id="country" name="country"/></div>
+<div class="field"><label data-i18n="preferred_lang" for="preferred">{{ home_copy['preferred_lang'] }}</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">{{ home_copy['opt_english'] }}</option><option data-i18n="opt_french" value="French">{{ home_copy['opt_french'] }}</option><option data-i18n="opt_german" value="German">{{ home_copy['opt_german'] }}</option><option data-i18n="opt_spanish" value="Spanish">{{ home_copy['opt_spanish'] }}</option><option data-i18n="opt_russian" value="Russian">{{ home_copy['opt_russian'] }}</option><option data-i18n="opt_serbian" value="Serbian">{{ home_copy['opt_serbian'] }}</option></select></div>
+<div class="field"><label data-i18n="channel" for="channel">{{ home_copy['channel'] }}</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">{{ home_copy['opt_direct'] }}</option><option data-i18n="opt_other" value="Other">{{ home_copy['opt_other'] }}</option></select></div>
+<div class="field"><label data-i18n="amount" for="amountDispute">{{ home_copy['amount'] }}</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="{{ home_copy['amount_ph'] }}"/></div>
+<div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">{{ home_copy['main_problem'] }}</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">{{ home_copy['opt_problem1'] }}</option><option data-i18n="opt_problem2" value="Poor quality or defects">{{ home_copy['opt_problem2'] }}</option><option data-i18n="opt_problem3" value="Wrong material or specification">{{ home_copy['opt_problem3'] }}</option><option data-i18n="opt_problem4" value="Questionable documents">{{ home_copy['opt_problem4'] }}</option><option data-i18n="opt_problem5" value="Supplier refuses refund">{{ home_copy['opt_problem5'] }}</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">{{ home_copy['opt_problem6'] }}</option><option data-i18n="opt_problem_other" value="Other or multiple issues">{{ home_copy['opt_problem_other'] }}</option></select></div>
+<div class="field full"><div class="error" data-i18n="form_error" hidden id="stepError">{{ home_copy['form_error'] }}</div></div>
+<div class="field form-actions step-one-actions"><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">{{ home_copy['continue'] }}</button></div>
 </div>
 <div class="form-step" id="stepTwo">
-<div class="form-choice-intro"><strong data-i18n="description_mode_title">Как вам удобнее описать ситуацию?</strong><span data-i18n="description_mode_text">Напишите в поле ниже или нажмите «Рассказать голосом». Расшифровку можно исправить перед отправкой.</span></div>
-<div class="field full description-field"><label data-i18n="description" for="description">Краткое описание</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="Дата заказа, сумма оплаты, обещания поставщика, что пошло не так и какого результата вы добиваетесь." required=""></textarea>{% if voice_input_enabled %}<button aria-label="Рассказать ситуацию голосом" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">Рассказать ситуацию голосом</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">До 2 минут · текст можно исправить</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">Опишите ситуацию минимум в 50 символах, чтобы заявку можно было ответственно проверить.</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">Можно рассказать ситуацию голосом. Расшифровка появится в поле, и её можно будет исправить перед отправкой.</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">Я согласен передать запись ИИ-провайдеру только для расшифровки. Аудио не сохраняется в базе дел.</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
-<div class="field"><label data-i18n="supplier_name" for="supplierName">Поставщик или компания</label><input id="supplierName" name="supplier_name"/></div>
-<div class="field"><label data-i18n="order_number" for="orderNumber">Номер заказа</label><input id="orderNumber" name="order_number"/></div>
-<div class="field"><label data-i18n="order_value" for="orderValue">Полная стоимость заказа</label><input id="orderValue" name="order_value"/></div>
-<div class="field"><label data-i18n="requested_result" for="requestedResult">Желаемый результат</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">Полный возврат</option><option data-i18n="opt_result2" value="Partial refund">Частичный возврат</option><option data-i18n="opt_result3" value="Replacement">Замена</option><option data-i18n="opt_result4" value="Completion of order">Завершение исполнения заказа</option><option data-i18n="opt_result5" value="Negotiated settlement">Согласованное урегулирование</option><option data-i18n="opt_result6" value="Not sure">Пока не уверен</option></select></div>
-<div class="field full filebox"><label data-i18n="upload">До отправки заявки документы не требуются</label><div class="hint" data-i18n="upload_hint">После отправки используйте закрытую ссылку статуса, чтобы загрузить до 20 ключевых PDF или изображений.</div></div>
-<aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">Перед отправкой</h3><p data-i18n="submit_summary_data">Мы сохраним контактные данные, сведения о покупке и споре, описание ситуации и выбранные согласия. Документы на этом шаге не передаются; при выборе ИИ-помощи текст заявки может обрабатываться настроенным ИИ-провайдером.</p><p data-i18n="submit_summary_response">Ориентир первого ответа человека — в течение 2 рабочих дней.</p></aside>
+<div class="form-choice-intro"><strong data-i18n="description_mode_title">{{ home_copy['description_mode_title'] }}</strong><span data-i18n="description_mode_text">{{ home_copy['description_mode_text'] }}</span></div>
+<div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
+<div class="field"><label data-i18n="supplier_name" for="supplierName">{{ home_copy['supplier_name'] }}</label><input id="supplierName" name="supplier_name"/></div>
+<div class="field"><label data-i18n="order_number" for="orderNumber">{{ home_copy['order_number'] }}</label><input id="orderNumber" name="order_number"/></div>
+<div class="field"><label data-i18n="order_value" for="orderValue">{{ home_copy['order_value'] }}</label><input id="orderValue" name="order_value"/></div>
+<div class="field"><label data-i18n="requested_result" for="requestedResult">{{ home_copy['requested_result'] }}</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">{{ home_copy['opt_result1'] }}</option><option data-i18n="opt_result2" value="Partial refund">{{ home_copy['opt_result2'] }}</option><option data-i18n="opt_result3" value="Replacement">{{ home_copy['opt_result3'] }}</option><option data-i18n="opt_result4" value="Completion of order">{{ home_copy['opt_result4'] }}</option><option data-i18n="opt_result5" value="Negotiated settlement">{{ home_copy['opt_result5'] }}</option><option data-i18n="opt_result6" value="Not sure">{{ home_copy['opt_result6'] }}</option></select></div>
+<div class="field full filebox"><label data-i18n="upload">{{ home_copy['upload'] }}</label><div class="hint" data-i18n="upload_hint">{{ home_copy['upload_hint'] }}</div></div>
+<aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">{{ home_copy['submit_summary_title'] }}</h3><p data-i18n="submit_summary_data">{{ home_copy['submit_summary_data'] }}</p><p data-i18n="submit_summary_response">{{ home_copy['submit_summary_response'] }}</p></aside>
 <div class="consent-group">
-<div class="consent-row"><label><input name="free_access_terms" required="" type="checkbox"/><span data-i18n="pilot_consent">Я понимаю, что сервис сейчас бесплатный, принятие зависит от профиля дела и доступной мощности, а подача заявки не гарантирует принятие.</span></label></div>
-<div class="consent-row"><label><input name="sharing_authority" required="" type="checkbox"/><span data-i18n="consent1">Я подтверждаю, что имею право передавать указанную информацию и документы.</span></label></div>
-<div class="consent-row"><label><input name="ai_consent" type="checkbox"/><span data-i18n="consent2">Я добровольно разрешаю ИИ-помощь при обязательной человеческой проверке. Без согласия заявка будет обработана правилами и, при необходимости, вручную.</span></label></div>
-<div class="consent-row"><label><input name="no_guarantee" required="" type="checkbox"/><span data-i18n="consent3">Я понимаю, что ChinaTradeResolve не гарантирует возврат средств или конкретный результат.</span></label></div>
+<div class="consent-row"><label><input name="free_access_terms" required="" type="checkbox"/><span data-i18n="pilot_consent">{{ home_copy['pilot_consent'] }}</span></label></div>
+<div class="consent-row"><label><input name="sharing_authority" required="" type="checkbox"/><span data-i18n="consent1">{{ home_copy['consent1'] }}</span></label></div>
+<div class="consent-row"><label><input name="ai_consent" type="checkbox"/><span data-i18n="consent2">{{ home_copy['consent2'] }}</span></label></div>
+<div class="consent-row"><label><input name="no_guarantee" required="" type="checkbox"/><span data-i18n="consent3">{{ home_copy['consent3'] }}</span></label></div>
 </div>
-<div aria-live="polite" class="form-readiness" data-i18n="form_incomplete_status" id="formReadiness" role="status">Заполните обязательные поля, отметьте три обязательных согласия и завершите проверку безопасности.</div>
-{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-callback="ctrApplicationTurnstileSuccess" data-error-callback="ctrApplicationTurnstileError" data-expired-callback="ctrApplicationTurnstileExpired" data-response-field-name="cf-turnstile-response" data-size="flexible" data-sitekey="{{ turnstile_site_key }}" data-timeout-callback="ctrApplicationTurnstileTimeout" data-unsupported-callback="ctrApplicationTurnstileUnsupported" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_loading" id="applicationTurnstileStatus" role="status">Загружаю проверку безопасности…</div></div>{% endif %}
+<div aria-live="polite" class="form-readiness" data-i18n="form_incomplete_status" id="formReadiness" role="status">{{ home_copy['form_incomplete_status'] }}</div>
+{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-callback="ctrApplicationTurnstileSuccess" data-error-callback="ctrApplicationTurnstileError" data-expired-callback="ctrApplicationTurnstileExpired" data-response-field-name="cf-turnstile-response" data-size="flexible" data-sitekey="{{ turnstile_site_key }}" data-timeout-callback="ctrApplicationTurnstileTimeout" data-unsupported-callback="ctrApplicationTurnstileUnsupported" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_loading" id="applicationTurnstileStatus" role="status">{{ home_copy['application_turnstile_loading'] }}</div></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
-<div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">Назад</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">Отправить бесплатную заявку</button></div>
+<div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">{{ home_copy['back'] }}</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">{{ home_copy['submit_review'] }}</button></div>
 </div>
 </form>
 <div id="confirmation" hidden tabindex="-1">
-<h3 data-i18n="received">Бесплатная заявка сохранена</h3>
-<p data-i18n="received_text">Заявка сохранена и автоматически проверена.</p>
+<h3 data-i18n="received">{{ home_copy['received'] }}</h3>
+<p data-i18n="received_text">{{ home_copy['received_text'] }}</p>
 <div class="notice"><strong id="caseNumber"></strong><div class="case-decision" id="caseDecision"></div></div>
 <div class="private-access">
-  <strong data-i18n="private_link_title">Сохраните приватную ссылку</strong>
-  <p data-i18n="private_link_warning">Без этой ссылки нельзя повторно открыть дело и документы. Не пересылайте её посторонним.</p>
-  <label for="privateStatusUrl" data-i18n="private_link_label">Приватная ссылка дела</label>
-  <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">Скопировать ссылку</button></div>
+  <strong data-i18n="private_link_title">{{ home_copy['private_link_title'] }}</strong>
+  <p data-i18n="private_link_warning">{{ home_copy['private_link_warning'] }}</p>
+  <label for="privateStatusUrl" data-i18n="private_link_label">{{ home_copy['private_link_label'] }}</label>
+  <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">{{ home_copy['copy_private_link'] }}</button></div>
   <div class="copy-result" id="copyResult" role="status" aria-live="polite"></div>
   <p class="email-state" id="emailDeliveryState"></p>
-  <div class="status-link-row"><a class="btn dark" data-i18n="view_case_status" hidden id="statusLink">Посмотреть статус дела</a></div>
+  <div class="status-link-row"><a class="btn dark" data-i18n="view_case_status" hidden id="statusLink">{{ home_copy['view_case_status'] }}</a></div>
 </div>
 </div>
 </div>
@@ -513,10 +514,10 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="wrap">
 <div class="support-box">
 <div>
-<div class="eyebrow" data-i18n="support_eyebrow">Добровольная поддержка</div>
-<h2 data-i18n="support_title">Если ChinaTradeResolve помог вам, можно поддержать развитие проекта</h2>
-<p class="intro" data-i18n="support_text">Основная заявка рассматривается без оплаты. Поддержка проекта полностью добровольна и не является оплатой предварительной оценки.</p>
-<p class="support-methods-label" data-i18n="support_methods">Доступные способы добровольной поддержки</p>
+<div class="eyebrow" data-i18n="support_eyebrow">{{ home_copy['support_eyebrow'] }}</div>
+<h2 data-i18n="support_title">{{ home_copy['support_title'] }}</h2>
+<p class="intro" data-i18n="support_text">{{ home_copy['support_text'] }}</p>
+<p class="support-methods-label" data-i18n="support_methods">{{ home_copy['support_methods'] }}</p>
 <div class="support-methods">
 {% if paypal_support_enabled %}
 <a class="support-method" data-lang-link href="/support#paypal"><span class="payment-icon paypal" aria-hidden="true">P</span><span>PayPal</span></a>
@@ -524,46 +525,46 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 {% if crypto_wallets %}
 <a class="support-method" data-lang-link href="/support#crypto">
 <span class="payment-icon crypto" aria-hidden="true">◈</span>
-<span data-i18n="support_crypto_method">Криптовалюта</span>
+<span data-i18n="support_crypto_method">{{ home_copy['support_crypto_method'] }}</span>
 </a>
 {% endif %}
 </div>
-<a class="btn primary" data-i18n="support_button" data-lang-link href="/support">Поддержать проект</a>
+<a class="btn primary" data-i18n="support_button" data-lang-link href="/support">{{ home_copy['support_button'] }}</a>
 </div>
 <div class="support-card">
-<h3 data-i18n="support_rules_title">Поддержка ничего не меняет в обслуживании</h3>
+<h3 data-i18n="support_rules_title">{{ home_copy['support_rules_title'] }}</h3>
 <ul>
-<li data-i18n="support_rule1">Она не влияет на принятие дела или приоритет.</li>
-<li data-i18n="support_rule2">Она не покупает результат, возврат средств или благоприятную оценку.</li>
-<li data-i18n="support_rule3">Это только добровольный способ помочь покрыть расходы проекта.</li>
+<li data-i18n="support_rule1">{{ home_copy['support_rule1'] }}</li>
+<li data-i18n="support_rule2">{{ home_copy['support_rule2'] }}</li>
+<li data-i18n="support_rule3">{{ home_copy['support_rule3'] }}</li>
 </ul>
-<p class="support-note" data-i18n="support_notice">Добровольная поддержка обрабатывается отдельно и не влияет на рассмотрение дела.</p>
+<p class="support-note" data-i18n="support_notice">{{ home_copy['support_notice'] }}</p>
 </div>
 </div>
 </div>
 </section>{% endif %}
 <section id="guides-preview">
 <div class="wrap">
-<div class="eyebrow" data-i18n="guides_preview_eyebrow">Полезные материалы</div>
-<h2 data-i18n="guides_preview_title">Начните с подходящего руководства</h2>
-<p class="intro" data-i18n="guides_preview_intro">Короткие инструкции помогут понять, какие доказательства сохранить и как выстроить хронологию до подачи заявки.</p>
+<div class="eyebrow" data-i18n="guides_preview_eyebrow">{{ home_copy['guides_preview_eyebrow'] }}</div>
+<h2 data-i18n="guides_preview_title">{{ home_copy['guides_preview_title'] }}</h2>
+<p class="intro" data-i18n="guides_preview_intro">{{ home_copy['guides_preview_intro'] }}</p>
 <div class="grid g3 guides-preview-grid">
-<a class="card" data-guide-slug="alibaba-dispute-evidence" href="/{{ page_language }}/guides/alibaba-dispute-evidence"><div class="icon">01</div><h3 data-i18n="guide_card_evidence_title">Доказательства для спора на Alibaba</h3><p data-i18n="guide_card_evidence_text">Что сохранить из заказа, переписки, оплаты и материалов о проблеме.</p><span class="guide-card-link" data-i18n="guide_card_read">Открыть руководство →</span></a>
-<a class="card" data-guide-slug="supplier-not-shipped" href="/{{ page_language }}/guides/supplier-not-shipped"><div class="icon">02</div><h3 data-i18n="guide_card_shipping_title">Поставщик не отправил товар</h3><p data-i18n="guide_card_shipping_text">Как отличить реальную отправку от созданной накладной и не пропустить сроки.</p><span class="guide-card-link" data-i18n="guide_card_read">Открыть руководство →</span></a>
-<a class="card" data-guide-slug="product-quality-dispute" href="/{{ page_language }}/guides/product-quality-dispute"><div class="icon">03</div><h3 data-i18n="guide_card_quality_title">Брак или неверная спецификация</h3><p data-i18n="guide_card_quality_text">Как связать фотографии, измерения и дефекты с письменными условиями заказа.</p><span class="guide-card-link" data-i18n="guide_card_read">Открыть руководство →</span></a>
+<a class="card" data-guide-slug="alibaba-dispute-evidence" href="/{{ page_language }}/guides/alibaba-dispute-evidence"><div class="icon">01</div><h3 data-i18n="guide_card_evidence_title">{{ home_copy['guide_card_evidence_title'] }}</h3><p data-i18n="guide_card_evidence_text">{{ home_copy['guide_card_evidence_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
+<a class="card" data-guide-slug="supplier-not-shipped" href="/{{ page_language }}/guides/supplier-not-shipped"><div class="icon">02</div><h3 data-i18n="guide_card_shipping_title">{{ home_copy['guide_card_shipping_title'] }}</h3><p data-i18n="guide_card_shipping_text">{{ home_copy['guide_card_shipping_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
+<a class="card" data-guide-slug="product-quality-dispute" href="/{{ page_language }}/guides/product-quality-dispute"><div class="icon">03</div><h3 data-i18n="guide_card_quality_title">{{ home_copy['guide_card_quality_title'] }}</h3><p data-i18n="guide_card_quality_text">{{ home_copy['guide_card_quality_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
 </div>
-<div class="guides-preview-actions"><a class="btn guides-all-link" data-i18n="guides_view_all" href="/{{ page_language }}/guides">Посмотреть все руководства</a></div>
+<div class="guides-preview-actions"><a class="btn guides-all-link" data-i18n="guides_view_all" href="/{{ page_language }}/guides">{{ home_copy['guides_view_all'] }}</a></div>
 </div>
 </section>
 <section class="light" id="faq">
 <div class="wrap">
-<div class="eyebrow" data-i18n="faq_eyebrow">Часто задаваемые вопросы</div>
-<h2 data-i18n="faq_title">Важные вопросы</h2>
-<details><summary data-i18n="faq1">Вы гарантируете возврат?</summary><p data-i18n="faq1_text">Нет. Результат зависит от доказательств, договора, способа оплаты, правил площадки и ответа поставщика.</p></details>
-<details><summary data-i18n="faq2">Вы работаете только с Alibaba?</summary><p data-i18n="faq2_text">Нет. Дела могут касаться Alibaba, AliExpress, Made-in-China или прямых договоров.</p></details>
-<details><summary data-i18n="faq3">Вы юридическая фирма?</summary><p data-i18n="faq3_text">Нет. ChinaTradeResolve оказывает коммерческую поддержку, анализирует документы и помогает готовить претензии и переписку.</p></details>
-<details><summary data-i18n="faq4">Как используется ИИ?</summary><p data-i18n="faq4_text">ИИ может помогать организовывать и сравнивать материалы. Важные выводы и исходящие документы требуют человеческой проверки.</p></details>
-<details><summary data-i18n="faq5">Кто видит мои материалы?</summary><p data-i18n="faq5_text">На этапе заявки документы не загружаются. Если дело принято, запрашиваются только ключевые файлы; доступ к ним используется для согласованного анализа и не даёт права отправлять их третьим лицам.</p></details>
+<div class="eyebrow" data-i18n="faq_eyebrow">{{ home_copy['faq_eyebrow'] }}</div>
+<h2 data-i18n="faq_title">{{ home_copy['faq_title'] }}</h2>
+<details><summary data-i18n="faq1">{{ home_copy['faq1'] }}</summary><p data-i18n="faq1_text">{{ home_copy['faq1_text'] }}</p></details>
+<details><summary data-i18n="faq2">{{ home_copy['faq2'] }}</summary><p data-i18n="faq2_text">{{ home_copy['faq2_text'] }}</p></details>
+<details><summary data-i18n="faq3">{{ home_copy['faq3'] }}</summary><p data-i18n="faq3_text">{{ home_copy['faq3_text'] }}</p></details>
+<details><summary data-i18n="faq4">{{ home_copy['faq4'] }}</summary><p data-i18n="faq4_text">{{ home_copy['faq4_text'] }}</p></details>
+<details><summary data-i18n="faq5">{{ home_copy['faq5'] }}</summary><p data-i18n="faq5_text">{{ home_copy['faq5_text'] }}</p></details>
 </div>
 </section>
 </main>
@@ -577,24 +578,24 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <path class="check" d="M16.5 23l2.4 2.4 5-5.4"></path>
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
-</div><div class="small" data-i18n="footer_text">Коммерческая помощь покупателям, работающим с китайскими поставщиками.</div></div>
-<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">Конфиденциальность</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">Условия</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">Политика оплаты</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">Уведомление об ИИ</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">Ограничение ответственности</a><a class="guides-footer-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">Руководства</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">Поддержать</a>{% endif %}</div>
+</div><div class="small" data-i18n="footer_text">{{ home_copy['footer_text'] }}</div></div>
+<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">{{ home_copy['legal_privacy'] }}</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">{{ home_copy['legal_terms'] }}</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">{{ home_copy['legal_payment'] }}</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">{{ home_copy['legal_ai'] }}</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">{{ home_copy['legal_disclaimer'] }}</a><a class="guides-footer-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">{{ home_copy['nav_support'] }}</a>{% endif %}</div>
 <div class="small">© 2026 ChinaTradeResolve</div>
 </div>
 </footer>
-<a class="btn primary mobile" data-i18n="submit_case" href="#submit">Отправить бесплатную заявку</a>
+<a class="btn primary mobile" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>
 
 <div class="ai-chat-root" id="aiChatRoot" data-enabled="{{ 'true' if ai_assistant_enabled else 'false' }}" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-enabled="{{ 'true' if voice_input_enabled else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}"{% if not ai_assistant_enabled %} hidden{% endif %}>
-<button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">Спросить ИИ‑помощника</span></button>
+<button aria-controls="aiChatPanel" aria-expanded="false" class="ai-chat-launcher" id="aiChatLauncher" type="button"><span class="spark" aria-hidden="true">✦</span><span class="launcher-label" data-i18n="ai_chat_button">{{ home_copy['ai_chat_button'] }}</span></button>
 <section aria-labelledby="aiChatTitle" aria-modal="true" class="ai-chat-panel" id="aiChatPanel" role="dialog" hidden>
-<div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">ИИ‑помощник ChinaTradeResolve</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">Бета</span></strong><small data-i18n="ai_chat_subtitle">Общая информация на вашем языке</small></div><button aria-label="Закрыть помощника" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
-<p class="ai-chat-notice" data-i18n="ai_chat_notice">Не указывайте конфиденциальные данные. Помощник даёт общую информацию.</p>
-<div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">Здравствуйте. Я могу объяснить работу сервиса, подсказать полезные доказательства и помочь структурировать описание спора с поставщиком. Я не вижу ваше дело и закрытую страницу статуса.</div></div>
-{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">Проверка безопасности</strong><span data-i18n="ai_turnstile_help">Проверка обычно проходит автоматически. Если потребуется действие, оно появится здесь.</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">Загружаю проверку…</div></div>{% endif %}
-<div class="ai-chat-quick" id="aiChatQuick"{% if turnstile_site_key %} hidden{% endif %}><button data-i18n="ai_chat_quick_docs" type="button">Какие доказательства подготовить?</button><button data-i18n="ai_chat_quick_scope" type="button">Подходит ли сервис для моей ситуации?</button><button data-i18n="ai_chat_quick_process" type="button">Как проходит бесплатная проверка?</button></div>
-<label class="ai-chat-input-label" for="aiChatInput"><strong data-i18n="ai_chat_input_title">Ваш вопрос</strong><span data-i18n="ai_chat_input_help">Напишите или расскажите голосом</span></label>
-<form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="Рассказать вопрос голосом" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta" id="aiVoiceButtonText">Рассказать вопрос голосом</span><small data-i18n="ai_voice_cta_hint" id="aiVoiceButtonHint">Нажмите и говорите до 2 минут</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">Только для голосового ввода</strong><span data-i18n="ai_voice_consent">Я согласен передать запись провайдеру ИИ только для расшифровки. Аудио не сохраняется в базе сайта.</span></span></label><div class="voice-live-note" data-i18n="voice_live_privacy">Для показа предварительного текста браузер может использовать собственную службу распознавания речи. Итоговая расшифровка выполняется отдельно и может немного отличаться.</div><div aria-live="polite" class="voice-live-preview" hidden id="aiVoiceLive"><strong data-i18n="voice_live_title">Предварительный текст</strong><div class="voice-live-text" id="aiVoiceLiveText"></div></div><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="Сообщение" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="Опишите вопрос без конфиденциальных данных…" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">Отправить</button></form>
-<div class="ai-chat-privacy" data-i18n="ai_chat_privacy">Чат не сохраняется в базе дел. Последние сообщения передаются ИИ‑провайдеру; применяются его правила обработки и хранения. Голосовая запись удаляется из памяти сразу после расшифровки.</div>
+<div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">{{ home_copy['ai_chat_title'] }}</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">{{ home_copy['ai_chat_badge'] }}</span></strong><small data-i18n="ai_chat_subtitle">{{ home_copy['ai_chat_subtitle'] }}</small></div><button aria-label="{{ home_copy['ai_chat_close'] }}" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
+<p class="ai-chat-notice" data-i18n="ai_chat_notice">{{ home_copy['ai_chat_notice'] }}</p>
+<div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">{{ home_copy['ai_chat_welcome'] }}</div></div>
+{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">{{ home_copy['ai_turnstile_title'] }}</strong><span data-i18n="ai_turnstile_help">{{ home_copy['ai_turnstile_help'] }}</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">{{ home_copy['ai_turnstile_loading'] }}</div></div>{% endif %}
+<div class="ai-chat-quick" id="aiChatQuick"{% if turnstile_site_key %} hidden{% endif %}><button data-i18n="ai_chat_quick_docs" type="button">{{ home_copy['ai_chat_quick_docs'] }}</button><button data-i18n="ai_chat_quick_scope" type="button">{{ home_copy['ai_chat_quick_scope'] }}</button><button data-i18n="ai_chat_quick_process" type="button">{{ home_copy['ai_chat_quick_process'] }}</button></div>
+<label class="ai-chat-input-label" for="aiChatInput"><strong data-i18n="ai_chat_input_title">{{ home_copy['ai_chat_input_title'] }}</strong><span data-i18n="ai_chat_input_help">{{ home_copy['ai_chat_input_help'] }}</span></label>
+<form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="{{ home_copy['ai_voice_start_label'] }}" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta" id="aiVoiceButtonText">{{ home_copy['ai_voice_cta'] }}</span><small data-i18n="ai_voice_cta_hint" id="aiVoiceButtonHint">{{ home_copy['ai_voice_cta_hint'] }}</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">{{ home_copy['ai_voice_consent_title'] }}</strong><span data-i18n="ai_voice_consent">{{ home_copy['ai_voice_consent'] }}</span></span></label><div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="aiVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="aiVoiceLiveText"></div></div><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="{{ home_copy['ai_chat_message_label'] }}" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="{{ home_copy['ai_chat_placeholder'] }}" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">{{ home_copy['ai_chat_send'] }}</button></form>
+<div class="ai-chat-privacy" data-i18n="ai_chat_privacy">{{ home_copy['ai_chat_privacy'] }}</div>
 </section>
 </div>
 <script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js"></script>
@@ -979,14 +980,6 @@ const translations=window.CTR_TRANSLATIONS||{};
 const supportedLanguages=['en','fr','de','es','ru','sr'];
 const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};
 const guideLabels={en:'Guides',fr:'Guides',de:'Ratgeber',es:'Guías',ru:'Руководства',sr:'Vodiči'};
-const pageMeta={
-  en:{title:'ChinaTradeResolve — review of disputes with Chinese suppliers',description:'Describe a dispute with a Chinese supplier and receive a preliminary view of your position, missing evidence and practical next steps.'},
-  fr:{title:'ChinaTradeResolve — analyse des litiges avec des fournisseurs chinois',description:'Décrivez un litige avec un fournisseur chinois et recevez une première évaluation de votre position, des preuves manquantes et des prochaines actions.'},
-  de:{title:'ChinaTradeResolve — Prüfung von Streitigkeiten mit chinesischen Lieferanten',description:'Beschreiben Sie einen Streit mit einem chinesischen Lieferanten und erhalten Sie eine erste Einschätzung Ihrer Position, fehlender Nachweise und nächster Schritte.'},
-  es:{title:'ChinaTradeResolve — revisión de disputas con proveedores chinos',description:'Describa una disputa con un proveedor chino y reciba una evaluación inicial de su posición, pruebas faltantes y próximos pasos prácticos.'},
-  ru:{title:'ChinaTradeResolve — разбор споров с китайскими поставщиками',description:'Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий.'},
-  sr:{title:'ChinaTradeResolve — pregled sporova sa kineskim dobavljačima',description:'Opišite spor sa kineskim dobavljačem i dobijte početnu procenu pozicije, dokaza koji nedostaju i praktičnih sledećih koraka.'}
-};
 try{
   const ctrParams=new URLSearchParams(window.location.search);
   ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(key=>{const value=ctrParams.get(key);if(value)sessionStorage.setItem('ctr_'+key,value)});
@@ -1020,10 +1013,6 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
     const accessCopy=privateAccessCopy[lang]||privateAccessCopy.en;
     emailState.textContent=emailState.dataset.configured==='true'?accessCopy.email_on:accessCopy.email_off;
   }
-  const meta=pageMeta[lang]||pageMeta.en;
-  document.title=meta.title;
-  const description=document.querySelector('meta[name="description"]');
-  if(description)description.setAttribute('content',meta.description);
   const preferred=document.getElementById('preferred');
   if(preferred&&syncPreferred&&!preferred.dataset.userChanged)preferred.value=preferredLanguageValues[lang];
   document.querySelectorAll('.guides-nav-link,.guides-footer-link,.guides-all-link').forEach(link=>{if(!link.dataset.i18n)link.textContent=guideLabels[lang]||guideLabels.en;link.setAttribute('href',`/${lang}/guides`)});
@@ -1053,15 +1042,20 @@ function chooseLanguage(lang,options={}){
     document.dispatchEvent(new CustomEvent('ctr:language-changed',{detail:{language:lang}}));
   }
 }
-langSelect.addEventListener('change',e=>chooseLanguage(e.target.value));
-mobileLangSelect.addEventListener('change',e=>{chooseLanguage(e.target.value);closeMobileMenu()});
+function navigateToLanguage(lang){
+  lang=normalizeLanguage(lang);
+  try{localStorage.setItem('ctr_lang_v20',lang)}catch(_e){}
+  const url=new URL(window.location.href);
+  if(lang==='ru')url.searchParams.delete('lang');
+  else url.searchParams.set('lang',lang);
+  window.location.assign(url.pathname+url.search+url.hash);
+}
+langSelect.addEventListener('change',e=>navigateToLanguage(e.target.value));
+mobileLangSelect.addEventListener('change',e=>{closeMobileMenu();navigateToLanguage(e.target.value)});
 const preferredSelect=document.getElementById('preferred');
 preferredSelect.addEventListener('change',()=>{preferredSelect.dataset.userChanged='true'});
-let initialLanguage='';
-const queryLanguage=new URLSearchParams(window.location.search).get('lang');
-try{initialLanguage=queryLanguage||localStorage.getItem('ctr_lang_v20')||localStorage.getItem('ctr_lang_v17')||''}catch(_e){initialLanguage=queryLanguage||''}
-if(!initialLanguage){initialLanguage=(navigator.languages&&navigator.languages[0])||navigator.language||'en'}
-chooseLanguage(initialLanguage,{updateUrl:!queryLanguage});
+const initialLanguage=normalizeLanguage(document.documentElement.lang);
+chooseLanguage(initialLanguage,{updateUrl:false});
 
 const aiChatRoot=document.getElementById('aiChatRoot');
 if(aiChatRoot){

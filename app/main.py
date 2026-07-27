@@ -143,8 +143,29 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.52"
+APP_VERSION = "3.7.53"
 logger = logging.getLogger("chinatraderesolve")
+
+
+def _load_home_translations() -> dict[str, dict[str, str]]:
+    """Load the public landing-page copy used by both server rendering and JS."""
+    path = BASE / "static" / "translations-v2.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:  # fail loudly during startup
+        raise RuntimeError(f"Unable to load landing-page translations: {path}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("Landing-page translations must be an object")
+    translations: dict[str, dict[str, str]] = {}
+    for language in SUPPORTED_LANGUAGES:
+        copy = payload.get(language)
+        if not isinstance(copy, dict):
+            raise RuntimeError(f"Missing landing-page translations for {language}")
+        translations[language] = {str(key): str(value) for key, value in copy.items()}
+    return translations
+
+
+HOME_TRANSLATIONS = _load_home_translations()
 
 
 STANDARD_REQUEST_BODY_BYTES = 1 * 1024 * 1024
@@ -1417,6 +1438,7 @@ def home(request: Request) -> HTMLResponse:
             "canonical_url": canonical_url,
             "page_language": page_language,
             "seo": seo,
+            "home_copy": HOME_TRANSLATIONS[page_language],
             "language_alternates": language_alternates,
             "x_default_url": x_default_url,
             "social_image_url": base_url + "/static/social-preview.png",

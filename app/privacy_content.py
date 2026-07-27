@@ -57,7 +57,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                   'brève description. Elle peut aussi conserver les paramètres de campagne (par exemple la source '
                   'UTM et le nom de campagne), la première page visitée et, lorsqu’elle est disponible, uniquement '
                   'l’origine du site référent. La page privée peut conserver jusqu’à 20 PDF ou images clés et le '
-                  'rapport d’analyse. Aucune donnée de carte bancaire n’est collectée.',
+                  'rapport d’analyse. Aucune donnée de carte bancaire n’est collectée. Si la balise facultative Yandex Metrica est activée, elle peut également traiter des données techniques de visite et de navigation à des fins statistiques.',
         'h_purpose': 'Utilisation des données',
         'p_purpose': 'Les données servent à enregistrer et examiner les demandes, communiquer avec les demandeurs, '
                      'analyser les dossiers, comprendre quelles publications ou sources de promotion apportent des '
@@ -147,7 +147,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                   'descripción. También puede guardar etiquetas de campaña (por ejemplo, fuente UTM y nombre de '
                   'campaña), la primera página visitada y, cuando esté disponible, solo el origen del sitio '
                   'remitente. La página privada puede almacenar hasta 20 PDF o imágenes clave y el informe de '
-                  'análisis. No se recopilan datos de tarjetas de pago.',
+                  'análisis. No se recopilan datos de tarjetas de pago. Si se activa la etiqueta opcional de Yandex Metrica, también puede tratar datos técnicos de visita y navegación para estadísticas del sitio.',
         'h_purpose': 'Uso de los datos',
         'p_purpose': 'Los datos se utilizan para registrar y revisar solicitudes, comunicarse con los solicitantes, '
                      'analizar casos, entender qué publicaciones o canales de promoción generan consultas útiles, '
@@ -190,7 +190,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                   'описание спора. Также могут сохраняться метки рекламной кампании (например, UTM-источник и '
                   'название кампании), первая открытая страница и, при наличии, только адрес сайта-источника без '
                   'полного пути. На закрытой странице дела могут храниться до 20 ключевых PDF или изображений и '
-                  'результат анализа доказательств. Платёжные данные банковских карт не собираются.',
+                  'результат анализа доказательств. Платёжные данные банковских карт не собираются. Если включён необязательный счётчик Яндекс Метрики, он также может обрабатывать технические данные о посещении и навигации для статистики сайта.',
         'h_purpose': 'Зачем используются данные',
         'p_purpose': 'Данные используются для регистрации и предварительной проверки заявок, связи с заявителем, '
                      'рассмотрения дела, понимания того, какие публикации и каналы приводят полезные обращения, '
@@ -232,7 +232,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
         'p_data': 'Prijava prikuplja ime, email, zemlju, jezik, podatke o porudžbini i kratak opis spora. Mogu se '
                   'sačuvati i oznake kampanje (na primer UTM izvor i naziv kampanje), prva posećena stranica i, kada '
                   'postoji, samo poreklo prethodnog sajta. Privatna stranica slučaja može čuvati do 20 ključnih PDF '
-                  'ili slikovnih fajlova i izveštaj analize. Podaci platnih kartica se ne prikupljaju.',
+                  'ili slikovnih fajlova i izveštaj analize. Podaci platnih kartica se ne prikupljaju. Ako je uključen opcioni Yandex Metrica brojač, on takođe može obrađivati tehničke podatke o poseti i navigaciji radi statistike sajta.',
         'h_purpose': 'Kako se podaci koriste',
         'p_purpose': 'Podaci se koriste za registraciju i preliminarni pregled prijava, komunikaciju, pregled '
                      'slučaja, razumevanje koje objave i promotivni izvori donose korisne upite, zaštitu servisa od '
@@ -264,3 +264,17 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
         'meta_description': 'Kako ChinaTradeResolve prikuplja, koristi, štiti i briše podatke prijava, slučajeva, '
                             'dokumenata i izvora posete.',
         'language_label': 'Jezik'}}
+
+_METRIKA_PRIVACY_DISCLOSURE = {
+    "en": "If the optional Yandex Metrica counter is enabled, it may also process technical visit and navigation data for site statistics.",
+    "ru": "Если включён необязательный счётчик Яндекс Метрики, он также может обрабатывать технические данные о посещении и навигации для статистики сайта.",
+    "fr": "Si la balise facultative Yandex Metrica est activée, elle peut également traiter des données techniques de visite et de navigation à des fins statistiques.",
+    "de": "Wenn der optionale Zähler Yandex Metrica aktiviert ist, kann er außerdem technische Besuchs- und Navigationsdaten für die Website-Statistik verarbeiten.",
+    "es": "Si se activa el contador opcional de Yandex Metrica, también puede tratar datos técnicos de visita y navegación para las estadísticas del sitio.",
+    "sr": "Ako je uključen opcioni Yandex Metrica brojač, on takođe može obrađivati tehničke podatke o poseti i navigaciji radi statistike sajta.",
+}
+
+for _language, _sentence in _METRIKA_PRIVACY_DISCLOSURE.items():
+    if _sentence not in PRIVACY_COPY[_language]["p_data"]:
+        PRIVACY_COPY[_language]["p_data"] += " " + _sentence
+

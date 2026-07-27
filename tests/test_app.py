@@ -2106,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.49"
+    assert health.json()["version"] == "3.7.50"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.49"
+    assert health.headers["x-app-version"] == "3.7.50"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -2426,12 +2426,12 @@ def test_render_external_url_is_used_when_public_base_url_is_missing(monkeypatch
     assert configured_public_base_url() == "https://example-service.onrender.com"
 
 
-def test_production_render_service_uses_canonical_domain_for_email_links(monkeypatch):
+def test_production_render_service_does_not_assume_unconnected_custom_domain(monkeypatch):
     from app.config import configured_public_base_url
 
     monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://chinatraderesolve.onrender.com/")
-    assert configured_public_base_url() == "https://chinatraderesolve.com"
+    assert configured_public_base_url() == "https://chinatraderesolve.onrender.com"
 
 
 def test_feedback_form_has_no_autofill_prone_honeypot():
@@ -4691,7 +4691,7 @@ def test_robots_and_sitemap_follow_launch_readiness(monkeypatch):
     assert blocked.status_code == 200
     assert blocked.text == "User-agent: *\nDisallow: /\n"
 
-    monkeypatch.setattr(module, "public_launch_is_ready", lambda: True)
+    monkeypatch.setattr(module, "search_indexing_is_ready", lambda: True)
     allowed = client.get("/robots.txt")
     assert allowed.status_code == 200
     assert "Allow: /" in allowed.text
@@ -4991,7 +4991,7 @@ def test_admin_dashboard_explains_when_search_indexing_is_blocked():
     assert page.status_code == 200
     assert "Индексация в поисковых системах" in page.text
     assert "Заблокирована" in page.text
-    assert "/ready" in page.text
+    assert "SEARCH_INDEXING_ENABLED" in page.text
 
 
 
@@ -5186,6 +5186,7 @@ def _v3745_redirect_test_app():
         body_limited_app,
         canonical_base_url="https://chinatraderesolve.com",
         source_hosts={"chinatraderesolve.onrender.com"},
+        enabled=True,
     )
 
 
@@ -5198,13 +5199,28 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "/case/CTR-2026-ABC/private-token?lang=ru&utm_source=old-link",
         follow_redirects=False,
     )
-    assert response.status_code == 308
+    assert response.status_code == 301
     assert response.headers["location"] == (
         "https://chinatraderesolve.com/case/CTR-2026-ABC/private-token"
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.49"
+    assert response.headers["x-app-version"] == "3.7.50"
+
+
+def test_v3750_canonical_post_redirect_preserves_method():
+    from app.main import CanonicalHostRedirectMiddleware, body_limited_app
+
+    local_app = CanonicalHostRedirectMiddleware(
+        body_limited_app,
+        canonical_base_url="https://chinatraderesolve.com",
+        source_hosts={"chinatraderesolve.onrender.com"},
+        enabled=True,
+    )
+    local_client = TestClient(local_app, base_url="https://chinatraderesolve.onrender.com")
+    response = local_client.post("/application", data={"test": "1"}, follow_redirects=False)
+    assert response.status_code == 308
+    assert response.headers["location"] == "https://chinatraderesolve.com/application"
 
 
 def test_v3745_canonical_hostname_is_not_redirected():
@@ -5214,7 +5230,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.49"
+    assert response.json()["version"] == "3.7.50"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5234,19 +5250,47 @@ def test_v3745_local_fallback_does_not_redirect_render_host_to_localhost():
         body_limited_app,
         canonical_base_url="http://127.0.0.1:8000",
         source_hosts={"chinatraderesolve.onrender.com"},
+        enabled=True,
     )
     local_client = TestClient(local_app, base_url="https://chinatraderesolve.onrender.com")
     response = local_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
     assert "location" not in response.headers
 
+def test_v3750_yandex_verification_meta_is_rendered():
+    import app.main as module
+
+    original = module.settings.yandex_site_verification
+    object.__setattr__(module.settings, "yandex_site_verification", "test-yandex-token")
+    try:
+        page = client.get("/")
+        assert '<meta name="yandex-verification" content="test-yandex-token"' in page.text
+    finally:
+        object.__setattr__(module.settings, "yandex_site_verification", original)
+
+
+def test_v3750_canonical_redirect_can_be_disabled():
+    from app.main import CanonicalHostRedirectMiddleware, body_limited_app
+
+    local_app = CanonicalHostRedirectMiddleware(
+        body_limited_app,
+        canonical_base_url="https://chinatraderesolve.com",
+        source_hosts={"chinatraderesolve.onrender.com"},
+        enabled=False,
+    )
+    local_client = TestClient(local_app, base_url="https://chinatraderesolve.onrender.com")
+    response = local_client.get("/health", follow_redirects=False)
+    assert response.status_code == 200
+    assert "location" not in response.headers
+
+
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.49"
-    assert "v3.7.49" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.49" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.49" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.49" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.50"
+    assert "v3.7.50" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.50" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.50" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.50" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():

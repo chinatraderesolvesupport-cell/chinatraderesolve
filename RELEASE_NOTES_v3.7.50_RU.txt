@@ -1,0 +1,9 @@
+ChinaTradeResolve Document AI v3.7.50
+
+- Исправлен основной SEO-риск: технический домен Render больше не объявляет неработающий chinatraderesolve.com без явной настройки PUBLIC_BASE_URL.
+- Добавлен отдельный безопасный переключатель SEARCH_INDEXING_ENABLED.
+- Редирект с onrender.com включается только через ENABLE_CANONICAL_REDIRECT после подключения домена.
+- Добавлены YANDEX_SITE_VERIFICATION и YANDEX_METRIKA_ID.
+- Яндекс Метрика подключается CSP-совместимо, без Вебвизора.
+- IndexNow отправляет обновления напрямую в Yandex и в общий endpoint.
+- Добавлена инструкция YANDEX_WEBMASTER_SETUP_RU.md.

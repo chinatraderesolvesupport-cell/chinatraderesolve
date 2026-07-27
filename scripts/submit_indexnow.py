@@ -32,15 +32,23 @@ payload = {
     "keyLocation": f"{BASE_URL}/indexnow/{KEY}.txt",
     "urlList": [BASE_URL + path for path in paths],
 }
-request = Request(
+endpoints = (
+    "https://yandex.com/indexnow",
     "https://api.indexnow.org/indexnow",
-    data=json.dumps(payload).encode("utf-8"),
-    headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "ChinaTradeResolve/1.0"},
-    method="POST",
 )
-try:
-    with urlopen(request, timeout=30) as response:
-        print(f"IndexNow response: {response.status}; submitted URLs: {len(paths)}")
-except Exception as exc:
-    print(f"IndexNow submission failed: {exc}", file=sys.stderr)
+successes = 0
+for endpoint in endpoints:
+    request = Request(
+        endpoint,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "ChinaTradeResolve/1.0"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=30) as response:
+            print(f"IndexNow {endpoint}: {response.status}; submitted URLs: {len(paths)}")
+            successes += 1
+    except Exception as exc:
+        print(f"IndexNow {endpoint} failed: {exc}", file=sys.stderr)
+if not successes:
     raise SystemExit(1)

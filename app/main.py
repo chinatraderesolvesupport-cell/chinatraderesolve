@@ -143,7 +143,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.49"
+APP_VERSION = "3.7.50"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -170,11 +170,12 @@ class CanonicalHostRedirectMiddleware:
     """Permanently redirect Render's technical hostname to the public custom domain.
 
     The target origin is fixed by the validated ``PUBLIC_BASE_URL`` setting.  The
-    original path and query string are preserved exactly, and HTTP 308 keeps the
-    request method for the rare case where an old technical URL is submitted.
+    original path and query string are preserved exactly. Normal page requests
+    use SEO-friendly HTTP 301, while non-idempotent methods use HTTP 308 so form
+    bodies and methods are preserved safely.
     """
 
-    def __init__(self, app, *, canonical_base_url: str | None = None, source_hosts=None):
+    def __init__(self, app, *, canonical_base_url: str | None = None, source_hosts=None, enabled: bool = True):
         self.app = app
         self.canonical_base_url = (canonical_base_url or settings.public_base_url).rstrip("/")
         try:
@@ -190,7 +191,8 @@ class CanonicalHostRedirectMiddleware:
             if str(item or "").strip()
         )
         self.enabled = bool(
-            canonical_scheme == "https"
+            enabled
+            and canonical_scheme == "https"
             and self.canonical_host
             and self.canonical_host not in self.source_hosts
         )
@@ -235,9 +237,11 @@ class CanonicalHostRedirectMiddleware:
         if query:
             target += "?" + query
 
+        request_method = str(scope.get("method") or "GET").upper()
+        redirect_status = 301 if request_method in {"GET", "HEAD"} else 308
         response = RedirectResponse(
             target,
-            status_code=308,
+            status_code=redirect_status,
             headers={
                 "Cache-Control": "public, max-age=86400",
                 "Vary": "Host",
@@ -430,6 +434,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
+templates.env.globals["yandex_metrika_id"] = settings.yandex_metrika_id
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
@@ -494,6 +499,23 @@ def launch_readiness_checks() -> dict[str, bool]:
 
 def public_launch_is_ready() -> bool:
     return all(launch_readiness_checks().values())
+
+
+def search_indexing_checks() -> dict[str, bool]:
+    try:
+        hostname = (urlparse(settings.public_base_url).hostname or "").casefold()
+    except ValueError:
+        hostname = ""
+    return {
+        "explicit_enable": settings.search_indexing_enabled,
+        "https_public_url": settings.public_base_url.startswith("https://"),
+        "public_hostname": bool(hostname and hostname not in {"localhost", "127.0.0.1", "::1"}),
+        "privacy_identity": privacy_configuration_is_complete(),
+    }
+
+
+def search_indexing_is_ready() -> bool:
+    return all(search_indexing_checks().values())
 
 
 def public_launch_is_blocked() -> bool:
@@ -829,12 +851,14 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
     turnstile_sources = " https://challenges.cloudflare.com" if turnstile_is_enabled() else ""
+    metrika_script = " https://mc.yandex.ru" if settings.yandex_metrika_id else ""
+    metrika_connect = " https://mc.yandex.ru https://mc.yandex.com" if settings.yandex_metrika_id else ""
     response.headers.setdefault(
         "Content-Security-Policy",
         f"default-src 'self'; style-src 'self' 'nonce-{csp_nonce}'; style-src-attr 'none'; "
-        f"script-src 'self' 'nonce-{csp_nonce}'{turnstile_sources}; script-src-attr 'none'; "
-        "object-src 'none'; img-src 'self' data:; "
-        f"connect-src 'self'{turnstile_sources}; frame-src 'self'{turnstile_sources}; "
+        f"script-src 'self' 'nonce-{csp_nonce}'{turnstile_sources}{metrika_script}; script-src-attr 'none'; "
+        f"object-src 'none'; img-src 'self' data:{metrika_script}; "
+        f"connect-src 'self'{turnstile_sources}{metrika_connect}; frame-src 'self'{turnstile_sources}; "
         "form-action 'self'; frame-ancestors 'none'; base-uri 'self'",
     )
     if settings.public_base_url.startswith("https://"):
@@ -1399,6 +1423,7 @@ def home(request: Request) -> HTMLResponse:
             "logo_url": base_url + "/static/logo-512.png",
             "google_site_verification": (settings.google_site_verification or "").strip(),
             "bing_site_verification": (settings.bing_site_verification or "").strip(),
+            "yandex_site_verification": (settings.yandex_site_verification or "").strip(),
             "operator_credentials": (settings.operator_credentials or "").strip(),
             "operator_registration": (settings.data_controller_registration or "").strip(),
         },
@@ -1568,6 +1593,9 @@ def health() -> dict[str, Any]:
         "telegram_monitor": telegram_monitor_health(),
         "public_launch_mode": settings.public_launch_mode,
         "public_launch_ready": all(readiness.values()),
+        "search_indexing_enabled": settings.search_indexing_enabled,
+        "search_indexing_ready": search_indexing_is_ready(),
+        "search_indexing_checks": search_indexing_checks(),
         "database_backend": database_backend_name(),
         "database_persistent": using_postgres(),
         "readiness_checks": readiness,
@@ -1594,7 +1622,7 @@ def indexnow_key_file(key: str) -> PlainTextResponse:
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 def robots() -> PlainTextResponse:
-    if not public_launch_is_ready():
+    if not search_indexing_is_ready():
         return PlainTextResponse(
             "User-agent: *\nDisallow: /\n",
             headers={"Cache-Control": "public, max-age=300"},
@@ -2424,9 +2452,12 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
             "cases": cases,
             "counts": dashboard_counts(),
             "traffic_sources": traffic_source_counts(),
-            "search_indexing_enabled": public_launch_is_ready(),
+            "search_indexing_enabled": search_indexing_is_ready(),
+            "search_indexing_checks": search_indexing_checks(),
             "google_verification_configured": bool((settings.google_site_verification or "").strip()),
             "bing_verification_configured": bool((settings.bing_site_verification or "").strip()),
+            "yandex_verification_configured": bool((settings.yandex_site_verification or "").strip()),
+            "yandex_metrika_configured": bool(settings.yandex_metrika_id),
             "indexnow_configured": bool((settings.indexnow_key or "").strip()),
             "database_backend": database_backend_name(),
             "database_persistent": using_postgres(),
@@ -2666,4 +2697,7 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # All route decorators above are already bound to ``fastapi_app``.
 fastapi_app = app
 body_limited_app = RequestBodyLimitMiddleware(fastapi_app)
-app = CanonicalHostRedirectMiddleware(body_limited_app)
+app = CanonicalHostRedirectMiddleware(
+    body_limited_app,
+    enabled=settings.enable_canonical_redirect,
+)

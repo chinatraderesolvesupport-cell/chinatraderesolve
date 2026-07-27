@@ -17,9 +17,8 @@ DEFAULT_ETH_ADDRESS = "0x2F8a2773F8254d061ef286Bac8BF922344a2A494"
 DEFAULT_USDT_TRC20_ADDRESS = "TEJaGC38ZV8UirP7zkfPRiqHRi73wTWX5R"
 DEFAULT_SOL_ADDRESS = "AEZsJ2921CR7qD7kRQRS7BiaxneeaFyKMhwDmyjCS6Zm"
 
-# Canonical production domain used for public links and transactional email.
+# Suggested custom production domain. It is used only when PUBLIC_BASE_URL is explicitly configured.
 CANONICAL_PUBLIC_BASE_URL = "https://chinatraderesolve.com"
-_RENDER_SERVICE_HOSTS = frozenset({"chinatraderesolve.onrender.com"})
 
 INSECURE_ADMIN_TOKENS = frozenset({
     "",
@@ -109,6 +108,11 @@ def _env_choice(name: str, default: str, allowed: set[str]) -> str:
     return value if value in allowed else default
 
 
+def _env_digits(name: str) -> str:
+    value = (os.getenv(name) or "").strip()
+    return value if value.isdigit() and 4 <= len(value) <= 20 else ""
+
+
 def _valid_base_url(raw: str | None) -> str | None:
     value = (raw or "").strip().rstrip("/")
     if not value or any(ord(char) < 33 for char in value):
@@ -133,18 +137,14 @@ def _valid_base_url(raw: str | None) -> str | None:
 
 
 def configured_public_base_url() -> str:
-    # An explicit valid value always wins. On the known production Render service,
-    # use the canonical custom domain so emails, sitemaps and private case links
-    # never fall back to the temporary *.onrender.com hostname.
+    # Never publish a custom-domain canonical until that domain has actually been
+    # connected in Render and explicitly supplied through PUBLIC_BASE_URL.
     explicit = _valid_base_url(os.getenv("PUBLIC_BASE_URL"))
     if explicit:
         return explicit
 
     render_url = _valid_base_url(os.getenv("RENDER_EXTERNAL_URL"))
     if render_url:
-        hostname = (urlparse(render_url).hostname or "").casefold()
-        if hostname in _RENDER_SERVICE_HOSTS:
-            return CANONICAL_PUBLIC_BASE_URL
         return render_url
 
     return "http://127.0.0.1:8000"
@@ -159,6 +159,8 @@ class Settings:
     app_secret: str = os.getenv("APP_SECRET", DEFAULT_APP_SECRET)
     public_base_url: str = configured_public_base_url()
     public_launch_mode: bool = _env_bool("PUBLIC_LAUNCH_MODE")
+    search_indexing_enabled: bool = _env_bool("SEARCH_INDEXING_ENABLED")
+    enable_canonical_redirect: bool = _env_bool("ENABLE_CANONICAL_REDIRECT")
     openai_billing_ready: bool = _env_bool("OPENAI_BILLING_READY")
     enable_ai_triage: bool = _env_bool("ENABLE_AI_TRIAGE")
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
@@ -248,6 +250,8 @@ class Settings:
     operator_credentials: str | None = os.getenv("OPERATOR_CREDENTIALS")
     google_site_verification: str | None = os.getenv("GOOGLE_SITE_VERIFICATION")
     bing_site_verification: str | None = os.getenv("BING_SITE_VERIFICATION")
+    yandex_site_verification: str | None = os.getenv("YANDEX_SITE_VERIFICATION")
+    yandex_metrika_id: str = _env_digits("YANDEX_METRIKA_ID")
     indexnow_key: str = os.getenv("INDEXNOW_KEY", "").strip()
 
 

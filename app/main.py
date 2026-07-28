@@ -66,6 +66,7 @@ from .db import (
     list_case_documents,
     list_cases,
     list_feedback,
+    mark_case_viewed,
     claim_daily_usage_for_subject,
     replace_triage,
     record_audit,
@@ -143,7 +144,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.53"
+APP_VERSION = "3.7.54"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -895,6 +896,10 @@ STATUS_LABELS = {
     "submitted": "Получено", "needs_information": "Нужна информация",
     "pilot_candidate": "Кандидат на бесплатную помощь", "human_review": "Ручная проверка",
     "declined": "Отклонено", "accepted": "Принято", "closed": "Закрыто",
+}
+ADMIN_STATUS_SHORT_LABELS = {
+    **STATUS_LABELS,
+    "pilot_candidate": "Кандидат",
 }
 RISK_LABELS = {"critical": "Критический", "high": "Высокий", "medium": "Средний", "low": "Низкий"}
 LANGUAGE_LABELS = {"English": "Английский", "French": "Французский", "German": "Немецкий", "Spanish": "Испанский", "Russian": "Русский", "Serbian": "Сербский"}
@@ -2463,16 +2468,58 @@ def admin_logout(request: Request, csrf_token: str = Form(...)) -> RedirectRespo
 
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_dashboard(request: Request, status: str | None = None, risk: str | None = None) -> HTMLResponse:
+def admin_dashboard(
+    request: Request,
+    status: str | None = None,
+    risk: str | None = None,
+    view: str = "active",
+    q: str | None = None,
+    sort: str = "priority",
+) -> HTMLResponse:
     if not is_admin(request):
         return RedirectResponse("/admin/login", status_code=303)
-    cases = list_cases(status=status, risk=risk)
+    allowed_views = {
+        "active", "new", "urgent", "needs_information", "human_review",
+        "pilot_candidate", "closed", "archive", "all",
+    }
+    allowed_statuses = set(STATUS_LABELS)
+    allowed_risks = set(RISK_LABELS)
+    allowed_sorts = {"priority", "newest", "oldest", "updated"}
+    if view not in allowed_views:
+        view = "active"
+    if status not in allowed_statuses:
+        status = None
+    if risk not in allowed_risks:
+        risk = None
+    if sort not in allowed_sorts:
+        sort = "priority"
+    search_query = (q or "").strip()[:120]
+    counts = dashboard_counts()
+    cases = list_cases(
+        status=status, risk=risk, view=view, search=search_query, sort=sort
+    )
+    view_copy = {
+        "active": ("Активные дела", "Все незакрытые обращения, отсортированные по риску и приоритету."),
+        "new": ("Новые входящие", "Дела, которые ещё ни разу не открывались администратором."),
+        "urgent": ("Срочные дела", "Активные обращения с критическим или высоким уровнем риска."),
+        "needs_information": ("Нужна информация", "Обращения, по которым необходимо запросить дополнительные сведения."),
+        "human_review": ("Требуют вмешательства", "Дела, переданные на ручную проверку администратора."),
+        "pilot_candidate": ("Кандидаты на бесплатную помощь", "Заявки, прошедшие предварительный автоматический отбор."),
+        "closed": ("Закрытые дела", "Завершённые обращения, убранные из основной рабочей очереди."),
+        "archive": ("Архив", "Закрытые и отклонённые обращения."),
+        "all": ("Все дела", "Полный список активных и архивных обращений."),
+    }
     return templates.TemplateResponse(
         request=request,
         name="admin_dashboard.html",
         context={
             "cases": cases,
-            "counts": dashboard_counts(),
+            "counts": counts,
+            "current_view": view,
+            "current_view_title": view_copy[view][0],
+            "current_view_description": view_copy[view][1],
+            "search_query": search_query,
+            "sort_filter": sort,
             "traffic_sources": traffic_source_counts(),
             "search_indexing_enabled": search_indexing_is_ready(),
             "search_indexing_checks": search_indexing_checks(),
@@ -2488,6 +2535,7 @@ def admin_dashboard(request: Request, status: str | None = None, risk: str | Non
             "status_filter": status or "",
             "risk_filter": risk or "",
             "status_labels": STATUS_LABELS,
+            "status_short_labels": ADMIN_STATUS_SHORT_LABELS,
             "risk_labels": RISK_LABELS,
             "problem_labels": PROBLEM_LABELS,
             "csrf_token": admin_csrf_token(request),
@@ -2539,6 +2587,8 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
     case = get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
+    mark_case_viewed(case_id)
+    case = get_case(case_id) or case
     document_analysis = _fresh_document_analysis(case_id)
     return templates.TemplateResponse(
         request=request,

@@ -3,91 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Очередь дел — ChinaTradeResolve</title>
+<title>{{ current_view_title }} — ChinaTradeResolve</title>
 <style nonce="{{ request.state.csp_nonce }}">
-:root{--teal:#14b8a6;--teal-dark:#0f766e;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--amber:#f59e0b}
+:root{--teal:#14b8a6;--teal-dark:#0f766e;--light:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--amber:#f59e0b;--red:#dc2626;--blue:#2563eb}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--light);color:var(--ink);line-height:1.5}a{color:var(--teal-dark)}
-.wrap{width:min(1180px,94%);margin:28px auto}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.brand{font-weight:900;font-size:22px}.brand span{color:var(--teal)}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;margin:16px 0;box-shadow:0 8px 24px #0f172a0a}
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:9px;border:1px solid #94a3b8;background:white;color:var(--ink);font-weight:800;text-decoration:none;cursor:pointer}.btn.primary{background:var(--teal);border-color:var(--teal);color:#062c28}.btn.feedback-nav{position:relative;border-color:#fcd34d;background:#fffbeb}.notification-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#b45309;color:white;font-size:12px}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800}.risk-critical,.risk-high{background:#fee2e2;color:#991b1b}.risk-medium{background:#fef3c7;color:#92400e}.risk-low{background:#d1fae5;color:#065f46}
-table{width:100%;border-collapse:collapse;background:white}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:var(--muted)}
-input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}textarea{min-height:100px}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.metric{background:white;border:1px solid var(--line);border-radius:12px;padding:15px}.metric strong{display:block;font-size:25px}.metric-link{display:block;color:inherit;text-decoration:none;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.metric-link:hover,.metric-link:focus-visible{transform:translateY(-2px);border-color:#fbbf24;box-shadow:0 10px 24px #b4530917;outline:none}.metric-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.review-icon{font-size:21px}.feedback-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid #fcd34d;border-radius:999px;background:#fffbeb;color:#92400e;text-decoration:none;font-weight:800;white-space:nowrap}.feedback-empty{color:#94a3b8}
-.muted{color:var(--muted)}.section-title{margin:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.login{width:min(420px,92%);margin:10vh auto}.traffic-list{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.source-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;font-weight:800}.source-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#0e7490;color:white;font-size:12px}.source-cell{max-width:190px}.source-name{font-weight:800;color:#155e75;word-break:break-word}.search-services{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.search-service{border:1px solid var(--line);border-radius:11px;padding:12px;background:#f8fafc}.search-service-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.search-service-name{font-weight:900}.service-ok{background:#d1fae5;color:#065f46}.service-off{background:#f1f5f9;color:#475569}.service-detail{display:block;margin-top:5px;color:var(--muted);font-size:13px}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.search-services{grid-template-columns:1fr}}@media(max-width:800px){.row{grid-template-columns:1fr}table{display:block;overflow-x:auto}}@media(max-width:520px){.grid{grid-template-columns:1fr}.top-actions{width:100%}.top-actions .btn{flex:1;justify-content:center}}
+.wrap{width:min(1260px,95%);margin:22px auto 44px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}.top h1{margin:8px 0 2px;font-size:clamp(25px,3vw,36px)}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.brand{font-weight:900;font-size:22px}.brand span{color:var(--teal)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;border-radius:10px;border:1px solid #94a3b8;background:white;color:var(--ink);font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap}.btn.primary{background:var(--teal);border-color:var(--teal);color:#062c28}.btn.soft{background:#f1f5f9;border-color:#cbd5e1}.btn.feedback-nav{position:relative;border-color:#fcd34d;background:#fffbeb}.notification-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#b45309;color:white;font-size:12px}
+.card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 8px 24px #0f172a0a}.muted{color:var(--muted)}.section-title{margin:0}.badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800;white-space:nowrap}.risk-critical,.risk-high{background:#fee2e2;color:#991b1b}.risk-medium{background:#fef3c7;color:#92400e}.risk-low{background:#d1fae5;color:#065f46}.service-ok{background:#d1fae5;color:#065f46}.service-off{background:#f1f5f9;color:#475569}
+.queue-nav-wrap{position:sticky;top:0;z-index:20;margin:18px -4px 14px;padding:8px 4px;background:linear-gradient(var(--light) 75%,transparent)}.queue-nav{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}.queue-tab{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:white;color:#334155;text-decoration:none;font-weight:850;white-space:nowrap}.queue-tab:hover{border-color:#5eead4}.queue-tab.active{background:#0f172a;color:white;border-color:#0f172a}.queue-tab.urgent.active{background:#991b1b;border-color:#991b1b}.queue-tab .count{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 6px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:12px}.queue-tab.active .count{background:#ffffff24;color:white}.queue-tab .new-count{background:#dcfce7;color:#166534}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.metric{display:block;min-width:0;background:white;border:1px solid var(--line);border-radius:13px;padding:14px;color:inherit;text-decoration:none;transition:.15s}.metric:hover,.metric:focus-visible{transform:translateY(-2px);border-color:#5eead4;box-shadow:0 10px 24px #0f766e17;outline:none}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{display:block;font-size:27px;margin-top:2px}.metric.selected{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}.metric.urgent strong{color:#b91c1c}
+.queue-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}.queue-heading h2{margin:0;font-size:24px}.queue-total{font-weight:850;color:#475569}
+.filters{display:grid;grid-template-columns:minmax(210px,2fr) repeat(3,minmax(145px,1fr)) auto;gap:10px;align-items:end}.filters label{font-weight:800;font-size:13px;color:#475569}.filters input,.filters select{width:100%;margin-top:5px;padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:white;color:var(--ink)}.filter-actions{display:flex;gap:7px}
+.table-wrap{overflow:hidden;border:1px solid var(--line);border-radius:13px;background:white}.queue-table{width:100%;border-collapse:collapse;table-layout:fixed}.queue-table th,.queue-table td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.queue-table th{font-size:11px;text-transform:uppercase;letter-spacing:.035em;color:var(--muted);background:#f8fafc}.queue-table tr:last-child td{border-bottom:0}.queue-table tbody tr:hover{background:#f8fafc}.col-case{width:16%}.col-state{width:14%}.col-problem{width:18%}.col-applicant{width:19%}.col-source{width:13%}.col-date{width:11%}.col-open{width:9%}.case-ref{font-weight:900}.case-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}.new-dot{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:900;color:#166534}.new-dot:before{content:"";width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px #dcfce7}.state-stack{display:flex;gap:6px;flex-wrap:wrap}.person-name{font-weight:850;overflow-wrap:anywhere}.person-email,.source-detail{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.source-short{font-weight:800;color:#155e75}.feedback-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 7px;border:1px solid #fcd34d;border-radius:999px;background:#fffbeb;color:#92400e;text-decoration:none;font-size:12px;font-weight:900}.open-link{padding:8px 10px}.empty-state{text-align:center;padding:34px!important;color:var(--muted)}
+.tech summary{cursor:pointer;font-weight:900;font-size:18px;list-style:none}.tech summary::-webkit-details-marker{display:none}.tech summary:after{content:"＋";float:right;color:var(--muted)}.tech[open] summary:after{content:"−"}.search-services{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.search-service{border:1px solid var(--line);border-radius:11px;padding:12px;background:#f8fafc}.search-service-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.search-service-name{font-weight:900}.service-detail{display:block;margin-top:5px;color:var(--muted);font-size:13px}.traffic-list{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.source-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;font-weight:800}.source-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#0e7490;color:white;font-size:12px}
+@media(max-width:1080px){.metrics{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.filter-actions{grid-column:1/-1}.col-source{display:none}}
+@media(max-width:760px){.wrap{width:min(96%,680px)}.metrics{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.filter-actions{grid-column:auto}.search-services{grid-template-columns:1fr}.table-wrap{border:0;background:transparent;overflow:visible}.queue-table,.queue-table tbody,.queue-table tr,.queue-table td{display:block;width:100%}.queue-table thead{display:none}.queue-table tr{margin:0 0 12px;background:white;border:1px solid var(--line);border-radius:13px;padding:12px;box-shadow:0 6px 18px #0f172a0a}.queue-table td{border:0;padding:7px 0}.queue-table td:before{content:attr(data-label);display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:900;letter-spacing:.04em;margin-bottom:2px}.col-source{display:block}.open-link{width:100%}.queue-heading{align-items:flex-start}.top-actions{width:100%}.top-actions .btn{flex:1}}
+@media(max-width:450px){.metrics{grid-template-columns:1fr 1fr}.metric{padding:11px}.metric strong{font-size:23px}.card{padding:14px}.filter-actions{display:grid;grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <div><div class="brand">ChinaTrade<span>Resolve</span></div><h1>Очередь дел, требующих внимания</h1></div>
+    <div><div class="brand">ChinaTrade<span>Resolve</span></div><h1>Рабочая очередь</h1><div class="muted">Очередь дел, требующих внимания: сначала новые и срочные, закрытые обращения находятся отдельно.</div></div>
     <div class="top-actions">
-      <a class="btn feedback-nav" href="/admin/feedback" aria-label="Открыть отзывы клиентов, всего {{ counts.feedback or 0 }}">
-        <span aria-hidden="true">💬</span> Отзывы
-        {% if counts.feedback %}<span class="notification-count">{{ counts.feedback }}</span>{% endif %}
-      </a>
+      <a class="btn feedback-nav" href="/admin/feedback"><span aria-hidden="true">💬</span> Отзывы {% if counts.feedback %}<span class="notification-count">{{ counts.feedback }}</span>{% endif %}</a>
       <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn">Выйти</button></form>
     </div>
   </div>
 
-  <div class="grid">
-    <div class="metric"><span>Всего дел</span><strong>{{ counts.total or 0 }}</strong></div>
-    <div class="metric"><span>Исключения</span><strong>{{ counts.exceptions or 0 }}</strong></div>
-    <div class="metric"><span>Кандидаты на бесплатную помощь</span><strong>{{ counts.pilot_candidate or 0 }}</strong></div>
-    <div class="metric"><span>Ручная проверка</span><strong>{{ counts.human_review or 0 }}</strong></div>
-    <a class="metric metric-link" href="/admin/feedback">
-      <span class="metric-title"><span>Отзывы</span><span class="review-icon" aria-hidden="true">💬</span></span>
-      <strong>{{ counts.feedback or 0 }}</strong><span class="muted">Открыть и проанализировать</span>
-    </a>
+  <div class="queue-nav-wrap">
+    <nav class="queue-nav" aria-label="Разделы очереди">
+      <a class="queue-tab {{ 'active' if current_view=='new' else '' }}" href="/admin?view=new">Новые <span class="count new-count">{{ counts.new or 0 }}</span></a>
+      <a class="queue-tab urgent {{ 'active' if current_view=='urgent' else '' }}" href="/admin?view=urgent">Срочные <span class="count">{{ counts.urgent or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='needs_information' else '' }}" href="/admin?view=needs_information">Нужна информация <span class="count">{{ counts.needs_information or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='human_review' else '' }}" href="/admin?view=human_review">Ручная проверка <span class="count">{{ counts.human_review or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='pilot_candidate' else '' }}" href="/admin?view=pilot_candidate">Кандидаты <span class="count">{{ counts.pilot_candidate or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='active' else '' }}" href="/admin?view=active">Активные <span class="count">{{ counts.active or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='closed' else '' }}" href="/admin?view=closed">Закрытые <span class="count">{{ counts.closed or 0 }}</span></a>
+      <a class="queue-tab {{ 'active' if current_view=='all' else '' }}" href="/admin?view=all">Все <span class="count">{{ counts.total or 0 }}</span></a>
+    </nav>
+  </div>
+
+  <div class="metrics" aria-label="Основные показатели очереди">
+    <a class="metric {{ 'selected' if current_view=='new' else '' }}" href="/admin?view=new"><span>Новые входящие</span><strong>{{ counts.new or 0 }}</strong></a>
+    <a class="metric urgent {{ 'selected' if current_view=='urgent' else '' }}" href="/admin?view=urgent"><span>Срочные</span><strong>{{ counts.urgent or 0 }}</strong></a>
+    <a class="metric {{ 'selected' if current_view=='needs_information' else '' }}" href="/admin?view=needs_information"><span>Нужна информация</span><strong>{{ counts.needs_information or 0 }}</strong></a>
+    <a class="metric {{ 'selected' if current_view=='human_review' else '' }}" href="/admin?view=human_review"><span>Ручная проверка</span><strong>{{ counts.human_review or 0 }}</strong></a>
+    <a class="metric {{ 'selected' if current_view=='active' else '' }}" href="/admin?view=active"><span>Всего активных</span><strong>{{ counts.active or 0 }}</strong></a>
+    <a class="metric {{ 'selected' if current_view=='closed' else '' }}" href="/admin?view=closed"><span>Закрытые</span><strong>{{ counts.closed or 0 }}</strong></a>
   </div>
 
   <div class="card">
-    <h2 class="section-title">Индексация в поисковых системах</h2>
-    {% if search_indexing_enabled %}<p><span class="badge risk-low">Разрешена</span> Поисковые роботы могут обходить публичные страницы сайта.</p>{% else %}<p><span class="badge risk-high">Заблокирована</span> Файл <code>/robots.txt</code> пока запрещает индексацию. Проверьте <code>SEARCH_INDEXING_ENABLED</code>, HTTPS, публичный домен и данные оператора.</p>{% endif %}
-    <div class="search-services" aria-label="Состояние поисковых интеграций">
-      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Google Search Console</span><span class="badge {{ 'service-ok' if google_search_console_connected else 'service-off' }}">{{ 'Подключён' if google_search_console_connected else 'Не подключён' }}</span></div><span class="service-detail">Статус подтверждается вручную, поскольку ресурс может быть подтверждён через DNS.</span></div>
-      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Яндекс Вебмастер</span><span class="badge {{ 'service-ok' if yandex_webmaster_connected else 'service-off' }}">{{ 'Подключён' if yandex_webmaster_connected else 'Не подключён' }}</span></div><span class="service-detail">Права владельца и обработка Sitemap подтверждаются во внешнем кабинете.</span></div>
-      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Яндекс Метрика{% if yandex_metrika_id %} · № {{ yandex_metrika_id }}{% endif %}</span><span class="badge {{ 'service-ok' if yandex_metrika_configured else 'service-off' }}">{{ 'Подключена' if yandex_metrika_configured else 'Не подключена' }}</span></div><span class="service-detail">Счётчик установлен на публичных страницах сайта.</span></div>
-      <div class="search-service"><div class="search-service-head"><span class="search-service-name">IndexNow</span><span class="badge {{ 'service-ok' if indexnow_configured else 'service-off' }}">{{ 'Ключ настроен' if indexnow_configured else 'Ключ не настроен' }}</span></div><span class="service-detail">Используется для ускоренного уведомления поисковых систем об обновлениях.</span></div>
-      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Bing Webmaster Tools</span><span class="badge {{ 'service-ok' if bing_webmaster_connected else 'service-off' }}">{{ 'Подключён' if bing_webmaster_connected else 'Не подключён' }}</span></div><span class="service-detail">Ручной статус внешнего кабинета Bing.</span></div>
-    </div>
-    {% if database_persistent and database_available %}<p><span class="badge risk-low">PostgreSQL</span> Заявки сохраняются в постоянной базе данных.</p>{% elif database_backend == 'sqlite' %}<p><span class="badge risk-high">SQLite</span> Это локальное хранилище. Для Render задайте <code>DATABASE_URL</code>, иначе после перезапуска данные могут быть потеряны и индексация останется заблокированной.</p>{% else %}<p><span class="badge risk-high">База недоступна</span> PostgreSQL настроен, но проверочный запрос не выполнен.</p>{% endif %}
-  </div>
-
-  <div class="card">
-    <h2 class="section-title">Источники заявок</h2>
-    <p class="muted">Показывает, откуда пришли люди с UTM-ссылками или по домену предыдущего сайта. «Прямой или неопределённый источник» означает, что UTM-метка и надёжный домен перехода не были сохранены; это не всегда ручной ввод адреса.</p>
-    <div class="traffic-list">{% for item in traffic_sources %}<span class="source-pill">{{ item.source }} <span class="source-count">{{ item.count }}</span></span>{% else %}<span class="muted">Данных об источниках пока нет.</span>{% endfor %}</div>
-  </div>
-
-  <div class="card">
-    <form method="get" class="row">
-      <label>Статус<select name="status"><option value="">Все</option>{% for value in ['needs_information','pilot_candidate','human_review','declined','accepted','closed'] %}<option value="{{ value }}" {% if status_filter==value %}selected{% endif %}>{{ status_labels.get(value, value) }}</option>{% endfor %}</select></label>
-      <label>Риск<select name="risk"><option value="">Все</option>{% for value in ['critical','high','medium','low'] %}<option value="{{ value }}" {% if risk_filter==value %}selected{% endif %}>{{ risk_labels.get(value, value) }}</option>{% endfor %}</select></label>
-      <div><button class="btn primary">Применить фильтры</button></div>
+    <div class="queue-heading"><div><h2>{{ current_view_title }}</h2><div class="muted">{{ current_view_description }}</div></div><div class="queue-total">Показано: {{ cases|length }}</div></div>
+    <form method="get" class="filters" aria-label="Поиск и фильтры очереди">
+      <input type="hidden" name="view" value="{{ current_view }}">
+      <label>Поиск<input name="q" value="{{ search_query }}" placeholder="Номер дела, имя, email, поставщик"></label>
+      <label>Статус<select name="status"><option value="">Любой</option>{% for value in ['submitted','needs_information','pilot_candidate','human_review','declined','accepted','closed'] %}<option value="{{ value }}" {% if status_filter==value %}selected{% endif %}>{{ status_labels.get(value, value) }}</option>{% endfor %}</select></label>
+      <label>Риск<select name="risk"><option value="">Любой</option>{% for value in ['critical','high','medium','low'] %}<option value="{{ value }}" {% if risk_filter==value %}selected{% endif %}>{{ risk_labels.get(value, value) }}</option>{% endfor %}</select></label>
+      <label>Сортировка<select name="sort"><option value="priority" {% if sort_filter=='priority' %}selected{% endif %}>Сначала важные</option><option value="newest" {% if sort_filter=='newest' %}selected{% endif %}>Сначала новые</option><option value="oldest" {% if sort_filter=='oldest' %}selected{% endif %}>Сначала старые</option><option value="updated" {% if sort_filter=='updated' %}selected{% endif %}>Недавно обновлённые</option></select></label>
+      <div class="filter-actions"><button class="btn primary">Показать</button><a class="btn soft" href="/admin?view={{ current_view }}">Сбросить</a></div>
     </form>
   </div>
 
-  <div class="card">
-    <table>
-      <thead><tr><th>Приоритет</th><th>Дело</th><th>Статус</th><th>Риск</th><th>Проблема</th><th>Заявитель</th><th>Источник</th><th>Отзыв</th><th>Создано</th></tr></thead>
+  <div class="table-wrap">
+    <table class="queue-table">
+      <thead><tr><th class="col-case">Дело</th><th class="col-state">Статус и риск</th><th class="col-problem">Проблема</th><th class="col-applicant">Заявитель</th><th class="col-source">Источник</th><th class="col-date">Создано</th><th class="col-open"></th></tr></thead>
       <tbody>
       {% for case in cases %}
         <tr>
-          <td><strong>{{ case.priority }}</strong></td>
-          <td><a href="/admin/case/{{ case.id }}">{{ case.case_reference }}</a></td>
-          <td><span class="badge">{{ status_labels.get(case.status, case.status) }}</span></td>
-          <td><span class="badge risk-{{ case.risk_level }}">{{ risk_labels.get(case.risk_level, case.risk_level) }}</span></td>
-          <td>{{ problem_labels.get(case.main_problem, case.main_problem) }}</td>
-          <td>{{ case.full_name }}<br><span class="muted">{{ case.email }}</span></td>
-          <td class="source-cell"><span class="source-name">{{ case.acquisition.source_label }}</span>{% if case.acquisition.utm_campaign %}<br><span class="muted">{{ case.acquisition.utm_campaign }}</span>{% endif %}</td>
-          <td>{% if case.feedback_rating %}<a class="feedback-pill" href="/admin/case/{{ case.id }}#client-feedback" title="Открыть отзыв"><span aria-hidden="true">💬</span> {{ case.feedback_rating }}/5</a>{% else %}<span class="feedback-empty">—</span>{% endif %}</td>
-          <td>{{ case.created_at }}</td>
+          <td class="col-case" data-label="Дело"><a class="case-ref" href="/admin/case/{{ case.id }}">{{ case.case_reference }}</a><div class="case-meta"><span class="badge">приоритет {{ case.priority }}</span>{% if case.is_new %}<span class="new-dot">НОВОЕ</span>{% endif %}{% if case.feedback_rating %}<a class="feedback-pill" href="/admin/case/{{ case.id }}#client-feedback">💬 {{ case.feedback_rating }}/5</a>{% endif %}</div></td>
+          <td class="col-state" data-label="Статус и риск"><div class="state-stack"><span class="badge">{{ status_short_labels.get(case.status, case.status) }}</span><span class="badge risk-{{ case.risk_level }}">{{ risk_labels.get(case.risk_level, case.risk_level) }}</span></div></td>
+          <td class="col-problem" data-label="Проблема">{{ problem_labels.get(case.main_problem, case.main_problem) }}</td>
+          <td class="col-applicant" data-label="Заявитель"><div class="person-name">{{ case.full_name }}</div><div class="person-email">{{ case.email }}</div></td>
+          <td class="col-source" data-label="Источник"><div class="source-short">{{ case.source_short }}</div>{% if case.acquisition.utm_campaign %}<div class="source-detail">{{ case.acquisition.utm_campaign }}</div>{% endif %}</td>
+          <td class="col-date" data-label="Создано">{{ case.created_display }}</td>
+          <td class="col-open" data-label="Действие"><a class="btn primary open-link" href="/admin/case/{{ case.id }}">Открыть</a></td>
         </tr>
-      {% else %}<tr><td colspan="9">По выбранным фильтрам дел нет.</td></tr>{% endfor %}
+      {% else %}<tr><td class="empty-state" colspan="7">В этом разделе дел нет. Попробуйте другой раздел или сбросьте фильтры.</td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
+
+  <details class="card tech">
+    <summary>Техническое состояние, индексация и источники</summary>
+    <h3>Индексация в поисковых системах</h3>
+    {% if search_indexing_enabled %}<p><span class="badge risk-low">Разрешена</span> Поисковые роботы могут обходить публичные страницы сайта.</p>{% else %}<p><span class="badge risk-high">Заблокирована</span> Проверьте <code>SEARCH_INDEXING_ENABLED</code>, HTTPS, публичный домен и данные оператора.</p>{% endif %}
+    <div class="search-services" aria-label="Состояние поисковых интеграций">
+      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Google Search Console</span><span class="badge {{ 'service-ok' if google_search_console_connected else 'service-off' }}">{{ 'Подключён' if google_search_console_connected else 'Не подключён' }}</span></div><span class="service-detail">Статус подтверждается вручную, поскольку ресурс может быть подтверждён через DNS.</span></div>
+      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Яндекс Вебмастер</span><span class="badge {{ 'service-ok' if yandex_webmaster_connected else 'service-off' }}">{{ 'Подключён' if yandex_webmaster_connected else 'Не подключён' }}</span></div><span class="service-detail">Права владельца и Sitemap.</span></div>
+      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Яндекс Метрика{% if yandex_metrika_id %} · № {{ yandex_metrika_id }}{% endif %}</span><span class="badge {{ 'service-ok' if yandex_metrika_configured else 'service-off' }}">{{ 'Подключена' if yandex_metrika_configured else 'Не подключена' }}</span></div><span class="service-detail">Счётчик на публичных страницах.</span></div>
+      <div class="search-service"><div class="search-service-head"><span class="search-service-name">IndexNow</span><span class="badge {{ 'service-ok' if indexnow_configured else 'service-off' }}">{{ 'Ключ настроен' if indexnow_configured else 'Ключ не настроен' }}</span></div><span class="service-detail">Быстрые уведомления поисковых систем.</span></div>
+      <div class="search-service"><div class="search-service-head"><span class="search-service-name">Bing Webmaster Tools</span><span class="badge {{ 'service-ok' if bing_webmaster_connected else 'service-off' }}">{{ 'Подключён' if bing_webmaster_connected else 'Не подключён' }}</span></div><span class="service-detail">Статус внешнего кабинета Bing.</span></div>
+    </div>
+    {% if database_persistent and database_available %}<p><span class="badge risk-low">PostgreSQL</span> Заявки сохраняются в постоянной базе данных.</p>{% elif database_backend == 'sqlite' %}<p><span class="badge risk-high">SQLite</span> Для Render задайте <code>DATABASE_URL</code>.</p>{% else %}<p><span class="badge risk-high">База недоступна</span> Проверочный запрос не выполнен.</p>{% endif %}
+    <h3>Источники заявок</h3>
+    <p class="muted">«Прямой или неопределённый источник» означает, что UTM-метка и надёжный домен перехода не были сохранены; это не всегда ручной ввод адреса.</p>
+    <div class="traffic-list">{% for item in traffic_sources %}<span class="source-pill">{{ item.source }} <span class="source-count">{{ item.count }}</span></span>{% else %}<span class="muted">Данных пока нет.</span>{% endfor %}</div>
+  </details>
 </div>
 </body>
 </html>

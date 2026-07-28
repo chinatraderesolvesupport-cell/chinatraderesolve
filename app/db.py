@@ -148,6 +148,38 @@ def _ensure_document_analysis_run_token(conn: Any) -> None:
         execute(conn, "ALTER TABLE document_analyses ADD COLUMN run_token TEXT NOT NULL DEFAULT ''")
 
 
+def _ensure_case_admin_viewed_at(conn: Any) -> None:
+    """Track whether an administrator has opened a case without losing old data.
+
+    Existing cases are marked as already viewed during the one-time migration so
+    a deployment does not suddenly label the entire historical queue as new.
+    Cases created after the migration keep NULL until their detail page is opened.
+    """
+    if using_postgres():
+        rows = execute(
+            conn,
+            "SELECT column_name FROM information_schema.columns WHERE table_name='cases'",
+        ).fetchall()
+        columns = {str(row["column_name"]) for row in rows}
+    else:
+        rows = execute(conn, "PRAGMA table_info(cases)").fetchall()
+        columns = {str(row["name"]) for row in rows}
+    if "admin_viewed_at" not in columns:
+        if using_postgres():
+            execute(conn, "ALTER TABLE cases ADD COLUMN admin_viewed_at TEXT")
+        else:
+            execute(conn, "ALTER TABLE cases ADD COLUMN admin_viewed_at TEXT")
+        execute(
+            conn,
+            "UPDATE cases SET admin_viewed_at=updated_at WHERE admin_viewed_at IS NULL",
+        )
+    execute(
+        conn,
+        "CREATE INDEX IF NOT EXISTS idx_cases_admin_queue "
+        "ON cases(admin_viewed_at,status,risk_level,created_at)",
+    )
+
+
 def _ensure_case_document_page_count(conn: Any) -> None:
     """Add PDF page metadata without racing an overlapping PostgreSQL deploy."""
     if using_postgres():
@@ -198,6 +230,7 @@ def init_db() -> None:
                 triage_source TEXT NOT NULL,
                 public_message TEXT NOT NULL,
                 admin_note TEXT NOT NULL DEFAULT '',
+                admin_viewed_at TEXT,
                 deleted_at TEXT
             )
             """,
@@ -289,6 +322,7 @@ def init_db() -> None:
             _ensure_notification_retry_columns(conn)
             _ensure_document_analysis_run_token(conn)
             _ensure_case_document_page_count(conn)
+            _ensure_case_admin_viewed_at(conn)
         return
 
     with transaction() as conn:
@@ -323,6 +357,7 @@ def init_db() -> None:
                 triage_source TEXT NOT NULL,
                 public_message TEXT NOT NULL,
                 admin_note TEXT NOT NULL DEFAULT '',
+                admin_viewed_at TEXT,
                 deleted_at TEXT
             );
 
@@ -405,6 +440,7 @@ def init_db() -> None:
         _ensure_notification_retry_columns(conn)
         _ensure_document_analysis_run_token(conn)
         _ensure_case_document_page_count(conn)
+        _ensure_case_admin_viewed_at(conn)
 
 
 def add_audit(conn: Any, case_id: int, actor: str, event_type: str, details: dict[str, Any]) -> None:
@@ -582,7 +618,33 @@ def traffic_source_counts() -> list[dict[str, Any]]:
     ]
 
 
-def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[str, Any]]:
+def _admin_datetime(value: Any) -> str:
+    raw = str(value or "")
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        return parsed.strftime("%d.%m.%Y %H:%M")
+    except ValueError:
+        return raw
+
+
+def _short_source_label(acquisition: dict[str, str]) -> str:
+    key = str(acquisition.get("source_key") or "direct")
+    label = str(acquisition.get("source_label") or key)
+    if key == "direct":
+        return "Прямой / неизвестный"
+    if len(label) > 28:
+        return label[:27].rstrip() + "…"
+    return label
+
+
+def list_cases(
+    status: str | None = None,
+    risk: str | None = None,
+    *,
+    view: str = "active",
+    search: str | None = None,
+    sort: str = "priority",
+) -> list[dict[str, Any]]:
     query = """
         SELECT c.*, f.rating AS feedback_rating, f.updated_at AS feedback_updated_at
         FROM cases c
@@ -590,13 +652,40 @@ def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[
         WHERE c.deleted_at IS NULL
     """
     args: list[Any] = []
+    view_conditions = {
+        "active": "c.status NOT IN ('closed','declined')",
+        "new": "c.admin_viewed_at IS NULL AND c.status NOT IN ('closed','declined')",
+        "urgent": "c.risk_level IN ('critical','high') AND c.status NOT IN ('closed','declined')",
+        "needs_information": "c.status='needs_information'",
+        "human_review": "c.status='human_review'",
+        "pilot_candidate": "c.status='pilot_candidate'",
+        "closed": "c.status='closed'",
+        "archive": "c.status IN ('closed','declined')",
+        "all": "1=1",
+    }
+    query += " AND " + view_conditions.get(view, view_conditions["active"])
     if status:
         query += " AND c.status=?"
         args.append(status)
     if risk:
         query += " AND c.risk_level=?"
         args.append(risk)
-    query += " ORDER BY CASE c.risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, c.priority DESC, c.created_at DESC"
+    cleaned_search = (search or "").strip().casefold()[:120]
+    if cleaned_search:
+        like = f"%{cleaned_search}%"
+        query += (
+            " AND (LOWER(c.case_reference) LIKE ? OR LOWER(c.full_name) LIKE ? "
+            "OR LOWER(c.email) LIKE ? OR LOWER(c.main_problem) LIKE ? "
+            "OR LOWER(c.supplier_name) LIKE ? OR LOWER(c.order_number) LIKE ?)"
+        )
+        args.extend([like] * 6)
+    order_by = {
+        "priority": "CASE c.risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, c.priority DESC, c.created_at DESC",
+        "newest": "c.created_at DESC, c.priority DESC",
+        "oldest": "c.created_at ASC, c.priority DESC",
+        "updated": "c.updated_at DESC, c.priority DESC",
+    }.get(sort, "CASE c.risk_level WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC, c.priority DESC, c.created_at DESC")
+    query += " ORDER BY " + order_by
     with transaction() as conn:
         cases = [dict(r) for r in execute(conn, query, args).fetchall()]
         acquisition_rows = execute(
@@ -607,8 +696,25 @@ def list_cases(status: str | None = None, risk: str | None = None) -> list[dict[
     for row in acquisition_rows:
         acquisition_by_case.setdefault(int(row["case_id"]), _parse_acquisition(row["details_json"]))
     for case in cases:
-        case["acquisition"] = acquisition_by_case.get(int(case["id"]), _parse_acquisition("{}"))
+        acquisition = acquisition_by_case.get(int(case["id"]), _parse_acquisition("{}"))
+        case["acquisition"] = acquisition
+        case["source_short"] = _short_source_label(acquisition)
+        case["created_display"] = _admin_datetime(case.get("created_at"))
+        case["updated_display"] = _admin_datetime(case.get("updated_at"))
+        case["is_new"] = not bool(case.get("admin_viewed_at")) and case.get("status") not in {"closed", "declined"}
     return cases
+
+
+def mark_case_viewed(case_id: int) -> bool:
+    """Mark a case as seen the first time its administrator detail page opens."""
+    with transaction() as conn:
+        cursor = execute(
+            conn,
+            "UPDATE cases SET admin_viewed_at=COALESCE(admin_viewed_at,?) "
+            "WHERE id=? AND deleted_at IS NULL",
+            (utcnow(), case_id),
+        )
+        return int(cursor.rowcount or 0) == 1
 
 
 def list_feedback(rating: int | None = None, consent: str | None = None) -> list[dict[str, Any]]:
@@ -854,13 +960,32 @@ def mark_notification(
 
 def dashboard_counts() -> dict[str, int]:
     with transaction() as conn:
-        rows = execute(conn, "SELECT status,COUNT(*) AS n FROM cases WHERE deleted_at IS NULL GROUP BY status").fetchall()
-        counts = {r["status"]: r["n"] for r in rows}
-        counts["total"] = sum(counts.values())
-        counts["exceptions"] = sum(counts.get(k, 0) for k in ("human_review", "needs_information"))
+        rows = execute(
+            conn,
+            "SELECT status,risk_level,admin_viewed_at FROM cases WHERE deleted_at IS NULL",
+        ).fetchall()
         feedback_row = execute(conn, "SELECT COUNT(*) AS n FROM feedback").fetchone()
-        counts["feedback"] = int(feedback_row["n"]) if feedback_row else 0
-        return counts
+    counts: dict[str, int] = {}
+    for row in rows:
+        status = str(row["status"])
+        counts[status] = counts.get(status, 0) + 1
+    counts["total"] = len(rows)
+    counts["active"] = sum(1 for row in rows if row["status"] not in {"closed", "declined"})
+    counts["new"] = sum(
+        1 for row in rows
+        if row["status"] not in {"closed", "declined"} and not row["admin_viewed_at"]
+    )
+    counts["urgent"] = sum(
+        1 for row in rows
+        if row["status"] not in {"closed", "declined"}
+        and row["risk_level"] in {"critical", "high"}
+    )
+    counts["exceptions"] = sum(
+        1 for row in rows if row["status"] in {"human_review", "needs_information"}
+    )
+    counts["archive"] = sum(1 for row in rows if row["status"] in {"closed", "declined"})
+    counts["feedback"] = int(feedback_row["n"]) if feedback_row else 0
+    return counts
 
 
 def _anonymize_case_for_connection(conn: Any, case_id: int, deleted_at: str) -> None:

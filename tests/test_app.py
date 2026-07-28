@@ -322,10 +322,9 @@ def test_admin_auth_queue_close_and_feedback():
     assert "Согласие на публикацию:</b> да" in admin_case.text
     assert 'id="client-feedback"' in admin_case.text
 
-    dashboard_with_feedback = client.get("/admin")
-    assert "Открыть и проанализировать" in dashboard_with_feedback.text
+    dashboard_with_feedback = client.get("/admin?view=all")
     assert f'href="/admin/case/{case_id}#client-feedback"' in dashboard_with_feedback.text
-    assert "> 5/5</a>" in dashboard_with_feedback.text
+    assert "5/5</a>" in dashboard_with_feedback.text
 
     feedback_centre = client.get("/admin/feedback")
     assert feedback_centre.status_code == 200
@@ -2107,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.53"
+    assert health.json()["version"] == "3.7.54"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.53"
+    assert health.headers["x-app-version"] == "3.7.54"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5228,7 +5227,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.53"
+    assert response.headers["x-app-version"] == "3.7.54"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5253,7 +5252,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.53"
+    assert response.json()["version"] == "3.7.54"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5309,11 +5308,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.53"
-    assert "v3.7.53" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.53" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.53" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.53" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.54"
+    assert "v3.7.54" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.54" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.54" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.54" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5477,3 +5476,59 @@ def test_v3749_related_guides_are_limited_and_contextual():
     assert page.text.count('class="related"') == 1
     assert 'Alibaba закрыла спор без возврата денег' in page.text
     assert 'Китайский поставщик пропал после оплаты' in page.text
+
+
+
+def test_admin_dashboard_has_work_queue_tabs_and_marks_case_seen():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="queue-tabs@example.com"),
+        headers={"x-forwarded-for": "198.51.100.251"},
+    ).json()
+    client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+    )
+    new_queue = client.get("/admin?view=new")
+    assert new_queue.status_code == 200
+    assert "Новые входящие" in new_queue.text
+    assert "Срочные" in new_queue.text
+    assert "Нужна информация" in new_queue.text
+    assert "Ручная проверка" in new_queue.text
+    assert created["case_reference"] in new_queue.text
+    import re
+    case_match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), new_queue.text)
+    assert case_match
+    case_id = int(case_match.group(1))
+    detail = client.get(f"/admin/case/{case_id}")
+    assert detail.status_code == 200
+    new_queue_after = client.get("/admin?view=new")
+    assert created["case_reference"] not in new_queue_after.text
+    all_queue = client.get("/admin?view=all&q=queue-tabs%40example.com")
+    assert created["case_reference"] in all_queue.text
+
+
+def test_admin_dashboard_defaults_to_active_and_hides_closed_cases():
+    created = client.post(
+        "/api/applications",
+        json=valid_payload(email="closed-queue@example.com"),
+        headers={"x-forwarded-for": "198.51.100.252"},
+    ).json()
+    client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+    )
+    import re
+    dashboard = client.get("/admin")
+    case_match = re.search(r'href="/admin/case/(\d+)">' + re.escape(created["case_reference"]), dashboard.text)
+    assert case_match
+    case_id = int(case_match.group(1))
+    csrf = re.search(r'name="csrf_token" value="([^"]+)"', dashboard.text).group(1)
+    client.post(
+        f"/admin/case/{case_id}/status",
+        data={"status": "closed", "note": "Completed", "csrf_token": csrf},
+    )
+    active = client.get("/admin")
+    assert created["case_reference"] not in active.text
+    closed = client.get("/admin?view=closed")
+    assert created["case_reference"] in closed.text

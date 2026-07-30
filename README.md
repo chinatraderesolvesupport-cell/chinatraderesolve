@@ -1,6 +1,14 @@
-# ChinaTradeResolve Document AI v3.7.54
+# ChinaTradeResolve Document AI v3.7.55
 
-Version 3.7.54 introduces a task-oriented administrator work queue with persistent new-case indicators, dedicated tabs for urgent and intervention queues, compact responsive case cards, search and sorting, and archived technical diagnostics below the working list.
+Version 3.7.55 fixes the permanent IndexNow submission command: the script now imports the application correctly when launched directly from Render Shell and declares the root verification-key URL required to submit every multilingual guide without HTTP 422 errors. The administrator work queue from v3.7.54 is unchanged.
+
+## IndexNow submission fix in v3.7.55
+
+- `python scripts/submit_indexnow.py` now works directly from the project root or Render Shell without a manual `PYTHONPATH` prefix.
+- `keyLocation` points to `https://chinatraderesolve.com/<INDEXNOW_KEY>.txt`, matching the root verification route exposed by the application.
+- The former `/indexnow/<key>.txt` location remains available for compatibility, but it is no longer advertised to IndexNow because it cannot authorize URLs outside `/indexnow/`.
+- URL generation is deduplicated and remains at 84 public multilingual URLs for the current catalogue.
+- Regression tests cover root key delivery, project-root bootstrapping and the generated IndexNow payload.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 ## Pre-promotion interface and international SEO fixes in v3.7.54
@@ -79,7 +87,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.54 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.55 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -89,7 +97,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.54`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.55`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -480,7 +488,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.54
+cd ChinaTradeResolve_Document_AI_v3.7.55
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -638,7 +646,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.54 включает безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.55 включает исправленный IndexNow-скрипт, безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

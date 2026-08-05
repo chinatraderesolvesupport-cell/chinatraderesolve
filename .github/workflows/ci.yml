@@ -36,3 +36,119 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+  milica-rc16-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout isolated RC16 audit branch
+        uses: actions/checkout@v4
+        with:
+          ref: milica-rc16-audit-build
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+          cache-read-only: true
+
+      - name: Reconstruct audited source
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rc16-audit /tmp/rc16-pass1 /tmp/rc16-pass2 /tmp/rc16-out
+          cat tools/milica_rc16_audit/source_parts/part*.b64 | base64 -d > /tmp/Milica_RC16_source_unsigned.tar.gz
+          gzip -t /tmp/Milica_RC16_source_unsigned.tar.gz
+          tar -xzf /tmp/Milica_RC16_source_unsigned.tar.gz -C /tmp/rc16-audit
+          tar -xzf /tmp/Milica_RC16_source_unsigned.tar.gz -C /tmp/rc16-pass1
+          tar -xzf /tmp/Milica_RC16_source_unsigned.tar.gz -C /tmp/rc16-pass2
+          test -f /tmp/rc16-audit/app/src/main/java/rs/milicamusic/app/MilicaWakeService.java
+          ! find /tmp/rc16-audit -type f \( -name '*.jks' -o -name '*.keystore' \) | grep -q .
+
+      - name: Static source audit
+        run: |
+          set -euo pipefail
+          node --check /tmp/rc16-audit/app/src/main/assets/web/app.js
+          python tools/milica_rc16_audit/milica-rc16-tests.py --root /tmp/rc16-audit | tee /tmp/rc16-out/static-audit.txt
+          gradle -p /tmp/rc16-audit :app:compileReleaseJavaWithJavac --no-daemon --stacktrace
+          gradle -p /tmp/rc16-audit :app:lintRelease --no-daemon --stacktrace
+          cp /tmp/rc16-audit/app/build/reports/lint-results-release.html /tmp/rc16-out/lint-results-release.html
+          cp /tmp/rc16-audit/app/build/reports/lint-results-release.xml /tmp/rc16-out/lint-results-release.xml
+
+      - name: Build two independent release APKs
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools"
+          BUILD_TOOLS="$(find "$BUILD_TOOLS_ROOT" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -x "$BUILD_TOOLS/zipalign"
+          test -x "$BUILD_TOOLS/aapt"
+          test -f "$BUILD_TOOLS/lib/apksigner.jar"
+
+          build_one() {
+            root="$1"
+            label="$2"
+            gradle -p "$root" clean :app:assembleRelease --no-daemon --stacktrace
+            unsigned="$(find "$root/app/build/outputs/apk/release" -maxdepth 1 -type f -name '*unsigned*.apk' | head -n 1)"
+            test -n "$unsigned"
+            "$BUILD_TOOLS/zipalign" -p -f 4 "$unsigned" "/tmp/rc16-out/Milica_RC16_${label}_aligned_unsigned.apk"
+            "$BUILD_TOOLS/zipalign" -c -p 4 "/tmp/rc16-out/Milica_RC16_${label}_aligned_unsigned.apk"
+            unzip -t "/tmp/rc16-out/Milica_RC16_${label}_aligned_unsigned.apk" >/dev/null
+            python tools/milica_rc16_audit/milica-rc16-tests.py \
+              --root "$root" \
+              --apk "/tmp/rc16-out/Milica_RC16_${label}_aligned_unsigned.apk" \
+              | tee "/tmp/rc16-out/${label}-apk-audit.txt"
+            "$BUILD_TOOLS/aapt" dump badging "/tmp/rc16-out/Milica_RC16_${label}_aligned_unsigned.apk" \
+              | tee "/tmp/rc16-out/${label}-badging.txt"
+            grep -q "versionCode='26'" "/tmp/rc16-out/${label}-badging.txt"
+            grep -q "versionName='1.1-rc16'" "/tmp/rc16-out/${label}-badging.txt"
+          }
+
+          build_one /tmp/rc16-pass1 pass1
+          build_one /tmp/rc16-pass2 pass2
+          sha256sum /tmp/rc16-out/Milica_RC16_pass1_aligned_unsigned.apk \
+                    /tmp/rc16-out/Milica_RC16_pass2_aligned_unsigned.apk \
+                    | tee /tmp/rc16-out/rebuilds-sha256.txt
+          cp "$BUILD_TOOLS/lib/apksigner.jar" /tmp/rc16-out/apksigner.jar
+
+      - name: APK privacy and integrity audit
+        run: |
+          set -euo pipefail
+          for apk in /tmp/rc16-out/Milica_RC16_pass*_aligned_unsigned.apk; do
+            ! unzip -Z1 "$apk" | grep -Eiq '\.(jks|keystore)$'
+            if unzip -p "$apk" classes.dex | strings | grep -Eq 'AIza[0-9A-Za-z_-]{30,}'; then
+              echo 'A Google API key pattern was embedded in classes.dex' >&2
+              exit 1
+            fi
+          done
+          cat > /tmp/rc16-out/Milica_RC16_PUBLIC_AUDIT_REPORT.txt <<'EOF'
+Milica Music 1.1 RC16 — independent unsigned build audit
+
+PASS: source archive gzip/tar integrity
+PASS: no signing keystore in source archive
+PASS: JavaScript syntax
+PASS: RC16 architecture and regression policy tests
+PASS: independent release Java compilation
+PASS: Android lintRelease
+PASS: clean release build 1
+PASS: clean release build 2 in a separate source tree
+PASS: ZIP alignment and APK archive integrity for both builds
+PASS: package versionCode 26 / versionName 1.1-rc16
+PASS: embedded RC16 assets and policy markers in both APKs
+PASS: no keystore embedded in either APK
+PASS: no Google API-key pattern found in classes.dex
+
+The APKs in this public audit are intentionally unsigned. Stable private signing and
+certificate verification are performed separately after downloading the audited artifact.
+EOF
+
+      - name: Upload unsigned audited builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: Milica-RC16-Public-Audit-Unsigned
+          path: /tmp/rc16-out/
+          if-no-files-found: error

@@ -1,6 +1,8 @@
 name: Build Milica RC16 Public Audit
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,8 +14,10 @@ jobs:
   audit-build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
+      - name: Checkout audited branch
         uses: actions/checkout@v4
+        with:
+          ref: milica-rc16-audit-build
 
       - name: Set up Java
         uses: actions/setup-java@v5

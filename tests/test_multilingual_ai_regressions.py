@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -113,6 +114,24 @@ def test_voice_language_sets_cover_all_public_languages() -> None:
     assert "sr:'sr-RS'" in index_html
     assert "data.append('language',document.documentElement.lang)" in index_html
     assert "language:document.documentElement.lang" in index_html
+
+
+def test_primary_home_copy_is_language_specific() -> None:
+    translations = json.loads(
+        (ROOT / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8")
+    )
+    critical_keys = (
+        "hero_title",
+        "form_title",
+        "ai_chat_button",
+        "ai_chat_welcome",
+        "ai_voice_cta",
+        "description_voice_cta",
+    )
+    for language in ("fr", "de", "es", "ru", "sr"):
+        for key in critical_keys:
+            assert translations[language][key].strip()
+            assert translations[language][key] != translations["en"][key]
 
 
 def test_runtime_ai_and_voice_fallbacks_are_localized() -> None:

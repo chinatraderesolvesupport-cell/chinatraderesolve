@@ -184,8 +184,8 @@ def localized_error(language: str, kind: str) -> str:
 
 # Serbian users routinely use both Latin and Cyrillic. Keep the original
 # normalised text for Russian and other languages, and append a Serbian-Latin
-# transliteration only for matching. This lets the same scope rules recognise
-# "dobavljač" and "добављач" without changing the user's message sent to AI.
+# transliteration only for user-text matching. This lets the same scope rules
+# recognise "dobavljač" and "добављач" without changing the message sent to AI.
 _SERBIAN_CYRILLIC_TO_LATIN = str.maketrans({
     "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "ђ": "dj",
     "е": "e", "ж": "z", "з": "z", "и": "i", "ј": "j", "к": "k",
@@ -417,10 +417,14 @@ _FOLLOWUP_EXACT_TERMS = (
 )
 
 
-def _normalise_scope_text(value: str) -> str:
+def _normalise_basic_text(value: str) -> str:
     decomposed = unicodedata.normalize("NFKD", str(value or "").casefold())
     without_marks = "".join(char for char in decomposed if not unicodedata.combining(char))
-    normalized = " ".join(without_marks.split())
+    return " ".join(without_marks.split())
+
+
+def _normalise_scope_text(value: str) -> str:
+    normalized = _normalise_basic_text(value)
     transliterated = normalized.translate(_SERBIAN_CYRILLIC_TO_LATIN)
     if transliterated != normalized:
         # Keep both forms: Russian matching still sees the original Cyrillic,
@@ -438,7 +442,10 @@ def _contains_term(text: str, terms: tuple[str, ...]) -> bool:
     ``vic`` (joke) also matches the English word ``service``.
     """
     for term in terms:
-        normalised_term = _normalise_scope_text(term)
+        # Terms remain in their authored language/script. Only user text gets the
+        # extra Serbian transliteration, otherwise Russian term matching would
+        # require an artificial "Cyrillic + Latin" sequence.
+        normalised_term = _normalise_basic_text(term)
         if not normalised_term:
             continue
         if (
@@ -514,9 +521,11 @@ def _is_contextual_followup(latest_text: str, earlier_user_text: str) -> bool:
         return False
     if not (_contains_term(earlier, _SCOPE_STRONG_TERMS) or _latest_is_in_scope(earlier_user_text)):
         return False
-    latest_exact = re.sub(r"[^\w]+", " ", latest, flags=re.UNICODE).strip()
+    latest_exact = re.sub(
+        r"[^\w]+", " ", _normalise_basic_text(latest_text), flags=re.UNICODE
+    ).strip()
     exact_terms = {
-        re.sub(r"[^\w]+", " ", _normalise_scope_text(value), flags=re.UNICODE).strip()
+        re.sub(r"[^\w]+", " ", _normalise_basic_text(value), flags=re.UNICODE).strip()
         for value in _FOLLOWUP_EXACT_TERMS
     }
     if latest_exact in exact_terms:

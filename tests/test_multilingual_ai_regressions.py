@@ -116,6 +116,13 @@ def test_voice_language_sets_cover_all_public_languages() -> None:
     assert "language:document.documentElement.lang" in index_html
 
 
+def test_language_runtime_patch_loads_after_base_translation_bundle() -> None:
+    index_html = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    base_pos = index_html.index('/static/translations-v2.js')
+    patch_pos = index_html.index('/static/launch-i18n-v3.js')
+    assert base_pos < patch_pos
+
+
 def test_primary_home_copy_is_language_specific() -> None:
     translations = json.loads(
         (ROOT / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8")

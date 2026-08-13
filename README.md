@@ -1,5 +1,9 @@
 # ChinaTradeResolve Document AI v3.7.56
 
+**Live service:** [chinatraderesolve.com](https://chinatraderesolve.com/) · [English guides](https://chinatraderesolve.com/en/guides) · [Русские руководства](https://chinatraderesolve.com/ru/guides)
+
+ChinaTradeResolve is an independent multilingual service that helps buyers organise evidence, identify missing documents and understand practical next steps in disputes with Chinese suppliers. The current preliminary-review pilot is free, checked by a person, does not guarantee recovery and does not replace legal advice.
+
 Version 3.7.56 adds a measurable free-traffic foundation without changing case processing. Yandex Metrica now records the guide-to-application funnel, every multilingual guide has an accessible share action, and the repository includes a rules-aware organic launch kit with UTM conventions, publication drafts and partner outreach copy.
 
 ## Free traffic measurement and sharing in v3.7.56

@@ -388,7 +388,7 @@ _UPLOAD_DESTINATION_TERMS = (
     # is required below, or the earlier conversation must already be in scope.
     "where do i send", "where should i send", "where can i upload", "where do i upload",
     "how do i send", "how do i upload", "where can i attach", "how do i attach",
-    "куда отправлять", "куда мне это", "куда мне отправ", "куда это отправ", "куда направ", "куда послать",
+    "куда отправлять", "куда отправить", "куда мне это", "куда мне отправ", "куда это отправ", "куда направ", "куда послать",
     "куда загруз", "где загруз", "как загруз", "где прикреп", "как прикреп",
     "où envoyer", "ou envoyer", "où téléverser", "ou televerser", "où joindre", "ou joindre",
     "wohin senden", "wo hochladen", "hochlad", "wo anhängen", "wo anhangen", "anhang",

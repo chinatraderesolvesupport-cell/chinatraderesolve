@@ -2106,9 +2106,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.55"
+    assert health.json()["version"] == "3.7.56"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.55"
+    assert health.headers["x-app-version"] == "3.7.56"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5231,7 +5231,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.55"
+    assert response.headers["x-app-version"] == "3.7.56"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5256,7 +5256,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.55"
+    assert response.json()["version"] == "3.7.56"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5312,11 +5312,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.55"
-    assert "v3.7.55" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.55" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.55" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.55" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.56"
+    assert "v3.7.56" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.56" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.56" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.56" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5536,3 +5536,28 @@ def test_admin_dashboard_defaults_to_active_and_hides_closed_cases():
     assert created["case_reference"] not in active.text
     closed = client.get("/admin?view=closed")
     assert created["case_reference"] in closed.text
+def test_guide_sharing_and_metrika_conversion_goals_are_present():
+    for language, label in {
+        "en": "Share this guide",
+        "ru": "Поделиться руководством",
+        "fr": "Partager ce guide",
+        "de": "Ratgeber teilen",
+        "es": "Compartir esta guía",
+        "sr": "Podeli vodič",
+    }.items():
+        page = client.get(f"/{language}/guides/supplier-not-refunding")
+        assert page.status_code == 200
+        assert 'id="shareGuide"' in page.text
+        assert 'data-metrika-goal="guide_share"' in page.text
+        assert label in page.text
+
+    landing = client.get("/")
+    assert landing.status_code == 200
+    assert "ctrMetrikaGoal('application_submitted',true)" in landing.text
+    assert "ctrMetrikaGoal('ai_chat_open',true)" in landing.text
+
+    metrika = client.get("/static/yandex-metrika.js")
+    assert metrika.status_code == 200
+    assert 'window.ctrMetrikaGoal = sendGoal' in metrika.text
+    assert 'application_start' in metrika.text
+    assert 'application_cta_click' in metrika.text

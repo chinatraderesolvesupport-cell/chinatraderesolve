@@ -65,7 +65,7 @@ def submit(endpoint: str, payload: dict[str, object], url_count: int) -> int:
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json; charset=utf-8",
-            "User-Agent": "ChinaTradeResolve/3.7.55",
+            "User-Agent": "ChinaTradeResolve/3.7.56",
         },
         method="POST",
     )

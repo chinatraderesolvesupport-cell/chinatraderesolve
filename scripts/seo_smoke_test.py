@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production-safe SEO checks for ChinaTradeResolve v3.7.55.
+"""Production-safe SEO checks for ChinaTradeResolve v3.7.56.
 
 Usage:
     python scripts/seo_smoke_test.py
@@ -16,7 +16,7 @@ from urllib.parse import urljoin
 import httpx
 
 BASE_URL = os.getenv("CTR_BASE_URL", "https://chinatraderesolve.com").rstrip("/")
-EXPECTED_VERSION = "3.7.55"
+EXPECTED_VERSION = "3.7.56"
 SAMPLE_PATHS = [
     "/ru/guides",
     "/en/guides",
@@ -79,7 +79,7 @@ def check(condition: bool, label: str, failures: list[str]) -> None:
 
 def main() -> int:
     failures: list[str] = []
-    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.7.55"}) as client:
+    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.7.56"}) as client:
         health = client.get(urljoin(BASE_URL + "/", "health"))
         check(health.status_code == 200, "health returns HTTP 200", failures)
         if health.status_code == 200:

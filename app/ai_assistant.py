@@ -182,18 +182,6 @@ def localized_error(language: str, kind: str) -> str:
     return ERROR_COPY.get(language, ERROR_COPY["en"]).get(kind, ERROR_COPY["en"]["unavailable"])
 
 
-# Serbian users routinely use both Latin and Cyrillic. Keep the original
-# normalised text for Russian and other languages, and append a Serbian-Latin
-# transliteration only for user-text matching. This lets the same scope rules
-# recognise "dobavljač" and "добављач" without changing the message sent to AI.
-_SERBIAN_CYRILLIC_TO_LATIN = str.maketrans({
-    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "ђ": "dj",
-    "е": "e", "ж": "z", "з": "z", "и": "i", "ј": "j", "к": "k",
-    "л": "l", "љ": "lj", "м": "m", "н": "n", "њ": "nj", "о": "o",
-    "п": "p", "р": "r", "с": "s", "т": "t", "ћ": "c", "у": "u",
-    "ф": "f", "х": "h", "ц": "c", "ч": "c", "џ": "dz", "ш": "s",
-})
-
 
 _SCOPE_STRONG_TERMS = (
     # English
@@ -417,20 +405,10 @@ _FOLLOWUP_EXACT_TERMS = (
 )
 
 
-def _normalise_basic_text(value: str) -> str:
+def _normalise_scope_text(value: str) -> str:
     decomposed = unicodedata.normalize("NFKD", str(value or "").casefold())
     without_marks = "".join(char for char in decomposed if not unicodedata.combining(char))
     return " ".join(without_marks.split())
-
-
-def _normalise_scope_text(value: str) -> str:
-    normalized = _normalise_basic_text(value)
-    transliterated = normalized.translate(_SERBIAN_CYRILLIC_TO_LATIN)
-    if transliterated != normalized:
-        # Keep both forms: Russian matching still sees the original Cyrillic,
-        # while Serbian rules can match their existing Latin stems and phrases.
-        normalized = f"{normalized} {transliterated}"
-    return normalized
 
 
 def _contains_term(text: str, terms: tuple[str, ...]) -> bool:
@@ -442,10 +420,7 @@ def _contains_term(text: str, terms: tuple[str, ...]) -> bool:
     ``vic`` (joke) also matches the English word ``service``.
     """
     for term in terms:
-        # Terms remain in their authored language/script. Only user text gets the
-        # extra Serbian transliteration, otherwise Russian term matching would
-        # require an artificial "Cyrillic + Latin" sequence.
-        normalised_term = _normalise_basic_text(term)
+        normalised_term = _normalise_scope_text(term)
         if not normalised_term:
             continue
         if (
@@ -521,11 +496,9 @@ def _is_contextual_followup(latest_text: str, earlier_user_text: str) -> bool:
         return False
     if not (_contains_term(earlier, _SCOPE_STRONG_TERMS) or _latest_is_in_scope(earlier_user_text)):
         return False
-    latest_exact = re.sub(
-        r"[^\w]+", " ", _normalise_basic_text(latest_text), flags=re.UNICODE
-    ).strip()
+    latest_exact = re.sub(r"[^\w]+", " ", latest, flags=re.UNICODE).strip()
     exact_terms = {
-        re.sub(r"[^\w]+", " ", _normalise_basic_text(value), flags=re.UNICODE).strip()
+        re.sub(r"[^\w]+", " ", _normalise_scope_text(value), flags=re.UNICODE).strip()
         for value in _FOLLOWUP_EXACT_TERMS
     }
     if latest_exact in exact_terms:
@@ -637,7 +610,6 @@ def _developer_prompt(language: str) -> str:
     return f"""
 You are the public AI information assistant for ChinaTradeResolve.
 Answer in {language_name}. Be calm, clear and concise. Usually stay under 220 words.
-The selected website language is authoritative. If the user writes that language in a different script, continue in the selected language rather than switching to English. For Serbian, understand both Latin and Cyrillic Serbian and, when practical, mirror the Serbian script used by the user.
 Do not append isolated foreign-language words, internal labels, translation markers or model artefacts. Proper names such as Alibaba and ChinaTradeResolve are allowed.
 
 SERVICE FACTS YOU MAY RELY ON:
@@ -810,16 +782,6 @@ async def assistant_reply(payload: AssistantChatRequest) -> str:
             type(exc).__name__,
         )
         raise AssistantProviderError("AI provider returned an invalid response") from exc
-    except Exception as exc:
-        # Keep an unexpected library/provider edge case from turning into an
-        # unlocalized HTML 500 response in the public chat. The route converts
-        # this typed error into the selected language's safe unavailable copy.
-        logger.exception(
-            "Unexpected AI assistant failure model=%s error_type=%s",
-            model,
-            type(exc).__name__,
-        )
-        raise AssistantProviderError("AI assistant failed unexpectedly") from exc
 
     # Keep accidental provider verbosity under control and remove invalid Unicode artefacts.
     cleaned_answer = _strip_unexpected_foreign_tail(

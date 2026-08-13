@@ -946,6 +946,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       }
       throw new Error(message||ui.fallback);
     }
+    if(typeof window.ctrMetrikaGoal==='function')window.ctrMetrikaGoal('application_submitted',true);
     form.hidden=true;
     const confirmation=document.getElementById('confirmation');
     confirmation.hidden=false;
@@ -1126,6 +1127,7 @@ if(aiChatRoot){
     window.requestAnimationFrame(()=>aiChatForm.scrollTo({top:aiChatForm.scrollHeight,behavior:'smooth'}));
   }
   function openAiChat(){
+    if(typeof window.ctrMetrikaGoal==='function')window.ctrMetrikaGoal('ai_chat_open',true);
     lockAiPageScroll();
     aiChatPanel.hidden=false;
     aiChatRoot.classList.add('is-open');

@@ -1,6 +1,14 @@
-# ChinaTradeResolve Document AI v3.7.55
+# ChinaTradeResolve Document AI v3.7.56
 
-Version 3.7.55 fixes the permanent IndexNow submission command: the script now imports the application correctly when launched directly from Render Shell and declares the root verification-key URL required to submit every multilingual guide without HTTP 422 errors. The administrator work queue from v3.7.54 is unchanged.
+Version 3.7.56 adds a measurable free-traffic foundation without changing case processing. Yandex Metrica now records the guide-to-application funnel, every multilingual guide has an accessible share action, and the repository includes a rules-aware organic launch kit with UTM conventions, publication drafts and partner outreach copy.
+
+## Free traffic measurement and sharing in v3.7.56
+
+- Multilingual guide pages provide a localized share button using the platform share sheet where available and a clipboard fallback elsewhere.
+- Yandex Metrica goals cover guide opens, guide sharing, application CTA clicks, form starts, successful submissions, AI-chat opens and voluntary-support opens.
+- `TRAFFIC_LAUNCH_KIT_RU.md` contains the complete free organic-distribution plan, current anti-spam safeguards, community replies, a four-week LinkedIn calendar, partner outreach copy and the later paid-test boundary.
+- No personal data is added to analytics goals; existing privacy disclosure and UTM sanitization remain unchanged.
+- The full automated test suite covers all six guide languages and the new measurement hooks.
 
 ## IndexNow submission fix in v3.7.55
 

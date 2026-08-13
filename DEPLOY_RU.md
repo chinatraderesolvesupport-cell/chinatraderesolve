@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.7.55 на Render
+# Установка ChinaTradeResolve v3.7.56 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.55.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.56.zip`.
 
-В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.55.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.56.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 
@@ -176,9 +176,9 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 Пустой `TELEGRAM_MONITOR_CHATS` отслеживает только публичные каналы и группы, уже доступные аккаунту. Монитор не пишет пользователям автоматически.
 
-## Проверка после обновления до v3.7.55
+## Проверка после обновления до v3.7.56
 
-После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.55"`.
+После статуса `Live` откройте `/health`. Должно отображаться `"version": "3.7.56"`.
 После статуса `Live` откройте технический адрес `https://chinatraderesolve.onrender.com/?lang=ru`. Браузер должен автоматически перейти на `https://chinatraderesolve.com/?lang=ru`; путь и параметры должны сохраниться.
  Затем откройте `/ready`: для разрешения поисковой индексации endpoint должен вернуть HTTP 200 и `"status": "ready"`. Проверьте `/robots.txt` и `/sitemap.xml`; после готовности robots должен содержать `Allow: /`, а sitemap — языковые страницы руководств. Затем откройте главную страницу на телефоне и убедитесь, что компактная круглая кнопка ИИ находится над нижней кнопкой заявки и не перекрывает её. После этого откройте закрытую страницу тестового дела, выберите документ и убедитесь, что после нажатия кнопки появляется заметный индикатор «Загрузка документов…». Также войдите в `/admin`: значок «Отзывы» должен показывать счётчик, а `/admin/feedback` — открывать общий экран анализа отзывов. До оплаты ожидаются `openai_billing_ready: false`, `ai_assistant_enabled: false`, `voice_input_enabled: false` и `document_analysis_enabled: false`. После оплаты установите `OPENAI_BILLING_READY=true` и проверьте, что нужные ИИ-функции стали активны. Затем откройте `/ready`. До публичного запуска настройте все проверки, включая `database_storage`, так, чтобы endpoint вернул HTTP 200 и `"status": "ready"`.
 
@@ -206,7 +206,7 @@ OPERATOR_CREDENTIALS=проверяемая_квалификация_или_оп
 
 Заполните `DATA_CONTROLLER_NAME` и `DATA_CONTROLLER_ADDRESS`; `/health` должен вернуть `privacy_configuration_complete: true`. Для защиты формы от ботов создайте Cloudflare Turnstile widget и задайте обе переменные `TURNSTILE_SITE_KEY` и `TURNSTILE_SECRET_KEY`. Для анализа документов проверьте `MAX_DAILY_DOCUMENT_ANALYSES_PER_CASE`, `MAX_DAILY_DOCUMENT_ANALYSES_GLOBAL`, `DOCUMENT_PDF_DETAIL=low`, `RETENTION_DAYS` и `INACTIVE_RETENTION_DAYS`.
 
-## Автоматическая заключительная production-проверка v3.7.55
+## Автоматическая заключительная production-проверка v3.7.56
 
 После deploy и настройки всех переменных откройте Render Shell и выполните:
 

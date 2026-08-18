@@ -39,6 +39,13 @@ INSECURE_APP_SECRETS = frozenset({
 MIN_ADMIN_TOKEN_LENGTH = 32
 MIN_APP_SECRET_LENGTH = 32
 
+# Keep database-backed periodic maintenance sparse enough that an idle Neon
+# compute can suspend instead of being woken every minute. Event-driven work
+# (new applications, status changes, document access) still runs immediately.
+DEFAULT_MAINTENANCE_INTERVAL_SECONDS = 3600
+MIN_MAINTENANCE_INTERVAL_SECONDS = 3600
+MAX_MAINTENANCE_INTERVAL_SECONDS = 86400
+
 
 def admin_token_is_secure(value: str | None) -> bool:
     candidate = (value or "").strip()
@@ -82,6 +89,15 @@ def _env_int(
     if maximum is not None:
         value = min(maximum, value)
     return value
+
+
+def _maintenance_interval_seconds() -> int:
+    return _env_int(
+        "MAINTENANCE_INTERVAL_SECONDS",
+        DEFAULT_MAINTENANCE_INTERVAL_SECONDS,
+        minimum=MIN_MAINTENANCE_INTERVAL_SECONDS,
+        maximum=MAX_MAINTENANCE_INTERVAL_SECONDS,
+    )
 
 
 def _env_float(
@@ -212,7 +228,7 @@ class Settings:
     max_daily_voice_transcriptions: int = max_daily_voice_transcriptions_per_session
     openai_timeout_seconds: float = _env_float("OPENAI_TIMEOUT_SECONDS", 20, minimum=2, maximum=120)
     application_triage_timeout_seconds: float = _env_float("APPLICATION_TRIAGE_TIMEOUT_SECONDS", 8, minimum=1, maximum=30)
-    maintenance_interval_seconds: int = _env_int("MAINTENANCE_INTERVAL_SECONDS", 60, minimum=60, maximum=3600)
+    maintenance_interval_seconds: int = _maintenance_interval_seconds()
     retention_check_interval_seconds: int = _env_int("RETENTION_CHECK_INTERVAL_SECONDS", 86400, minimum=3600, maximum=604800)
     retention_days: int = _env_int("RETENTION_DAYS", 90, minimum=1, maximum=3650)
     inactive_retention_days: int = _env_int("INACTIVE_RETENTION_DAYS", 365, minimum=30, maximum=3650)

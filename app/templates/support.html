@@ -14,7 +14,7 @@
 @media(max-width:900px){.wallets{grid-template-columns:1fr}.wallet{display:grid;grid-template-columns:180px 1fr;column-gap:18px}.wallet-head{grid-column:1/-1}.qr-wrap{grid-row:2/7;margin:12px 0}.qr{width:170px}.warning{grid-column:2}}
 @media(max-width:590px){.top{align-items:flex-start}.wallet{display:block}.qr{width:205px}.warning{display:block}.hero{padding:22px}.lang{max-width:130px}.paypal-card{grid-template-columns:1fr;padding:19px}.paypal-card .btn{width:100%;min-width:0}.paypal-qr-link{width:190px;max-width:100%;margin:auto}}
 .clipboard-fallback{position:fixed;opacity:0;pointer-events:none}</style>
-{% if yandex_metrika_id %}<script defer src="/static/yandex-metrika.js" data-counter-id="{{ yandex_metrika_id }}"></script>{% endif %}
+{% if yandex_metrika_id %}<script defer src="/static/yandex-metrika.js?v={{ asset_version }}" data-counter-id="{{ yandex_metrika_id }}"></script>{% endif %}
 </head>
 <body>
 {% if yandex_metrika_id %}<noscript><div><img src="https://mc.yandex.ru/watch/{{ yandex_metrika_id }}" class="metrika-pixel" alt=""></div></noscript>{% endif %}

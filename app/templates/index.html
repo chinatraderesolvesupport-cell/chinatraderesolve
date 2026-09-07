@@ -11,7 +11,7 @@
 <link rel="canonical" href="{{ canonical_url }}"/>
 {% for item in language_alternates %}<link rel="alternate" hreflang="{{ item.lang }}" href="{{ item.url }}"/>{% endfor %}
 <link rel="alternate" hreflang="x-default" href="{{ x_default_url }}"/>
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
+<link rel="icon" href="/static/favicon.svg?v={{ asset_version }}" type="image/svg+xml"/>
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="{{ seo.title }}"/>
 <meta property="og:description" content="{{ seo.og_description }}"/>
@@ -20,10 +20,11 @@
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
+<meta name="application-version" content="{{ asset_version }}"/>
 {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}"/>{% endif %}
 {% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}"/>{% endif %}
 {% if yandex_site_verification %}<meta name="yandex-verification" content="{{ yandex_site_verification }}"/>{% endif %}
-{% if yandex_metrika_id %}<script defer src="/static/yandex-metrika.js" data-counter-id="{{ yandex_metrika_id }}"></script>{% endif %}
+{% if yandex_metrika_id %}<script defer src="/static/yandex-metrika.js?v={{ asset_version }}" data-counter-id="{{ yandex_metrika_id }}"></script>{% endif %}
 <style nonce="{{ request.state.csp_nonce }}">
 :root{
   --bg:#0f172a;--panel:#172033;--panel2:#132238;--navy:#17324D;--teal:#14B8A6;
@@ -40,7 +41,6 @@ button,input,select,textarea{font:inherit}
 .skip-link{position:fixed;left:12px;top:12px;z-index:200;transform:translateY(-160%);padding:10px 14px;border-radius:9px;background:#fff;color:#0f172a;font-weight:900}.skip-link:focus{transform:translateY(0)}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
 .wrap{width:min(1160px,92%);margin:auto}
-.prototype-banner{background:#fde68a;color:#422006;text-align:center;padding:8px 12px;font-weight:800;font-size:13px}
 header{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0;gap:18px}
 .brand{font-weight:900;font-size:21px;white-space:nowrap;display:inline-flex;align-items:center;gap:10px}
@@ -58,13 +58,13 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0
 .btn:disabled,.btn[aria-disabled="true"]{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
 .lang{background:#0b1220;color:#e5e7eb;border:1px solid #475569;border-radius:9px;padding:10px}
 .menu-btn{display:none;background:transparent;color:#fff;border:1px solid #475569;border-radius:9px;padding:9px 11px;cursor:pointer}
-.hero{padding:76px 0 58px;background:radial-gradient(circle at 84% 22%,rgba(20,184,166,.20),transparent 34%),linear-gradient(180deg,#0f172a,#111c31)}
-.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:50px;align-items:center}
+.hero{padding:54px 0 46px;background:radial-gradient(circle at 84% 22%,rgba(20,184,166,.20),transparent 34%),linear-gradient(180deg,#0f172a,#111c31)}
+.hero-grid{display:grid;grid-template-columns:1.22fr .78fr;gap:40px;align-items:center}
 .eyebrow{color:var(--teal);font-weight:900;text-transform:uppercase;letter-spacing:.12em;font-size:13px}
-h1{font-size:clamp(44px,6vw,72px);line-height:1.03;margin:14px 0 22px;letter-spacing:-.035em}
+h1{font-size:clamp(36px,4vw,50px);line-height:1.04;margin:12px 0 18px;letter-spacing:-.035em;max-width:720px}
 h2{font-size:clamp(30px,4vw,46px);line-height:1.15;margin:0 0 14px}
 h3{line-height:1.25}
-.lead,.intro{color:var(--muted);font-size:19px;max-width:780px}
+.lead,.intro{color:var(--muted);font-size:18px;max-width:780px}
 .hero-buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .trust-pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
 .trust-pills span{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid rgba(255,255,255,.13);border-radius:999px;color:#dbeafe;font-size:13px;background:rgba(255,255,255,.035)}
@@ -283,10 +283,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </style>
 <script nonce="{{ request.state.csp_nonce }}" type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"ChinaTradeResolve","url":x_default_url},{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
 {% if turnstile_site_key %}<script nonce="{{ request.state.csp_nonce }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
-<body>
+<body data-app-version="{{ asset_version }}">
 {% if yandex_metrika_id %}<noscript><div><img src="https://mc.yandex.ru/watch/{{ yandex_metrika_id }}" class="metrika-pixel" alt=""></div></noscript>{% endif %}
 <a class="skip-link" href="#main-content" data-i18n="skip_content">{{ home_copy['skip_content'] }}</a>
-<div class="prototype-banner" data-i18n="prototype">{{ home_copy['prototype'] }}</div>
 <header>
 <div class="wrap">
 <nav>
@@ -568,9 +567,10 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">{{ home_copy['ai_chat_privacy'] }}</div>
 </section>
 </div>
-<script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js"></script>
-<script nonce="{{ request.state.csp_nonce }}" src="/static/launch-i18n-v3.js"></script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js?v={{ asset_version }}"></script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/launch-i18n-v3.js?v={{ asset_version }}"></script>
 <script nonce="{{ request.state.csp_nonce }}">
+if(window.CTR_TRANSLATIONS_VERSION!==document.body.dataset.appVersion){console.error("ChinaTradeResolve translation asset version mismatch",{html:document.body.dataset.appVersion,asset:window.CTR_TRANSLATIONS_VERSION||"missing"});}
 const menuBtn=document.getElementById('menuBtn'),mobilePanel=document.getElementById('mobilePanel');
 const mobileCta=document.querySelector('.mobile');
 const aiLauncherButton=document.getElementById('aiChatLauncher');

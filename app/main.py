@@ -144,7 +144,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.57"
+APP_VERSION = "3.7.58"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -457,6 +457,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 templates.env.globals["yandex_metrika_id"] = settings.yandex_metrika_id
+templates.env.globals["asset_version"] = APP_VERSION
 limiter = SlidingWindowRateLimiter()
 admin_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=900)
 assistant_limiter = SlidingWindowRateLimiter(limit=18, window_seconds=600)
@@ -948,9 +949,24 @@ async def security_headers(request: Request, call_next):
     )
     if settings.public_base_url.startswith("https://"):
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-    if request.url.path.startswith(("/admin", "/case/")):
-        response.headers.setdefault("Cache-Control", "no-store")
+    path = request.url.path
+    existing_cache_control = response.headers.get("Cache-Control", "").lower()
+    if path.startswith(("/admin", "/case/")):
+        response.headers["Cache-Control"] = "no-store"
         response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
+    elif "no-store" in existing_cache_control:
+        # Preserve stricter cache directives set by error/unavailable responses.
+        # In particular, a 503 launch gate must never be made cacheable/revalidatable.
+        pass
+    elif path.startswith("/static/"):
+        # Public assets are versioned in page URLs.  A short revalidation window
+        # prevents a CDN/browser from pinning old translations or legal copy
+        # after a deploy even if an asset URL is visited directly.
+        response.headers["Cache-Control"] = "public, max-age=300, must-revalidate"
+    elif path in {"/", "/privacy", "/support", "/health", "/ready"}:
+        # These pages are operationally important and must reflect the active
+        # release rather than an edge-cached HTML copy from an older deploy.
+        response.headers["Cache-Control"] = "no-cache, max-age=0, must-revalidate"
     return response
 
 

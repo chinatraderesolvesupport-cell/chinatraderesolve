@@ -1,0 +1,13 @@
+ChinaTradeResolve v3.7.58 — public UX, cache coherency and full-site regression hardening
+
+Изменения:
+- Первый экран стал компактнее: убрана жёлтая предупреждающая плашка, заголовок короче, ценность сервиса видна быстрее.
+- Блок доверия конкретнее объясняет роль Эдуарда Цаголова и происхождение проекта без выдуманной юридической квалификации.
+- Формулировки FAQ согласованы с Terms/Disclaimer: подготовка черновика не обещается как безусловная часть бесплатной оценки.
+- Добавлено версионирование JS/CSS и короткая revalidation-политика для /static, чтобы старые переводы и legal copy не переживали новый deploy в browser/CDN cache.
+- Главная, Privacy, Support, /health и /ready получают no-cache/must-revalidate.
+- В HTML главной добавлен release marker; production smoke теперь сравнивает версию /ready, HTML, ожидаемый hero и translation asset.
+- Static legal/sample pages также используют versioned CSS/JS URLs.
+- Выполнен повторный полный обход public/admin/case flows, переводов, SEO и security regressions.
+
+Production, Render, DNS, Cloudflare и секреты этим архивом не изменяются.

@@ -441,14 +441,38 @@ def main() -> int:
                 body=robots.text[:500],
             )
 
+            expected_heroes = {
+                "en": "Review the evidence. See the next step.",
+                "ru": "Разберём доказательства. Покажем следующий шаг.",
+                "fr": "Examinons les preuves. Voyez l’étape suivante.",
+                "de": "Nachweise prüfen. Den nächsten Schritt erkennen.",
+                "es": "Revisamos las pruebas. Vea el siguiente paso.",
+                "sr": "Pregledaćemo dokaze. Pokazaćemo sledeći korak.",
+            }
             page_results = {}
             for language in ("en", "ru", "fr", "de", "es", "sr"):
-                page = public_client.get(args.base_url.rstrip("/") + f"/?lang={language}")
+                page = public_client.get(
+                    args.base_url.rstrip("/") + f"/?lang={language}&smoke_release={report['version']}"
+                )
                 page_results[language] = {
                     "status_code": page.status_code,
                     "x_app_version": page.headers.get("x-app-version"),
+                    "cache_control": page.headers.get("cache-control"),
                     "has_brand": "ChinaTradeResolve" in page.text,
+                    "has_release_marker": f'data-app-version="{report["version"]}"' in page.text,
+                    "has_expected_hero": expected_heroes[language] in page.text,
                 }
+            translations_asset = public_client.get(
+                args.base_url.rstrip("/") + f"/static/translations-v2.js?v={report['version']}"
+            )
+            record(
+                report,
+                "public_translation_asset_version",
+                translations_asset.status_code == 200
+                and f'CTR_TRANSLATIONS_VERSION="{report["version"]}"' in translations_asset.text,
+                status_code=translations_asset.status_code,
+                cache_control=translations_asset.headers.get("cache-control"),
+            )
             support = public_client.get(args.base_url.rstrip("/") + "/support")
             record(
                 report,
@@ -457,6 +481,8 @@ def main() -> int:
                     item["status_code"] == 200
                     and item["x_app_version"] == report["version"]
                     and item["has_brand"]
+                    and item["has_release_marker"]
+                    and item["has_expected_hero"]
                     for item in page_results.values()
                 ) and support.status_code == 200,
                 languages=page_results,

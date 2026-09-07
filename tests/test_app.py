@@ -120,10 +120,10 @@ def test_health_and_home_free_access():
     assert health.json()["document_analysis_enabled"] is False
     home = client.get("/")
     assert home.status_code == 200
-    assert "Приём ограничен: на проверку человеком" in home.text
+    assert "prototype-banner" not in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
-    assert "Контролёр данных пилотного проекта: Эдуард Цаголов." in home.text
+    assert "Ответственный за пилот и контролёр данных: Эдуард Цаголов." in home.text
     assert "Через этот прототип не принимаются платежи и документы" not in home.text
     assert "Статус прототипа" not in home.text
     assert health.json()["email_delivery_configured"] is False
@@ -406,7 +406,7 @@ def valid_payload_model():
 def test_russian_localization_and_security_headers():
     home = client.get("/")
     assert home.status_code == 200
-    assert "Ответственный оператор и проверка человеком" in home.text
+    assert "Ответственный за пилот и человеческая проверка" in home.text
     assert "ChinaTradeResolve Case Review Team" not in home.text
     assert "Электронная почта" in home.text
     assert home.headers["x-content-type-options"] == "nosniff"
@@ -1711,7 +1711,7 @@ def test_v33_home_structure_and_translation_completeness():
 
     home = client.get("/")
     assert home.status_code == 200
-    assert "Разберём доказательства и определим следующий шаг" in home.text
+    assert "Разберём доказательства. Покажем следующий шаг" in home.text
     assert "Проверка до оплаты" not in home.text
     assert home.text.count('id="services"') == 1
     assert home.text.count('id="about"') == 1
@@ -2109,9 +2109,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.57"
+    assert health.json()["version"] == "3.7.58"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.57"
+    assert health.headers["x-app-version"] == "3.7.58"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5127,7 +5127,7 @@ def test_home_promotes_localized_guides_without_reintroducing_old_copy():
     assert 'href="/ru/guides/product-quality-dispute"' in page.text
     assert 'data-i18n="nav_guides"' in page.text
     assert 'Подайте заявку на предварительную оценку материалов' in page.text
-    assert 'Контролёр данных пилотного проекта: Эдуард Цаголов.' in page.text
+    assert 'Ответственный за пилот и контролёр данных: Эдуард Цаголов.' in page.text
     assert 'Если проект оказался полезен, его можно поддержать.' in page.text
     for forbidden in (
         'Отправьте дело на бесплатный анализ',
@@ -5235,7 +5235,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.57"
+    assert response.headers["x-app-version"] == "3.7.58"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5260,7 +5260,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.57"
+    assert response.json()["version"] == "3.7.58"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5316,11 +5316,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.57"
-    assert "v3.7.57" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.57" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.57" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.57" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.58"
+    assert "v3.7.58" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.58" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.58" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.58" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5440,13 +5440,13 @@ def test_v3749_search_intent_guides_are_substantial_and_indexable():
 
 def test_v3753_landing_page_is_server_rendered_in_requested_language():
     expected = {
-        "en": "Review the evidence. Decide the next step.",
-        "fr": "Examinez les preuves. Déterminez la prochaine étape.",
-        "de": "Nachweise prüfen. Den nächsten Schritt festlegen.",
-        "es": "Revise las pruebas. Defina el siguiente paso.",
-        "sr": "Pregledajte dokaze i odredite sledeći korak.",
+        "en": "Review the evidence. See the next step.",
+        "fr": "Examinons les preuves. Voyez l’étape suivante.",
+        "de": "Nachweise prüfen. Den nächsten Schritt erkennen.",
+        "es": "Revisamos las pruebas. Vea el siguiente paso.",
+        "sr": "Pregledaćemo dokaze. Pokazaćemo sledeći korak.",
     }
-    russian_hero = "Разберём доказательства и определим следующий шаг."
+    russian_hero = "Разберём доказательства. Покажем следующий шаг."
     for language, hero in expected.items():
         page = client.get(f"/?lang={language}")
         assert page.status_code == 200
@@ -5649,3 +5649,70 @@ def test_v3757_bad_legacy_address_is_ignored_not_rendered_or_required(monkeypatc
     page = client.get("/privacy?lang=ru")
     assert opaque not in page.text
     assert "Эдуард Цаголов" in page.text
+
+
+def test_v3758_public_html_is_release_marked_and_revalidates():
+    page = client.get('/?lang=ru')
+    assert page.status_code == 200
+    assert 'data-app-version="3.7.58"' in page.text
+    assert '<meta name="application-version" content="3.7.58"' in page.text
+    assert '/static/translations-v2.js?v=3.7.58' in page.text
+    assert '/static/launch-i18n-v3.js?v=3.7.58' in page.text
+    assert page.headers['cache-control'] == 'no-cache, max-age=0, must-revalidate'
+    assert 'prototype-banner' not in page.text
+    assert 'Разложим спор по фактам и покажем следующий шаг.' not in page.text
+
+
+def test_v3758_versioned_translation_asset_has_short_revalidation_and_marker():
+    asset = client.get('/static/translations-v2.js?v=3.7.58')
+    assert asset.status_code == 200
+    assert asset.headers['cache-control'] == 'public, max-age=300, must-revalidate'
+    assert 'CTR_TRANSLATIONS_VERSION="3.7.58"' in asset.text
+
+
+def test_v3758_new_hero_is_server_rendered_in_every_supported_language():
+    expected = {
+        'ru': 'Разберём доказательства. Покажем следующий шаг.',
+        'en': 'Review the evidence. See the next step.',
+        'sr': 'Pregledaćemo dokaze. Pokazaćemo sledeći korak.',
+        'fr': 'Examinons les preuves. Voyez l’étape suivante.',
+        'de': 'Nachweise prüfen. Den nächsten Schritt erkennen.',
+        'es': 'Revisamos las pruebas. Vea el siguiente paso.',
+    }
+    for language, hero in expected.items():
+        page = client.get(f'/?lang={language}')
+        assert page.status_code == 200
+        assert hero in page.text
+        assert 'data-app-version="3.7.58"' in page.text
+
+
+def test_v3758_law_firm_and_draft_scope_wording_is_consistent():
+    page = client.get('/?lang=ru')
+    assert page.status_code == 200
+    assert 'ChinaTradeResolve — не юридическая фирма.' in page.text
+    assert 'черновик претензии или сообщения может готовиться только если это отдельно согласовано' in page.text
+    assert 'подготовка претензий и переписки' not in page.text
+
+
+def test_v3758_legal_and_sample_assets_are_versioned():
+    base = Path(__file__).resolve().parent.parent / 'app' / 'static'
+    for filename in ('terms.html', 'refund.html', 'ai-notice.html', 'disclaimer.html'):
+        text = (base / filename).read_text(encoding='utf-8')
+        assert '/static/legal-pages.css?v=3.7.58' in text
+        assert '/static/legal-i18n-v2.js?v=3.7.58' in text
+    sample = (base / 'sample_case_assessment.html').read_text(encoding='utf-8')
+    assert '/static/sample-case-assessment.css?v=3.7.58' in sample
+    assert '/static/legal-i18n-v2.js?v=3.7.58' in sample
+
+
+def test_v3758_no_store_from_launch_gate_has_precedence_over_public_revalidation(monkeypatch):
+    import app.main as module
+    from dataclasses import replace
+    monkeypatch.setattr(
+        module,
+        'settings',
+        replace(module.settings, public_launch_mode=True, data_controller_name='', contact_email=''),
+    )
+    page = client.get('/')
+    assert page.status_code == 503
+    assert page.headers['cache-control'] == 'no-store'

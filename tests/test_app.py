@@ -2109,9 +2109,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.58"
+    assert health.json()["version"] == "3.7.59"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.58"
+    assert health.headers["x-app-version"] == "3.7.59"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5235,7 +5235,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.58"
+    assert response.headers["x-app-version"] == "3.7.59"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5260,7 +5260,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.58"
+    assert response.json()["version"] == "3.7.59"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5316,11 +5316,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.58"
-    assert "v3.7.58" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.58" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.58" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.58" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.59"
+    assert "v3.7.59" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.59" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.59" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.59" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5651,26 +5651,26 @@ def test_v3757_bad_legacy_address_is_ignored_not_rendered_or_required(monkeypatc
     assert "Эдуард Цаголов" in page.text
 
 
-def test_v3758_public_html_is_release_marked_and_revalidates():
+def test_v3759_public_html_is_release_marked_and_revalidates():
     page = client.get('/?lang=ru')
     assert page.status_code == 200
-    assert 'data-app-version="3.7.58"' in page.text
-    assert '<meta name="application-version" content="3.7.58"' in page.text
-    assert '/static/translations-v2.js?v=3.7.58' in page.text
-    assert '/static/launch-i18n-v3.js?v=3.7.58' in page.text
+    assert 'data-app-version="3.7.59"' in page.text
+    assert '<meta name="application-version" content="3.7.59"' in page.text
+    assert '/static/translations-v2.js?v=3.7.59' in page.text
+    assert '/static/launch-i18n-v3.js?v=3.7.59' in page.text
     assert page.headers['cache-control'] == 'no-cache, max-age=0, must-revalidate'
     assert 'prototype-banner' not in page.text
     assert 'Разложим спор по фактам и покажем следующий шаг.' not in page.text
 
 
-def test_v3758_versioned_translation_asset_has_short_revalidation_and_marker():
-    asset = client.get('/static/translations-v2.js?v=3.7.58')
+def test_v3759_versioned_translation_asset_has_short_revalidation_and_marker():
+    asset = client.get('/static/translations-v2.js?v=3.7.59')
     assert asset.status_code == 200
     assert asset.headers['cache-control'] == 'public, max-age=300, must-revalidate'
-    assert 'CTR_TRANSLATIONS_VERSION="3.7.58"' in asset.text
+    assert 'CTR_TRANSLATIONS_VERSION="3.7.59"' in asset.text
 
 
-def test_v3758_new_hero_is_server_rendered_in_every_supported_language():
+def test_v3759_new_hero_is_server_rendered_in_every_supported_language():
     expected = {
         'ru': 'Разберём доказательства. Покажем следующий шаг.',
         'en': 'Review the evidence. See the next step.',
@@ -5683,10 +5683,10 @@ def test_v3758_new_hero_is_server_rendered_in_every_supported_language():
         page = client.get(f'/?lang={language}')
         assert page.status_code == 200
         assert hero in page.text
-        assert 'data-app-version="3.7.58"' in page.text
+        assert 'data-app-version="3.7.59"' in page.text
 
 
-def test_v3758_law_firm_and_draft_scope_wording_is_consistent():
+def test_v3759_law_firm_and_draft_scope_wording_is_consistent():
     page = client.get('/?lang=ru')
     assert page.status_code == 200
     assert 'ChinaTradeResolve — не юридическая фирма.' in page.text
@@ -5694,18 +5694,18 @@ def test_v3758_law_firm_and_draft_scope_wording_is_consistent():
     assert 'подготовка претензий и переписки' not in page.text
 
 
-def test_v3758_legal_and_sample_assets_are_versioned():
+def test_v3759_legal_and_sample_assets_are_versioned():
     base = Path(__file__).resolve().parent.parent / 'app' / 'static'
     for filename in ('terms.html', 'refund.html', 'ai-notice.html', 'disclaimer.html'):
         text = (base / filename).read_text(encoding='utf-8')
-        assert '/static/legal-pages.css?v=3.7.58' in text
-        assert '/static/legal-i18n-v2.js?v=3.7.58' in text
+        assert '/static/legal-pages.css?v=3.7.59' in text
+        assert '/static/legal-i18n-v2.js?v=3.7.59' in text
     sample = (base / 'sample_case_assessment.html').read_text(encoding='utf-8')
-    assert '/static/sample-case-assessment.css?v=3.7.58' in sample
-    assert '/static/legal-i18n-v2.js?v=3.7.58' in sample
+    assert '/static/sample-case-assessment.css?v=3.7.59' in sample
+    assert '/static/legal-i18n-v2.js?v=3.7.59' in sample
 
 
-def test_v3758_no_store_from_launch_gate_has_precedence_over_public_revalidation(monkeypatch):
+def test_v3759_no_store_from_launch_gate_has_precedence_over_public_revalidation(monkeypatch):
     import app.main as module
     from dataclasses import replace
     monkeypatch.setattr(
@@ -5716,3 +5716,20 @@ def test_v3758_no_store_from_launch_gate_has_precedence_over_public_revalidation
     page = client.get('/')
     assert page.status_code == 503
     assert page.headers['cache-control'] == 'no-store'
+
+
+def test_v3759_hero_example_is_explicitly_training_in_every_language():
+    expected = {
+        'ru': ('Учебный пример разбора', 'Учебный пример структуры анализа'),
+        'en': ('Training example: case overview', 'Training example · evidence-analysis structure'),
+        'sr': ('Primer za obuku: pregled slučaja', 'Primer za obuku · struktura analize dokaza'),
+        'fr': ('Exemple pédagogique d’analyse', 'Exemple pédagogique · structure de l’analyse des preuves'),
+        'de': ('Lernbeispiel der Fallanalyse', 'Lernbeispiel · Struktur der Beweisanalyse'),
+        'es': ('Ejemplo didáctico de análisis', 'Ejemplo didáctico · estructura del análisis de pruebas'),
+    }
+    for language, (title, status) in expected.items():
+        page = client.get(f'/?lang={language}')
+        assert page.status_code == 200
+        assert title in page.text
+        assert status in page.text
+

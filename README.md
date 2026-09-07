@@ -1,8 +1,8 @@
-# ChinaTradeResolve Document AI v3.7.58
+# ChinaTradeResolve Document AI v3.7.59
 
-Version 3.7.58 keeps the v3.7.58 trust/conversion hardening and configures the free pilot with a real natural-person data controller: Эдуард Цаголов. Public readiness now requires a meaningful controller identity and public contact email; a postal address is optional and is never fabricated.
+Version 3.7.59 keeps the v3.7.58 trust/conversion hardening and configures the free pilot with a real natural-person data controller: Эдуард Цаголов. Public readiness now requires a meaningful controller identity and public contact email; a postal address is optional and is never fabricated.
 
-## Trust, privacy and conversion changes in v3.7.58
+## Trust, privacy and conversion changes retained from v3.7.58
 
 - Opaque hashes, long tokens and obvious placeholders can no longer satisfy the privacy identity readiness check.
 - Rejected operator values are never echoed on the Privacy page; development mode shows a safe pending-identity notice instead.
@@ -98,7 +98,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.58 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.59 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -108,7 +108,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.58`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.59`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -499,7 +499,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.58
+cd ChinaTradeResolve_Document_AI_v3.7.59
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -657,7 +657,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.58 включает исправленный IndexNow-скрипт, безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.59 включает исправленный IndexNow-скрипт, безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

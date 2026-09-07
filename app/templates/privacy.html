@@ -27,7 +27,7 @@
   <h2>{{ copy.h_controller }}</h2>
   <p>{{ copy.p_controller }}</p>
   {% if privacy_configuration_complete %}
-  <div class="controller"><strong>{{ controller_name }}</strong><br>{{ controller_address }}{% if controller_registration %}<br>{{ controller_registration }}{% endif %}<br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
+  <div class="controller"><strong>{{ controller_name }}</strong>{% if controller_address %}<br>{{ controller_address }}{% endif %}{% if controller_registration %}<br>{{ controller_registration }}{% endif %}<br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
   {% else %}
   <div class="controller"><strong>{{ controller_name }}</strong><br><span>{{ copy.development_notice }}</span><br><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></div>
   {% endif %}

@@ -136,10 +136,9 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .pilot-badge{display:inline-flex;align-items:center;gap:8px;background:#ccfbf1;color:#115e59;border:1px solid #99f6e4;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:900;margin-bottom:12px}
 .pilot-list{padding-left:20px}.pilot-list li{margin:8px 0}
 .pilot-limit{background:#fff7ed;color:#9a3412;border:1px solid #fdba74;border-radius:12px;padding:14px;font-size:14px;margin-top:14px}
-.support-section{background:#0b1220}
-.support-box{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:30px;background:linear-gradient(135deg,rgba(20,184,166,.10),rgba(23,50,77,.35))}
-.support-card{background:#fff;color:#0f172a;border-radius:16px;padding:22px}
-.support-card ul{padding-left:20px}.support-card li{margin:8px 0}
+.support-section{background:#0b1220;padding:34px 0}
+.support-box{display:flex;align-items:center;justify-content:space-between;gap:22px;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:20px 22px;background:rgba(20,184,166,.07)}
+.support-box h2{font-size:clamp(24px,3vw,32px);margin-bottom:7px}.support-box .intro{margin-bottom:10px;max-width:760px}.support-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-shrink:0}
 .support-note{font-size:13px;color:#64748b;margin-top:12px}
 .support-methods-label{margin:19px 0 9px;color:#cbd5e1;font-size:13px;font-weight:800}
 .support-methods{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 19px}
@@ -154,7 +153,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .payment-icon.usdt{background:#26a17b;color:#fff;font-size:18px}
 .payment-icon.sol{background:#0b0f19}
 .payment-icon svg{display:block;width:17px;height:17px}
-@media(max-width:700px){.support-box{grid-template-columns:1fr;padding:24px}}
+@media(max-width:700px){.support-box{align-items:flex-start;flex-direction:column;padding:18px}.support-actions{width:100%}.support-actions .btn{width:100%}}
 @media(max-width:700px){.pilot-box{grid-template-columns:1fr}}
 .final-cta{background:radial-gradient(circle at 80% 20%,rgba(20,184,166,.22),transparent 35%),linear-gradient(135deg,#17324D,#0f172a)}
 .final-cta-box{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:38px;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:rgba(15,23,42,.48)}
@@ -422,6 +421,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <p data-i18n="operator_text">{{ home_copy['operator_text'] }}</p>
 <p class="operator-profile" data-i18n="operator_payment_note">{{ home_copy['operator_payment_note'] }}</p>
 <ul class="operator-facts">
+{% if privacy_configuration_complete %}<li><strong>{{ controller_name }}</strong>{% if controller_address %} · {{ controller_address }}{% endif %}</li>{% endif %}
 <li><a class="contact-email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></li>
 {% if operator_credentials %}<li>{{ operator_credentials }}</li>{% endif %}
 {% if operator_registration %}<li>{{ operator_registration }}</li>{% endif %}
@@ -464,21 +464,21 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="form-step active" id="stepOne">
 <div class="field"><label data-i18n="full_name" for="fullName">{{ home_copy['full_name'] }}</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">{{ home_copy['email_label'] }}</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
-<div class="field"><label data-i18n="country" for="country">{{ home_copy['country'] }}</label><input autocomplete="country-name" id="country" name="country"/></div>
+<div class="field"><label for="country"><span data-i18n="country">{{ home_copy['country'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input autocomplete="country-name" id="country" name="country"/></div>
 <div class="field"><label data-i18n="preferred_lang" for="preferred">{{ home_copy['preferred_lang'] }}</label><select id="preferred" name="preferred_language"><option data-i18n="opt_english" value="English">{{ home_copy['opt_english'] }}</option><option data-i18n="opt_french" value="French">{{ home_copy['opt_french'] }}</option><option data-i18n="opt_german" value="German">{{ home_copy['opt_german'] }}</option><option data-i18n="opt_spanish" value="Spanish">{{ home_copy['opt_spanish'] }}</option><option data-i18n="opt_russian" value="Russian">{{ home_copy['opt_russian'] }}</option><option data-i18n="opt_serbian" value="Serbian">{{ home_copy['opt_serbian'] }}</option></select></div>
-<div class="field"><label data-i18n="channel" for="channel">{{ home_copy['channel'] }}</label><select id="channel" name="purchasing_channel"><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">{{ home_copy['opt_direct'] }}</option><option data-i18n="opt_other" value="Other">{{ home_copy['opt_other'] }}</option></select></div>
-<div class="field"><label data-i18n="amount" for="amountDispute">{{ home_copy['amount'] }}</label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="{{ home_copy['amount_ph'] }}"/></div>
-<div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">{{ home_copy['main_problem'] }}</label><select id="mainProblem" name="main_problem"><option data-i18n="opt_problem1" value="Goods not delivered">{{ home_copy['opt_problem1'] }}</option><option data-i18n="opt_problem2" value="Poor quality or defects">{{ home_copy['opt_problem2'] }}</option><option data-i18n="opt_problem3" value="Wrong material or specification">{{ home_copy['opt_problem3'] }}</option><option data-i18n="opt_problem4" value="Questionable documents">{{ home_copy['opt_problem4'] }}</option><option data-i18n="opt_problem5" value="Supplier refuses refund">{{ home_copy['opt_problem5'] }}</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">{{ home_copy['opt_problem6'] }}</option><option data-i18n="opt_problem_other" value="Other or multiple issues">{{ home_copy['opt_problem_other'] }}</option></select></div>
+<div class="field"><label data-i18n="channel" for="channel">{{ home_copy['channel'] }}</label><select id="channel" name="purchasing_channel" required><option value="" selected disabled data-i18n="select_channel">{{ home_copy['select_channel'] }}</option><option>Alibaba</option><option>AliExpress</option><option>Made-in-China</option><option data-i18n="opt_direct" value="Direct supplier contract">{{ home_copy['opt_direct'] }}</option><option data-i18n="opt_other" value="Other">{{ home_copy['opt_other'] }}</option></select></div>
+<div class="field"><label for="amountDispute"><span data-i18n="amount">{{ home_copy['amount'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="amountDispute" name="amount_in_dispute" data-i18n-placeholder="amount_ph" placeholder="{{ home_copy['amount_ph'] }}"/></div>
+<div class="field step-one-problem"><label data-i18n="main_problem" for="mainProblem">{{ home_copy['main_problem'] }}</label><select id="mainProblem" name="main_problem" required><option value="" selected disabled data-i18n="select_problem">{{ home_copy['select_problem'] }}</option><option data-i18n="opt_problem1" value="Goods not delivered">{{ home_copy['opt_problem1'] }}</option><option data-i18n="opt_problem2" value="Poor quality or defects">{{ home_copy['opt_problem2'] }}</option><option data-i18n="opt_problem3" value="Wrong material or specification">{{ home_copy['opt_problem3'] }}</option><option data-i18n="opt_problem4" value="Questionable documents">{{ home_copy['opt_problem4'] }}</option><option data-i18n="opt_problem5" value="Supplier refuses refund">{{ home_copy['opt_problem5'] }}</option><option data-i18n="opt_problem6" value="Marketplace rejected the claim">{{ home_copy['opt_problem6'] }}</option><option data-i18n="opt_problem_other" value="Other or multiple issues">{{ home_copy['opt_problem_other'] }}</option></select></div>
 <div class="field full"><div class="error" data-i18n="form_error" hidden id="stepError">{{ home_copy['form_error'] }}</div></div>
 <div class="field form-actions step-one-actions"><button class="btn primary" data-i18n="continue" id="nextBtn" type="button">{{ home_copy['continue'] }}</button></div>
 </div>
 <div class="form-step" id="stepTwo">
 <div class="form-choice-intro"><strong data-i18n="description_mode_title">{{ home_copy['description_mode_title'] }}</strong><span data-i18n="description_mode_text">{{ home_copy['description_mode_text'] }}</span></div>
 <div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
-<div class="field"><label data-i18n="supplier_name" for="supplierName">{{ home_copy['supplier_name'] }}</label><input id="supplierName" name="supplier_name"/></div>
-<div class="field"><label data-i18n="order_number" for="orderNumber">{{ home_copy['order_number'] }}</label><input id="orderNumber" name="order_number"/></div>
-<div class="field"><label data-i18n="order_value" for="orderValue">{{ home_copy['order_value'] }}</label><input id="orderValue" name="order_value"/></div>
-<div class="field"><label data-i18n="requested_result" for="requestedResult">{{ home_copy['requested_result'] }}</label><select id="requestedResult" name="requested_result"><option data-i18n="opt_result1" value="Full refund">{{ home_copy['opt_result1'] }}</option><option data-i18n="opt_result2" value="Partial refund">{{ home_copy['opt_result2'] }}</option><option data-i18n="opt_result3" value="Replacement">{{ home_copy['opt_result3'] }}</option><option data-i18n="opt_result4" value="Completion of order">{{ home_copy['opt_result4'] }}</option><option data-i18n="opt_result5" value="Negotiated settlement">{{ home_copy['opt_result5'] }}</option><option data-i18n="opt_result6" value="Not sure">{{ home_copy['opt_result6'] }}</option></select></div>
+<div class="field"><label for="supplierName"><span data-i18n="supplier_name">{{ home_copy['supplier_name'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="supplierName" name="supplier_name"/></div>
+<div class="field"><label for="orderNumber"><span data-i18n="order_number">{{ home_copy['order_number'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderNumber" name="order_number"/></div>
+<div class="field"><label for="orderValue"><span data-i18n="order_value">{{ home_copy['order_value'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderValue" name="order_value"/></div>
+<div class="field"><label for="requestedResult"><span data-i18n="requested_result">{{ home_copy['requested_result'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><select id="requestedResult" name="requested_result"><option value="" selected data-i18n="select_result">{{ home_copy['select_result'] }}</option><option data-i18n="opt_result1" value="Full refund">{{ home_copy['opt_result1'] }}</option><option data-i18n="opt_result2" value="Partial refund">{{ home_copy['opt_result2'] }}</option><option data-i18n="opt_result3" value="Replacement">{{ home_copy['opt_result3'] }}</option><option data-i18n="opt_result4" value="Completion of order">{{ home_copy['opt_result4'] }}</option><option data-i18n="opt_result5" value="Negotiated settlement">{{ home_copy['opt_result5'] }}</option><option data-i18n="opt_result6" value="Not sure">{{ home_copy['opt_result6'] }}</option></select></div>
 <div class="field full filebox"><label data-i18n="upload">{{ home_copy['upload'] }}</label><div class="hint" data-i18n="upload_hint">{{ home_copy['upload_hint'] }}</div></div>
 <aside class="submit-summary" aria-labelledby="submitSummaryTitle"><h3 id="submitSummaryTitle" data-i18n="submit_summary_title">{{ home_copy['submit_summary_title'] }}</h3><p data-i18n="submit_summary_data">{{ home_copy['submit_summary_data'] }}</p><p data-i18n="submit_summary_response">{{ home_copy['submit_summary_response'] }}</p></aside>
 <div class="consent-group">
@@ -511,37 +511,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </section>
 {% if support_enabled %}<section class="support-section" id="support">
-<div class="wrap">
-<div class="support-box">
-<div>
-<div class="eyebrow" data-i18n="support_eyebrow">{{ home_copy['support_eyebrow'] }}</div>
-<h2 data-i18n="support_title">{{ home_copy['support_title'] }}</h2>
-<p class="intro" data-i18n="support_text">{{ home_copy['support_text'] }}</p>
-<p class="support-methods-label" data-i18n="support_methods">{{ home_copy['support_methods'] }}</p>
-<div class="support-methods">
-{% if paypal_support_enabled %}
-<a class="support-method" data-lang-link href="/support#paypal"><span class="payment-icon paypal" aria-hidden="true">P</span><span>PayPal</span></a>
-{% endif %}
-{% if crypto_wallets %}
-<a class="support-method" data-lang-link href="/support#crypto">
-<span class="payment-icon crypto" aria-hidden="true">◈</span>
-<span data-i18n="support_crypto_method">{{ home_copy['support_crypto_method'] }}</span>
-</a>
-{% endif %}
-</div>
-<a class="btn primary" data-i18n="support_button" data-lang-link href="/support">{{ home_copy['support_button'] }}</a>
-</div>
-<div class="support-card">
-<h3 data-i18n="support_rules_title">{{ home_copy['support_rules_title'] }}</h3>
-<ul>
-<li data-i18n="support_rule1">{{ home_copy['support_rule1'] }}</li>
-<li data-i18n="support_rule2">{{ home_copy['support_rule2'] }}</li>
-<li data-i18n="support_rule3">{{ home_copy['support_rule3'] }}</li>
-</ul>
-<p class="support-note" data-i18n="support_notice">{{ home_copy['support_notice'] }}</p>
-</div>
-</div>
-</div>
+<div class="wrap"><div class="support-box"><div><div class="eyebrow" data-i18n="support_eyebrow">{{ home_copy['support_eyebrow'] }}</div><h2 data-i18n="support_title">{{ home_copy['support_title'] }}</h2><p class="intro" data-i18n="support_text">{{ home_copy['support_text'] }}</p></div><div class="support-actions"><a class="btn primary" data-i18n="support_button" data-lang-link href="/support">{{ home_copy['support_button'] }}</a></div></div></div>
 </section>{% endif %}
 <section id="guides-preview">
 <div class="wrap">
@@ -655,7 +625,7 @@ const applicationTurnstileRequired=Boolean(applicationTurnstileStatus);
 let applicationTurnstileVerified=!applicationTurnstileRequired;
 let applicationSubmitting=false;
 const requiredConsentInputs=[...caseFormElement.querySelectorAll('input[name="free_access_terms"],input[name="sharing_authority"],input[name="no_guarantee"]')];
-const requiredApplicationFields=[document.getElementById('fullName'),document.getElementById('email'),descriptionField];
+const requiredApplicationFields=[document.getElementById('fullName'),document.getElementById('email'),document.getElementById('channel'),document.getElementById('mainProblem'),descriptionField];
 function applicationCopy(key){const copy=(window.CTR_TRANSLATIONS&&window.CTR_TRANSLATIONS[document.documentElement.lang])||(window.CTR_TRANSLATIONS&&window.CTR_TRANSLATIONS.en)||{};return copy[key]||''}
 function applicationFieldValid(field){if(!field)return false;if(field===document.getElementById('fullName'))return field.value.trim().length>=2&&field.validity.valid;if(field===descriptionField)return field.value.trim().length>=50&&field.validity.valid;return field.validity.valid}
 function setApplicationFieldValidity(field,force=false){if(!field)return;const show=force||field.dataset.touched==='true';field.setAttribute('aria-invalid',show&&!applicationFieldValid(field)?'true':'false')}
@@ -871,9 +841,9 @@ const stepOne=document.getElementById('stepOne'),stepTwo=document.getElementById
 const prog1=document.getElementById('prog1'),prog2=document.getElementById('prog2'),label1=document.getElementById('label1'),label2=document.getElementById('label2');
 const nextButton=document.getElementById('nextBtn');
 nextButton.addEventListener('click',()=>{
-  const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email');
-  const ok=n.length>=2 && e.checkValidity(); document.getElementById('stepError').hidden=ok;
-  if(!ok){ if(!e.checkValidity())e.reportValidity(); else document.getElementById('fullName').focus(); return; }
+  const n=document.getElementById('fullName').value.trim(),e=document.getElementById('email'),channel=document.getElementById('channel'),problem=document.getElementById('mainProblem');
+  const ok=n.length>=2 && e.checkValidity() && channel.checkValidity() && problem.checkValidity(); document.getElementById('stepError').hidden=ok;
+  if(!ok){ if(!e.checkValidity())e.reportValidity(); else if(!channel.checkValidity())channel.reportValidity(); else if(!problem.checkValidity())problem.reportValidity(); else document.getElementById('fullName').focus(); return; }
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.setTimeout(drawFormReadinessAttention,180);window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
 });
 stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
@@ -946,7 +916,6 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
       }
       throw new Error(message||ui.fallback);
     }
-    if(typeof window.ctrMetrikaGoal==='function')window.ctrMetrikaGoal('application_submitted',true);
     form.hidden=true;
     const confirmation=document.getElementById('confirmation');
     confirmation.hidden=false;
@@ -1127,7 +1096,6 @@ if(aiChatRoot){
     window.requestAnimationFrame(()=>aiChatForm.scrollTo({top:aiChatForm.scrollHeight,behavior:'smooth'}));
   }
   function openAiChat(){
-    if(typeof window.ctrMetrikaGoal==='function')window.ctrMetrikaGoal('ai_chat_open',true);
     lockAiPageScroll();
     aiChatPanel.hidden=false;
     aiChatRoot.classList.add('is-open');

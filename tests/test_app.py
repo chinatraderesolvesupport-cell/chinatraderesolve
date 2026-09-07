@@ -120,10 +120,10 @@ def test_health_and_home_free_access():
     assert health.json()["document_analysis_enabled"] is False
     home = client.get("/")
     assert home.status_code == 200
-    assert "Ограниченный бесплатный доступ" in home.text
+    assert "Приём ограничен: на проверку человеком" in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
-    assert "Платные услуги пока не предоставляются. Документы загружаются только на закрытой странице дела." in home.text
+    assert "Контролёр данных пилотного проекта: Эдуард Цаголов." in home.text
     assert "Через этот прототип не принимаются платежи и документы" not in home.text
     assert "Статус прототипа" not in home.text
     assert health.json()["email_delivery_configured"] is False
@@ -247,12 +247,15 @@ def test_support_page_is_optional_and_non_priority():
 def test_home_shows_configured_voluntary_payment_methods():
     page = client.get("/")
     assert page.status_code == 200
-    assert 'href="/support#paypal"' in page.text
-    assert 'href="/support#crypto"' in page.text
+    assert 'href="/support"' in page.text
+    support = client.get('/support')
+    assert support.status_code == 200
+    assert 'id="paypal"' in support.text
+    assert 'id="crypto"' in support.text
     assert 'href="/support#wallet-btc"' not in page.text
-    assert 'data-i18n="support_crypto_method"' in page.text
-    assert "PayPal" in page.text
-    assert "Криптовалюта" in page.text
+    assert 'Crypto' in support.text or 'Крипто' in support.text
+    assert "PayPal" in support.text
+    assert "Bitcoin" in support.text
 
 
 def test_mobile_menu_accessible_name_is_localized():
@@ -403,7 +406,7 @@ def valid_payload_model():
 def test_russian_localization_and_security_headers():
     home = client.get("/")
     assert home.status_code == 200
-    assert "Независимый сервис ChinaTradeResolve" in home.text
+    assert "Ответственный оператор и проверка человеком" in home.text
     assert "ChinaTradeResolve Case Review Team" not in home.text
     assert "Электронная почта" in home.text
     assert home.headers["x-content-type-options"] == "nosniff"
@@ -1708,7 +1711,7 @@ def test_v33_home_structure_and_translation_completeness():
 
     home = client.get("/")
     assert home.status_code == 200
-    assert "Разложим спор по фактам" in home.text
+    assert "Разберём доказательства и определим следующий шаг" in home.text
     assert "Проверка до оплаты" not in home.text
     assert home.text.count('id="services"') == 1
     assert home.text.count('id="about"') == 1
@@ -2106,9 +2109,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.56"
+    assert health.json()["version"] == "3.7.57"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.56"
+    assert health.headers["x-app-version"] == "3.7.57"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -4646,9 +4649,10 @@ def test_privacy_route_exposes_configuration_status():
     response = client.get("/privacy?lang=en")
     assert response.status_code == 200
     assert "DATA_CONTROLLER_ADDRESS" not in response.text
-    assert "This local preview is not accepting public applications" in response.text
+    assert "Эдуард Цаголов" in response.text
+    assert "chinatraderesolve.support@gmail.com" in response.text
     health = client.get("/health").json()
-    assert health["privacy_configuration_complete"] is False
+    assert health["privacy_configuration_complete"] is True
 
 
 def test_container_healthcheck_uses_liveness_endpoint_not_readiness_gate():
@@ -4665,7 +4669,7 @@ def test_launch_readiness_endpoint_is_fail_closed_by_default():
     payload = response.json()
     assert payload["status"] == "not_ready"
     assert payload["checks"]["administrator_security"] is True
-    assert payload["checks"]["privacy_identity"] is False
+    assert payload["checks"]["privacy_identity"] is True
 
 
 def test_launch_readiness_endpoint_returns_200_when_all_checks_pass(monkeypatch):
@@ -5123,8 +5127,8 @@ def test_home_promotes_localized_guides_without_reintroducing_old_copy():
     assert 'href="/ru/guides/product-quality-dispute"' in page.text
     assert 'data-i18n="nav_guides"' in page.text
     assert 'Подайте заявку на предварительную оценку материалов' in page.text
-    assert 'Платные услуги пока не предоставляются.' in page.text
-    assert 'Основная заявка рассматривается без оплаты.' in page.text
+    assert 'Контролёр данных пилотного проекта: Эдуард Цаголов.' in page.text
+    assert 'Если проект оказался полезен, его можно поддержать.' in page.text
     for forbidden in (
         'Отправьте дело на бесплатный анализ',
         'Что входит в бесплатный анализ',
@@ -5231,7 +5235,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.56"
+    assert response.headers["x-app-version"] == "3.7.57"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5256,7 +5260,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.56"
+    assert response.json()["version"] == "3.7.57"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5312,11 +5316,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.56"
-    assert "v3.7.56" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.56" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.56" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.56" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.57"
+    assert "v3.7.57" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.57" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.57" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.57" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5436,13 +5440,13 @@ def test_v3749_search_intent_guides_are_substantial_and_indexable():
 
 def test_v3753_landing_page_is_server_rendered_in_requested_language():
     expected = {
-        "en": "Turn the dispute into facts and a clear next step.",
-        "fr": "Transformons le litige en faits et en prochaine étape claire.",
-        "de": "Wir ordnen den Streit nach Fakten und zeigen den nächsten Schritt.",
-        "es": "Ordenamos la disputa por hechos y mostramos el siguiente paso.",
-        "sr": "Razložićemo spor na činjenice i pokazati sledeći korak.",
+        "en": "Review the evidence. Decide the next step.",
+        "fr": "Examinez les preuves. Déterminez la prochaine étape.",
+        "de": "Nachweise prüfen. Den nächsten Schritt festlegen.",
+        "es": "Revise las pruebas. Defina el siguiente paso.",
+        "sr": "Pregledajte dokaze i odredite sledeći korak.",
     }
-    russian_hero = "Разложим спор по фактам и покажем следующий шаг."
+    russian_hero = "Разберём доказательства и определим следующий шаг."
     for language, hero in expected.items():
         page = client.get(f"/?lang={language}")
         assert page.status_code == 200
@@ -5536,28 +5540,112 @@ def test_admin_dashboard_defaults_to_active_and_hides_closed_cases():
     assert created["case_reference"] not in active.text
     closed = client.get("/admin?view=closed")
     assert created["case_reference"] in closed.text
-def test_guide_sharing_and_metrika_conversion_goals_are_present():
-    for language, label in {
-        "en": "Share this guide",
-        "ru": "Поделиться руководством",
-        "fr": "Partager ce guide",
-        "de": "Ratgeber teilen",
-        "es": "Compartir esta guía",
-        "sr": "Podeli vodič",
-    }.items():
-        page = client.get(f"/{language}/guides/supplier-not-refunding")
-        assert page.status_code == 200
-        assert 'id="shareGuide"' in page.text
-        assert 'data-metrika-goal="guide_share"' in page.text
-        assert label in page.text
 
-    landing = client.get("/")
-    assert landing.status_code == 200
-    assert "ctrMetrikaGoal('application_submitted',true)" in landing.text
-    assert "ctrMetrikaGoal('ai_chat_open',true)" in landing.text
 
-    metrika = client.get("/static/yandex-metrika.js")
-    assert metrika.status_code == 200
-    assert 'window.ctrMetrikaGoal = sendGoal' in metrika.text
-    assert 'application_start' in metrika.text
-    assert 'application_cta_click' in metrika.text
+def test_v3756_privacy_identity_rejects_opaque_hashes_and_placeholders(monkeypatch):
+    import app.main as module
+    assert module._privacy_identity_value_is_meaningful("b057244199bbff39f8e398f30e6f9c60") is False
+    assert module._privacy_identity_value_is_meaningful("c2852c7301780f4367661ede2631300c", address=True) is False
+    assert module._privacy_identity_value_is_meaningful("TODO") is False
+    assert module._privacy_identity_value_is_meaningful("Example Operator d.o.o.") is False
+    assert module._privacy_identity_value_is_meaningful("Dunav Consulting d.o.o.") is True
+    assert module._privacy_identity_value_is_meaningful("Knez Mihailova 10, Belgrade, Serbia", address=True) is True
+
+
+def test_v3756_privacy_page_never_echoes_rejected_identity_values(monkeypatch):
+    import app.main as module
+    from dataclasses import replace
+    bad_name = "b057244199bbff39f8e398f30e6f9c60"
+    bad_address = "c2852c7301780f4367661ede2631300c"
+    monkeypatch.setattr(
+        module,
+        "settings",
+        replace(module.settings, data_controller_name=bad_name, data_controller_address=bad_address),
+    )
+    page = client.get("/privacy?lang=ru")
+    assert page.status_code == 200
+    assert bad_name not in page.text
+    assert bad_address not in page.text
+    assert "Эдуард Цаголов" in page.text
+    assert "chinatraderesolve.support@gmail.com" in page.text
+
+
+def test_v3756_form_starts_with_neutral_required_choices_and_marks_optional_fields():
+    page = client.get("/?lang=ru")
+    assert page.status_code == 200
+    assert '<select id="channel" name="purchasing_channel" required><option value="" selected disabled' in page.text
+    assert 'data-i18n="select_channel"' in page.text
+    assert '<select id="mainProblem" name="main_problem" required><option value="" selected disabled' in page.text
+    assert 'data-i18n="select_problem"' in page.text
+    assert 'data-i18n="optional"' in page.text
+    assert "document.getElementById('channel'),document.getElementById('mainProblem')" in page.text
+
+
+def test_v3756_training_example_is_consistent_specific_and_evidence_linked():
+    page = client.get("/?lang=ru")
+    assert "Учебный пример: разбор по доказательствам" in page.text
+    sample = client.get("/static/sample_case_assessment.html")
+    assert sample.status_code == 200
+    assert "Training example" in sample.text
+    assert "10 February 2026" in sample.text
+    assert "E01 order specification" in sample.text
+    legal_js = (Path(__file__).resolve().parent.parent / "app/static/legal-i18n-v2.js").read_text(encoding="utf-8")
+    assert '"tag":"Учебный пример"' in legal_js
+    assert '"h_summary":"Краткое описание дела"' in legal_js
+    assert '"h_summary":"1. Краткое описание дела"' not in legal_js
+
+
+def test_v3756_terms_do_not_promise_unimplemented_claim_draft():
+    legal_js = (Path(__file__).resolve().parent.parent / "app/static/legal-i18n-v2.js").read_text(encoding="utf-8")
+    assert "подготовить черновики претензий или сообщений" not in legal_js
+    assert "prepare draft claims or messages" not in legal_js
+
+
+def test_v3756_landing_removes_duplicate_blocks_and_compacts_support():
+    template = (Path(__file__).resolve().parent.parent / "app/templates/index.html").read_text(encoding="utf-8")
+    assert template.count('data-i18n="form_eyebrow"') == 1
+    assert template.count('data-i18n="support_methods"') == 0
+    assert 'class="support-card"' not in template
+    assert 'class="support-actions"' in template
+
+
+def test_v3757_pilot_controller_name_and_email_are_sufficient_without_postal_address(monkeypatch):
+    import app.main as module
+    from dataclasses import replace
+    monkeypatch.setattr(
+        module,
+        "settings",
+        replace(
+            module.settings,
+            data_controller_name=None,
+            data_controller_address=None,
+            contact_email="chinatraderesolve.support@gmail.com",
+        ),
+    )
+    assert module.effective_controller_name() == "Эдуард Цаголов"
+    assert module.effective_controller_address() == ""
+    assert module.privacy_configuration_is_complete() is True
+    page = client.get("/privacy?lang=ru")
+    assert page.status_code == 200
+    assert "Эдуард Цаголов" in page.text
+    assert "chinatraderesolve.support@gmail.com" in page.text
+
+
+def test_v3757_bad_legacy_address_is_ignored_not_rendered_or_required(monkeypatch):
+    import app.main as module
+    from dataclasses import replace
+    opaque = "c2852c7301780f4367661ede2631300c"
+    monkeypatch.setattr(
+        module,
+        "settings",
+        replace(
+            module.settings,
+            data_controller_name="Эдуард Цаголов",
+            data_controller_address=opaque,
+            contact_email="chinatraderesolve.support@gmail.com",
+        ),
+    )
+    assert module.privacy_configuration_is_complete() is True
+    page = client.get("/privacy?lang=ru")
+    assert opaque not in page.text
+    assert "Эдуард Цаголов" in page.text

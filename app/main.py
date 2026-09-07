@@ -144,7 +144,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.56"
+APP_VERSION = "3.7.57"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -476,10 +476,73 @@ def admin_configuration_is_secure() -> bool:
     )
 
 
+_PRIVACY_PLACEHOLDER_TOKENS = frozenset({
+    "changeme", "change me", "todo", "tbd", "placeholder", "example", "test",
+    "operator", "owner", "data controller", "n/a", "na", "unknown",
+})
+
+
+def _privacy_identity_value_is_meaningful(value: str | None, *, address: bool = False) -> bool:
+    """Reject empty, placeholder-like and opaque identity values before public launch.
+
+    This is intentionally conservative: it does not try to decide whether an identity is
+    legally sufficient, but it prevents random hashes/tokens from satisfying readiness.
+    """
+    text = " ".join(str(value or "").strip().split())
+    if len(text) < (8 if address else 4) or len(text) > 240:
+        return False
+    folded = text.casefold()
+    if (
+        folded in _PRIVACY_PLACEHOLDER_TOKENS
+        or folded.startswith(("example ", "test ", "placeholder ", "todo ", "tbd "))
+        or any(token in folded for token in ("<name>", "<address>", "your name", "your address"))
+    ):
+        return False
+    compact = re.sub(r"[^A-Za-z0-9]", "", text)
+    if len(compact) >= 20 and re.fullmatch(r"[0-9a-fA-F]+", compact):
+        return False
+    if len(compact) >= 24 and re.fullmatch(r"[A-Za-z0-9_-]+", text):
+        # Long opaque identifiers without spaces or address punctuation are not identity text.
+        return False
+    if not any(ch.isalpha() for ch in text):
+        return False
+    if address and not any(ch.isspace() or ch in ",.-/" for ch in text):
+        return False
+    return True
+
+
+PILOT_CONTROLLER_NAME = "Эдуард Цаголов"
+
+
+def effective_controller_name() -> str:
+    """Return the real pilot controller identity, ignoring unsafe legacy placeholders."""
+    configured = " ".join(str(settings.data_controller_name or "").strip().split())
+    if _privacy_identity_value_is_meaningful(configured):
+        return configured
+    return PILOT_CONTROLLER_NAME
+
+
+def effective_controller_address() -> str:
+    """Return an optional public postal address only when it is meaningful."""
+    configured = " ".join(str(settings.data_controller_address or "").strip().split())
+    if _privacy_identity_value_is_meaningful(configured, address=True):
+        return configured
+    return ""
+
+
+def _privacy_contact_is_meaningful(value: str | None) -> bool:
+    text = str(value or "").strip()
+    return bool(5 <= len(text) <= 254 and re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", text))
+
+
 def privacy_configuration_is_complete() -> bool:
+    # During the free pilot the controller is a natural person. Article-style
+    # transparency requires identity + contact details; a postal address remains
+    # optional until one is deliberately supplied. Never let an old opaque address
+    # token block or leak into the public page.
     return bool(
-        (settings.data_controller_name or "").strip()
-        and (settings.data_controller_address or "").strip()
+        _privacy_identity_value_is_meaningful(effective_controller_name())
+        and _privacy_contact_is_meaningful(settings.contact_email)
     )
 
 
@@ -1453,6 +1516,9 @@ def home(request: Request) -> HTMLResponse:
             "yandex_site_verification": (settings.yandex_site_verification or "").strip(),
             "operator_credentials": (settings.operator_credentials or "").strip(),
             "operator_registration": (settings.data_controller_registration or "").strip(),
+            "controller_name": effective_controller_name(),
+            "controller_address": effective_controller_address(),
+            "privacy_configuration_complete": privacy_configuration_is_complete(),
         },
     )
 
@@ -1753,6 +1819,7 @@ def privacy_page(request: Request) -> HTMLResponse:
         }
         for code in SUPPORTED_PRIVACY_LANGUAGES
     ]
+    privacy_ready = privacy_configuration_is_complete()
     return templates.TemplateResponse(
         request=request,
         name="privacy.html",
@@ -1763,10 +1830,14 @@ def privacy_page(request: Request) -> HTMLResponse:
             "canonical_url": base_url + canonical_path,
             "alternates": alternates,
             "language_names": PUBLIC_LANGUAGE_NAMES,
-            "controller_name": (settings.data_controller_name or "ChinaTradeResolve").strip(),
-            "controller_address": (settings.data_controller_address or "").strip(),
-            "controller_registration": (settings.data_controller_registration or "").strip(),
-            "privacy_configuration_complete": privacy_configuration_is_complete(),
+            # Never echo rejected identity values back to the public page. A
+            # hash/opaque token is exactly the failure mode this gate protects
+            # against; development mode should show a safe brand label plus the
+            # explicit pending notice instead of leaking the bad configuration.
+            "controller_name": effective_controller_name(),
+            "controller_address": effective_controller_address(),
+            "controller_registration": (settings.data_controller_registration or "").strip() if privacy_ready else "",
+            "privacy_configuration_complete": privacy_ready,
             "contact_email": settings.contact_email,
         },
     )

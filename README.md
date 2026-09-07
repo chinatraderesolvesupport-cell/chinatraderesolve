@@ -1,26 +1,25 @@
-# ChinaTradeResolve Document AI v3.7.56
+# ChinaTradeResolve Document AI v3.7.57
 
-**Live service:** [chinatraderesolve.com](https://chinatraderesolve.com/) · [English guides](https://chinatraderesolve.com/en/guides) · [Русские руководства](https://chinatraderesolve.com/ru/guides)
+Version 3.7.57 keeps the v3.7.57 trust/conversion hardening and configures the free pilot with a real natural-person data controller: Эдуард Цаголов. Public readiness now requires a meaningful controller identity and public contact email; a postal address is optional and is never fabricated.
 
-ChinaTradeResolve is an independent multilingual service that helps buyers organise evidence, identify missing documents and understand practical next steps in disputes with Chinese suppliers. The current preliminary-review pilot is free, checked by a person, does not guarantee recovery and does not replace legal advice.
+## Trust, privacy and conversion changes in v3.7.57
 
-Version 3.7.56 adds a measurable free-traffic foundation without changing case processing. Yandex Metrica now records the guide-to-application funnel, every multilingual guide has an accessible share action, and the repository includes a rules-aware organic launch kit with UTM conventions, publication drafts and partner outreach copy.
+- Opaque hashes, long tokens and obvious placeholders can no longer satisfy the privacy identity readiness check.
+- Rejected operator values are never echoed on the Privacy page; development mode shows a safe pending-identity notice instead.
+- The landing page can show the real operator identity, contact details and optional factual credentials after configuration.
+- The hero and process wording are shorter and more concrete, distinguishing the first human response from the full assessment.
+- The form starts with neutral required choices for purchase channel and problem; optional fields are visibly marked and the requested outcome is not preselected.
+- The sample result is consistently labelled as a training example and uses fictional dates, evidence IDs and claim-to-evidence mapping.
+- Terms and disclaimer no longer promise a claim/message draft as a guaranteed part of the free assessment.
+- Voluntary support is compact on the landing page; details remain on the dedicated support page.
+- See `TRAFFIC_AND_CONVERSION_PLAN_RU.md` for the separate 30-day traffic/measurement plan. Zero traffic and poor conversion are treated as different problems.
 
-## Free traffic measurement and sharing in v3.7.56
+## IndexNow submission fix retained from v3.7.55
 
-- Multilingual guide pages provide a localized share button using the platform share sheet where available and a clipboard fallback elsewhere.
-- Yandex Metrica goals cover guide opens, guide sharing, application CTA clicks, form starts, successful submissions, AI-chat opens and voluntary-support opens.
-- `TRAFFIC_LAUNCH_KIT_RU.md` contains the complete free organic-distribution plan, current anti-spam safeguards, community replies, a four-week LinkedIn calendar, partner outreach copy and the later paid-test boundary.
-- No personal data is added to analytics goals; existing privacy disclosure and UTM sanitization remain unchanged.
-- The full automated test suite covers all six guide languages and the new measurement hooks.
-
-## IndexNow submission fix in v3.7.55
-
-- `python scripts/submit_indexnow.py` now works directly from the project root or Render Shell without a manual `PYTHONPATH` prefix.
-- `keyLocation` points to `https://chinatraderesolve.com/<INDEXNOW_KEY>.txt`, matching the root verification route exposed by the application.
-- The former `/indexnow/<key>.txt` location remains available for compatibility, but it is no longer advertised to IndexNow because it cannot authorize URLs outside `/indexnow/`.
-- URL generation is deduplicated and remains at 84 public multilingual URLs for the current catalogue.
-- Regression tests cover root key delivery, project-root bootstrapping and the generated IndexNow payload.
+- `python scripts/submit_indexnow.py` works directly from the project root or Render Shell without a manual `PYTHONPATH` prefix.
+- `keyLocation` points to the root verification file, allowing the multilingual public URL set to be submitted without the previous HTTP 422 failure.
+- The former `/indexnow/<key>.txt` location remains available for compatibility.
+- URL generation remains deduplicated and regression-tested.
 
 Runnable free-access implementation for ChinaTradeResolve. The service is free with no fixed end date until the operator decides to introduce a different model and announces it in advance.
 ## Pre-promotion interface and international SEO fixes in v3.7.54
@@ -99,7 +98,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - `/support`, the PayPal QR image and every cryptocurrency QR image now respect the same strict launch gate as the main public pages.
 - Blocked public pages and support assets return HTTP 503 without exposing payment links or wallet addresses.
 - Temporary launch-block responses are marked `no-store` and include a five-minute `Retry-After` hint.
-- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.55 release markers.
+- Deployment and promotion instructions retain the v3.7.38 launch-gate changes and use current v3.7.57 release markers.
 - Release tests verify launch blocking, response headers, non-disclosure of payment configuration and synchronized documentation.
 - Generated Python and pytest caches are removed before packaging.
 
@@ -109,7 +108,7 @@ Runnable free-access implementation for ChinaTradeResolve. The service is free w
 - At viewport widths of 360 px and below, the AI chat form switches from two columns to one.
 - The send button moves below the message field, spans the full width and retains a comfortable minimum touch height.
 - The message field explicitly uses the available width without forcing horizontal compression.
-- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.55`.
+- A regression test verifies the responsive CSS; the current release markers are synchronised for `3.7.57`.
 
 
 ## Safer application, voice and chat flow in v3.7.35
@@ -235,7 +234,7 @@ The public assistant now rejects unrelated general-chat requests locally before 
 - Triage never automatically declines a person because of an evidence-handling keyword, and monetary escalation is currency-aware for USD, EUR, GBP, CNY and RSD.
 - Cloudflare Turnstile can protect the public application form when both keys are configured.
 - The private case link supports withdrawal of future AI consent, removal of the stored AI report and immediate permanent case deletion.
-- Closed and inactive cases have separate retention periods. The dynamic privacy page exposes operator details from `DATA_CONTROLLER_NAME` and `DATA_CONTROLLER_ADDRESS`.
+- Closed and inactive cases have separate retention periods. The dynamic privacy page exposes the pilot controller identity and public contact email; `DATA_CONTROLLER_ADDRESS` is optional and rendered only when deliberately configured with meaningful text.
 - Bitcoin Bech32/Bech32m and Ethereum EIP-55 checksums are validated; non-local support URLs must use HTTPS.
 - Dependencies and the Python base image are pinned. The container runs as an unprivileged user and includes a health check.
 
@@ -442,7 +441,7 @@ The main public page is indexable. The optional support page remains `noindex,no
 
 - No service fee is charged during the free-access phase.
 - There is no automatic expiry date.
-- Individual cases may still be declined because of scope, urgency, evidence or available capacity.
+- Individual cases may still be declined because of scope, urgency, evidence or because the number of cases accepted at one time is limited.
 - A future paid model may be introduced only after advance notice.
 - A case already accepted as free is not converted to paid work without the user’s explicit agreement.
 - Voluntary support is separate from the service and never affects acceptance, priority, review or outcome.
@@ -500,7 +499,7 @@ Feedback is stored in SQLite and shown in the admin case view. Nothing is publis
 ## Run locally
 
 ```bash
-cd ChinaTradeResolve_Document_AI_v3.7.55
+cd ChinaTradeResolve_Document_AI_v3.7.57
 cp .env.example .env
 # Edit ADMIN_TOKEN and APP_SECRET.
 python -m pip install -r requirements.txt
@@ -658,7 +657,7 @@ When both variables are present, queued confirmation and admin-alert emails are 
 
 ## SEO и продвижение
 
-Версия 3.7.55 включает исправленный IndexNow-скрипт, безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
+Версия 3.7.57 включает исправленный IndexNow-скрипт, безопасную диагностику и усиленное переподключение Telegram-монитора, а также принудительный переход с технического домена Render на официальный домен с сохранением пути и параметров, а также устранение случайных иностранных хвостов в ответах ИИ, понятный ответ о загрузке документов, повторное использование успешно пройденной CAPTCHA в защищённой сессии ИИ, автоматический старт записи после согласия, заметное предупреждение о незаполненной форме, надёжные CI-тесты, канонический домен в письмах, пассивный Telegram-монитор, усиленную форму заявки, голосовой ввод и полноценные руководства на всех шести языках, sitemap с языковыми альтернативами, Open Graph, Article/Breadcrumb JSON-LD и видимую в админке атрибуцию заявок. До публичной индексации `/ready` должен вернуть HTTP 200: пока проверки запуска не пройдены, `robots.txt` намеренно закрывает сайт от поисковиков. Для HTML-подтверждения задайте `GOOGLE_SITE_VERIFICATION` и `BING_SITE_VERIFICATION`; подтверждённые через DNS или внешний кабинет статусы админ-панели управляются переменными `GOOGLE_SEARCH_CONSOLE_CONNECTED`, `YANDEX_WEBMASTER_CONNECTED` и `BING_WEBMASTER_CONNECTED`. Для IndexNow создайте уникальный `INDEXNOW_KEY`, затем выполните `python scripts/submit_indexnow.py`. Подробный порядок находится в `PROMOTION_RU.md`.
 
 
 ## PDF security verification

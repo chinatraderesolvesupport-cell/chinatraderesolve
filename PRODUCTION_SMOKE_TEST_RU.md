@@ -53,7 +53,7 @@ OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
 python scripts/production_smoke_test.py \
   --confirm-live \
   --base-url https://chinatraderesolve.com \
-  --email info.praim@list.ru
+  --email YOUR_TEST_EMAIL
 ```
 
 Команда намеренно требует `--confirm-live`, поскольку она отправляет настоящие письма и выполняет платные вызовы OpenAI.

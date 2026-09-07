@@ -3,7 +3,7 @@ from __future__ import annotations
 SUPPORTED_PRIVACY_LANGUAGES = ("en", "ru", "fr", "de", "es", "sr")
 
 PRIVACY_COPY = {'en': {'title': 'Privacy policy',
-        'notice': 'Effective 24 July 2026. This policy describes the current free stage of the service.',
+        'notice': 'Effective 7 September 2026. This policy describes the current free stage of the service.',
         'h_controller': 'Who processes data',
         'p_controller': 'ChinaTradeResolve is an independent commercial-dispute support project. The responsible '
                         'operator and contact details are shown below.',
@@ -41,13 +41,13 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                       'identity documents. Images are re-encoded to remove embedded metadata. Internet transmission '
                       'cannot be guaranteed to be completely secure.',
         'back': 'Return to website',
-        'development_notice': 'This local preview is not accepting public applications. Operator details must be '
+        'development_notice': 'Operator identity is not yet valid for public launch. The public launch gate remains closed until real operator details are configured and validated. '
                               'configured before public launch.',
         'meta_description': 'How ChinaTradeResolve collects, uses, protects and deletes application, case, document '
                             'and campaign-source data.',
         'language_label': 'Language'},
  'fr': {'title': 'Politique de confidentialité',
-        'notice': 'En vigueur depuis le 24 juillet 2026. Cette politique décrit la phase gratuite actuelle du '
+        'notice': 'En vigueur depuis le 7 septembre 2026. Cette politique décrit la phase gratuite actuelle du '
                   'service.',
         'h_controller': 'Qui traite les données',
         'p_controller': 'ChinaTradeResolve est un projet indépendant d’assistance commerciale aux litiges. Les '
@@ -92,7 +92,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                             'demande, de dossier, de documents et de provenance.',
         'language_label': 'Langue'},
  'de': {'title': 'Datenschutzerklärung',
-        'notice': 'Gültig ab 24. Juli 2026. Diese Erklärung beschreibt die aktuelle kostenlose Phase des Dienstes.',
+        'notice': 'Gültig ab 7. September 2026. Diese Erklärung beschreibt die aktuelle kostenlose Phase des Dienstes.',
         'h_controller': 'Wer Daten verarbeitet',
         'p_controller': 'ChinaTradeResolve ist ein unabhängiges Projekt zur kaufmännischen Unterstützung bei '
                         'Streitfällen. Angaben zum verantwortlichen Betreiber und Kontakt stehen unten.',
@@ -137,7 +137,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                             'schützt und löscht.',
         'language_label': 'Sprache'},
  'es': {'title': 'Política de privacidad',
-        'notice': 'Vigente desde el 24 de julio de 2026. Esta política describe la fase gratuita actual del '
+        'notice': 'Vigente desde el 7 de septiembre de 2026. Esta política describe la fase gratuita actual del '
                   'servicio.',
         'h_controller': 'Quién trata los datos',
         'p_controller': 'ChinaTradeResolve es un proyecto independiente de apoyo comercial en disputas. Los datos '
@@ -181,7 +181,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                             'casos, documentos y procedencia.',
         'language_label': 'Idioma'},
  'ru': {'title': 'Политика конфиденциальности',
-        'notice': 'Действует с 24 июля 2026 года. Политика описывает текущий бесплатный этап сервиса.',
+        'notice': 'Действует с 7 сентября 2026 года. Политика описывает текущий бесплатный этап сервиса.',
         'h_controller': 'Кто обрабатывает данные',
         'p_controller': 'ChinaTradeResolve — независимый проект коммерческой помощи в спорах. Данные ответственного '
                         'оператора и контакты указаны ниже.',
@@ -224,7 +224,7 @@ PRIVACY_COPY = {'en': {'title': 'Privacy policy',
                             'документов и источников перехода.',
         'language_label': 'Язык'},
  'sr': {'title': 'Politika privatnosti',
-        'notice': 'Važi od 24. jula 2026. Ova politika opisuje trenutnu besplatnu fazu usluge.',
+        'notice': 'Važi od 7. septembra 2026. Ova politika opisuje trenutnu besplatnu fazu usluge.',
         'h_controller': 'Ko obrađuje podatke',
         'p_controller': 'ChinaTradeResolve je nezavisan projekat komercijalne pomoći u sporovima. Podaci odgovornog '
                         'operatera i kontakt nalaze se ispod.',
@@ -278,3 +278,15 @@ for _language, _sentence in _METRIKA_PRIVACY_DISCLOSURE.items():
     if _sentence not in PRIVACY_COPY[_language]["p_data"]:
         PRIVACY_COPY[_language]["p_data"] += " " + _sentence
 
+
+# Public-launch messaging must never imply that placeholder or opaque identity values are acceptable.
+_PRIVACY_IDENTITY_PENDING_NOTICE = {
+    "en": "Operator identity is not yet valid for public launch. The public launch gate remains closed until real operator details are configured and validated.",
+    "ru": "Данные оператора пока не прошли проверку для публичного запуска. Публичный режим остаётся заблокирован до настройки и проверки реальных данных оператора.",
+    "sr": "Podaci operatera još nisu važeći za javno pokretanje. Javni režim ostaje blokiran dok se stvarni podaci operatera ne podese i provere.",
+    "fr": "L’identité de l’opérateur n’est pas encore valide pour le lancement public. Le lancement reste bloqué jusqu’à la configuration et la validation des données réelles de l’opérateur.",
+    "de": "Die Betreiberidentität ist noch nicht für den öffentlichen Start gültig. Der öffentliche Start bleibt blockiert, bis echte Betreiberangaben konfiguriert und geprüft sind.",
+    "es": "La identidad del operador aún no es válida para el lanzamiento público. El lanzamiento permanece bloqueado hasta configurar y validar los datos reales del operador.",
+}
+for _language, _notice in _PRIVACY_IDENTITY_PENDING_NOTICE.items():
+    PRIVACY_COPY[_language]["development_notice"] = _notice

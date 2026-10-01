@@ -247,7 +247,7 @@ def test_support_page_is_optional_and_non_priority():
 def test_home_shows_configured_voluntary_payment_methods():
     page = client.get("/")
     assert page.status_code == 200
-    assert 'href="/support"' in page.text
+    assert 'href="/support?lang=ru"' in page.text
     support = client.get('/support')
     assert support.status_code == 200
     assert 'id="paypal"' in support.text

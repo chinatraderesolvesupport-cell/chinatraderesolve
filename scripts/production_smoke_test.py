@@ -433,10 +433,13 @@ def main() -> int:
                 payload=ready,
             )
             robots = public_client.get(urljoin(args.base_url.rstrip("/") + "/", "robots.txt"))
+            robots_lines = {line.strip() for line in robots.text.splitlines() if line.strip()}
             record(
                 report,
                 "public_indexing",
-                robots.status_code == 200 and "Allow: /" in robots.text and "Disallow: /" not in robots.text,
+                robots.status_code == 200
+                and "Allow: /" in robots_lines
+                and "Disallow: /" not in robots_lines,
                 status_code=robots.status_code,
                 body=robots.text[:500],
             )
@@ -498,7 +501,7 @@ def main() -> int:
                 record(
                     report,
                     "technical_hostname_redirect",
-                    redirect.status_code == 308
+                    redirect.status_code == 301
                     and redirect.headers.get("location")
                     == args.base_url.rstrip("/") + "/?lang=ru&utm_source=smoke",
                     status_code=redirect.status_code,

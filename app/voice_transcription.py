@@ -22,6 +22,15 @@ SUPPORTED_AUDIO_TYPES: dict[str, tuple[str, str]] = {
 }
 LANGUAGE_CODES = {"en", "fr", "de", "es", "ru", "sr"}
 
+TRANSCRIPTION_PROMPTS: dict[str, str] = {
+    "ru": "Речь пользователя о споре с китайским поставщиком. Возможные термины: ChinaTradeResolve, China Trade Resolve, Alibaba, поставщик, заказ, инвойс, оплата, возврат, спор, доказательства, документы, голосовой модуль.",
+    "sr": "Govor korisnika o sporu sa kineskim dobavljačem. Mogući termini: ChinaTradeResolve, China Trade Resolve, Alibaba, dobavljač, porudžbina, faktura, uplata, povraćaj, spor, dokazi, dokumenti.",
+    "en": "User speech about a dispute with a Chinese supplier. Possible terms: ChinaTradeResolve, China Trade Resolve, Alibaba, supplier, order, invoice, payment, refund, dispute, evidence, documents.",
+    "fr": "Parole d’un utilisateur concernant un litige avec un fournisseur chinois. Termes possibles : ChinaTradeResolve, China Trade Resolve, Alibaba, fournisseur, commande, facture, paiement, remboursement, litige, preuves, documents.",
+    "de": "Nutzersprache zu einem Streit mit einem chinesischen Lieferanten. Mögliche Begriffe: ChinaTradeResolve, China Trade Resolve, Alibaba, Lieferant, Bestellung, Rechnung, Zahlung, Rückerstattung, Streit, Nachweise, Dokumente.",
+    "es": "Habla de un usuario sobre una disputa con un proveedor chino. Términos posibles: ChinaTradeResolve, China Trade Resolve, Alibaba, proveedor, pedido, factura, pago, reembolso, disputa, pruebas, documentos.",
+}
+
 
 class VoiceConfigurationError(RuntimeError):
     """Raised when voice transcription is not configured."""
@@ -73,6 +82,7 @@ async def transcribe_audio(
         "model": str(settings.openai_transcription_model),
         "language": language_code,
         "response_format": "json",
+        "prompt": TRANSCRIPTION_PROMPTS.get(language_code, TRANSCRIPTION_PROMPTS["en"]),
     }
     try:
         async with httpx.AsyncClient(timeout=max(30, settings.openai_timeout_seconds)) as client:

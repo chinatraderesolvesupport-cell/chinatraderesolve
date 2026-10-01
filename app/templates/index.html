@@ -444,7 +444,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </table>
 </div><p class="table-swipe-hint" data-i18n="table_swipe_hint" id="tableSwipeHint">{{ home_copy['table_swipe_hint'] }}</p>
 </div>
-<a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html">{{ home_copy['view_sample'] }}</a>
+<a class="btn" data-i18n="view_sample" data-lang-link href="/static/sample_case_assessment.html?lang={{ page_language }}">{{ home_copy['view_sample'] }}</a>
 </div>
 </div>
 </div>
@@ -510,7 +510,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </section>
 {% if support_enabled %}<section class="support-section" id="support">
-<div class="wrap"><div class="support-box"><div><div class="eyebrow" data-i18n="support_eyebrow">{{ home_copy['support_eyebrow'] }}</div><h2 data-i18n="support_title">{{ home_copy['support_title'] }}</h2><p class="intro" data-i18n="support_text">{{ home_copy['support_text'] }}</p></div><div class="support-actions"><a class="btn primary" data-i18n="support_button" data-lang-link href="/support">{{ home_copy['support_button'] }}</a></div></div></div>
+<div class="wrap"><div class="support-box"><div><div class="eyebrow" data-i18n="support_eyebrow">{{ home_copy['support_eyebrow'] }}</div><h2 data-i18n="support_title">{{ home_copy['support_title'] }}</h2><p class="intro" data-i18n="support_text">{{ home_copy['support_text'] }}</p></div><div class="support-actions"><a class="btn primary" data-i18n="support_button" data-lang-link href="/support?lang={{ page_language }}">{{ home_copy['support_button'] }}</a></div></div></div>
 </section>{% endif %}
 <section id="guides-preview">
 <div class="wrap">
@@ -548,7 +548,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div><div class="small" data-i18n="footer_text">{{ home_copy['footer_text'] }}</div></div>
-<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy">{{ home_copy['legal_privacy'] }}</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html">{{ home_copy['legal_terms'] }}</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html">{{ home_copy['legal_payment'] }}</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html">{{ home_copy['legal_ai'] }}</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html">{{ home_copy['legal_disclaimer'] }}</a><a class="guides-footer-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support">{{ home_copy['nav_support'] }}</a>{% endif %}</div>
+<div class="legal-links small"><a data-i18n="legal_privacy" data-lang-link href="/privacy?lang={{ page_language }}">{{ home_copy['legal_privacy'] }}</a><a data-i18n="legal_terms" data-lang-link href="/static/terms.html?lang={{ page_language }}">{{ home_copy['legal_terms'] }}</a><a data-i18n="legal_payment" data-lang-link href="/static/refund.html?lang={{ page_language }}">{{ home_copy['legal_payment'] }}</a><a data-i18n="legal_ai" data-lang-link href="/static/ai-notice.html?lang={{ page_language }}">{{ home_copy['legal_ai'] }}</a><a data-i18n="legal_disclaimer" data-lang-link href="/static/disclaimer.html?lang={{ page_language }}">{{ home_copy['legal_disclaimer'] }}</a><a class="guides-footer-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>{% if support_enabled %}<a data-i18n="nav_support" data-lang-link href="/support?lang={{ page_language }}">{{ home_copy['nav_support'] }}</a>{% endif %}</div>
 <div class="small">© 2026 ChinaTradeResolve</div>
 </div>
 </footer>

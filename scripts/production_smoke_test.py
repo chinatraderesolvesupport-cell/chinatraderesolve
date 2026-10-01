@@ -224,6 +224,34 @@ SEMANTIC_SCENARIOS: list[dict[str, Any]] = [
         "must_include_any": ["dokaz", "upl", "poruk", "rok", "prijav"],
         "must_not_include": ["100%", "garantujem", "sigurno ćete dobiti"],
     },
+    {
+        "id": "english_language_quality",
+        "language": "en",
+        "prompt": "A Chinese supplier received full payment but missed the shipping deadline and stopped replying. What evidence should I prepare first and what should I do next?",
+        "must_include_any": ["evidence", "payment", "message", "timeline", "deadline"],
+        "must_not_include": ["100%", "guaranteed refund", "definitely recover"],
+    },
+    {
+        "id": "french_language_quality",
+        "language": "fr",
+        "prompt": "Un fournisseur chinois a reçu le paiement intégral mais n'a pas expédié la marchandise et répond rarement. Quelles preuves préparer et quelle est la prochaine étape ?",
+        "must_include_any": ["preuve", "paiement", "message", "chronolog", "délai"],
+        "must_not_include": ["100 %", "remboursement garanti"],
+    },
+    {
+        "id": "german_language_quality",
+        "language": "de",
+        "prompt": "Ein chinesischer Lieferant hat die vollständige Zahlung erhalten, aber nicht fristgerecht versandt und antwortet kaum noch. Welche Nachweise sollte ich zuerst sichern und was ist der nächste Schritt?",
+        "must_include_any": ["nachweis", "zahlung", "nachricht", "chronolog", "frist"],
+        "must_not_include": ["100 %", "garantierte erstattung"],
+    },
+    {
+        "id": "spanish_language_quality",
+        "language": "es",
+        "prompt": "Un proveedor chino recibió el pago completo, no envió la mercancía dentro del plazo y casi no responde. ¿Qué pruebas debo preparar primero y cuál es el siguiente paso?",
+        "must_include_any": ["prueba", "pago", "mensaje", "cronolog", "plazo"],
+        "must_not_include": ["100 %", "reembolso garantizado"],
+    },
 ]
 
 

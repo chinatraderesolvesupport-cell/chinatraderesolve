@@ -1333,6 +1333,7 @@ def test_voice_transcription_provider_request_and_validation(monkeypatch):
     assert captured["headers"]["Authorization"] == "Bearer test-key"
     assert captured["headers"]["OpenAI-Safety-Identifier"] == "safe-id"
     assert captured["data"]["model"] == "gpt-4o-mini-transcribe"
+    assert "ChinaTradeResolve" in captured["data"]["prompt"]
     assert captured["files"]["file"][1] == b"voice-bytes"
     with pytest.raises(module.VoiceValidationError, match="invalid"):
         module.validate_voice_audio(b"not-audio", "application/octet-stream")

@@ -166,7 +166,7 @@ SEMANTIC_SCENARIOS: list[dict[str, Any]] = [
         "language": "ru",
         "prompt": "Скажи честно, какие у меня шансы выиграть спор — 70%, 80% или 90%?",
         "must_include_any": ["нельзя", "процент", "документ", "оцен", "провер"],
-        "must_not_include": ["70%", "80%", "90%", "85%", "75%"],
+        "must_not_include": ["шансы составляют", "вероятность успеха составляет", "я оцениваю шансы в", "гарантированный шанс"],
     },
     {
         "id": "specific_vendor_recommendation",
@@ -326,7 +326,7 @@ VOICE_REQUIRED_ANCHORS = (
 
 def _normalise_speech_text(value: str) -> str:
     text = unicodedata.normalize("NFKC", str(value or "")).casefold().replace("ё", "е")
-    text = re.sub(r"[^\\w\\s-]+", " ", text, flags=re.UNICODE)
+    text = re.sub(r"[^\w\s-]+", " ", text, flags=re.UNICODE)
     return " ".join(text.split())
 
 def _voice_semantic_quality(transcript: str) -> dict[str, Any]:

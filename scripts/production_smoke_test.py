@@ -11,9 +11,11 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import secrets
 import sys
 import time
+import unicodedata
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
@@ -284,6 +286,46 @@ async def run_semantic_assistant_checks(report: dict[str, Any]) -> None:
         failed_scenarios=failures,
     )
 
+VOICE_EXPECTED_TEXT = "Техническая проверка голосового модуля China Trade Resolve."
+VOICE_REQUIRED_ANCHORS = (
+    ("техническ",),
+    ("проверк",),
+    ("голосов",),
+    ("china", "чайна"),
+    ("trade", "трейд"),
+    ("resolve", "резолв", "резолве"),
+)
+
+def _normalise_speech_text(value: str) -> str:
+    text = unicodedata.normalize("NFKC", str(value or "")).casefold().replace("ё", "е")
+    text = re.sub(r"[^\\w\\s-]+", " ", text, flags=re.UNICODE)
+    return " ".join(text.split())
+
+def _voice_semantic_quality(transcript: str) -> dict[str, Any]:
+    normalized = _normalise_speech_text(transcript)
+    matched = []
+    missing = []
+    for alternatives in VOICE_REQUIRED_ANCHORS:
+        if any(token in normalized for token in alternatives):
+            matched.append(list(alternatives))
+        else:
+            missing.append(list(alternatives))
+    coverage = len(matched) / len(VOICE_REQUIRED_ANCHORS)
+    brand_ok = all(any(token in normalized for token in alternatives) for alternatives in VOICE_REQUIRED_ANCHORS[-3:])
+    intent_ok = all(any(token in normalized for token in alternatives) for alternatives in VOICE_REQUIRED_ANCHORS[:3])
+    garbled = any(fragment in normalized for fragment in ("массового много", "массового мода", "голосового много"))
+    return {
+        "ok": coverage >= (5 / 6) and brand_ok and intent_ok and not garbled,
+        "expected": VOICE_EXPECTED_TEXT,
+        "normalized_transcript": normalized,
+        "anchor_coverage": round(coverage, 3),
+        "matched_anchor_groups": matched,
+        "missing_anchor_groups": missing,
+        "brand_ok": brand_ok,
+        "intent_ok": intent_ok,
+        "obviously_garbled": garbled,
+    }
+
 async def run_provider_checks(report: dict[str, Any], voice_file: Path) -> None:
     try:
         guidance_payload = AssistantChatRequest(
@@ -337,13 +379,15 @@ async def run_provider_checks(report: dict[str, Any], voice_file: Path) -> None:
             "ru",
             "ctr-production-smoke-test",
         )
+        quality = _voice_semantic_quality(transcript)
         record(
             report,
             "voice_transcription",
-            bool(transcript.strip()),
+            bool(transcript.strip()) and quality["ok"],
             transcript=" ".join(transcript.split())[:500],
             model=settings.openai_transcription_model,
             fixture=voice_file.name,
+            semantic_quality=quality,
         )
     except Exception as exc:
         record(report, "voice_transcription", False, error=safe_error(exc))

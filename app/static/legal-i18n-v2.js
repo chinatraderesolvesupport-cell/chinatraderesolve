@@ -6,7 +6,7 @@ window.CTR_BOOT_LEGAL=function(pageId){
  const select=document.getElementById('lang');
  function normalize(v){const c=String(v||'').toLowerCase().split('-')[0];return supported.includes(c)?c:'en'}
  function setLang(v){const l=normalize(v),copy=all[l]||all.en||{};document.documentElement.lang=l;if(select){select.value=l;select.setAttribute('aria-label',languageLabels[l]||languageLabels.en)}document.querySelectorAll('[data-k]').forEach(el=>{const value=copy[el.dataset.k];if(value!==undefined)el.textContent=value});document.title=copy.title||'ChinaTradeResolve';const back=document.querySelector('[data-back]');if(back)back.href='/?lang='+l;try{localStorage.setItem('ctr_lang_v20',l)}catch(e){}}
- if(select)select.onchange=e=>setLang(e.target.value);
+ if(select)select.onchange=e=>{const lang=normalize(e.target.value);setLang(lang);const url=new URL(window.location.href);url.searchParams.set('lang',lang);window.history.replaceState(null,'',url)};
  const query=new URLSearchParams(window.location.search).get('lang');
  let saved='';try{saved=localStorage.getItem('ctr_lang_v20')||localStorage.getItem('ctr_lang_v17')||''}catch(e){};setLang(query||saved||navigator.language||'en');
 };
@@ -21,3 +21,4 @@ window.CTR_BOOT_LEGAL=function(pageId){
 })();
 
 window.addEventListener("DOMContentLoaded",()=>{const page=document.body?.dataset?.legalPage;if(page&&typeof window.CTR_BOOT_LEGAL==="function")window.CTR_BOOT_LEGAL(page)});
+

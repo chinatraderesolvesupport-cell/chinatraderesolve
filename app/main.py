@@ -909,6 +909,11 @@ async def verify_turnstile(token: str, request: Request) -> bool:
             )
             response.raise_for_status()
             result = response.json()
+            if isinstance(result, dict) and result.get("success") is not True:
+                # Log only Cloudflare's diagnostic codes, never the submitted token.
+                codes = result.get("error-codes")
+                if isinstance(codes, list):
+                    logger.warning("Turnstile rejected token: codes=%s", [str(code)[:64] for code in codes[:8]])
             return bool(isinstance(result, dict) and result.get("success") is True)
     except (httpx.HTTPError, ValueError, TypeError):
         logger.exception("Turnstile verification failed")

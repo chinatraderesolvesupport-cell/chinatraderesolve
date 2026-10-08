@@ -5700,10 +5700,10 @@ def test_v3759_legal_and_sample_assets_are_versioned():
     for filename in ('terms.html', 'refund.html', 'ai-notice.html', 'disclaimer.html'):
         text = (base / filename).read_text(encoding='utf-8')
         assert '/static/legal-pages.css?v=3.7.59' in text
-        assert '/static/legal-i18n-v2.js?v=3.7.59' in text
+        assert '/static/legal-i18n-v2.js?v=3.7.59.1' in text
     sample = (base / 'sample_case_assessment.html').read_text(encoding='utf-8')
     assert '/static/sample-case-assessment.css?v=3.7.59' in sample
-    assert '/static/legal-i18n-v2.js?v=3.7.59' in sample
+    assert '/static/legal-i18n-v2.js?v=3.7.59.1' in sample
 
 
 def test_v3759_no_store_from_launch_gate_has_precedence_over_public_revalidation(monkeypatch):

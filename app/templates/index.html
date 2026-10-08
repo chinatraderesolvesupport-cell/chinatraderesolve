@@ -487,7 +487,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="consent-row"><label><input name="no_guarantee" required="" type="checkbox"/><span data-i18n="consent3">{{ home_copy['consent3'] }}</span></label></div>
 </div>
 <div aria-live="polite" class="form-readiness" data-i18n="form_incomplete_status" id="formReadiness" role="status">{{ home_copy['form_incomplete_status'] }}</div>
-{% if turnstile_site_key %}<div class="field full"><div class="cf-turnstile" data-callback="ctrApplicationTurnstileSuccess" data-error-callback="ctrApplicationTurnstileError" data-execution="execute" data-expired-callback="ctrApplicationTurnstileExpired" data-response-field-name="cf-turnstile-response" data-size="flexible" data-sitekey="{{ turnstile_site_key }}" data-timeout-callback="ctrApplicationTurnstileTimeout" data-unsupported-callback="ctrApplicationTurnstileUnsupported" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_required" id="applicationTurnstileStatus" role="status">{{ home_copy['application_turnstile_required'] }}</div></div>{% endif %}
+{% if turnstile_site_key %}<div class="field full"><div data-sitekey="{{ turnstile_site_key }}" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_required" id="applicationTurnstileStatus" role="status">{{ home_copy['application_turnstile_required'] }}</div><button data-i18n="application_turnstile_retry" hidden id="applicationTurnstileRetry" type="button"></button></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">{{ home_copy['back'] }}</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">{{ home_copy['submit_review'] }}</button></div>
 </div>
@@ -621,8 +621,12 @@ const descriptionCount=document.getElementById('descriptionCount');
 const formSubmitButton=document.getElementById('submitBtn');
 const formReadiness=document.getElementById('formReadiness');
 const applicationTurnstileStatus=document.getElementById('applicationTurnstileStatus');
+const applicationTurnstileMount=document.getElementById('applicationTurnstileWidget');
+const applicationTurnstileRetry=document.getElementById('applicationTurnstileRetry');
 const applicationTurnstileRequired=Boolean(applicationTurnstileStatus);
 let applicationTurnstileVerified=!applicationTurnstileRequired;
+let applicationTurnstileToken='';
+let applicationTurnstileWidgetId=null;
 let applicationTurnstileStarted=false;
 let applicationTurnstileLoadAttempts=0;
 let applicationTurnstileLoadTimer=null;
@@ -649,28 +653,48 @@ function updateSubmitAvailability(){
   if(formReadiness){const key=ready?'form_ready_status':(applicationTurnstileRequired?'form_incomplete_status':'form_incomplete_status_no_bot');formReadiness.classList.toggle('ready',ready);formReadiness.textContent=applicationCopy(key)}
   maybeStartApplicationTurnstile();
 }
-function setApplicationTurnstileStatus(key,state=''){if(!applicationTurnstileStatus)return;applicationTurnstileStatus.textContent=applicationCopy(key);applicationTurnstileStatus.dataset.state=state}
+function setApplicationTurnstileStatus(key,state=''){if(!applicationTurnstileStatus)return;applicationTurnstileStatus.textContent=applicationCopy(key);applicationTurnstileStatus.dataset.state=state;if(applicationTurnstileRetry)applicationTurnstileRetry.hidden=state!=='error'}
 function maybeStartApplicationTurnstile(){
-  if(!applicationTurnstileRequired||applicationTurnstileStarted||applicationSubmitting||!requiredApplicationFields.every(applicationFieldValid)||!requiredConsentInputs.every(input=>input.checked))return;
-  if(!window.turnstile||typeof window.turnstile.execute!=='function'){
+  // The second step is display:none on page load. Never create its iframe there.
+  if(!applicationTurnstileRequired||applicationSubmitting||!document.getElementById('stepTwo').classList.contains('active'))return;
+  if(!window.turnstile||typeof window.turnstile.render!=='function'){
     if(applicationTurnstileLoadTimer!==null)return;
     if(applicationTurnstileLoadAttempts>=50){setApplicationTurnstileStatus('application_turnstile_error','error');return}
     applicationTurnstileLoadAttempts+=1;
     applicationTurnstileLoadTimer=window.setTimeout(()=>{applicationTurnstileLoadTimer=null;maybeStartApplicationTurnstile()},100);
     return;
   }
+  if(applicationTurnstileWidgetId===null){
+    try{
+      applicationTurnstileWidgetId=window.turnstile.render(applicationTurnstileMount,{
+        sitekey:applicationTurnstileMount.dataset.sitekey,
+        size:applicationTurnstileMount.clientWidth<300?'compact':'flexible',
+        language:document.documentElement.lang||'auto',
+        appearance:'interaction-only',execution:'execute','response-field':false,
+        callback:window.ctrApplicationTurnstileSuccess,
+        'expired-callback':window.ctrApplicationTurnstileExpired,
+        'timeout-callback':window.ctrApplicationTurnstileTimeout,
+        'unsupported-callback':window.ctrApplicationTurnstileUnsupported,
+        'error-callback':window.ctrApplicationTurnstileError
+      });
+    }catch(_error){setApplicationTurnstileStatus('application_turnstile_error','error');return}
+  }
+  if(applicationTurnstileStarted||!requiredApplicationFields.every(applicationFieldValid)||!requiredConsentInputs.every(input=>input.checked))return;
   try{
-    window.turnstile.execute('#applicationTurnstileWidget');
     applicationTurnstileStarted=true;
     setApplicationTurnstileStatus('application_turnstile_loading');
+    window.turnstile.execute(applicationTurnstileWidgetId);
   }catch(_error){setApplicationTurnstileStatus('application_turnstile_error','error')}
 }
-function resetApplicationTurnstile(){if(!applicationTurnstileRequired)return;applicationTurnstileVerified=false;applicationTurnstileStarted=false;try{if(window.turnstile&&typeof window.turnstile.reset==='function')window.turnstile.reset('#applicationTurnstileWidget')}catch(_error){}setApplicationTurnstileStatus('application_turnstile_loading');updateSubmitAvailability()}
-window.ctrApplicationTurnstileSuccess=token=>{applicationTurnstileVerified=Boolean(String(token||'').trim());setApplicationTurnstileStatus('application_turnstile_ready','verified');updateSubmitAvailability()};
-window.ctrApplicationTurnstileExpired=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_required','required');updateSubmitAvailability()};
-window.ctrApplicationTurnstileTimeout=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_required','required');updateSubmitAvailability()};
-window.ctrApplicationTurnstileUnsupported=()=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');updateSubmitAvailability()};
-window.ctrApplicationTurnstileError=errorCode=>{applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');const code=String(errorCode||'');if(/^\d{6}$/.test(code))applicationTurnstileStatus.textContent+=` (${code})`;updateSubmitAvailability()};
+function resetApplicationTurnstile(){if(!applicationTurnstileRequired)return;applicationTurnstileToken='';applicationTurnstileVerified=false;applicationTurnstileStarted=false;applicationTurnstileLoadAttempts=0;try{if(applicationTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function')window.turnstile.reset(applicationTurnstileWidgetId)}catch(_error){}setApplicationTurnstileStatus('application_turnstile_loading');updateSubmitAvailability()}
+function removeApplicationTurnstile(){if(!applicationTurnstileRequired)return;applicationTurnstileToken='';applicationTurnstileVerified=false;applicationTurnstileStarted=false;try{if(applicationTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function')window.turnstile.remove(applicationTurnstileWidgetId)}catch(_error){}applicationTurnstileWidgetId=null;setApplicationTurnstileStatus('application_turnstile_required','required');updateSubmitAvailability()}
+window.ctrApplicationTurnstileSuccess=token=>{applicationTurnstileToken=String(token||'').trim();applicationTurnstileVerified=Boolean(applicationTurnstileToken);setApplicationTurnstileStatus('application_turnstile_ready','verified');updateSubmitAvailability()};
+window.ctrApplicationTurnstileExpired=()=>resetApplicationTurnstile();
+window.ctrApplicationTurnstileTimeout=()=>resetApplicationTurnstile();
+window.ctrApplicationTurnstileUnsupported=()=>{applicationTurnstileToken='';applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');updateSubmitAvailability()};
+window.ctrApplicationTurnstileError=errorCode=>{applicationTurnstileToken='';applicationTurnstileVerified=false;setApplicationTurnstileStatus('application_turnstile_error','error');const code=String(errorCode||'');if(/^\d{6}$/.test(code))applicationTurnstileStatus.textContent+=` (${code})`;updateSubmitAvailability()};
+if(applicationTurnstileRetry)applicationTurnstileRetry.addEventListener('click',resetApplicationTurnstile);
+document.addEventListener('ctr:language-changed',removeApplicationTurnstile);
 function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`;updateSubmitAvailability()}
 requiredApplicationFields.forEach(field=>{field.addEventListener('blur',()=>{field.dataset.touched='true';setApplicationFieldValidity(field);updateSubmitAvailability()});field.addEventListener('input',()=>{setApplicationFieldValidity(field);updateSubmitAvailability()})});
 descriptionField.addEventListener('input',updateDescriptionCount);
@@ -866,7 +890,7 @@ nextButton.addEventListener('click',()=>{
   if(ok){stepOne.classList.remove('active');stepTwo.classList.add('active');prog2.classList.add('active');label1.classList.remove('active');label2.classList.add('active');updateSubmitAvailability();window.setTimeout(drawFormReadinessAttention,180);window.requestAnimationFrame(()=>{scrollElementToFormTop(stepTwo,{offset:88,behavior:'smooth'});window.setTimeout(()=>descriptionField.focus({preventScroll:true}),120)})}
 });
 stepOne.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='BUTTON'){event.preventDefault();nextButton.click()}});
-document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active');window.requestAnimationFrame(()=>scrollElementToFormTop(stepOne,{offset:88,behavior:'smooth'}))});
+document.getElementById('backBtn').addEventListener('click',()=>{stepTwo.classList.remove('active');stepOne.classList.add('active');prog2.classList.remove('active');label2.classList.remove('active');label1.classList.add('active');removeApplicationTurnstile();window.requestAnimationFrame(()=>scrollElementToFormTop(stepOne,{offset:88,behavior:'smooth'}))});
 document.getElementById('caseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const form=e.target;
@@ -898,7 +922,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const payload={};
   data.forEach((value,key)=>{payload[key]=value});
   ['free_access_terms','sharing_authority','ai_consent','no_guarantee'].forEach(k=>payload[k]=data.has(k));
-  payload.turnstile_token=String(data.get('cf-turnstile-response')||'');
+  payload.turnstile_token=applicationTurnstileToken;
   const params=new URLSearchParams(window.location.search);
   payload.utm_source=String(params.get('utm_source')||sessionStorage.getItem('ctr_utm_source')||'').slice(0,120);
   payload.utm_medium=String(params.get('utm_medium')||sessionStorage.getItem('ctr_utm_medium')||'').slice(0,120);

@@ -5170,12 +5170,13 @@ def test_ci_workflow_is_packaged_and_runs_compile_and_tests():
 def test_v3734_application_form_tracks_all_required_states():
     template = (Path(__file__).parents[1] / "app" / "templates" / "index.html").read_text(encoding="utf-8")
     assert 'id="formReadiness"' in template
-    assert 'data-callback="ctrApplicationTurnstileSuccess"' in template
-    assert 'data-expired-callback="ctrApplicationTurnstileExpired"' in template
-    assert 'data-timeout-callback="ctrApplicationTurnstileTimeout"' in template
-    assert 'data-unsupported-callback="ctrApplicationTurnstileUnsupported"' in template
-    assert "window.turnstile.reset('#applicationTurnstileWidget')" in template
-    assert 'data-error-callback="ctrApplicationTurnstileError"' in template
+    assert 'data-sitekey="{{ turnstile_site_key }}" id="applicationTurnstileWidget"' in template
+    assert 'class="cf-turnstile"' not in template
+    assert "window.turnstile.render(applicationTurnstileMount" in template
+    assert "window.turnstile.reset(applicationTurnstileWidgetId)" in template
+    assert "window.turnstile.remove(applicationTurnstileWidgetId)" in template
+    assert "callback:window.ctrApplicationTurnstileSuccess" in template
+    assert "'error-callback':window.ctrApplicationTurnstileError" in template
     assert "requiredApplicationFields.every(applicationFieldValid)" in template
     assert "requiredConsentInputs.every(input=>input.checked)" in template
     assert "applicationTurnstileVerified" in template

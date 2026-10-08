@@ -487,7 +487,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="consent-row"><label><input name="no_guarantee" required="" type="checkbox"/><span data-i18n="consent3">{{ home_copy['consent3'] }}</span></label></div>
 </div>
 <div aria-live="polite" class="form-readiness" data-i18n="form_incomplete_status" id="formReadiness" role="status">{{ home_copy['form_incomplete_status'] }}</div>
-{% if turnstile_site_key %}<div class="field full"><div data-sitekey="{{ turnstile_site_key }}" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_required" id="applicationTurnstileStatus" role="status">{{ home_copy['application_turnstile_required'] }}</div><button data-i18n="application_turnstile_retry" hidden id="applicationTurnstileRetry" type="button"></button></div>{% endif %}
+{% if turnstile_site_key %}<div class="field full"><div data-sitekey="{{ turnstile_site_key }}" id="applicationTurnstileWidget"></div><div aria-live="polite" class="application-turnstile-status" data-i18n="application_turnstile_required" id="applicationTurnstileStatus" role="status">{{ home_copy['application_turnstile_required'] }}</div><button hidden id="applicationTurnstileRetry" type="button"></button></div>{% endif %}
 <div class="field full"><div aria-live="polite" class="submit-status" id="submitStatus" role="status"></div></div>
 <div class="field full form-actions"><button class="btn dark" data-i18n="back" id="backBtn" type="button">{{ home_copy['back'] }}</button><button aria-disabled="true" class="btn primary" data-i18n="submit_review" disabled id="submitBtn" type="submit">{{ home_copy['submit_review'] }}</button></div>
 </div>
@@ -648,6 +648,7 @@ function drawFormReadinessAttention(){
 }
 function updateSubmitAvailability(){
   const ready=applicationReady();
+  if(applicationTurnstileRetry)applicationTurnstileRetry.textContent=applicationCopy('application_turnstile_retry');
   formSubmitButton.disabled=!ready;
   formSubmitButton.setAttribute('aria-disabled',ready?'false':'true');
   if(formReadiness){const key=ready?'form_ready_status':(applicationTurnstileRequired?'form_incomplete_status':'form_incomplete_status_no_bot');formReadiness.classList.toggle('ready',ready);formReadiness.textContent=applicationCopy(key)}

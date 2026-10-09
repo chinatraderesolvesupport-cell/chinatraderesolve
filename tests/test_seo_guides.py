@@ -1,6 +1,7 @@
 """Indexability and useful entry points for all localized dispute guides."""
 
 from html.parser import HTMLParser
+from html import unescape
 import json
 import os
 from pathlib import Path
@@ -63,7 +64,7 @@ def test_all_72_guide_pages_have_unique_localized_metadata_and_reciprocal_links(
             assert home.status_code == 200
             for slug in ("supplier-not-refunding", "alibaba-dispute-closed-no-refund"):
                 assert f'data-guide-slug="{slug}" href="/{lang}/guides/{slug}"' in home.text
-                assert GUIDES[lang][slug]["title"] in home.text
+                assert GUIDES[lang][slug]["title"] in unescape(home.text)
             for slug, guide in GUIDES[lang].items():
                 path = f"/{lang}/guides/{slug}"
                 page = client.get(path)
@@ -98,8 +99,9 @@ def test_all_72_guide_pages_have_unique_localized_metadata_and_reciprocal_links(
                 descriptions.add(parsed.descriptions[0])
 
 
-def test_sitemap_contains_every_localized_guide_and_truthful_dates():
+def test_sitemap_contains_every_localized_guide_and_truthful_dates(monkeypatch):
     base = settings.public_base_url.rstrip("/")
+    monkeypatch.setattr("app.main.search_indexing_is_ready", lambda: True)
     with TestClient(app) as client:
         robots = client.get("/robots.txt")
         assert robots.status_code == 200

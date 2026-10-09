@@ -521,6 +521,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a class="card" data-guide-slug="alibaba-dispute-evidence" href="/{{ page_language }}/guides/alibaba-dispute-evidence"><div class="icon">01</div><h3 data-i18n="guide_card_evidence_title">{{ home_copy['guide_card_evidence_title'] }}</h3><p data-i18n="guide_card_evidence_text">{{ home_copy['guide_card_evidence_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
 <a class="card" data-guide-slug="supplier-not-shipped" href="/{{ page_language }}/guides/supplier-not-shipped"><div class="icon">02</div><h3 data-i18n="guide_card_shipping_title">{{ home_copy['guide_card_shipping_title'] }}</h3><p data-i18n="guide_card_shipping_text">{{ home_copy['guide_card_shipping_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
 <a class="card" data-guide-slug="product-quality-dispute" href="/{{ page_language }}/guides/product-quality-dispute"><div class="icon">03</div><h3 data-i18n="guide_card_quality_title">{{ home_copy['guide_card_quality_title'] }}</h3><p data-i18n="guide_card_quality_text">{{ home_copy['guide_card_quality_text'] }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>
+{% for card in featured_guide_cards %}<a class="card featured-guide-card" data-guide-slug="{{ card.slug }}" href="/{{ page_language }}/guides/{{ card.slug }}"><div class="icon">0{{ loop.index + 3 }}</div><h3>{{ card.title }}</h3><p>{{ card.description }}</p><span class="guide-card-link" data-i18n="guide_card_read">{{ home_copy['guide_card_read'] }}</span></a>{% endfor %}
 </div>
 <div class="guides-preview-actions"><a class="btn guides-all-link" data-i18n="guides_view_all" href="/{{ page_language }}/guides">{{ home_copy['guides_view_all'] }}</a></div>
 </div>
@@ -994,6 +995,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
 });
 
 const translations=window.CTR_TRANSLATIONS||{};
+const featuredGuideTranslations={{ featured_guide_translations|tojson }};
 const supportedLanguages=['en','fr','de','es','ru','sr'];
 const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};
 const guideLabels={en:'Guides',fr:'Guides',de:'Ratgeber',es:'Guías',ru:'Руководства',sr:'Vodiči'};
@@ -1034,6 +1036,7 @@ function setLang(lang,{updateUrl=true,syncPreferred=true}={}){
   if(preferred&&syncPreferred&&!preferred.dataset.userChanged)preferred.value=preferredLanguageValues[lang];
   document.querySelectorAll('.guides-nav-link,.guides-footer-link,.guides-all-link').forEach(link=>{if(!link.dataset.i18n)link.textContent=guideLabels[lang]||guideLabels.en;link.setAttribute('href',`/${lang}/guides`)});
   document.querySelectorAll('[data-guide-slug]').forEach(link=>link.setAttribute('href',`/${lang}/guides/${link.dataset.guideSlug}`));
+  document.querySelectorAll('.featured-guide-card').forEach(link=>{const card=featuredGuideTranslations[lang]?.[link.dataset.guideSlug];if(card){link.querySelector('h3').textContent=card.title;link.querySelector('p').textContent=card.description}});
   document.querySelectorAll('[data-lang-link]').forEach(link=>{
     try{const url=new URL(link.getAttribute('href'),window.location.origin);url.searchParams.set('lang',lang);link.setAttribute('href',url.pathname+url.search+url.hash)}catch(_e){}
   });

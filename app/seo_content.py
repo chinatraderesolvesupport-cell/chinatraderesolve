@@ -1124,7 +1124,70 @@ for _lang in ("fr", "de", "es", "sr"):
     }[_lang])
     GUIDE_DETAIL_COPY[_lang].setdefault("editorial_note", GUIDE_DETAIL_COPY[_lang]["fine"])
 
-GUIDE_MODIFIED_DATE = "2026-07-28"
+# These four original translations predate the short-answer block used by the
+# newer guides. Give each search landing page a concrete first action.
+ORIGINAL_GUIDE_ANSWERS = {
+    "fr": {
+        "alibaba-dispute-evidence": "Conservez les conditions finales, le paiement et les échanges datés. Associez chaque défaut ou retard à une pièce précise, puis vérifiez le délai de réclamation affiché pour votre commande.",
+        "supplier-not-shipped": "Comparez la date d’expédition convenue avec la preuve de remise au transporteur : une étiquette créée ne suffit pas. Gardez le paiement et les messages, puis vérifiez sans attendre les délais de la plateforme et du paiement.",
+        "product-quality-dispute": "Comparez la spécification approuvée avec des photos, mesures ou tests datés et indiquez la quantité concernée. Préservez l’emballage et vérifiez les délais avant de demander une solution proportionnée.",
+        "organize-dispute-documents": "Gardez les originaux inchangés, créez une chronologie et numérotez les pièces reliant commande, paiement, promesse et problème. Notez séparément les délais de la plateforme, de la banque et du contrat.",
+    },
+    "de": {
+        "alibaba-dispute-evidence": "Sichern Sie die endgültigen Bestellbedingungen, Zahlung und datierte Nachrichten. Belegen Sie jede Abweichung mit einer konkreten Datei und prüfen Sie die Frist des betreffenden Auftrags.",
+        "supplier-not-shipped": "Vergleichen Sie das vereinbarte Versanddatum mit dem Nachweis der Übergabe an den Frachtführer; ein erstelltes Etikett reicht nicht. Sichern Sie Zahlung und Nachrichten und prüfen Sie Plattform- und Zahlungsfristen.",
+        "product-quality-dispute": "Vergleichen Sie die freigegebene Spezifikation mit datierten Fotos, Messungen oder Tests und nennen Sie die betroffene Menge. Bewahren Sie Verpackung und Ware auf und prüfen Sie Fristen vor der Forderung.",
+        "organize-dispute-documents": "Lassen Sie Originale unverändert, erstellen Sie eine Chronologie und verknüpfen Sie Bestellung, Zahlung, Zusage und Problem mit nummerierten Belegen. Notieren Sie Plattform-, Bank- und Vertragsfristen getrennt.",
+    },
+    "es": {
+        "alibaba-dispute-evidence": "Conserve las condiciones definitivas, el pago y los mensajes fechados. Vincule cada defecto o retraso a una prueba concreta y compruebe el plazo de reclamación de su pedido.",
+        "supplier-not-shipped": "Compare la fecha de envío acordada con la prueba de entrega al transportista; una etiqueta creada no basta. Guarde el pago y los mensajes y revise los plazos de la plataforma y del medio de pago.",
+        "product-quality-dispute": "Compare la especificación aprobada con fotos, mediciones o pruebas fechadas e indique la cantidad afectada. Conserve embalaje y mercancía y revise los plazos antes de reclamar.",
+        "organize-dispute-documents": "Mantenga intactos los originales, cree una cronología y numere las pruebas que unen pedido, pago, promesa y problema. Anote por separado los plazos de plataforma, banco y contrato.",
+    },
+    "sr": {
+        "alibaba-dispute-evidence": "Sačuvajte konačne uslove porudžbine, uplatu i datirane poruke. Svako odstupanje povežite sa konkretnim dokazom i proverite rok za prigovor koji važi za tu porudžbinu.",
+        "supplier-not-shipped": "Uporedite dogovoreni datum slanja sa dokazom da je roba predata prevozniku; sama kreirana etiketa nije dovoljna. Sačuvajte uplatu i poruke i proverite rokove platforme i plaćanja.",
+        "product-quality-dispute": "Uporedite odobrenu specifikaciju sa datiranim fotografijama, merenjima ili testovima i navedite pogođenu količinu. Sačuvajte ambalažu i robu i proverite rokove pre zahteva.",
+        "organize-dispute-documents": "Sačuvajte originale bez izmena, napravite hronologiju i numerišite dokaze koji povezuju porudžbinu, uplatu, obećanje i problem. Odvojeno zabeležite rokove platforme, banke i ugovora.",
+    },
+}
+
+for _lang, _answers in ORIGINAL_GUIDE_ANSWERS.items():
+    for _slug, _summary in _answers.items():
+        GUIDES[_lang][_slug]["summary"] = _summary
+
+# Search intent is the buyer's immediate problem; the service reviews evidence
+# and next steps without promising recovery or acting for the buyer.
+REFUND_GUIDE_METADATA = {
+    "en": ("Chinese supplier won't refund me: evidence and next steps", "Supplier in China refuses a refund? Check payment and order evidence, a written refund promise, open platform or bank deadlines, and practical next steps."),
+    "ru": ("Поставщик из Китая не возвращает деньги: что делать", "Китайский поставщик отказал в возврате? Сверьте оплату, условия заказа, обещание вернуть деньги и сроки спора на платформе или в банке."),
+    "fr": ("Fournisseur chinois refuse le remboursement : que faire ?", "Fournisseur chinois ou vendeur Alibaba refuse de rembourser ? Vérifiez paiement, conditions, promesse écrite et délais de la plateforme ou de la banque."),
+    "de": ("Chinesischer Lieferant zahlt nicht zurück: Was tun?", "Lieferant in China verweigert die Erstattung? Prüfen Sie Zahlung, Bestellung, schriftliche Zusage und offene Fristen bei Plattform oder Bank."),
+    "es": ("Proveedor chino no devuelve el dinero: qué hacer", "¿El proveedor chino o vendedor de Alibaba se niega a reembolsar? Revise pago, pedido, promesa escrita y plazos de la plataforma o del banco."),
+    "sr": ("Kineski dobavljač ne vraća novac: šta uraditi", "Dobavljač iz Kine odbija povraćaj? Proverite uplatu, uslove porudžbine, pisano obećanje i rokove platforme ili banke."),
+}
+for _lang, (_title, _description) in REFUND_GUIDE_METADATA.items():
+    GUIDES[_lang]["supplier-not-refunding"].update(title=_title, description=_description)
+
+# Cards are generated after the localized metadata changes, including the two
+# priority problem routes linked directly from the home page.
+for _lang in SUPPORTED_LANGUAGES:
+    GUIDE_CARD_COPY[_lang] = {
+        _slug: {"title": _data["title"], "description": _data["description"]}
+        for _slug, _data in GUIDES[_lang].items()
+    }
+
+GUIDE_MODIFIED_DATE = "2026-10-09"
+for _lang, _updated in {
+    "en": "Updated 9 October 2026",
+    "ru": "Обновлено 9 октября 2026 года",
+    "fr": "Mis à jour le 9 octobre 2026",
+    "de": "Aktualisiert am 9. Oktober 2026",
+    "es": "Actualizado el 9 de octubre de 2026",
+    "sr": "Ažurirano 9. oktobra 2026.",
+}.items():
+    GUIDE_DETAIL_COPY[_lang]["updated"] = _updated
 
 # One visible editorial notice per guide; keep the message useful without duplication.
 GUIDE_DETAIL_COPY["fr"]["editorial_note"] = "Ce guide explique comment organiser les preuves et préparer les prochaines étapes pratiques. Il ne prédit pas l’issue du litige et ne remplace pas un conseil juridique. Vérifiez les règles et délais actuels de la plateforme."

@@ -1528,6 +1528,17 @@ def home(request: Request) -> HTMLResponse:
             "page_language": page_language,
             "seo": seo,
             "home_copy": HOME_TRANSLATIONS[page_language],
+            "featured_guide_cards": [
+                {"slug": slug, **GUIDE_CARD_COPY[page_language][slug]}
+                for slug in ("supplier-not-refunding", "alibaba-dispute-closed-no-refund")
+            ],
+            "featured_guide_translations": {
+                code: {
+                    slug: GUIDE_CARD_COPY[code][slug]
+                    for slug in ("supplier-not-refunding", "alibaba-dispute-closed-no-refund")
+                }
+                for code in SUPPORTED_LANGUAGES
+            },
             "language_alternates": language_alternates,
             "x_default_url": x_default_url,
             "social_image_url": base_url + "/static/social-preview.png",
@@ -1779,7 +1790,8 @@ def sitemap() -> Response:
         for language in SUPPORTED_PRIVACY_LANGUAGES
     }
     privacy_alternates = {**privacy_paths, "x-default": "/privacy?lang=en"}
-    urls.extend(entry(path, privacy_alternates) for path in privacy_paths.values())
+    # Privacy content was not edited in this release; keep its real last-modified date.
+    urls.extend(entry(path, privacy_alternates, lastmod="2026-07-28") for path in privacy_paths.values())
 
     hub_paths = {language: f"/{language}/guides" for language in SUPPORTED_LANGUAGES}
     hub_alternates = {**hub_paths, "x-default": "/en/guides"}

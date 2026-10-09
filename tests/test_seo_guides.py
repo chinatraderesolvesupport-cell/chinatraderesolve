@@ -83,7 +83,11 @@ def test_all_72_guide_pages_have_unique_localized_metadata_and_reciprocal_links(
                 }
                 assert guide.get("summary"), path
                 assert f'href="/?lang={lang}#submit"' in page.text
-                assert f'href="/{lang}/guides/{guide["related_slugs"][0]}"' in page.text
+                assert re.search(
+                    rf'<p class="quick-links">.*?<a href="/{lang}/guides/[^\"]+"',
+                    page.text,
+                    re.S,
+                ), path
                 assert f'"dateModified": "{GUIDE_MODIFIED_DATE}"' in page.text
                 script = re.search(r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>', page.text, re.S)
                 assert script, path

@@ -956,7 +956,10 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
           message=ui.prefix+fieldNames.join(', ')+'.';
         }
       }else if(typeof result.detail==='string'){
-        message=result.detail;
+        // API details are English; do not show them raw in a translated form.
+        message=result.detail==='Bot-protection verification is required'
+          ?applicationCopy('application_turnstile_error')
+          :ui.unable;
       }
       throw new Error(message||ui.fallback);
     }

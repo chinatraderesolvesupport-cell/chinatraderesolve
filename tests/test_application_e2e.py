@@ -173,6 +173,13 @@ def test_browser_application_mobile_case_upload_and_local_mail_delivery():
             try:
                 page = browser.new_page(locale="ru-RU", viewport={"width": 390, "height": 844}, device_scale_factor=1)
                 fill_application(page, base)
+                page.evaluate("window.ctrApplicationTurnstileExpired()")
+                expect(page.locator("#submitBtn")).to_be_enabled(timeout=30000)
+                page.evaluate("window.ctrApplicationTurnstileError('110200')")
+                expect(page.locator("#submitBtn")).to_be_disabled()
+                expect(page.locator("#applicationTurnstileRetry")).to_be_visible()
+                page.locator("#applicationTurnstileRetry").click()
+                expect(page.locator("#submitBtn")).to_be_enabled(timeout=30000)
                 page.locator("#submitBtn").click()
                 expect(page.locator("#confirmation")).to_be_visible(timeout=30000)
                 reference = page.locator("#caseNumber").inner_text()

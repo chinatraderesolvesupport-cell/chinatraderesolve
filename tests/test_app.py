@@ -5471,9 +5471,9 @@ def test_v3753_guide_notice_and_dates_are_synchronised():
     page = client.get("/fr/guides/supplier-not-refunding")
     assert page.status_code == 200
     assert page.text.count('class="fine"') == 1
-    assert "Mis à jour le 28 juillet 2026" in page.text
-    assert 'content="2026-07-28"' in page.text
-    assert '"dateModified": "2026-07-28"' in page.text
+    assert "Mis à jour le 9 octobre 2026" in page.text
+    assert 'content="2026-10-09"' in page.text
+    assert '"dateModified": "2026-10-09"' in page.text
     assert "Ce guide explique comment organiser les preuves" in page.text
     sitemap = client.get("/sitemap.xml")
     assert sitemap.status_code == 200

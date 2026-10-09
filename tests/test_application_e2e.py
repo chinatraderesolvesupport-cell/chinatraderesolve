@@ -26,6 +26,7 @@ from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 PASS_SITE = "1x00000000000000000000AA"
 PASS_SECRET = "1x0000000000000000000000000000000AA"
+FAIL_SECRET = "2x0000000000000000000000000000000AA"
 DUPLICATE_SECRET = "3x0000000000000000000000000000000AA"
 DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX"
 
@@ -58,7 +59,7 @@ def free_port():
 
 
 @contextmanager
-def isolated_app(secret=PASS_SECRET):
+def isolated_app(secret=PASS_SECRET, expected_mail_failure=False):
     with tempfile.TemporaryDirectory(prefix="ctr-e2e-") as directory:
         sink = ThreadingHTTPServer(("127.0.0.1", 0), MailSink)
         sink.messages = []
@@ -118,8 +119,11 @@ def isolated_app(secret=PASS_SECRET):
                 sink_thread.join(timeout=5)
                 log.flush()
                 log.seek(0)
-                errors = [line.strip() for line in log if "Traceback" in line or "ERROR:" in line]
-                assert not errors, f"Isolated server errors: {errors}"
+                output = log.read()
+                if expected_mail_failure:
+                    assert "Email delivery failed" in output, "Expected mail failure was not logged"
+                else:
+                    assert "Traceback" not in output and "ERROR:" not in output, "Isolated server error in test log"
 
 
 def application_payload(**overrides):
@@ -218,11 +222,14 @@ def test_siteverify_rejects_missing_bad_and_spent_tokens_without_creating_cases(
     with isolated_app() as (base, database, _sink, http, _env):
         for payload, expected in (
             (application_payload(turnstile_token=""), 400),
-            (application_payload(turnstile_token="not-a-cloudflare-token"), 400),
             (application_payload(email="not-an-email"), 422),
             (application_payload(sharing_authority=False), 422),
         ):
             assert http.post(base + "/api/applications", json=payload).status_code == expected
+        assert case_count(database) == 0
+    # The official always-pass secret accepts arbitrary nonempty tokens.
+    with isolated_app(FAIL_SECRET) as (base, database, _sink, http, _env):
+        assert http.post(base + "/api/applications", json=application_payload(turnstile_token="not-a-cloudflare-token")).status_code == 400
         assert case_count(database) == 0
     # Cloudflare's documented test secret simulates an expired or reused token.
     with isolated_app(DUPLICATE_SECRET) as (base, database, _sink, http, _env):
@@ -231,18 +238,23 @@ def test_siteverify_rejects_missing_bad_and_spent_tokens_without_creating_cases(
 
 
 def test_mail_transport_failure_keeps_notifications_for_retry():
-    with isolated_app() as (base, database, sink, http, env):
+    with isolated_app(expected_mail_failure=True) as (base, database, sink, http, env):
         sink.fail_mail = True
         response = http.post(base + "/api/applications", json=application_payload())
         assert response.status_code == 201
         reference = response.json()["case_reference"]
         assert http.get(base + response.json()["status_url"]).status_code == 200
         assert sink.messages == []
-        with sqlite3.connect(database) as conn:
-            rows = conn.execute("SELECT status,attempts FROM notification_outbox").fetchall()
-            assert rows == [("pending", 1), ("pending", 1)]
-            conn.execute("UPDATE notification_outbox SET next_attempt_at=NULL WHERE status='pending'")
+        for _ in range(100):
+            with sqlite3.connect(database) as conn:
+                rows = conn.execute("SELECT status,attempts FROM notification_outbox ORDER BY id").fetchall()
+            if rows == [("pending", 1), ("pending", 1)]:
+                break
+            time.sleep(0.1)
+        assert rows == [("pending", 1), ("pending", 1)]
         sink.fail_mail = False
+        with sqlite3.connect(database) as conn:
+            conn.execute("UPDATE notification_outbox SET next_attempt_at=NULL WHERE status='pending'")
         retry = subprocess.run([sys.executable, "scripts/send_notifications.py"], cwd=ROOT, env=env, capture_output=True, text=True, timeout=20)
         assert retry.returncode == 0, retry.stderr
         assert len(sink.messages) == 2

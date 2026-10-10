@@ -1,5 +1,8 @@
 # ChinaTradeResolve Document AI v3.7.59
 
+**Official website:** https://chinatraderesolve.com/ — China Trade Resolve (ChinaTradeResolve), an independent service for preliminary assessment of disputes with Chinese suppliers.
+
+
 Version 3.7.59 keeps the v3.7.58 trust/conversion hardening and configures the free pilot with a real natural-person data controller: Эдуард Цаголов. Public readiness now requires a meaningful controller identity and public contact email; a postal address is optional and is never fabricated.
 
 ## Trust, privacy and conversion changes retained from v3.7.58

@@ -4,32 +4,32 @@ SUPPORTED_LANGUAGES = ("en", "ru", "fr", "de", "es", "sr")
 
 HOME_SEO = {
     "en": {
-        "title": "ChinaTradeResolve — help with disputes involving Chinese suppliers",
-        "description": "Organize evidence, identify missing documents and receive a preliminary assessment for an Alibaba or Chinese-supplier dispute.",
+        "title": "China Trade Resolve (ChinaTradeResolve) — help with disputes involving Chinese suppliers",
+        "description": "China Trade Resolve offers a free preliminary assessment. Organize evidence, identify missing documents and receive a preliminary assessment for an Alibaba or Chinese-supplier dispute.",
         "og_description": "Independent preliminary review of supplier disputes, evidence and next steps.",
     },
     "ru": {
-        "title": "ChinaTradeResolve — разбор споров с китайскими поставщиками",
-        "description": "Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий.",
+        "title": "China Trade Resolve (ChinaTradeResolve) — разбор споров с китайскими поставщиками",
+        "description": "China Trade Resolve — бесплатная предварительная оценка. Опишите спор с китайским поставщиком и получите предварительную оценку позиции, недостающих доказательств и следующих действий.",
         "og_description": "Предварительная оценка позиции, доказательств и следующих действий без завышенных обещаний.",
     },
     "fr": {
-        "title": "ChinaTradeResolve — aide pour les litiges avec des fournisseurs chinois",
+        "title": "China Trade Resolve (ChinaTradeResolve) — aide pour les litiges avec des fournisseurs chinois",
         "description": "Organisez les preuves, repérez les documents manquants et obtenez une évaluation préliminaire de votre litige fournisseur.",
         "og_description": "Évaluation indépendante et préliminaire des preuves et prochaines étapes.",
     },
     "de": {
-        "title": "ChinaTradeResolve — Hilfe bei Streitfällen mit chinesischen Lieferanten",
+        "title": "China Trade Resolve (ChinaTradeResolve) — Hilfe bei Streitfällen mit chinesischen Lieferanten",
         "description": "Beweise ordnen, fehlende Unterlagen erkennen und eine vorläufige Einschätzung zu Ihrem Lieferantenstreit erhalten.",
         "og_description": "Unabhängige vorläufige Prüfung von Beweisen und nächsten Schritten.",
     },
     "es": {
-        "title": "ChinaTradeResolve — ayuda en disputas con proveedores chinos",
+        "title": "China Trade Resolve (ChinaTradeResolve) — ayuda en disputas con proveedores chinos",
         "description": "Organice pruebas, detecte documentos faltantes y obtenga una evaluación preliminar de su disputa con un proveedor.",
         "og_description": "Revisión preliminar e independiente de pruebas y próximos pasos.",
     },
     "sr": {
-        "title": "ChinaTradeResolve — pomoć u sporovima sa kineskim dobavljačima",
+        "title": "China Trade Resolve (ChinaTradeResolve) — pomoć u sporovima sa kineskim dobavljačima",
         "description": "Organizujte dokaze, utvrdite šta nedostaje i dobijte preliminarnu procenu spora sa dobavljačem.",
         "og_description": "Nezavisna preliminarna procena dokaza i narednih koraka.",
     },

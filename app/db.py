@@ -1150,6 +1150,7 @@ def _anonymize_case_for_connection(conn: Any, case_id: int, deleted_at: str) -> 
     """Remove related personal content and leave only a non-identifying tombstone."""
     execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM case_messages WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM case_documents WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))

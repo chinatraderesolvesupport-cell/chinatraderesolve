@@ -109,13 +109,15 @@ async def relay_realtime_transcription(
     if max_seconds < 1:
         raise RealtimeVoiceError("invalid_config")
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "OpenAI-Beta": "realtime=v1",
-    }
+    # Realtime transcription is now served through the GA interface.  The old
+    # beta header can make the provider close a GA transcription connection
+    # before it emits session.updated, which makes the browser fall back to the
+    # post-stop recorder without any live deltas.
+    headers = {"Authorization": f"Bearer {api_key}"}
     if safety_identifier:
         headers["OpenAI-Safety-Identifier"] = safety_identifier
 
+    stage = "connect"
     try:
         async with connect_factory(
             f"{REALTIME_URL}?model={model}",
@@ -125,7 +127,9 @@ async def relay_realtime_transcription(
             ping_timeout=20,
             max_size=1024 * 1024,
         ) as upstream:
+            stage = "connected"
             await upstream.send(json.dumps(build_session_update(language, model), ensure_ascii=False))
+            stage = "session_update_sent"
 
             # Do not tell the browser that live capture is ready until the provider
             # has accepted the transcription session.  Sending "ready" immediately
@@ -150,10 +154,26 @@ async def relay_realtime_transcription(
                     mapped = _provider_message(session_event)
                     if mapped:
                         await send(mapped)
+                    error = session_event.get("error")
+                    error_type = error.get("type") if isinstance(error, dict) else "provider_error"
+                    logger.warning(
+                        "realtime upstream error stage=%s model=%s language=%s error_type=%s",
+                        stage,
+                        model,
+                        normalize_language(language),
+                        str(error_type or "provider_error")[:80],
+                    )
                     raise RealtimeVoiceError("provider")
                 if session_event.get("type") == "session.updated":
+                    stage = "session_updated"
+                    logger.info(
+                        "realtime upstream session ready model=%s language=%s",
+                        model,
+                        normalize_language(language),
+                    )
                     break
             await send({"type": "ready", "sample_rate": REALTIME_AUDIO_RATE})
+            stage = "streaming"
             total_audio = 0
             stopping = False
             deadline = asyncio.get_running_loop().time() + max_seconds
@@ -240,5 +260,15 @@ async def relay_realtime_transcription(
         raise
     except Exception as exc:
         # Do not log provider messages, audio, transcripts, or request headers.
-        logger.warning("realtime transcription connection failed error_type=%s", type(exc).__name__)
+        close_code = getattr(exc, "code", None)
+        close_reason = getattr(exc, "reason", None)
+        logger.warning(
+            "realtime transcription connection failed stage=%s model=%s language=%s error_type=%s close_code=%s close_reason=%s",
+            stage,
+            model,
+            normalize_language(language),
+            type(exc).__name__,
+            str(close_code)[:32] if close_code is not None else "",
+            str(close_reason)[:80] if close_reason is not None else "",
+        )
         raise RealtimeVoiceError("provider") from exc

@@ -43,7 +43,7 @@ def test_legacy_analysis_display_localization_does_not_mutate_report():
     }
     localized = localize_report_for_display(report, "Russian")
     assert "не подтверждено загруженными материалами" in localized["summary"]
-    assert "дата не видна" in localized["timeline"][0]["event"]
+    assert "Дата не видна" in localized["timeline"][0]["event"]
     assert report["summary"] == "Payment was not evidenced in the uploaded materials."
     assert report["timeline"][0]["confidence"] == "high"
 

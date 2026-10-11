@@ -39,6 +39,20 @@ def test_voice_fallback_keeps_stop_available_and_locks_consent():
     assert "const currentDescriptionText=voiceCaptureMode==='description'&&!voiceCaptureModal.hidden?voiceCaptureDraft:descriptionField.value" in source
 
 
+def test_voice_turnstile_rehomes_and_retries_instead_of_stalling():
+    source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert 'id="aiTurnstileRetry"' in source
+    assert 'id="descriptionVoiceTurnstileRetry"' in source
+    assert "execution:'execute'" in source
+    assert "removeAiTurnstileWidget" in source
+    assert "removeDescriptionVoiceTurnstileWidget" in source
+    assert "aiTurnstileWatchdog=window.setTimeout" in source
+    assert "descriptionVoiceTurnstileWatchdog=window.setTimeout" in source
+    assert "retryAiTurnstile" in source
+    assert "retryDescriptionVoiceTurnstile" in source
+    assert "voiceCaptureAfterRestore" in source
+
+
 def test_voice_recording_and_email_hint_are_localized():
     translations = json.loads(
         (ROOT / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8")

@@ -5826,6 +5826,15 @@ def test_case_messaging_keeps_internal_notes_private_and_adds_admin_history():
         "not_required",
     }
 
+    # Simulate a message created before stable server-side keys were deployed.
+    from app.db import execute, transaction
+    with transaction() as conn:
+        execute(
+            conn,
+            "UPDATE case_messages SET idempotency_key=? WHERE id=?",
+            ("legacy-message-key-1234567890", messages[0]["id"]),
+        )
+
     public = client.get(created["status_url"])
     assert public.status_code == 200
     assert message_body not in public.text

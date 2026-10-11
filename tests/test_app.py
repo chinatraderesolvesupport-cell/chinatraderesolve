@@ -2110,9 +2110,9 @@ def test_application_response_exposes_canonical_absolute_status_url():
 def test_release_metadata_and_twenty_file_copy_are_consistent():
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["version"] == "3.7.59"
+    assert health.json()["version"] == "3.7.60"
     assert health.json()["document_limit"] == 20
-    assert health.headers["x-app-version"] == "3.7.59"
+    assert health.headers["x-app-version"] == "3.7.60"
     assert health.json()["voice_max_seconds"] == 120
     assert health.json()["email_link_base_url"] == health.json()["public_base_url"]
     assert "voice_transcriptions_daily_limit" not in health.json()
@@ -5237,7 +5237,7 @@ def test_v3745_render_hostname_redirects_to_canonical_origin_and_preserves_url()
         "?lang=ru&utm_source=old-link"
     )
     assert response.headers["vary"] == "Host"
-    assert response.headers["x-app-version"] == "3.7.59"
+    assert response.headers["x-app-version"] == "3.7.60"
 
 
 def test_v3750_canonical_post_redirect_preserves_method():
@@ -5262,7 +5262,7 @@ def test_v3745_canonical_hostname_is_not_redirected():
     )
     response = canonical_client.get("/health", follow_redirects=False)
     assert response.status_code == 200
-    assert response.json()["version"] == "3.7.59"
+    assert response.json()["version"] == "3.7.60"
 
 
 def test_v3745_unrelated_test_hostname_is_not_redirected():
@@ -5318,11 +5318,11 @@ def test_v3750_canonical_redirect_can_be_disabled():
 
 def test_v3738_version_markers_are_synchronised():
     root = Path(__file__).parents[1]
-    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.59"
-    assert "v3.7.59" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "ChinaTradeResolve Document AI v3.7.59" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
-    assert "v3.7.59" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
-    assert "3.7.59" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
+    assert (root / "VERSION.txt").read_text(encoding="utf-8").strip() == "3.7.60"
+    assert "v3.7.60" in (root / "README.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "ChinaTradeResolve Document AI v3.7.60" in (root / "CHANGELOG_RU.txt").read_text(encoding="utf-8").splitlines()[0]
+    assert "v3.7.60" in (root / "DEPLOY_RU.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "3.7.60" in (root / "PROMOTION_RU.md").read_text(encoding="utf-8")[:300]
 
 
 def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
@@ -5656,20 +5656,20 @@ def test_v3757_bad_legacy_address_is_ignored_not_rendered_or_required(monkeypatc
 def test_v3759_public_html_is_release_marked_and_revalidates():
     page = client.get('/?lang=ru')
     assert page.status_code == 200
-    assert 'data-app-version="3.7.59"' in page.text
-    assert '<meta name="application-version" content="3.7.59"' in page.text
-    assert '/static/translations-v2.js?v=3.7.59' in page.text
-    assert '/static/launch-i18n-v3.js?v=3.7.59' in page.text
+    assert 'data-app-version="3.7.60"' in page.text
+    assert '<meta name="application-version" content="3.7.60"' in page.text
+    assert '/static/translations-v2.js?v=3.7.60' in page.text
+    assert '/static/launch-i18n-v3.js?v=3.7.60' in page.text
     assert page.headers['cache-control'] == 'no-cache, max-age=0, must-revalidate'
     assert 'prototype-banner' not in page.text
     assert 'Разложим спор по фактам и покажем следующий шаг.' not in page.text
 
 
 def test_v3759_versioned_translation_asset_has_short_revalidation_and_marker():
-    asset = client.get('/static/translations-v2.js?v=3.7.59')
+    asset = client.get('/static/translations-v2.js?v=3.7.60')
     assert asset.status_code == 200
     assert asset.headers['cache-control'] == 'public, max-age=300, must-revalidate'
-    assert 'CTR_TRANSLATIONS_VERSION="3.7.59"' in asset.text
+    assert 'CTR_TRANSLATIONS_VERSION="3.7.60"' in asset.text
 
 
 def test_v3759_new_hero_is_server_rendered_in_every_supported_language():
@@ -5685,7 +5685,7 @@ def test_v3759_new_hero_is_server_rendered_in_every_supported_language():
         page = client.get(f'/?lang={language}')
         assert page.status_code == 200
         assert hero in page.text
-        assert 'data-app-version="3.7.59"' in page.text
+        assert 'data-app-version="3.7.60"' in page.text
 
 
 def test_v3759_law_firm_and_draft_scope_wording_is_consistent():

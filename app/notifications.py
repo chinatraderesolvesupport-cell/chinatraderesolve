@@ -62,6 +62,59 @@ def build_case_notifications(case: dict) -> list[dict[str, str]]:
     return messages
 
 
+def build_case_message_notification(case: dict, author: str) -> dict[str, str] | None:
+    """Build a minimal private-link notification without including message content."""
+    language = case.get("preferred_language") or "English"
+    reference = str(case["case_reference"])
+    private_url = f"{settings.public_base_url}/case/{reference}/{case['public_token']}"
+    if author == "admin":
+        recipient = str(case.get("email") or "").strip()
+        if not recipient:
+            return None
+        if language == "Russian":
+            subject = f"ChinaTradeResolve: новое сообщение по делу {reference}"
+            body = f"Здравствуйте, {case.get('full_name') or ''}!\n\nПо вашему делу появилось новое сообщение. Откройте приватную страницу дела:\n{private_url}\n\nСодержание сообщения доступно только на защищённой странице дела.\n"
+        elif language == "Serbian":
+            subject = f"ChinaTradeResolve: nova poruka za slučaj {reference}"
+            body = f"Poštovani/a {case.get('full_name') or ''},\n\nNa vašem slučaju je dostupna nova poruka. Otvorite privatnu stranicu slučaja:\n{private_url}\n\nSadržaj poruke dostupan je samo na zaštićenoj stranici slučaja.\n"
+        elif language == "French":
+            subject = f"ChinaTradeResolve : nouveau message pour le dossier {reference}"
+            body = f"Bonjour {case.get('full_name') or ''},\n\nUn nouveau message est disponible pour votre dossier. Ouvrez la page privée du dossier :\n{private_url}\n\nLe contenu est disponible uniquement sur la page protégée du dossier.\n"
+        elif language == "German":
+            subject = f"ChinaTradeResolve: neue Nachricht zu Fall {reference}"
+            body = f"Guten Tag {case.get('full_name') or ''},\n\nZu Ihrem Fall ist eine neue Nachricht verfügbar. Öffnen Sie die private Fallseite:\n{private_url}\n\nDer Inhalt ist nur auf der geschützten Fallseite sichtbar.\n"
+        elif language == "Spanish":
+            subject = f"ChinaTradeResolve: nuevo mensaje sobre el caso {reference}"
+            body = f"Hola {case.get('full_name') or ''},\n\nHay un nuevo mensaje disponible para su caso. Abra la página privada del caso:\n{private_url}\n\nEl contenido solo está disponible en la página protegida del caso.\n"
+        else:
+            subject = f"ChinaTradeResolve: new message for case {reference}"
+            body = f"Hello {case.get('full_name') or ''},\n\nA new message is available for your case. Open the private case page:\n{private_url}\n\nThe message content is available only on the protected case page.\n"
+        return {"recipient": recipient, "subject": subject, "body": body}
+
+    recipient = str(settings.admin_email or "").strip()
+    if not recipient:
+        return None
+    if language == "Russian":
+        subject = f"Ответ клиента ChinaTradeResolve: {reference}"
+        body = f"По делу {reference} появился ответ клиента. Откройте админ-панель для просмотра переписки.\n"
+    elif language == "Serbian":
+        subject = f"Odgovor klijenta ChinaTradeResolve: {reference}"
+        body = f"Na slučaju {reference} postoji odgovor klijenta. Otvorite administratorsku tablu da biste videli prepisku.\n"
+    elif language == "French":
+        subject = f"Réponse du client ChinaTradeResolve : {reference}"
+        body = f"Le client a répondu dans le dossier {reference}. Ouvrez le panneau d’administration pour voir le fil.\n"
+    elif language == "German":
+        subject = f"Antwort des Kunden ChinaTradeResolve: {reference}"
+        body = f"Der Kunde hat im Fall {reference} geantwortet. Öffnen Sie das Admin-Panel, um den Verlauf zu sehen.\n"
+    elif language == "Spanish":
+        subject = f"Respuesta del cliente ChinaTradeResolve: {reference}"
+        body = f"El cliente ha respondido en el caso {reference}. Abra el panel de administración para ver el hilo.\n"
+    else:
+        subject = f"ChinaTradeResolve client reply: {reference}"
+        body = f"The client replied in case {reference}. Open the administrator panel to view the thread.\n"
+    return {"recipient": recipient, "subject": subject, "body": body}
+
+
 def queue_case_notifications(case: dict) -> None:
     """Backward-compatible helper; new applications queue these transactionally."""
     for message in build_case_notifications(case):

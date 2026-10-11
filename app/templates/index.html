@@ -1944,7 +1944,13 @@ if(aiChatRoot){
   document.addEventListener('ctr:form-engaged',()=>{if(!aiChatPanel.hidden)closeAiChat(false)});
   aiChatLauncher.addEventListener('click',()=>aiChatPanel.hidden?openAiChat():closeAiChat(false,true));
   aiChatClose.addEventListener('click',()=>closeAiChat(false,true));
-  if(aiVoiceConsent)aiVoiceConsent.addEventListener('change',()=>{if(aiVoiceConsent.checked){setVoiceStatus('');aiVoicePanel&&aiVoicePanel.classList.remove('needs-attention');if(aiVoiceStartPending&&aiTurnstileSatisfied())window.setTimeout(startVoiceRecording,80);else ensureAiTurnstile()}else aiVoiceStartPending=false});
+  function requestAiVoiceStart(){
+    if(aiVoiceBusy||ctrRealtimeVoice.socket)return;
+    aiVoiceStartPending=true;
+    if(aiTurnstileSatisfied())window.setTimeout(startVoiceRecording,80);
+    else{showAiTurnstileRequired();ensureAiTurnstile()}
+  }
+  if(aiVoiceConsent)aiVoiceConsent.addEventListener('change',()=>{if(aiVoiceConsent.checked){setVoiceStatus('');aiVoicePanel&&aiVoicePanel.classList.remove('needs-attention');const modalOpen=voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden;if(modalOpen&&!voiceCaptureRecordingStarted)requestAiVoiceStart();else if(aiVoiceStartPending&&aiTurnstileSatisfied())window.setTimeout(startVoiceRecording,80);else ensureAiTurnstile()}else aiVoiceStartPending=false});
   if(aiVoiceButton)aiVoiceButton.addEventListener('click',()=>{
     if(ctrRealtimeVoice.mode==='assistant'&&ctrRealtimeVoice.socket)ctrRealtimeVoiceStop(false);
     else if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording')stopVoiceRecording(false);

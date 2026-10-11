@@ -972,13 +972,23 @@ function ctrRealtimeVoiceStop(discard=false){
   if(discard){try{ctrRealtimeVoice.socket.send(JSON.stringify({type:'close'}))}catch(_e){}ctrRealtimeVoiceCloseSocket();voiceCaptureUpdateControls(false,false);return true}
   if(ctrRealtimeVoice.stopping)return true;
   ctrRealtimeVoice.stopping=true;
-  if(ctrRealtimeVoice.processor){ctrRealtimeVoice.processor.onaudioprocess=null;try{ctrRealtimeVoice.processor.disconnect()}catch(_e){}ctrRealtimeVoice.processor=null}
-  if(ctrRealtimeVoice.source){try{ctrRealtimeVoice.source.disconnect()}catch(_e){}ctrRealtimeVoice.source=null}
-  if(ctrRealtimeVoice.gain){try{ctrRealtimeVoice.gain.disconnect()}catch(_e){}ctrRealtimeVoice.gain=null}
-  if(ctrRealtimeVoice.context){try{ctrRealtimeVoice.context.close()}catch(_e){}ctrRealtimeVoice.context=null}
-  if(ctrRealtimeVoice.stream){ctrRealtimeVoice.stream.getTracks().forEach(track=>track.stop());ctrRealtimeVoice.stream=null}
-  try{ctrRealtimeVoice.socket.send(JSON.stringify({type:'commit'}))}catch(_e){ctrRealtimeVoiceCloseSocket();voiceCaptureUpdateControls(false,false);return true}
   ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('paused'),'idle');voiceCaptureUpdateControls(false,true);ctrRealtimeVoice.closeTimer=window.setTimeout(()=>ctrRealtimeVoiceCloseSocket(),8500);
+  const context=ctrRealtimeVoice.context;
+  let finished=false;
+  const finish=()=>{
+    if(finished)return;
+    finished=true;
+    if(ctrRealtimeVoice.closeTimer){window.clearTimeout(ctrRealtimeVoice.closeTimer);ctrRealtimeVoice.closeTimer=null}
+    if(ctrRealtimeVoice.processor){ctrRealtimeVoice.processor.onaudioprocess=null;try{ctrRealtimeVoice.processor.disconnect()}catch(_e){}ctrRealtimeVoice.processor=null}
+    if(ctrRealtimeVoice.source){try{ctrRealtimeVoice.source.disconnect()}catch(_e){}ctrRealtimeVoice.source=null}
+    if(ctrRealtimeVoice.gain){try{ctrRealtimeVoice.gain.disconnect()}catch(_e){}ctrRealtimeVoice.gain=null}
+    if(context){try{context.close()}catch(_e){}if(ctrRealtimeVoice.context===context)ctrRealtimeVoice.context=null}
+    if(ctrRealtimeVoice.stream){ctrRealtimeVoice.stream.getTracks().forEach(track=>track.stop());ctrRealtimeVoice.stream=null}
+    try{if(ctrRealtimeVoice.socket&&ctrRealtimeVoice.socket.readyState===WebSocket.OPEN)ctrRealtimeVoice.socket.send(JSON.stringify({type:'commit'}));else throw new Error('socket_closed')}catch(_e){ctrRealtimeVoiceCloseSocket();voiceCaptureUpdateControls(false,false)}
+  };
+  if(context&&context.state==='running'){
+    Promise.race([context.suspend().catch(()=>{}),new Promise(resolve=>window.setTimeout(resolve,250))]).then(finish);
+  }else finish();
   return true;
 }
 if(voiceCaptureText)voiceCaptureText.addEventListener('input',()=>{if(ctrRealtimeVoice.ready&&!ctrRealtimeVoice.rendering&&!ctrRealtimeVoice.stopping){ctrRealtimeVoice.baseText=normalizeVoiceText(voiceCaptureText.value);ctrRealtimeVoice.items=new Map();ctrRealtimeVoice.order=[]}});
@@ -1054,7 +1064,7 @@ function releaseDescriptionVoiceStream(){if(descriptionVoiceTimer){window.clearT
 function stopDescriptionVoiceRecording(discard=false){
   if(ctrRealtimeVoice.mode==='description'&&ctrRealtimeVoice.socket){ctrRealtimeVoiceStop(discard);return}
   descriptionVoiceDiscard=descriptionVoiceDiscard||discard;stopDescriptionLiveRecognition(discard);
-  if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);descriptionVoiceRecorder.stop();return}
+  if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);try{descriptionVoiceRecorder.requestData()}catch(_e){}descriptionVoiceRecorder.stop();return}
   releaseDescriptionVoiceStream();descriptionVoiceChunks=[];descriptionVoiceBusy=false;if(discard)hideDescriptionLiveText();updateDescriptionVoiceButton();
 }
 async function uploadDescriptionVoiceLegacy(blob,baseText){
@@ -1650,6 +1660,7 @@ if(aiChatRoot){
     stopAiLiveRecognition(discard);
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording'){
       if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);
+      try{aiVoiceRecorder.requestData()}catch(_e){}
       aiVoiceRecorder.stop();
     }else{
       releaseVoiceStream();

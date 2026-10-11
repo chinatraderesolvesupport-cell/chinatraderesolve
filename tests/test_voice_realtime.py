@@ -112,7 +112,7 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results(caplog: pytest
             max_seconds=15,
         )
         assert "OpenAI-Beta" not in captured["additional_headers"]
-        assert captured["url"] == "wss://api.openai.com/v1/realtime"
+        assert captured["url"] == "wss://api.openai.com/v1/realtime?intent=transcription"
         return upstream, outgoing
 
     upstream, outgoing = asyncio.run(scenario())

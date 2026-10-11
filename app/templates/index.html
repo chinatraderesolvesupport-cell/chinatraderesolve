@@ -259,6 +259,14 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
  #faq .wrap{gap:9px}#faq details{padding:13px 14px}
 }
 @media(max-width:520px){.form-shell{padding:15px}.description-voice-button{min-height:50px}.ai-chat-panel{bottom:8px;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}}
+.voice-capture-modal{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.72);overscroll-behavior:contain}
+.voice-modal-open{overflow:hidden!important}
+.voice-capture-modal[hidden]{display:none}
+.voice-capture-dialog{width:min(880px,calc(100vw - 32px));height:min(780px,calc(100dvh - 32px));display:flex;flex-direction:column;gap:12px;padding:22px;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:22px;box-shadow:0 30px 100px rgba(0,0,0,.45);overflow:hidden}
+.voice-capture-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex:0 0 auto}.voice-capture-head h2{margin:0;font-size:clamp(22px,3vw,32px);line-height:1.1}.voice-capture-head p{margin:7px 0 0;color:#64748b;font-size:14px;line-height:1.4}.voice-capture-close{width:42px;height:42px;flex:0 0 42px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#334155;font-size:26px;line-height:1;cursor:pointer}.voice-capture-close:hover{background:#f1f5f9}
+.voice-capture-statusbar{display:flex;align-items:center;gap:10px;min-height:38px;padding:8px 12px;border:1px solid #99f6e4;border-radius:12px;background:#f0fdfa;color:#115e59;flex:0 0 auto}.voice-capture-statusbar[data-state="error"]{border-color:#fca5a5;background:#fef2f2;color:#b91c1c}.voice-capture-dot{width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:#94a3b8}.voice-capture-statusbar[data-state="recording"] .voice-capture-dot{background:#dc2626;box-shadow:0 0 0 5px rgba(220,38,38,.14);animation:voice-pulse-dot 1.2s ease-in-out infinite}.voice-capture-status{font-weight:900}.voice-capture-timer{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:.05em}.voice-capture-slot{flex:0 0 auto}.voice-capture-slot:empty{display:none}.voice-capture-slot .ai-voice-consent,.voice-capture-slot .description-voice-consent{margin:0;padding:10px 12px;border:1px solid #fed7aa;border-radius:11px;background:#fff7ed;font-size:12px;line-height:1.4}.voice-capture-slot .ai-chat-turnstile,.voice-capture-slot .description-voice-turnstile{margin:0;border:1px solid #e2e8f0;border-radius:11px}.voice-capture-text-label{font-weight:950;font-size:14px}.voice-capture-text{width:100%;min-height:0;flex:1 1 auto;resize:none;overflow-y:auto;padding:16px 18px;border:2px solid #94a3b8;border-radius:14px;background:#fff;color:#0f172a;font-size:clamp(17px,1.7vw,21px);line-height:1.6;box-shadow:inset 0 2px 5px rgba(15,23,42,.06)}.voice-capture-text:focus{outline:3px solid rgba(20,184,166,.3);outline-offset:1px;border-color:#0f766e}.voice-capture-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;flex:0 0 auto}.voice-capture-actions button{min-height:46px;padding:10px 16px;border-radius:11px;border:1px solid #94a3b8;background:#fff;color:#334155;font-weight:900;cursor:pointer}.voice-capture-actions button:hover:not(:disabled){background:#f1f5f9}.voice-capture-actions .voice-capture-stop{margin-right:auto;border-color:#dc2626;background:#fee2e2;color:#991b1b}.voice-capture-actions .voice-capture-apply{border-color:#0f766e;background:#0f766e;color:#fff}.voice-capture-actions button:disabled{opacity:.5;cursor:not-allowed}.voice-capture-footnote{margin:0;color:#64748b;font-size:12px;line-height:1.35;flex:0 0 auto}
+@keyframes voice-pulse-dot{50%{transform:scale(1.15);opacity:.7}}
+@media(max-width:600px){.voice-capture-modal{padding:8px}.voice-capture-dialog{width:calc(100vw - 16px);height:calc(100dvh - 16px);padding:15px;border-radius:16px;gap:9px}.voice-capture-head h2{font-size:22px}.voice-capture-head p{font-size:12px}.voice-capture-text{font-size:17px;line-height:1.55;padding:12px;min-height:220px}.voice-capture-actions{display:grid;grid-template-columns:1fr 1fr}.voice-capture-actions button{width:100%}.voice-capture-actions .voice-capture-stop{grid-column:1/-1;margin:0}.voice-capture-actions .voice-capture-apply{grid-column:1/-1}.voice-capture-footnote{font-size:11px}}
 @media(max-width:360px){.ai-chat-form{grid-template-columns:minmax(0,1fr);padding-left:10px;padding-right:10px}.ai-chat-form textarea{width:100%}.ai-chat-send{grid-column:1/-1;width:100%;min-height:44px}}
 #faq .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}#faq .eyebrow,#faq h2{grid-column:1/-1}#faq details{margin:0}
 #confirmation{scroll-margin-top:145px}.case-decision{margin-top:8px}.status-link-row{margin-top:10px}.status-link-row .btn{color:#0f172a;background:#fff;border-color:#0f766e}#confirmation:focus{outline:3px solid rgba(20,184,166,.35);outline-offset:5px;border-radius:12px}
@@ -473,7 +481,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 <div class="form-step" id="stepTwo">
 <div class="form-choice-intro"><strong data-i18n="description_mode_title">{{ home_copy['description_mode_title'] }}</strong><span data-i18n="description_mode_text">{{ home_copy['description_mode_text'] }}</span></div>
-<div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
+<div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div id="descriptionVoiceConsentHome"></div><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div id="descriptionVoiceTurnstileHome"></div><div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field"><label for="supplierName"><span data-i18n="supplier_name">{{ home_copy['supplier_name'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label for="orderNumber"><span data-i18n="order_number">{{ home_copy['order_number'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label for="orderValue"><span data-i18n="order_value">{{ home_copy['order_value'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderValue" name="order_value"/></div>
@@ -562,11 +570,23 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">{{ home_copy['ai_chat_title'] }}</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">{{ home_copy['ai_chat_badge'] }}</span></strong><small data-i18n="ai_chat_subtitle">{{ home_copy['ai_chat_subtitle'] }}</small></div><button aria-label="{{ home_copy['ai_chat_close'] }}" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">{{ home_copy['ai_chat_notice'] }}</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">{{ home_copy['ai_chat_welcome'] }}</div></div>
-{% if turnstile_site_key %}<div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">{{ home_copy['ai_turnstile_title'] }}</strong><span data-i18n="ai_turnstile_help">{{ home_copy['ai_turnstile_help'] }}</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">{{ home_copy['ai_turnstile_loading'] }}</div></div>{% endif %}
+{% if turnstile_site_key %}<div id="aiTurnstileHome"></div><div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">{{ home_copy['ai_turnstile_title'] }}</strong><span data-i18n="ai_turnstile_help">{{ home_copy['ai_turnstile_help'] }}</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">{{ home_copy['ai_turnstile_loading'] }}</div></div>{% endif %}
 <div class="ai-chat-quick" id="aiChatQuick"{% if turnstile_site_key %} hidden{% endif %}><button data-i18n="ai_chat_quick_docs" type="button">{{ home_copy['ai_chat_quick_docs'] }}</button><button data-i18n="ai_chat_quick_scope" type="button">{{ home_copy['ai_chat_quick_scope'] }}</button><button data-i18n="ai_chat_quick_process" type="button">{{ home_copy['ai_chat_quick_process'] }}</button></div>
 <label class="ai-chat-input-label" for="aiChatInput"><strong data-i18n="ai_chat_input_title">{{ home_copy['ai_chat_input_title'] }}</strong><span data-i18n="ai_chat_input_help">{{ home_copy['ai_chat_input_help'] }}</span></label>
-<form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="{{ home_copy['ai_voice_start_label'] }}" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta" id="aiVoiceButtonText">{{ home_copy['ai_voice_cta'] }}</span><small data-i18n="ai_voice_cta_hint" id="aiVoiceButtonHint">{{ home_copy['ai_voice_cta_hint'] }}</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">{{ home_copy['ai_voice_consent_title'] }}</strong><span data-i18n="ai_voice_consent">{{ home_copy['ai_voice_consent'] }}</span></span></label><div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="aiVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="aiVoiceLiveText"></div></div><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="{{ home_copy['ai_chat_message_label'] }}" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="{{ home_copy['ai_chat_placeholder'] }}" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">{{ home_copy['ai_chat_send'] }}</button></form>
+<form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="{{ home_copy['ai_voice_start_label'] }}" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta" id="aiVoiceButtonText">{{ home_copy['ai_voice_cta'] }}</span><small data-i18n="ai_voice_cta_hint" id="aiVoiceButtonHint">{{ home_copy['ai_voice_cta_hint'] }}</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><div id="aiVoiceConsentHome"></div><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">{{ home_copy['ai_voice_consent_title'] }}</strong><span data-i18n="ai_voice_consent">{{ home_copy['ai_voice_consent'] }}</span></span></label><div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="aiVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="aiVoiceLiveText"></div></div><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="{{ home_copy['ai_chat_message_label'] }}" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="{{ home_copy['ai_chat_placeholder'] }}" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">{{ home_copy['ai_chat_send'] }}</button></form>
 <div class="ai-chat-privacy" data-i18n="ai_chat_privacy">{{ home_copy['ai_chat_privacy'] }}</div>
+</section>
+</div>
+<div aria-hidden="true" class="voice-capture-modal" hidden id="voiceCaptureModal">
+<section aria-labelledby="voiceCaptureTitle" aria-modal="true" class="voice-capture-dialog" id="voiceCaptureDialog" role="dialog">
+<div class="voice-capture-head"><div><h2 id="voiceCaptureTitle">{{ home_copy['description_voice_cta'] }}</h2><p id="voiceCaptureSubtitle">{{ home_copy['description_voice_help'] }}</p></div><button aria-label="{{ home_copy['ai_chat_close'] }}" class="voice-capture-close" id="voiceCaptureClose" type="button">×</button></div>
+<div aria-live="polite" class="voice-capture-statusbar" data-state="idle" id="voiceCaptureStatusbar"><span aria-hidden="true" class="voice-capture-dot"></span><span class="voice-capture-status" id="voiceCaptureStatus">{{ home_copy['description_voice_cta'] }}</span><span class="voice-capture-timer" id="voiceCaptureTimer">00:00</span></div>
+<div class="voice-capture-slot" id="voiceCaptureConsentSlot"></div>
+<div class="voice-capture-slot" id="voiceCaptureVerificationSlot"></div>
+<label class="voice-capture-text-label" for="voiceCaptureText" id="voiceCaptureTextLabel">{{ home_copy['description'] }}</label>
+<textarea aria-describedby="voiceCaptureStatus voiceCaptureFootnote" class="voice-capture-text" id="voiceCaptureText" maxlength="8000" spellcheck="true"></textarea>
+<div class="voice-capture-actions"><button class="voice-capture-stop" id="voiceCaptureStop" type="button">{{ home_copy['description_voice_stop_label'] }}</button><button id="voiceCaptureContinue" type="button">{{ home_copy['description_voice_cta'] }}</button><button class="voice-capture-apply" id="voiceCaptureApply" type="button">{{ home_copy['description_voice_review'] }}</button></div>
+<p class="voice-capture-footnote" id="voiceCaptureFootnote">{{ home_copy['voice_live_privacy'] }}</p>
 </section>
 </div>
 <script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js?v={{ asset_version }}"></script>
@@ -753,6 +773,87 @@ function createCtrLiveRecognition(onText,onUnavailable){
   };
 }
 
+const voiceCaptureCopy={
+  en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant by voice',subtitle:'Speak naturally. The text appears as you speak and remains editable.',label:'Recognized text',recording:'Recording — speak now',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'The words shown during recording are live browser recognition results. The final server transcription may differ slightly.'},
+  ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику голосом',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',label:'Распознанный текст',recording:'Идёт запись — говорите',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Текст во время записи — это живой результат распознавания браузера. Итоговая серверная расшифровка может немного отличаться.'},
+  sr:{title:'Opišite svoju situaciju',assistantTitle:'Postavite pitanje AI asistentu glasom',subtitle:'Govorite prirodno. Tekst se pojavljuje dok govorite i može da se uređuje.',label:'Prepoznati tekst',recording:'Snimanje je u toku — govorite',paused:'Snimanje je zaustavljeno',stop:'Zaustavi snimanje',continue:'Nastavi diktiranje',apply:'Prenesi tekst',close:'Zatvori',discard:'Zatvoriti i obrisati nesačuvani tekst?',footnote:'Tekst tokom snimanja je rezultat prepoznavanja u pregledaču. Konačna serverska transkripcija može malo da se razlikuje.'},
+  de:{title:'Beschreiben Sie Ihre Situation',assistantTitle:'Stellen Sie dem KI-Assistenten eine Sprachfrage',subtitle:'Sprechen Sie natürlich. Der Text erscheint während des Sprechens und bleibt bearbeitbar.',label:'Erkannter Text',recording:'Aufnahme läuft — bitte sprechen',paused:'Aufnahme angehalten',stop:'Aufnahme stoppen',continue:'Diktat fortsetzen',apply:'Text übernehmen',close:'Schließen',discard:'Schließen und ungespeicherten Text verwerfen?',footnote:'Der Text während der Aufnahme stammt aus der Browser-Erkennung. Die endgültige Server-Transkription kann leicht abweichen.'},
+  fr:{title:'Décrivez votre situation',assistantTitle:'Posez votre question à l’assistant IA par la voix',subtitle:'Parlez naturellement. Le texte apparaît pendant que vous parlez et reste modifiable.',label:'Texte reconnu',recording:'Enregistrement en cours — parlez',paused:'Enregistrement arrêté',stop:'Arrêter l’enregistrement',continue:'Continuer la dictée',apply:'Utiliser ce texte',close:'Fermer',discard:'Fermer et supprimer le texte non enregistré ?',footnote:'Le texte affiché pendant l’enregistrement vient de la reconnaissance du navigateur. La transcription finale du serveur peut différer légèrement.'},
+  es:{title:'Describa su situación',assistantTitle:'Haga su pregunta al asistente de IA por voz',subtitle:'Hable con naturalidad. El texto aparece mientras habla y se puede editar.',label:'Texto reconocido',recording:'Grabación en curso — hable',paused:'Grabación detenida',stop:'Detener grabación',continue:'Continuar dictado',apply:'Usar este texto',close:'Cerrar',discard:'¿Cerrar y descartar el texto no guardado?',footnote:'El texto durante la grabación procede del reconocimiento del navegador. La transcripción final del servidor puede variar ligeramente.'}};
+voiceCaptureCopy.en.fallback='Live recognition is unavailable in this browser. The recording will be transcribed after you stop.';
+voiceCaptureCopy.ru.fallback='Живое распознавание недоступно в этом браузере. После остановки запись будет расшифрована сервером.';
+voiceCaptureCopy.sr.fallback='Živo prepoznavanje nije dostupno u ovom pregledaču. Nakon zaustavljanja snimak će biti transkribovan.';
+voiceCaptureCopy.de.fallback='Die Live-Erkennung ist in diesem Browser nicht verfügbar. Nach dem Stoppen wird die Aufnahme transkribiert.';
+voiceCaptureCopy.fr.fallback='La reconnaissance en direct est indisponible dans ce navigateur. L’enregistrement sera transcrit après l’arrêt.';
+voiceCaptureCopy.es.fallback='El reconocimiento en directo no está disponible en este navegador. La grabación se transcribirá al detenerla.';
+const voiceCaptureModal=document.getElementById('voiceCaptureModal');
+const voiceCaptureDialog=document.getElementById('voiceCaptureDialog');
+const voiceCaptureTitle=document.getElementById('voiceCaptureTitle');
+const voiceCaptureSubtitle=document.getElementById('voiceCaptureSubtitle');
+const voiceCaptureStatusbar=document.getElementById('voiceCaptureStatusbar');
+const voiceCaptureStatus=document.getElementById('voiceCaptureStatus');
+const voiceCaptureTimer=document.getElementById('voiceCaptureTimer');
+const voiceCaptureConsentSlot=document.getElementById('voiceCaptureConsentSlot');
+const voiceCaptureVerificationSlot=document.getElementById('voiceCaptureVerificationSlot');
+const voiceCaptureTextLabel=document.getElementById('voiceCaptureTextLabel');
+const voiceCaptureText=document.getElementById('voiceCaptureText');
+const voiceCaptureFootnote=document.getElementById('voiceCaptureFootnote');
+const aiChatInput=document.getElementById('aiChatInput');
+let aiVoiceBaseText='';
+const voiceCaptureStop=document.getElementById('voiceCaptureStop');
+const voiceCaptureContinue=document.getElementById('voiceCaptureContinue');
+const voiceCaptureApply=document.getElementById('voiceCaptureApply');
+const voiceCaptureClose=document.getElementById('voiceCaptureClose');
+let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCaptureSourcePanel=null,voiceCaptureSourceConsent=null,voiceCaptureSourceTurnstile=null,voiceCaptureConsentHome=null,voiceCaptureTurnstileHome=null,voiceCaptureStopAction=null,voiceCaptureContinueAction=null,voiceCaptureApplyAction=null;
+function voiceCaptureCopyFor(key){const lang=document.documentElement.lang||'en';return(voiceCaptureCopy[lang]&&voiceCaptureCopy[lang][key])||voiceCaptureCopy.en[key]||''}
+function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n').replace(/\\n/g,'\n').replace(/\r/g,'\n')}
+function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
+function voiceCaptureSetTimer(seconds){if(voiceCaptureTimer)voiceCaptureTimer.textContent=ctrVoiceElapsed(seconds)}
+function voiceCaptureSetDraft(value){voiceCaptureDraft=normalizeVoiceText(value).slice(0,8000);if(voiceCaptureText){voiceCaptureText.value=voiceCaptureDraft;voiceCaptureText.dispatchEvent(new Event('input',{bubbles:true}))}}
+function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCaptureModal)return;voiceCaptureStop.disabled=!recording;voiceCaptureContinue.disabled=recording||busy;voiceCaptureApply.disabled=recording||busy||!voiceCaptureDraft.trim()}
+function voiceCaptureMoveSources(mode){
+  const description=mode==='description';
+  voiceCaptureSourcePanel=document.getElementById(description?'descriptionVoicePanel':'aiVoicePanel');
+  voiceCaptureSourceConsent=document.getElementById(description?'descriptionVoiceConsent':'aiVoiceConsent');
+  voiceCaptureConsentHome=document.getElementById(description?'descriptionVoiceConsentHome':'aiVoiceConsentHome');
+  voiceCaptureSourceTurnstile=document.getElementById(description?'descriptionVoiceTurnstile':'aiChatTurnstileSection');
+  voiceCaptureTurnstileHome=document.getElementById(description?'descriptionVoiceTurnstileHome':'aiTurnstileHome');
+  if(voiceCaptureSourcePanel){voiceCaptureSourcePanel.hidden=false;voiceCaptureSourcePanel.style.display='none'}
+  if(voiceCaptureSourceConsent&&voiceCaptureConsentSlot)voiceCaptureConsentSlot.appendChild(voiceCaptureSourceConsent);
+  if(voiceCaptureSourceTurnstile&&voiceCaptureVerificationSlot)voiceCaptureVerificationSlot.appendChild(voiceCaptureSourceTurnstile);
+}
+function voiceCaptureRestoreSources(){
+  if(voiceCaptureSourceConsent&&voiceCaptureConsentHome)voiceCaptureConsentHome.appendChild(voiceCaptureSourceConsent);
+  if(voiceCaptureSourceTurnstile&&voiceCaptureTurnstileHome)voiceCaptureTurnstileHome.appendChild(voiceCaptureSourceTurnstile);
+  if(voiceCaptureSourcePanel){voiceCaptureSourcePanel.style.display='';voiceCaptureSourcePanel.hidden=true}
+  voiceCaptureSourcePanel=null;voiceCaptureSourceConsent=null;voiceCaptureSourceTurnstile=null;voiceCaptureConsentHome=null;voiceCaptureTurnstileHome=null;
+}
+function openVoiceCaptureModal(mode,initialText){
+  if(!voiceCaptureModal)return;
+  voiceCaptureMode=mode;voiceCaptureInitialText=normalizeVoiceText(initialText);voiceCaptureDraft=voiceCaptureInitialText;voiceCaptureMoveSources(mode);
+  const assistant=mode==='assistant';
+  voiceCaptureTitle.textContent=voiceCaptureCopyFor(assistant?'assistantTitle':'title');
+  voiceCaptureSubtitle.textContent=voiceCaptureCopyFor('subtitle');
+  voiceCaptureTextLabel.textContent=voiceCaptureCopyFor('label');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('footnote');
+  voiceCaptureStop.textContent=voiceCaptureCopyFor('stop');voiceCaptureContinue.textContent=voiceCaptureCopyFor('continue');voiceCaptureApply.textContent=voiceCaptureCopyFor('apply');voiceCaptureClose.setAttribute('aria-label',voiceCaptureCopyFor('close'));voiceCaptureText.value=voiceCaptureDraft;voiceCaptureSetStatus(voiceCaptureCopyFor('paused'));voiceCaptureSetTimer(0);voiceCaptureModal.hidden=false;voiceCaptureModal.setAttribute('aria-hidden','false');document.documentElement.classList.add('voice-modal-open');document.body.classList.add('voice-modal-open');voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=()=>{if(assistant){aiChatInput.value=voiceCaptureDraft.slice(0,1500);aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));aiVoiceBaseText=''}else{descriptionField.value=voiceCaptureDraft.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));descriptionVoiceBaseText=''}closeVoiceCaptureModal(false)};voiceCaptureUpdateControls(false,false);
+}
+function closeVoiceCaptureModal(discard=false,skipConfirm=false){
+  if(!voiceCaptureModal||voiceCaptureModal.hidden)return;
+  if(discard&&!skipConfirm&&voiceCaptureDraft!==voiceCaptureInitialText&&!window.confirm(voiceCaptureCopyFor('discard')))return;
+  voiceCaptureRestoreSources();voiceCaptureModal.hidden=true;voiceCaptureModal.setAttribute('aria-hidden','true');document.documentElement.classList.remove('voice-modal-open');document.body.classList.remove('voice-modal-open');voiceCaptureMode='';voiceCaptureDraft='';voiceCaptureInitialText='';voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=null;
+}
+function requestCloseVoiceCaptureModal(){
+  if(voiceCaptureStopAction&&voiceCaptureStop.disabled===false){voiceCaptureStopAction();return}
+  if(voiceCaptureDraft!==voiceCaptureInitialText&&!window.confirm(voiceCaptureCopyFor('discard')))return;
+  closeVoiceCaptureModal(false,true)
+}
+if(voiceCaptureText)voiceCaptureText.addEventListener('input',()=>{voiceCaptureDraft=normalizeVoiceText(voiceCaptureText.value).slice(0,8000);voiceCaptureUpdateControls(Boolean(voiceCaptureStopAction&&!voiceCaptureStop.disabled),Boolean(voiceCaptureContinue.disabled))});
+if(voiceCaptureStop)voiceCaptureStop.addEventListener('click',()=>{if(voiceCaptureStopAction)voiceCaptureStopAction()});
+if(voiceCaptureContinue)voiceCaptureContinue.addEventListener('click',()=>{if(voiceCaptureContinueAction)voiceCaptureContinueAction()});
+if(voiceCaptureApply)voiceCaptureApply.addEventListener('click',()=>{if(voiceCaptureApplyAction)voiceCaptureApplyAction()});
+if(voiceCaptureClose)voiceCaptureClose.addEventListener('click',requestCloseVoiceCaptureModal);
+if(voiceCaptureModal)voiceCaptureModal.addEventListener('click',event=>{if(event.target===voiceCaptureModal)requestCloseVoiceCaptureModal()});
+
 const descriptionVoiceButton=document.getElementById('descriptionVoiceButton');
 const descriptionVoiceButtonText=document.getElementById('descriptionVoiceButtonText');
 const descriptionVoiceButtonHint=document.getElementById('descriptionVoiceButtonHint');
@@ -816,7 +917,7 @@ function stopDescriptionVoiceRecording(discard=false){
   if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){descriptionVoiceRecorder.stop();return}
   releaseDescriptionVoiceStream();descriptionVoiceChunks=[];descriptionVoiceBusy=false;if(discard)hideDescriptionLiveText();updateDescriptionVoiceButton();
 }
-async function uploadDescriptionVoice(blob,baseText){
+async function uploadDescriptionVoiceLegacy(blob,baseText){
   const turnstileRequired=descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true';
   const token=descriptionVoiceToken();
   if(turnstileRequired&&!descriptionVoiceVerificationSatisfied()){setDescriptionVoiceStatus('description_voice_verification_required','required');return}
@@ -838,7 +939,7 @@ async function uploadDescriptionVoice(blob,baseText){
   }catch(error){descriptionVoiceStatus.textContent=error.name==='AbortError'?descriptionVoiceCopy('voice_timeout'):(error.message||descriptionVoiceCopy('description_voice_error'));descriptionVoiceStatus.dataset.state='error'}
   finally{window.clearTimeout(timeoutId);resetDescriptionVoiceTurnstile()}
 }
-async function startDescriptionVoiceRecording(){
+async function startDescriptionVoiceRecordingLegacy(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
   descriptionVoicePanel.hidden=false;descriptionVoicePanel.classList.add('needs-attention');window.setTimeout(()=>descriptionVoicePanel.classList.remove('needs-attention'),1800);ensureDescriptionVoiceTurnstile();
   if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
@@ -862,6 +963,49 @@ async function startDescriptionVoiceRecording(){
     descriptionVoiceRecorder.start(500);descriptionVoiceStartedAt=Date.now();updateDescriptionRecordingClock();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();
     descriptionVoiceTimer=window.setTimeout(()=>{setDescriptionVoiceStatus('description_voice_too_long','required');stopDescriptionVoiceRecording(false)},descriptionVoiceMaxSeconds*1000);
   }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
+}
+function setDescriptionVoiceStatus(key,state=''){const text=key?descriptionVoiceCopy(key):'';if(descriptionVoiceStatus){descriptionVoiceStatus.textContent=text;descriptionVoiceStatus.dataset.state=state}if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureSetStatus(text,state||'idle')}
+function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=normalizeVoiceText(descriptionVoiceBaseText).trim();voiceCaptureSetDraft(prefix+(prefix?'\n\n':'')+transcript);setDescriptionLiveText(transcript)}
+function updateDescriptionRecordingClock(){if(!descriptionVoiceStartedAt)return;const elapsed=(Date.now()-descriptionVoiceStartedAt)/1000;const text=descriptionVoiceCopy('description_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(descriptionVoiceStatus){descriptionVoiceStatus.textContent=text;descriptionVoiceStatus.dataset.state='recording'}if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
+async function uploadDescriptionVoice(blob,baseText){
+  const turnstileRequired=descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true';
+  const token=descriptionVoiceToken();
+  if(turnstileRequired&&!descriptionVoiceVerificationSatisfied()){setDescriptionVoiceStatus('description_voice_verification_required','required');return}
+  setDescriptionVoiceStatus('description_voice_transcribing');
+  const data=new FormData();data.append('audio',blob,blob.type.includes('mp4')?'description.m4a':'description.webm');data.append('language',document.documentElement.lang||'en');data.append('voice_consent','true');data.append('turnstile_token',token);data.append('purpose','description');
+  const controller=new AbortController();const timeoutId=window.setTimeout(()=>controller.abort(),45000);
+  try{
+    const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
+    markDescriptionVoiceTurnstileSessionVerified();
+    const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
+    const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft((normalizedBase?normalizedBase+'\n\n':'')+transcript);hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');voiceCaptureUpdateControls(false,false);
+  }catch(error){setDescriptionVoiceStatus(error.name==='AbortError'?'voice_timeout':'description_voice_error','error')}
+  finally{window.clearTimeout(timeoutId);resetDescriptionVoiceTurnstile()}
+}
+async function startDescriptionVoiceRecording(){
+  if(!descriptionVoiceButton||descriptionVoiceBusy)return;
+  openVoiceCaptureModal('description',descriptionField.value);
+  voiceCaptureStopAction=()=>stopDescriptionVoiceRecording(false);
+  voiceCaptureContinueAction=()=>startDescriptionVoiceRecording();
+  descriptionVoicePanel.hidden=false;descriptionVoicePanel.classList.add('needs-attention');window.setTimeout(()=>descriptionVoicePanel.classList.remove('needs-attention'),1800);ensureDescriptionVoiceTurnstile();
+  if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
+  if(!descriptionVoiceVerificationSatisfied()){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_verification_required','required');ensureDescriptionVoiceTurnstile();return}
+  descriptionVoiceStartPending=false;
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setDescriptionVoiceStatus('description_voice_unsupported','error');return}
+  try{
+    descriptionVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'];const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported(type))||'';
+    if(!mimeType){releaseDescriptionVoiceStream();setDescriptionVoiceStatus('description_voice_unsupported','error');return}
+    descriptionVoiceBaseText=descriptionField.value;voiceCaptureSetDraft(descriptionVoiceBaseText);setDescriptionLiveText('');
+    descriptionVoiceRecognition=createCtrLiveRecognition(text=>applyDescriptionLiveTranscript(text),()=>{setDescriptionLiveText('',true);voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback')});if(descriptionVoiceRecognition)descriptionVoiceRecognition.start();
+    descriptionVoiceRecorder=new MediaRecorder(descriptionVoiceStream,{mimeType});descriptionVoiceChunks=[];descriptionVoiceDiscard=false;descriptionVoiceBusy=true;
+    descriptionVoiceRecorder.addEventListener('dataavailable',event=>{if(event.data&&event.data.size)descriptionVoiceChunks.push(event.data)});
+    descriptionVoiceRecorder.addEventListener('stop',async()=>{const discard=descriptionVoiceDiscard;const type=descriptionVoiceRecorder.mimeType||'audio/webm';const blob=new Blob(descriptionVoiceChunks,{type});descriptionVoiceChunks=[];descriptionVoiceRecorder=null;releaseDescriptionVoiceStream();if(!discard&&blob.size)await uploadDescriptionVoice(blob,descriptionVoiceBaseText);else if(discard)hideDescriptionLiveText();descriptionVoiceBusy=false;voiceCaptureUpdateControls(false,false);updateDescriptionVoiceButton()},{once:true});
+    descriptionVoiceRecorder.start(500);descriptionVoiceStartedAt=Date.now();updateDescriptionRecordingClock();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();voiceCaptureUpdateControls(true,true);
+    descriptionVoiceTimer=window.setTimeout(()=>{setDescriptionVoiceStatus('description_voice_too_long','required');stopDescriptionVoiceRecording(false)},descriptionVoiceMaxSeconds*1000);
+  }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton();voiceCaptureUpdateControls(false,false)}
 }
 if(descriptionVoiceButton)descriptionVoiceButton.addEventListener('click',()=>{if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(false);else startDescriptionVoiceRecording()});
 if(descriptionVoiceConsent)descriptionVoiceConsent.addEventListener('change',()=>{updateDescriptionVoicePanelState();if(descriptionVoiceConsent.checked){setDescriptionVoiceStatus('');if(descriptionVoiceStartPending&&descriptionVoiceVerificationSatisfied())window.setTimeout(startDescriptionVoiceRecording,80);else ensureDescriptionVoiceTurnstile()}else descriptionVoiceStartPending=false});
@@ -1346,7 +1490,7 @@ if(aiChatRoot){
       updateAiControls();
     }
   }
-  async function uploadVoiceRecording(blob,baseText=''){
+  async function uploadVoiceRecordingLegacy(blob,baseText=''){
     const token=aiTurnstileToken();
     if(!aiTurnstileSatisfied()){
       aiVoiceStartPending=true;
@@ -1393,7 +1537,7 @@ if(aiChatRoot){
       resetAiTurnstile();
     }
   }
-  async function startVoiceRecording(){
+  async function startVoiceRecordingLegacy(){
     if(!aiVoiceButton||aiVoiceBusy)return;
     if(aiVoicePanel){revealAiVoicePanel();aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
     if(!aiVoiceConsent||!aiVoiceConsent.checked){
@@ -1464,6 +1608,44 @@ if(aiChatRoot){
       setVoiceStatus('ai_voice_permission');
       updateAiControls();
     }
+  }
+  function setVoiceStatus(key){const text=key?aiCopy(key):'';if(aiVoiceStatus)aiVoiceStatus.textContent=text;if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureSetStatus(text,key==='ai_voice_error'?'error':'idle')}
+  function applyAiLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!aiChatInput)return;const prefix=normalizeVoiceText(aiVoiceBaseText).trim();voiceCaptureSetDraft(prefix+(prefix?'\n\n':'')+transcript);setAiLiveText(transcript)}
+  function updateAiRecordingClock(){if(!aiVoiceStartedAt)return;const elapsed=(Date.now()-aiVoiceStartedAt)/1000;const text=aiCopy('ai_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(aiVoiceStatus)aiVoiceStatus.textContent=text;if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
+  async function uploadVoiceRecording(blob,baseText=''){
+    const token=aiTurnstileToken();
+    if(!aiTurnstileSatisfied()){aiVoiceStartPending=true;showAiTurnstileRequired();return}
+    setVoiceStatus('ai_voice_transcribing');
+    const data=new FormData();data.append('audio',blob,blob.type.includes('mp4')?'voice.m4a':'voice.webm');data.append('language',document.documentElement.lang);data.append('voice_consent','true');data.append('turnstile_token',token);data.append('purpose','assistant');
+    const controller=new AbortController();const timeoutId=window.setTimeout(()=>controller.abort(),45000);
+    try{
+      const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});const result=await response.json().catch(()=>({}));
+      if(!response.ok){if(response.status===400){aiTurnstileSessionVerified=false;aiVoiceStartPending=true;showAiTurnstileRequired()}const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_voice_error');setVoiceStatus('ai_voice_error');if(aiVoiceStatus)aiVoiceStatus.textContent=detail||aiCopy('ai_voice_error');return}
+      markAiTurnstileSessionVerified();const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
+      const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft((normalizedBase?normalizedBase+'\n\n':'')+transcript);setVoiceStatus('ai_voice_review');voiceCaptureUpdateControls(false,false);
+    }catch(error){setVoiceStatus(error.name==='AbortError'?'voice_timeout':'ai_voice_error')}
+    finally{window.clearTimeout(timeoutId);resetAiTurnstile()}
+  }
+  async function startVoiceRecording(){
+    if(!aiVoiceButton||aiVoiceBusy)return;
+    const continuing=voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden;const startText=continuing?voiceCaptureDraft:aiChatInput.value;
+    openVoiceCaptureModal('assistant',startText);voiceCaptureStopAction=()=>stopVoiceRecording(false);voiceCaptureContinueAction=()=>startVoiceRecording();
+    if(aiVoicePanel){revealAiVoicePanel();aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
+    if(!aiVoiceConsent||!aiVoiceConsent.checked){aiVoiceStartPending=true;setVoiceStatus('ai_voice_consent_required');aiVoiceConsent&&aiVoiceConsent.focus({preventScroll:true});return}
+    if(!aiTurnstileSatisfied()){aiVoiceStartPending=true;showAiTurnstileRequired();return}
+    aiVoiceStartPending=false;
+    if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setVoiceStatus('ai_voice_unsupported');return}
+    try{
+      aiVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'];const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported(type))||'';
+      if(!mimeType){releaseVoiceStream();setVoiceStatus('ai_voice_unsupported');return}
+      aiVoiceBaseText=startText;voiceCaptureSetDraft(startText);setAiLiveText('');
+      aiVoiceRecognition=createCtrLiveRecognition(text=>applyAiLiveTranscript(text),()=>{setAiLiveText('',true);voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback')});if(aiVoiceRecognition)aiVoiceRecognition.start();
+      aiVoiceRecorder=new MediaRecorder(aiVoiceStream,{mimeType});aiVoiceChunks=[];aiVoiceDiscard=false;aiVoiceBusy=true;
+      aiVoiceRecorder.addEventListener('dataavailable',event=>{if(event.data&&event.data.size)aiVoiceChunks.push(event.data)});
+      aiVoiceRecorder.addEventListener('stop',async()=>{const discard=aiVoiceDiscard;const type=aiVoiceRecorder.mimeType||'audio/webm';const blob=new Blob(aiVoiceChunks,{type});aiVoiceChunks=[];aiVoiceRecorder=null;releaseVoiceStream();if(aiVoiceButton)setAiVoiceButtonState(false);if(!discard&&blob.size)await uploadVoiceRecording(blob,aiVoiceBaseText);else if(discard)hideAiLiveText();aiVoiceBusy=false;voiceCaptureUpdateControls(false,false);updateAiControls();if(!discard&&(!voiceCaptureModal||voiceCaptureModal.hidden))aiChatInput.focus()},{once:true});
+      aiVoiceRecorder.start(500);setAiVoiceButtonState(true);aiVoiceStartedAt=Date.now();updateAiRecordingClock();aiVoiceElapsedTimer=window.setInterval(updateAiRecordingClock,1000);updateAiControls();voiceCaptureUpdateControls(true,true);
+      aiVoiceTimer=window.setTimeout(()=>{setVoiceStatus('ai_voice_too_long');stopVoiceRecording(false)},aiVoiceMaxSeconds*1000);
+    }catch(_error){stopAiLiveRecognition(true);releaseVoiceStream();aiVoiceBusy=false;hideAiLiveText();setVoiceStatus('ai_voice_permission');updateAiControls();voiceCaptureUpdateControls(false,false)}
   }
   function resetAiChatForLanguageChange(){
     if(aiChatAbortController){

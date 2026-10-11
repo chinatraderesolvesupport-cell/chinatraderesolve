@@ -19,7 +19,7 @@ from typing import Any
 from urllib.parse import quote, urlencode, urlparse
 from xml.sax.saxutils import escape as xml_escape
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Form, File, UploadFile
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Form, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -137,6 +137,7 @@ from .voice_transcription import (
     validate_voice_audio,
     voice_input_is_enabled,
 )
+from .voice_realtime import RealtimeVoiceError, relay_realtime_transcription
 
 
 PUBLIC_LANGUAGE_NAMES = {
@@ -2059,6 +2060,98 @@ async def public_voice_transcription(
     finally:
         audio_bytes = b""
     return VoiceTranscriptionResponse(transcript=transcript)
+
+
+@app.websocket("/ws/voice/transcribe")
+async def public_realtime_voice_transcription(websocket: WebSocket) -> None:
+    """Stream microphone PCM to the provider without exposing the API key."""
+    await websocket.accept()
+    language_code = "en"
+    try:
+        try:
+            start = await asyncio.wait_for(websocket.receive_json(), timeout=5)
+        except (asyncio.TimeoutError, ValueError, TypeError):
+            await websocket.send_json({"type": "error", "message": localized_error(language_code, "voice_invalid")})
+            await websocket.close(code=1008)
+            return
+        if not isinstance(start, dict) or start.get("type") != "start":
+            await websocket.send_json({"type": "error", "message": localized_error(language_code, "voice_invalid")})
+            await websocket.close(code=1008)
+            return
+
+        language_code = str(start.get("language") or "en")
+        language_code = language_code if language_code in LANGUAGE_CODES else "en"
+        purpose = str(start.get("purpose") or "assistant")
+        purpose = purpose if purpose in {"assistant", "description"} else "assistant"
+        client = client_key(websocket)
+        session_key = voice_rate_session_key(websocket)
+        if not voice_attempt_limiter.allow(f"voice-realtime-attempt:{client}"):
+            raise RealtimeVoiceError("rate")
+        if not voice_input_is_enabled() or not settings.openai_realtime_transcription_model:
+            raise RealtimeVoiceError("unavailable")
+        if start.get("voice_consent") is not True:
+            raise RealtimeVoiceError("voice_consent")
+        if not await verify_ai_turnstile(str(start.get("turnstile_token") or ""), websocket):
+            raise RealtimeVoiceError("bot")
+        if not voice_limiter.allow(f"voice-realtime:{purpose}:{session_key}"):
+            raise RealtimeVoiceError("rate")
+        try:
+            claim_daily_usage_for_subject(
+                f"voice_{purpose}",
+                usage_subject(websocket, f"voice_{purpose}"),
+                settings.max_daily_voice_transcriptions_per_session,
+                settings.max_daily_voice_transcriptions_global,
+            )
+        except DailyUsageLimitError as exc:
+            raise RealtimeVoiceError("voice_daily") from exc
+
+        safety_identifier = hashlib.sha256(
+            f"{_runtime_session_secret}:{client}".encode("utf-8")
+        ).hexdigest()
+
+        async def receive_message() -> dict[str, Any]:
+            message = await websocket.receive_json()
+            if not isinstance(message, dict):
+                raise RealtimeVoiceError("invalid_message")
+            return message
+
+        async def send_message(message: dict[str, Any]) -> None:
+            await websocket.send_json(message)
+
+        await relay_realtime_transcription(
+            receive=receive_message,
+            send=send_message,
+            api_key=str(settings.openai_api_key or ""),
+            language=language_code,
+            model=str(settings.openai_realtime_transcription_model),
+            safety_identifier=safety_identifier,
+            max_seconds=settings.voice_max_seconds,
+        )
+    except WebSocketDisconnect:
+        return
+    except RealtimeVoiceError as exc:
+        messages = {
+            "rate": "voice_rate",
+            "voice_daily": "voice_daily",
+            "voice_consent": "voice_consent",
+            "bot": "bot",
+            "too_long": "voice_invalid",
+            "invalid_audio": "voice_invalid",
+            "invalid_message": "voice_invalid",
+        }
+        key = messages.get(str(exc), "unavailable")
+        try:
+            await websocket.send_json({"type": "error", "message": localized_error(language_code, key)})
+            await websocket.close(code=1011 if key == "unavailable" else 1008)
+        except Exception:
+            return
+    except Exception:
+        logger.exception("realtime voice route failed")
+        try:
+            await websocket.send_json({"type": "error", "message": localized_error(language_code, "unavailable")})
+            await websocket.close(code=1011)
+        except Exception:
+            return
 
 
 @app.get("/support", response_class=HTMLResponse)

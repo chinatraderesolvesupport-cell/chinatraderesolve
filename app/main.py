@@ -87,6 +87,7 @@ from .document_analysis import (
     DocumentAnalysisProviderError,
     analyse_case_documents,
     document_analysis_is_enabled,
+    localize_report_for_display,
 )
 from .documents import (
     pdf_security_self_test,
@@ -2338,7 +2339,11 @@ def public_case_status(
             "message_issue": message_issue,
             "private_csrf_token": private_csrf_token(reference, token),
             "client_message_key": secrets.token_urlsafe(24),
-            "document_analysis": document_analysis,
+            "document_analysis": (
+                {**document_analysis, "result": localize_report_for_display(document_analysis.get("result"), language)}
+                if document_analysis and isinstance(document_analysis.get("result"), dict)
+                else document_analysis
+            ),
             "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "document_copy": DOCUMENT_COPY.get(language, DOCUMENT_COPY["English"]),
@@ -2838,7 +2843,11 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),
             "documents": list_case_documents(case_id),
-            "document_analysis": document_analysis,
+            "document_analysis": (
+                {**document_analysis, "result": localize_report_for_display(document_analysis.get("result"), "Russian")}
+                if document_analysis and isinstance(document_analysis.get("result"), dict)
+                else document_analysis
+            ),
             "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "status_labels": STATUS_LABELS,

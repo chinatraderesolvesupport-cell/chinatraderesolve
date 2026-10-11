@@ -341,7 +341,6 @@ def init_db() -> None:
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256)",
             "CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at)",
             "CREATE INDEX IF NOT EXISTS idx_case_messages_case ON case_messages(case_id, id)",
-            "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id)",
         ]
         with transaction() as conn:
             # Render can briefly run the old and new service instances at the
@@ -354,6 +353,7 @@ def init_db() -> None:
                 execute(conn, statement)
             _ensure_notification_retry_columns(conn)
             _ensure_notification_message_id(conn)
+            execute(conn, "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id)")
             _ensure_document_analysis_run_token(conn)
             _ensure_case_document_page_count(conn)
             _ensure_case_admin_viewed_at(conn)
@@ -483,11 +483,11 @@ def init_db() -> None:
             CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256);
             CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at);
             CREATE INDEX IF NOT EXISTS idx_case_messages_case ON case_messages(case_id, id);
-            CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id);
             """
         )
         _ensure_notification_retry_columns(conn)
         _ensure_notification_message_id(conn)
+        execute(conn, "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id)")
         _ensure_document_analysis_run_token(conn)
         _ensure_case_document_page_count(conn)
         _ensure_case_admin_viewed_at(conn)

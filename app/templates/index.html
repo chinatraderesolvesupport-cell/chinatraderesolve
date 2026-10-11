@@ -775,12 +775,12 @@ function createCtrLiveRecognition(onText,onUnavailable){
 
 const voiceTurnstileRetryCopy={en:'Retry security check',ru:'Повторить проверку безопасности',sr:'Ponovi bezbednosnu proveru',de:'Sicherheitsprüfung wiederholen',fr:'Réessayer le contrôle de sécurité',es:'Repetir la comprobación de seguridad'};
 const voiceCaptureCopy={
-  en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant by voice',subtitle:'Speak naturally. The text appears as you speak and remains editable.',fallbackSubtitle:'Live transcription is temporarily unavailable. You can keep recording; the text will appear after you stop.',label:'Recognized text',recording:'Recording — speak now',connecting:'Connecting live transcription…',error:'Live transcription is unavailable. Try again or type the text.',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'Audio is sent securely for live server transcription. The text remains editable.'},
-  ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику голосом',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',fallbackSubtitle:'Живое распознавание временно недоступно. Можно продолжить запись; текст появится после остановки.',label:'Распознанный текст',recording:'Идёт запись — говорите',connecting:'Подключение живой расшифровки…',error:'Живая расшифровка недоступна. Попробуйте ещё раз или введите текст.',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Аудио защищённо передаётся на сервер для живой расшифровки. Текст можно редактировать.'},
-  sr:{title:'Opišite svoju situaciju',assistantTitle:'Postavite pitanje AI asistentu glasom',subtitle:'Govorite prirodno. Tekst se pojavljuje dok govorite i može da se uređuje.',fallbackSubtitle:'Živo prepoznavanje je trenutno nedostupno. Možete nastaviti snimanje; tekst će se pojaviti nakon zaustavljanja.',label:'Prepoznati tekst',recording:'Snimanje je u toku — govorite',connecting:'Povezivanje živog prepoznavanja…',error:'Živo prepoznavanje nije dostupno. Pokušajte ponovo ili unesite tekst.',paused:'Snimanje je zaustavljeno',stop:'Zaustavi snimanje',continue:'Nastavi diktiranje',apply:'Prenesi tekst',close:'Zatvori',discard:'Zatvoriti i obrisati nesačuvani tekst?',footnote:'Audio se bezbedno šalje serveru na živo prepoznavanje. Tekst može da se uređuje.'},
-  de:{title:'Beschreiben Sie Ihre Situation',assistantTitle:'Stellen Sie dem KI-Assistenten eine Sprachfrage',subtitle:'Sprechen Sie natürlich. Der Text erscheint während des Sprechens und bleibt bearbeitbar.',fallbackSubtitle:'Die Live-Erkennung ist vorübergehend nicht verfügbar. Sie können weiter aufnehmen; der Text erscheint nach dem Stoppen.',label:'Erkannter Text',recording:'Aufnahme läuft — bitte sprechen',connecting:'Live-Transkription wird verbunden…',error:'Live-Transkription ist nicht verfügbar. Versuchen Sie es erneut oder geben Sie den Text ein.',paused:'Aufnahme angehalten',stop:'Aufnahme stoppen',continue:'Diktat fortsetzen',apply:'Text übernehmen',close:'Schließen',discard:'Schließen und ungespeicherten Text verwerfen?',footnote:'Audio wird sicher zur Live-Transkription übertragen. Der Text bleibt bearbeitbar.'},
-  fr:{title:'Décrivez votre situation',assistantTitle:'Posez votre question à l’assistant IA par la voix',subtitle:'Parlez naturellement. Le texte apparaît pendant que vous parlez et reste modifiable.',fallbackSubtitle:'La transcription en direct est temporairement indisponible. Vous pouvez continuer l’enregistrement ; le texte apparaîtra après l’arrêt.',label:'Texte reconnu',recording:'Enregistrement en cours — parlez',connecting:'Connexion de la transcription en direct…',error:'La transcription en direct est indisponible. Réessayez ou saisissez le texte.',paused:'Enregistrement arrêté',stop:'Arrêter l’enregistrement',continue:'Continuer la dictée',apply:'Utiliser ce texte',close:'Fermer',discard:'Fermer et supprimer le texte non enregistré ?',footnote:'L’audio est transmis de manière sécurisée pour une transcription en direct. Le texte reste modifiable.'},
-  es:{title:'Describa su situación',assistantTitle:'Haga su pregunta al asistente de IA por voz',subtitle:'Hable con naturalidad. El texto aparece mientras habla y se puede editar.',fallbackSubtitle:'El reconocimiento en directo no está disponible temporalmente. Puede seguir grabando; el texto aparecerá después de detener la grabación.',label:'Texto reconocido',recording:'Grabación en curso — hable',connecting:'Conectando la transcripción en directo…',error:'La transcripción en directo no está disponible. Inténtelo de nuevo o escriba el texto.',paused:'Grabación detenida',stop:'Detener grabación',continue:'Continuar dictado',apply:'Usar este texto',close:'Cerrar',discard:'¿Cerrar y descartar el texto no guardado?',footnote:'El audio se envía de forma segura para la transcripción en directo. El texto se puede editar.'}};
+  en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant',assistantSubtitle:'Type your question or start dictation. You can edit the text before sending it.',assistantLabel:'Question for the AI assistant',assistantStart:'Start dictation',assistantApply:'Send to AI',subtitle:'Speak naturally. The text appears as you speak and remains editable.',fallbackSubtitle:'Live transcription is temporarily unavailable. You can keep recording; the text will appear after you stop.',label:'Recognized text',recording:'Recording — speak now',connecting:'Connecting live transcription…',error:'Live transcription is unavailable. Try again or type the text.',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'Audio is sent securely for live server transcription. The text remains editable.'},
+  ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику',assistantSubtitle:'Введите вопрос или начните диктовку. Перед отправкой текст можно отредактировать.',assistantLabel:'Вопрос для ИИ-помощника',assistantStart:'Начать диктовку',assistantApply:'Отправить ИИ',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',fallbackSubtitle:'Живое распознавание временно недоступно. Можно продолжить запись; текст появится после остановки.',label:'Распознанный текст',recording:'Идёт запись — говорите',connecting:'Подключение живой расшифровки…',error:'Живая расшифровка недоступна. Попробуйте ещё раз или введите текст.',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Аудио защищённо передаётся на сервер для живой расшифровки. Текст можно редактировать.'},
+  sr:{title:'Opišite svoju situaciju',assistantTitle:'Postavite pitanje AI asistentu',assistantSubtitle:'Unesite pitanje ili počnite diktiranje. Tekst možete urediti pre slanja.',assistantLabel:'Pitanje za AI asistenta',assistantStart:'Počni diktiranje',assistantApply:'Pošalji AI asistentu',subtitle:'Govorite prirodno. Tekst se pojavljuje dok govorite i može da se uređuje.',fallbackSubtitle:'Živo prepoznavanje je trenutno nedostupno. Možete nastaviti snimanje; tekst će se pojaviti nakon zaustavljanja.',label:'Prepoznati tekst',recording:'Snimanje je u toku — govorite',connecting:'Povezivanje živog prepoznavanja…',error:'Živo prepoznavanje nije dostupno. Pokušajte ponovo ili unesite tekst.',paused:'Snimanje je zaustavljeno',stop:'Zaustavi snimanje',continue:'Nastavi diktiranje',apply:'Prenesi tekst',close:'Zatvori',discard:'Zatvoriti i obrisati nesačuvani tekst?',footnote:'Audio se bezbedno šalje serveru na živo prepoznavanje. Tekst može da se uređuje.'},
+  de:{title:'Beschreiben Sie Ihre Situation',assistantTitle:'Stellen Sie dem KI-Assistenten eine Frage',assistantSubtitle:'Geben Sie Ihre Frage ein oder starten Sie das Diktat. Sie können den Text vor dem Senden bearbeiten.',assistantLabel:'Frage an den KI-Assistenten',assistantStart:'Diktat starten',assistantApply:'An KI senden',subtitle:'Sprechen Sie natürlich. Der Text erscheint während des Sprechens und bleibt bearbeitbar.',fallbackSubtitle:'Die Live-Erkennung ist vorübergehend nicht verfügbar. Sie können weiter aufnehmen; der Text erscheint nach dem Stoppen.',label:'Erkannter Text',recording:'Aufnahme läuft — bitte sprechen',connecting:'Live-Transkription wird verbunden…',error:'Live-Transkription ist nicht verfügbar. Versuchen Sie es erneut oder geben Sie den Text ein.',paused:'Aufnahme angehalten',stop:'Aufnahme stoppen',continue:'Diktat fortsetzen',apply:'Text übernehmen',close:'Schließen',discard:'Schließen und ungespeicherten Text verwerfen?',footnote:'Audio wird sicher zur Live-Transkription übertragen. Der Text bleibt bearbeitbar.'},
+  fr:{title:'Décrivez votre situation',assistantTitle:'Posez une question à l’assistant IA',assistantSubtitle:'Saisissez votre question ou commencez la dictée. Vous pourrez modifier le texte avant l’envoi.',assistantLabel:'Question pour l’assistant IA',assistantStart:'Commencer la dictée',assistantApply:'Envoyer à l’IA',subtitle:'Parlez naturellement. Le texte apparaît pendant que vous parlez et reste modifiable.',fallbackSubtitle:'La transcription en direct est temporairement indisponible. Vous pouvez continuer l’enregistrement ; le texte apparaîtra après l’arrêt.',label:'Texte reconnu',recording:'Enregistrement en cours — parlez',connecting:'Connexion de la transcription en direct…',error:'La transcription en direct est indisponible. Réessayez ou saisissez le texte.',paused:'Enregistrement arrêté',stop:'Arrêter l’enregistrement',continue:'Continuer la dictée',apply:'Utiliser ce texte',close:'Fermer',discard:'Fermer et supprimer le texte non enregistré ?',footnote:'L’audio est transmis de manière sécurisée pour une transcription en direct. Le texte reste modifiable.'},
+  es:{title:'Describa su situación',assistantTitle:'Haga una pregunta al asistente de IA',assistantSubtitle:'Escriba su pregunta o inicie el dictado. Puede editar el texto antes de enviarlo.',assistantLabel:'Pregunta para el asistente de IA',assistantStart:'Iniciar dictado',assistantApply:'Enviar a la IA',subtitle:'Hable con naturalidad. El texto aparece mientras habla y se puede editar.',fallbackSubtitle:'El reconocimiento en directo no está disponible temporalmente. Puede seguir grabando; el texto aparecerá después de detener la grabación.',label:'Texto reconocido',recording:'Grabación en curso — hable',connecting:'Conectando la transcripción en directo…',error:'La transcripción en directo no está disponible. Inténtelo de nuevo o escriba el texto.',paused:'Grabación detenida',stop:'Detener grabación',continue:'Continuar dictado',apply:'Usar este texto',close:'Cerrar',discard:'¿Cerrar y descartar el texto no guardado?',footnote:'El audio se envía de forma segura para la transcripción en directo. El texto se puede editar.'}};
 voiceCaptureCopy.en.fallback='Live recognition is unavailable in this browser. The recording will be transcribed after you stop.';
 voiceCaptureCopy.ru.fallback='Живое распознавание недоступно в этом браузере. После остановки запись будет расшифрована сервером.';
 voiceCaptureCopy.sr.fallback='Živo prepoznavanje nije dostupno u ovom pregledaču. Nakon zaustavljanja snimak će biti transkribovan.';
@@ -805,14 +805,20 @@ const voiceCaptureStop=document.getElementById('voiceCaptureStop');
 const voiceCaptureContinue=document.getElementById('voiceCaptureContinue');
 const voiceCaptureApply=document.getElementById('voiceCaptureApply');
 const voiceCaptureClose=document.getElementById('voiceCaptureClose');
-let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCaptureSourcePanel=null,voiceCaptureSourceConsent=null,voiceCaptureSourceTurnstile=null,voiceCaptureConsentHome=null,voiceCaptureTurnstileHome=null,voiceCaptureStopAction=null,voiceCaptureContinueAction=null,voiceCaptureApplyAction=null,voiceCaptureAfterRestore=null;
+let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCaptureSourcePanel=null,voiceCaptureSourceConsent=null,voiceCaptureSourceTurnstile=null,voiceCaptureConsentHome=null,voiceCaptureTurnstileHome=null,voiceCaptureStopAction=null,voiceCaptureContinueAction=null,voiceCaptureApplyAction=null,voiceCaptureAfterRestore=null,voiceCaptureRecordingStarted=false,voiceCaptureElapsedBeforeSegment=0,voiceCaptureSegmentStartedAt=0,voiceCaptureTimerInterval=null;
 function voiceCaptureCopyFor(key){const lang=document.documentElement.lang||'en';return(voiceCaptureCopy[lang]&&voiceCaptureCopy[lang][key])||voiceCaptureCopy.en[key]||''}
 function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n').replace(/\\n/g,'\n').replace(/\r/g,'\n')}
+function capitalizeVoiceSegment(value){const text=normalizeVoiceText(value).trim();return text.replace(/^(\s*)(\p{L})/u,(match,space,letter)=>space+letter.toLocaleUpperCase())}
+function joinVoiceTranscript(baseText,transcript){const base=normalizeVoiceText(baseText).trim();const text=normalizeVoiceText(transcript).trim();if(!text)return base;return[base,base?capitalizeVoiceSegment(text):text].filter(Boolean).join('\n\n')}
 function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
 function voiceCaptureSetTimer(seconds){if(voiceCaptureTimer)voiceCaptureTimer.textContent=ctrVoiceElapsed(seconds)}
+function voiceCaptureElapsedNow(){return voiceCaptureElapsedBeforeSegment+(voiceCaptureSegmentStartedAt?((Date.now()-voiceCaptureSegmentStartedAt)/1000):0)}
+function voiceCaptureStartTimer(){if(!voiceCaptureModal||voiceCaptureModal.hidden)return;if(!voiceCaptureSegmentStartedAt)voiceCaptureSegmentStartedAt=Date.now();if(voiceCaptureTimerInterval)window.clearInterval(voiceCaptureTimerInterval);voiceCaptureSetTimer(voiceCaptureElapsedNow());voiceCaptureTimerInterval=window.setInterval(()=>voiceCaptureSetTimer(voiceCaptureElapsedNow()),250)}
+function voiceCapturePauseTimer(){if(voiceCaptureSegmentStartedAt){voiceCaptureElapsedBeforeSegment+=((Date.now()-voiceCaptureSegmentStartedAt)/1000);voiceCaptureSegmentStartedAt=0}if(voiceCaptureTimerInterval){window.clearInterval(voiceCaptureTimerInterval);voiceCaptureTimerInterval=null}voiceCaptureSetTimer(voiceCaptureElapsedBeforeSegment)}
+function voiceCaptureResetTimer(){if(voiceCaptureTimerInterval){window.clearInterval(voiceCaptureTimerInterval);voiceCaptureTimerInterval=null}voiceCaptureElapsedBeforeSegment=0;voiceCaptureSegmentStartedAt=0;voiceCaptureSetTimer(0)}
 function voiceCaptureSetDraft(value){voiceCaptureDraft=normalizeVoiceText(value).slice(0,8000);if(voiceCaptureText){voiceCaptureText.value=voiceCaptureDraft;voiceCaptureText.dispatchEvent(new Event('input',{bubbles:true}))}}
 function voiceCaptureSetConsentDisabled(disabled){const input=voiceCaptureSourceConsent&&voiceCaptureSourceConsent.querySelector('input[type="checkbox"]');if(input)input.disabled=Boolean(disabled)}
-function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCaptureModal)return;voiceCaptureStop.disabled=!recording;voiceCaptureContinue.disabled=recording||busy;voiceCaptureApply.disabled=recording||busy||!voiceCaptureDraft.trim();voiceCaptureSetConsentDisabled(Boolean(recording||busy))}
+function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCaptureModal)return;voiceCaptureStop.disabled=!recording;voiceCaptureContinue.disabled=recording||busy||(voiceCaptureMode==='assistant'&&!document.getElementById('aiVoiceButton'));voiceCaptureApply.disabled=recording||busy||!voiceCaptureDraft.trim();if(voiceCaptureMode==='assistant')voiceCaptureContinue.textContent=voiceCaptureRecordingStarted?voiceCaptureCopyFor('continue'):voiceCaptureCopyFor('assistantStart');voiceCaptureSetConsentDisabled(Boolean(recording||busy))}
 function voiceCaptureMoveSources(mode){
   const description=mode==='description';
   voiceCaptureSourcePanel=document.getElementById(description?'descriptionVoicePanel':'aiVoicePanel');
@@ -833,17 +839,20 @@ function voiceCaptureRestoreSources(){
 }
 function openVoiceCaptureModal(mode,initialText){
   if(!voiceCaptureModal)return;
-  voiceCaptureMode=mode;voiceCaptureInitialText=normalizeVoiceText(initialText);voiceCaptureDraft=voiceCaptureInitialText;voiceCaptureMoveSources(mode);
+  const continuing=!voiceCaptureModal.hidden&&voiceCaptureMode===mode;
+  voiceCaptureMode=mode;
+  if(!continuing){voiceCaptureInitialText=normalizeVoiceText(initialText);voiceCaptureDraft=voiceCaptureInitialText;voiceCaptureMoveSources(mode);voiceCaptureRecordingStarted=false;voiceCaptureResetTimer()}
+  else{voiceCaptureDraft=normalizeVoiceText(initialText)}
   const assistant=mode==='assistant';
   voiceCaptureTitle.textContent=voiceCaptureCopyFor(assistant?'assistantTitle':'title');
-  voiceCaptureSubtitle.textContent=voiceCaptureCopyFor('subtitle');
-  voiceCaptureTextLabel.textContent=voiceCaptureCopyFor('label');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('footnote');
-  voiceCaptureStop.textContent=voiceCaptureCopyFor('stop');voiceCaptureContinue.textContent=voiceCaptureCopyFor('continue');voiceCaptureApply.textContent=voiceCaptureCopyFor('apply');voiceCaptureClose.setAttribute('aria-label',voiceCaptureCopyFor('close'));voiceCaptureText.value=voiceCaptureDraft;voiceCaptureSetStatus(voiceCaptureCopyFor('paused'));voiceCaptureSetTimer(0);voiceCaptureModal.hidden=false;voiceCaptureModal.setAttribute('aria-hidden','false');document.documentElement.classList.add('voice-modal-open');document.body.classList.add('voice-modal-open');voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=()=>{if(assistant){aiChatInput.value=voiceCaptureDraft.slice(0,1500);aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));aiVoiceBaseText=''}else{descriptionField.value=voiceCaptureDraft.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));descriptionVoiceBaseText=''}closeVoiceCaptureModal(false)};voiceCaptureUpdateControls(false,false);
+  voiceCaptureSubtitle.textContent=voiceCaptureCopyFor(assistant?'assistantSubtitle':'subtitle');
+  voiceCaptureTextLabel.textContent=voiceCaptureCopyFor(assistant?'assistantLabel':'label');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('footnote');
+  voiceCaptureStop.textContent=voiceCaptureCopyFor('stop');voiceCaptureContinue.textContent=voiceCaptureCopyFor(assistant?'assistantStart':'continue');voiceCaptureApply.textContent=voiceCaptureCopyFor(assistant?'assistantApply':'apply');voiceCaptureClose.setAttribute('aria-label',voiceCaptureCopyFor('close'));voiceCaptureText.value=voiceCaptureDraft;if(!continuing)voiceCaptureSetStatus(voiceCaptureCopyFor('paused'));voiceCaptureModal.hidden=false;voiceCaptureModal.setAttribute('aria-hidden','false');document.documentElement.classList.add('voice-modal-open');document.body.classList.add('voice-modal-open');if(!continuing){voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=()=>{if(assistant){aiChatInput.value=voiceCaptureDraft.slice(0,1500);aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));aiVoiceBaseText=''}else{descriptionField.value=voiceCaptureDraft.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));descriptionVoiceBaseText=''}closeVoiceCaptureModal(false)}}voiceCaptureUpdateControls(false,false);window.requestAnimationFrame(()=>voiceCaptureText&&voiceCaptureText.focus({preventScroll:true}));
 }
 function closeVoiceCaptureModal(discard=false,skipConfirm=false){
   if(!voiceCaptureModal||voiceCaptureModal.hidden)return;
   if(discard&&!skipConfirm&&voiceCaptureDraft!==voiceCaptureInitialText&&!window.confirm(voiceCaptureCopyFor('discard')))return;
-  const afterRestore=voiceCaptureAfterRestore;voiceCaptureAfterRestore=null;voiceCaptureRestoreSources();voiceCaptureModal.hidden=true;voiceCaptureModal.setAttribute('aria-hidden','true');document.documentElement.classList.remove('voice-modal-open');document.body.classList.remove('voice-modal-open');voiceCaptureMode='';voiceCaptureDraft='';voiceCaptureInitialText='';voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=null;if(afterRestore)window.setTimeout(afterRestore,0);
+  const afterRestore=voiceCaptureAfterRestore;voiceCaptureAfterRestore=null;voiceCapturePauseTimer();voiceCaptureResetTimer();voiceCaptureRestoreSources();voiceCaptureModal.hidden=true;voiceCaptureModal.setAttribute('aria-hidden','true');document.documentElement.classList.remove('voice-modal-open');document.body.classList.remove('voice-modal-open');voiceCaptureMode='';voiceCaptureDraft='';voiceCaptureInitialText='';voiceCaptureRecordingStarted=false;voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=null;if(afterRestore)window.setTimeout(afterRestore,0);
 }
 function requestCloseVoiceCaptureModal(){
   if(voiceCaptureStopAction&&voiceCaptureStop.disabled===false){voiceCaptureStopAction();return}
@@ -866,7 +875,7 @@ function ctrRealtimeVoiceRender(){
   const transcript=normalizeVoiceText(ctrRealtimeVoiceText());
   const base=normalizeVoiceText(ctrRealtimeVoice.baseText).trim();
   ctrRealtimeVoice.rendering=true;
-  voiceCaptureSetDraft([base,transcript].filter(Boolean).join('\n\n'));
+  voiceCaptureSetDraft(joinVoiceTranscript(base,transcript));
   ctrRealtimeVoice.rendering=false;
 }
 function ctrRealtimeVoiceSetStatus(text,state='idle'){
@@ -969,9 +978,12 @@ async function ctrStartRealtimeVoice({mode,initialText,token}){
 }
 function ctrRealtimeVoiceStop(discard=false){
   if(!ctrRealtimeVoice.socket)return false;
-  if(discard){try{ctrRealtimeVoice.socket.send(JSON.stringify({type:'close'}))}catch(_e){}ctrRealtimeVoiceCloseSocket();voiceCaptureUpdateControls(false,false);return true}
+  if(discard){try{ctrRealtimeVoice.socket.send(JSON.stringify({type:'close'}))}catch(_e){}voiceCaptureResetTimer();ctrRealtimeVoiceCloseSocket();voiceCaptureUpdateControls(false,false);return true}
   if(ctrRealtimeVoice.stopping)return true;
   ctrRealtimeVoice.stopping=true;
+  voiceCapturePauseTimer();
+  if(ctrRealtimeVoice.mode==='assistant'&&typeof aiVoiceElapsedTimer!=='undefined'&&aiVoiceElapsedTimer){window.clearInterval(aiVoiceElapsedTimer);aiVoiceElapsedTimer=null;aiVoiceStartedAt=0}
+  if(ctrRealtimeVoice.mode==='description'&&typeof descriptionVoiceElapsedTimer!=='undefined'&&descriptionVoiceElapsedTimer){window.clearInterval(descriptionVoiceElapsedTimer);descriptionVoiceElapsedTimer=null;descriptionVoiceStartedAt=0}
   ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('paused'),'idle');voiceCaptureUpdateControls(false,true);ctrRealtimeVoice.closeTimer=window.setTimeout(()=>ctrRealtimeVoiceCloseSocket(),8500);
   const context=ctrRealtimeVoice.context;
   let finished=false;
@@ -1018,7 +1030,7 @@ function showDescriptionVoiceTurnstileRetry(show=true){if(!descriptionVoiceTurns
 function removeDescriptionVoiceTurnstileWidget({clearToken=false}={}){clearDescriptionVoiceTurnstileWatchdog();if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileRenderPending=false;descriptionVoiceTurnstileLoadAttempts=0;if(clearToken&&descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value=''}
 function retryDescriptionVoiceTurnstile(){removeDescriptionVoiceTurnstileWidget({clearToken:true});showDescriptionVoiceTurnstileRetry(false);ensureDescriptionVoiceTurnstile()}
 function setDescriptionLiveText(text,unavailable=false){if(!descriptionVoiceLive||!descriptionVoiceLiveText)return;descriptionVoiceLive.hidden=false;descriptionVoiceLiveText.textContent=text||(unavailable?descriptionVoiceCopy('voice_live_unavailable'):'')}
-function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=descriptionVoiceBaseText.trim();descriptionField.value=`${prefix}${prefix?'\\n\\n':''}${transcript}`.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));setDescriptionLiveText(transcript)}
+function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=descriptionVoiceBaseText.trim();descriptionField.value=joinVoiceTranscript(prefix,transcript).slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));setDescriptionLiveText(transcript)}
 function hideDescriptionLiveText(){if(descriptionVoiceLive)descriptionVoiceLive.hidden=true;if(descriptionVoiceLiveText)descriptionVoiceLiveText.textContent=''}
 function descriptionVoiceToken(){return descriptionVoiceTurnstileResponse?String(descriptionVoiceTurnstileResponse.value||''):''}
 function descriptionVoiceVerificationSatisfied(){return !descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||descriptionVoiceTurnstileSessionVerified||Boolean(descriptionVoiceToken())}
@@ -1060,9 +1072,10 @@ function resetDescriptionVoiceTurnstile(){
   showDescriptionVoiceTurnstileRetry(false);
 }
 function stopDescriptionLiveRecognition(discard=false){if(descriptionVoiceRecognition){discard?descriptionVoiceRecognition.abort():descriptionVoiceRecognition.stop();descriptionVoiceRecognition=null}}
-function releaseDescriptionVoiceStream(){if(descriptionVoiceTimer){window.clearTimeout(descriptionVoiceTimer);descriptionVoiceTimer=null}if(descriptionVoiceElapsedTimer){window.clearInterval(descriptionVoiceElapsedTimer);descriptionVoiceElapsedTimer=null}descriptionVoiceStartedAt=0;if(descriptionVoiceStream){descriptionVoiceStream.getTracks().forEach(track=>track.stop());descriptionVoiceStream=null}}
+function releaseDescriptionVoiceStream(){voiceCapturePauseTimer();if(descriptionVoiceTimer){window.clearTimeout(descriptionVoiceTimer);descriptionVoiceTimer=null}if(descriptionVoiceElapsedTimer){window.clearInterval(descriptionVoiceElapsedTimer);descriptionVoiceElapsedTimer=null}descriptionVoiceStartedAt=0;if(descriptionVoiceStream){descriptionVoiceStream.getTracks().forEach(track=>track.stop());descriptionVoiceStream=null}}
 function stopDescriptionVoiceRecording(discard=false){
   if(ctrRealtimeVoice.mode==='description'&&ctrRealtimeVoice.socket){ctrRealtimeVoiceStop(discard);return}
+  if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCapturePauseTimer();
   descriptionVoiceDiscard=descriptionVoiceDiscard||discard;stopDescriptionLiveRecognition(discard);
   if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);try{descriptionVoiceRecorder.requestData()}catch(_e){}descriptionVoiceRecorder.stop();return}
   releaseDescriptionVoiceStream();descriptionVoiceChunks=[];descriptionVoiceBusy=false;if(discard)hideDescriptionLiveText();updateDescriptionVoiceButton();
@@ -1083,7 +1096,7 @@ async function uploadDescriptionVoiceLegacy(blob,baseText){
     if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
     markDescriptionVoiceTurnstileSessionVerified();
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-    const combined=(baseText.trim()?baseText.trim()+'\n\n':'')+transcript;
+    const combined=joinVoiceTranscript(baseText,transcript);
     descriptionField.value=combined.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));
     hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');descriptionField.focus();
   }catch(error){descriptionVoiceStatus.textContent=error.name==='AbortError'?descriptionVoiceCopy('voice_timeout'):(error.message||descriptionVoiceCopy('description_voice_error'));descriptionVoiceStatus.dataset.state='error'}
@@ -1110,14 +1123,14 @@ async function startDescriptionVoiceRecordingLegacy(){
       const discard=descriptionVoiceDiscard;const type=descriptionVoiceRecorder.mimeType||'audio/webm';const blob=new Blob(descriptionVoiceChunks,{type});descriptionVoiceChunks=[];descriptionVoiceRecorder=null;releaseDescriptionVoiceStream();
       if(!discard&&blob.size)await uploadDescriptionVoice(blob,descriptionVoiceBaseText);else if(discard)hideDescriptionLiveText();descriptionVoiceBusy=false;updateDescriptionVoiceButton();
     },{once:true});
-    descriptionVoiceRecorder.start(500);descriptionVoiceStartedAt=Date.now();updateDescriptionRecordingClock();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();
+    descriptionVoiceRecorder.start(500);voiceCaptureRecordingStarted=true;descriptionVoiceStartedAt=Date.now();voiceCaptureStartTimer();updateDescriptionRecordingClock();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();
     if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSubtitle.textContent=voiceCaptureCopyFor('fallbackSubtitle');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback');voiceCaptureSetStatus(voiceCaptureCopyFor('fallback'),'recording');voiceCaptureUpdateControls(true,true)}
     descriptionVoiceTimer=window.setTimeout(()=>{setDescriptionVoiceStatus('description_voice_too_long','required');stopDescriptionVoiceRecording(false)},descriptionVoiceMaxSeconds*1000);
   }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
 }
 function setDescriptionVoiceStatus(key,state=''){const text=key?descriptionVoiceCopy(key):'';if(descriptionVoiceStatus){descriptionVoiceStatus.textContent=text;descriptionVoiceStatus.dataset.state=state}if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureSetStatus(text,state||'idle')}
-function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=normalizeVoiceText(descriptionVoiceBaseText).trim();voiceCaptureSetDraft([prefix,transcript].filter(Boolean).join('\n\n'));setDescriptionLiveText(transcript)}
-function updateDescriptionRecordingClock(){if(!descriptionVoiceStartedAt)return;const elapsed=(Date.now()-descriptionVoiceStartedAt)/1000;const text=descriptionVoiceCopy('description_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(descriptionVoiceStatus){descriptionVoiceStatus.textContent=text;descriptionVoiceStatus.dataset.state='recording'}if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
+function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=normalizeVoiceText(descriptionVoiceBaseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(prefix,transcript));setDescriptionLiveText(transcript)}
+function updateDescriptionRecordingClock(){if(!descriptionVoiceStartedAt)return;const elapsed=voiceCaptureMode==='description'&&!voiceCaptureModal.hidden?voiceCaptureElapsedNow():(Date.now()-descriptionVoiceStartedAt)/1000;const text=descriptionVoiceCopy('description_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(descriptionVoiceStatus){descriptionVoiceStatus.textContent=text;descriptionVoiceStatus.dataset.state='recording'}if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
 async function uploadDescriptionVoice(blob,baseText){
   const turnstileRequired=descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true';
   const token=descriptionVoiceToken();
@@ -1131,7 +1144,7 @@ async function uploadDescriptionVoice(blob,baseText){
     if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
     markDescriptionVoiceTurnstileSessionVerified();
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-    const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft([normalizedBase,transcript].filter(Boolean).join('\n\n'));hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');voiceCaptureUpdateControls(false,false);
+    const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,transcript));hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');voiceCaptureUpdateControls(false,false);
   }catch(error){setDescriptionVoiceStatus(error.name==='AbortError'?'voice_timeout':'description_voice_error','error')}
   finally{window.clearTimeout(timeoutId);resetDescriptionVoiceTurnstile()}
 }
@@ -1151,7 +1164,7 @@ async function startDescriptionVoiceRecording(){
   const currentDescriptionText=voiceCaptureMode==='description'&&!voiceCaptureModal.hidden?voiceCaptureDraft:descriptionField.value;
   descriptionVoiceBaseText=currentDescriptionText;voiceCaptureSetDraft(descriptionVoiceBaseText);descriptionVoiceBusy=true;
   const liveStarted=await ctrStartRealtimeVoice({mode:'description',initialText:descriptionVoiceBaseText,token:descriptionVoiceToken()});
-  if(liveStarted){descriptionVoiceBusy=false;descriptionVoiceStartedAt=Date.now();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();return}
+  if(liveStarted){descriptionVoiceBusy=false;voiceCaptureRecordingStarted=true;descriptionVoiceStartedAt=Date.now();voiceCaptureStartTimer();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();return}
   descriptionVoiceBusy=false;
   voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback');
   await startDescriptionVoiceRecordingLegacy();
@@ -1458,11 +1471,16 @@ if(aiChatRoot){
     aiChatRoot.classList.add('is-open');
     aiChatLauncher.setAttribute('aria-expanded','true');
     if(!aiTurnstileSatisfied()&&aiChatHistory.length===0)showAiVerification();else showAiQuickQuestions();
-    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(aiTurnstileSatisfied())window.setTimeout(()=>aiChatInput.focus({preventScroll:true}),40)});
+    openVoiceCaptureModal('assistant',aiChatInput.value);
+    voiceCaptureStopAction=null;
+    voiceCaptureContinueAction=()=>startVoiceRecording();
+    voiceCaptureApplyAction=()=>{const text=voiceCaptureDraft.slice(0,1500).trim();if(!text)return;if(!aiTurnstileSatisfied()){showAiVerification();ensureAiTurnstile();return}closeVoiceCaptureModal(false,true);sendAiMessage(text)};
+    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(aiTurnstileSatisfied())window.setTimeout(()=>voiceCaptureText&&voiceCaptureText.focus({preventScroll:true}),40)});
   }
   function closeAiChat(restoreFocus=true,goToApplication=false){
     if(aiChatAbortController)aiChatAbortController.abort();
     stopVoiceRecording(true);
+    if(voiceCaptureMode==='assistant')closeVoiceCaptureModal(false,true);
     collapseAiVoicePanel();
     aiChatPanel.hidden=true;
     aiChatRoot.classList.remove('is-open');
@@ -1636,7 +1654,7 @@ if(aiChatRoot){
     const transcript=String(text||'').trim();
     if(!transcript||!aiChatInput)return;
     const prefix=aiVoiceBaseText.trim();
-    aiChatInput.value=`${prefix}${prefix?'\\n\\n':''}${transcript}`.slice(0,1500);
+    aiChatInput.value=joinVoiceTranscript(prefix,transcript).slice(0,1500);
     aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));
     setAiLiveText(transcript);
   }
@@ -1649,6 +1667,7 @@ if(aiChatRoot){
     if(aiVoiceRecognition){discard?aiVoiceRecognition.abort():aiVoiceRecognition.stop();aiVoiceRecognition=null}
   }
   function releaseVoiceStream(){
+    voiceCapturePauseTimer();
     if(aiVoiceTimer){window.clearTimeout(aiVoiceTimer);aiVoiceTimer=null}
     if(aiVoiceElapsedTimer){window.clearInterval(aiVoiceElapsedTimer);aiVoiceElapsedTimer=null}
     aiVoiceStartedAt=0;
@@ -1656,6 +1675,7 @@ if(aiChatRoot){
   }
   function stopVoiceRecording(discard=false){
     if(ctrRealtimeVoice.mode==='assistant'&&ctrRealtimeVoice.socket){ctrRealtimeVoiceStop(discard);return}
+    if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCapturePauseTimer();
     aiVoiceDiscard=aiVoiceDiscard||discard;
     stopAiLiveRecognition(discard);
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording'){
@@ -1706,7 +1726,7 @@ if(aiChatRoot){
       markAiTurnstileSessionVerified();
       const transcript=String(result.transcript||'').trim();
       if(!transcript)throw new Error('empty transcript');
-      const combined=[String(baseText||'').trim(),transcript].filter(Boolean).join('\\n\\n');
+      const combined=joinVoiceTranscript(baseText,transcript);
       aiChatInput.value=combined.slice(0,1500);
       aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));
       aiVoiceBaseText='';
@@ -1775,7 +1795,9 @@ if(aiChatRoot){
       },{once:true});
       aiVoiceRecorder.start(500);
       setAiVoiceButtonState(true);
+      voiceCaptureRecordingStarted=true;
       aiVoiceStartedAt=Date.now();
+      voiceCaptureStartTimer();
       updateAiRecordingClock();
       aiVoiceElapsedTimer=window.setInterval(updateAiRecordingClock,1000);
       updateAiControls();
@@ -1794,8 +1816,8 @@ if(aiChatRoot){
     }
   }
   function setVoiceStatus(key){const text=key?aiCopy(key):'';if(aiVoiceStatus)aiVoiceStatus.textContent=text;if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureSetStatus(text,key==='ai_voice_error'?'error':'idle')}
-  function applyAiLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!aiChatInput)return;const prefix=normalizeVoiceText(aiVoiceBaseText).trim();voiceCaptureSetDraft([prefix,transcript].filter(Boolean).join('\n\n'));setAiLiveText(transcript)}
-  function updateAiRecordingClock(){if(!aiVoiceStartedAt)return;const elapsed=(Date.now()-aiVoiceStartedAt)/1000;const text=aiCopy('ai_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(aiVoiceStatus)aiVoiceStatus.textContent=text;if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
+  function applyAiLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!aiChatInput)return;const prefix=normalizeVoiceText(aiVoiceBaseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(prefix,transcript));setAiLiveText(transcript)}
+  function updateAiRecordingClock(){if(!aiVoiceStartedAt)return;const elapsed=voiceCaptureMode==='assistant'&&!voiceCaptureModal.hidden?voiceCaptureElapsedNow():(Date.now()-aiVoiceStartedAt)/1000;const text=aiCopy('ai_voice_recording')+' '+ctrVoiceElapsed(elapsed);if(aiVoiceStatus)aiVoiceStatus.textContent=text;if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSetStatus(voiceCaptureCopyFor('recording'),'recording');voiceCaptureSetTimer(elapsed)}}
   async function uploadVoiceRecording(blob,baseText=''){
     const token=aiTurnstileToken();
     if(!aiTurnstileSatisfied()){aiVoiceStartPending=true;showAiTurnstileRequired();return}
@@ -1806,7 +1828,7 @@ if(aiChatRoot){
       const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});const result=await response.json().catch(()=>({}));
       if(!response.ok){if(response.status===400){aiTurnstileSessionVerified=false;aiVoiceStartPending=true;showAiTurnstileRequired()}const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_voice_error');setVoiceStatus('ai_voice_error');if(aiVoiceStatus)aiVoiceStatus.textContent=detail||aiCopy('ai_voice_error');return}
       markAiTurnstileSessionVerified();const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-      const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft([normalizedBase,transcript].filter(Boolean).join('\n\n'));setVoiceStatus('ai_voice_review');voiceCaptureUpdateControls(false,false);
+      const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,transcript));setVoiceStatus('ai_voice_review');voiceCaptureUpdateControls(false,false);
     }catch(error){setVoiceStatus(error.name==='AbortError'?'voice_timeout':'ai_voice_error')}
     finally{window.clearTimeout(timeoutId);resetAiTurnstile()}
   }
@@ -1815,14 +1837,14 @@ if(aiChatRoot){
     const continuing=voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden;const startText=continuing?voiceCaptureDraft:aiChatInput.value;
     if(aiTurnstileRequired&&!aiTurnstileSessionVerified)removeAiTurnstileWidget();
     voiceCaptureAfterRestore=()=>{if(aiTurnstileRequired&&!aiTurnstileSessionVerified&&!aiTurnstileToken()){showAiVerification();ensureAiTurnstile()}};
-    openVoiceCaptureModal('assistant',startText);voiceCaptureStopAction=()=>stopVoiceRecording(false);voiceCaptureContinueAction=()=>startVoiceRecording();
+    openVoiceCaptureModal('assistant',startText);voiceCaptureStopAction=()=>stopVoiceRecording(false);voiceCaptureContinueAction=()=>startVoiceRecording();voiceCaptureApplyAction=()=>{const text=voiceCaptureDraft.slice(0,1500).trim();if(!text)return;if(!aiTurnstileSatisfied()){showAiVerification();ensureAiTurnstile();return}closeVoiceCaptureModal(false,true);sendAiMessage(text)};
     if(aiVoicePanel){revealAiVoicePanel();aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
     if(!aiVoiceConsent||!aiVoiceConsent.checked){aiVoiceStartPending=true;setVoiceStatus('ai_voice_consent_required');aiVoiceConsent&&aiVoiceConsent.focus({preventScroll:true});return}
     if(!aiTurnstileSatisfied()){aiVoiceStartPending=true;showAiTurnstileRequired();return}
     aiVoiceStartPending=false;
     aiVoiceBaseText=startText;voiceCaptureSetDraft(startText);aiVoiceBusy=true;
     const liveStarted=await ctrStartRealtimeVoice({mode:'assistant',initialText:startText,token:aiTurnstileToken()});
-    if(liveStarted){aiVoiceBusy=false;aiVoiceStartedAt=Date.now();aiVoiceElapsedTimer=window.setInterval(updateAiRecordingClock,1000);updateAiControls();return}
+    if(liveStarted){aiVoiceBusy=false;voiceCaptureRecordingStarted=true;aiVoiceStartedAt=Date.now();voiceCaptureStartTimer();aiVoiceElapsedTimer=window.setInterval(updateAiRecordingClock,1000);updateAiControls();return}
     aiVoiceBusy=false;
     voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback');
     await startVoiceRecordingLegacy();

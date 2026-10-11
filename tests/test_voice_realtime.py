@@ -79,7 +79,9 @@ class FakeUpstream:
         return value
 
 
-def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
+def test_relay_forwards_audio_and_commit_and_maps_interim_results(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO", logger="chinatraderesolve.voice_realtime")
+
     async def scenario() -> tuple[FakeUpstream, list[dict]]:
         upstream = FakeUpstream()
         incoming = iter([
@@ -117,6 +119,9 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
     assert outgoing[0] == {"type": "ready", "sample_rate": 24000}
     assert {message["type"] for message in outgoing} >= {"delta", "completed"}
     assert any(message["type"] == "completed" and message["text"] == "Привет мир." for message in outgoing)
+    assert "realtime transcription interim delta received" in caplog.text
+    assert "interim_delta_count=1" in caplog.text
+    assert "Привет мир." not in caplog.text
     assert [message["type"] for message in upstream.sent] == [
         "session.update",
         "input_audio_buffer.append",

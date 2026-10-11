@@ -22,6 +22,15 @@ SUPPORTED_AUDIO_TYPES: dict[str, tuple[str, str]] = {
 }
 LANGUAGE_CODES = {"en", "fr", "de", "es", "ru", "sr"}
 
+TRANSCRIPTION_STYLE_INSTRUCTIONS: dict[str, str] = {
+    "ru": "Расставляй естественные знаки препинания и начинай предложения с заглавной буквы. Не изменяй слова, числа, даты, суммы, имена, номера заказов и названия документов.",
+    "sr": "Dodaj prirodnu interpunkciju i počinji rečenice velikim slovom. Ne menjaj reči, brojeve, datume, iznose, imena, brojeve porudžbina ni nazive dokumenata.",
+    "en": "Add natural punctuation and capitalize sentences. Do not change words, numbers, dates, amounts, names, order numbers, or document titles.",
+    "fr": "Ajoutez une ponctuation naturelle et commencez les phrases par une majuscule. Ne modifiez pas les mots, nombres, dates, montants, noms, numéros de commande ni titres de documents.",
+    "de": "Setzen Sie natürliche Satzzeichen und schreiben Sie Satzanfänge groß. Ändern Sie keine Wörter, Zahlen, Daten, Beträge, Namen, Bestellnummern oder Dokumenttitel.",
+    "es": "Añade puntuación natural y escribe las frases con mayúscula inicial. No cambies palabras, números, fechas, importes, nombres, números de pedido ni títulos de documentos.",
+}
+
 TRANSCRIPTION_PROMPTS: dict[str, str] = {
     "ru": "Речь пользователя о споре с китайским поставщиком. Возможные термины: ChinaTradeResolve, China Trade Resolve, Alibaba, поставщик, заказ, инвойс, оплата, возврат, спор, доказательства, документы, голосовой модуль.",
     "sr": "Govor korisnika o sporu sa kineskim dobavljačem. Mogući termini: ChinaTradeResolve, China Trade Resolve, Alibaba, dobavljač, porudžbina, faktura, uplata, povraćaj, spor, dokazi, dokumenti.",
@@ -30,6 +39,11 @@ TRANSCRIPTION_PROMPTS: dict[str, str] = {
     "de": "Nutzersprache zu einem Streit mit einem chinesischen Lieferanten. Mögliche Begriffe: ChinaTradeResolve, China Trade Resolve, Alibaba, Lieferant, Bestellung, Rechnung, Zahlung, Rückerstattung, Streit, Nachweise, Dokumente.",
     "es": "Habla de un usuario sobre una disputa con un proveedor chino. Términos posibles: ChinaTradeResolve, China Trade Resolve, Alibaba, proveedor, pedido, factura, pago, reembolso, disputa, pruebas, documentos.",
 }
+
+
+def transcription_prompt(language_code: str) -> str:
+    code = language_code if language_code in LANGUAGE_CODES else "en"
+    return f"{TRANSCRIPTION_PROMPTS.get(code, TRANSCRIPTION_PROMPTS['en'])} {TRANSCRIPTION_STYLE_INSTRUCTIONS.get(code, TRANSCRIPTION_STYLE_INSTRUCTIONS['en'])}"
 
 
 class VoiceConfigurationError(RuntimeError):
@@ -82,7 +96,7 @@ async def transcribe_audio(
         "model": str(settings.openai_transcription_model),
         "language": language_code,
         "response_format": "json",
-        "prompt": TRANSCRIPTION_PROMPTS.get(language_code, TRANSCRIPTION_PROMPTS["en"]),
+        "prompt": transcription_prompt(language_code),
     }
     try:
         async with httpx.AsyncClient(timeout=max(30, settings.openai_timeout_seconds)) as client:

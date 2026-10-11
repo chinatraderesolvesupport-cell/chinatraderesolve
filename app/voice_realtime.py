@@ -11,7 +11,7 @@ from typing import Any
 
 import websockets
 
-from .voice_transcription import LANGUAGE_CODES, TRANSCRIPTION_PROMPTS
+from .voice_transcription import LANGUAGE_CODES, transcription_prompt
 
 
 logger = logging.getLogger("chinatraderesolve.voice_realtime")
@@ -44,7 +44,7 @@ def build_session_update(language: str, model: str = "gpt-live-transcribe") -> d
                     "transcription": {
                         "model": model,
                         "languages": [language_code],
-                        "prompt": TRANSCRIPTION_PROMPTS.get(language_code, TRANSCRIPTION_PROMPTS["en"]),
+                        "prompt": transcription_prompt(language_code),
                         "delay": "minimal",
                     },
                     "turn_detection": None,

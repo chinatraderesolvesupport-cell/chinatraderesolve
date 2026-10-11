@@ -23,6 +23,7 @@ def test_session_update_uses_pcm_24khz_and_selected_language() -> None:
     assert input_config["transcription"]["model"] == "gpt-live-transcribe"
     assert input_config["transcription"]["languages"] == ["ru"]
     assert input_config["transcription"]["delay"] == "minimal"
+    assert "знаки препинания" in input_config["transcription"]["prompt"]
     assert input_config["turn_detection"] is None
 
 

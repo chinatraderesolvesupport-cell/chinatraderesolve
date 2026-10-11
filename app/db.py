@@ -598,6 +598,15 @@ def add_case_message(
     with transaction() as conn:
         existing = execute(
             conn,
+            "SELECT id FROM case_messages WHERE case_id=? AND author=? AND body=? "
+            "ORDER BY id LIMIT 1",
+            (case_id, author, normalized_body),
+        ).fetchone()
+        if existing:
+            return _get_case_message(conn, int(existing["id"])) or {}
+
+        existing = execute(
+            conn,
             "SELECT id FROM case_messages WHERE idempotency_key=?",
             (key,),
         ).fetchone()

@@ -5745,6 +5745,7 @@ def _create_messaging_case(email, preferred_language="Russian"):
             preferred_language=preferred_language,
             full_name="Synthetic Messaging Client",
         ),
+        headers={"x-forwarded-for": "203.0.113.201"},
     )
     assert response.status_code == 201, response.text
     return response.json()
@@ -5777,6 +5778,7 @@ def test_case_messaging_keeps_internal_notes_private_and_adds_admin_history():
     login = client.post(
         "/admin/login",
         data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        headers={"x-forwarded-for": "203.0.113.201"},
         follow_redirects=False,
     )
     assert login.status_code == 303
@@ -5852,6 +5854,7 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
     client.post(
         "/admin/login",
         data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        headers={"x-forwarded-for": "203.0.113.201"},
         follow_redirects=False,
     )
     case_id, _, _, _ = _admin_case_context(created["case_reference"])

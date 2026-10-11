@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sqlite3
@@ -584,9 +585,15 @@ def add_case_message(
     normalized_body = "\n".join(line.rstrip() for line in normalized_body.split("\n"))
     if not normalized_body or len(normalized_body) > 6000:
         raise ValueError("Message must contain between 1 and 6000 characters")
-    key = str(idempotency_key or "").strip()
-    if not re.fullmatch(r"[A-Za-z0-9_-]{20,120}", key):
+    submitted_key = str(idempotency_key or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{20,120}", submitted_key):
         raise ValueError("Invalid message idempotency key")
+    # The browser key protects a normal double-submit, but it is regenerated
+    # for every rendered page.  A stable, case-scoped content key also closes
+    # the duplicate window across reloads and multiple open tabs.
+    key = hashlib.sha256(
+        f"{case_id}:{author}:{normalized_body}".encode("utf-8")
+    ).hexdigest()
 
     with transaction() as conn:
         existing = execute(

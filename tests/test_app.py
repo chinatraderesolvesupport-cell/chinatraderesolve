@@ -5837,7 +5837,7 @@ def test_case_messaging_keeps_internal_notes_private_and_adds_admin_history():
         f"/admin/case/{case_id}/message",
         data={
             "message": message_body,
-            "message_key": message_key_match.group(1),
+            "message_key": "different-valid-key-1234567890",
             "csrf_token": detail_csrf.group(1),
         },
         follow_redirects=False,
@@ -5905,7 +5905,7 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
         created["status_url"] + "/messages",
         data={
             "message": reply,
-            "message_key": message_key.group(1),
+            "message_key": "another-valid-key-1234567890",
             "csrf_token": csrf.group(1),
         },
         follow_redirects=False,

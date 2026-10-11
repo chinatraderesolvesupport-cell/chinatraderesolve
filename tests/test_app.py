@@ -123,7 +123,7 @@ def test_health_and_home_free_access():
     assert "prototype-banner" not in home.text
     assert "Добровольная поддержка" in home.text
     assert "chinatraderesolve.support@gmail.com" in home.text
-    assert "Ответственный за пилот и контролёр данных: Эдуард Цаголов." in home.text
+    assert "Оператор сервиса и контролёр данных: Эдуард Цаголов." in home.text
     assert "Через этот прототип не принимаются платежи и документы" not in home.text
     assert "Статус прототипа" not in home.text
     assert health.json()["email_delivery_configured"] is False
@@ -406,7 +406,7 @@ def valid_payload_model():
 def test_russian_localization_and_security_headers():
     home = client.get("/")
     assert home.status_code == 200
-    assert "Ответственный за пилот и человеческая проверка" in home.text
+    assert "Оператор сервиса и человеческая проверка" in home.text
     assert "ChinaTradeResolve Case Review Team" not in home.text
     assert "Электронная почта" in home.text
     assert home.headers["x-content-type-options"] == "nosniff"
@@ -5128,7 +5128,7 @@ def test_home_promotes_localized_guides_without_reintroducing_old_copy():
     assert 'href="/ru/guides/product-quality-dispute"' in page.text
     assert 'data-i18n="nav_guides"' in page.text
     assert 'Подайте заявку на предварительную оценку материалов' in page.text
-    assert 'Ответственный за пилот и контролёр данных: Эдуард Цаголов.' in page.text
+    assert 'Оператор сервиса и контролёр данных: Эдуард Цаголов.' in page.text
     assert 'Если проект оказался полезен, его можно поддержать.' in page.text
     for forbidden in (
         'Отправьте дело на бесплатный анализ',

@@ -814,7 +814,8 @@ function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCapture
 function voiceCaptureMoveSources(mode){
   const description=mode==='description';
   voiceCaptureSourcePanel=document.getElementById(description?'descriptionVoicePanel':'aiVoicePanel');
-  voiceCaptureSourceConsent=document.getElementById(description?'descriptionVoiceConsent':'aiVoiceConsent');
+  const consentInput=document.getElementById(description?'descriptionVoiceConsent':'aiVoiceConsent');
+  voiceCaptureSourceConsent=consentInput?consentInput.closest('label'):null;
   voiceCaptureConsentHome=document.getElementById(description?'descriptionVoiceConsentHome':'aiVoiceConsentHome');
   voiceCaptureSourceTurnstile=document.getElementById(description?'descriptionVoiceTurnstile':'aiChatTurnstileSection');
   voiceCaptureTurnstileHome=document.getElementById(description?'descriptionVoiceTurnstileHome':'aiTurnstileHome');
@@ -1887,3 +1888,4 @@ if(aiChatRoot){
 </script>
 </body>
 </html>
+

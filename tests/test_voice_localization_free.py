@@ -8,11 +8,27 @@ def test_voice_ui_uses_real_interim_results_and_preserves_editable_text():
     source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
     assert "recognition.interimResults=true" in source
     assert "recognition.continuous=true" in source
+    assert 'id="voiceCaptureModal"' in source
+    assert 'id="voiceCaptureText"' in source
+    assert 'id="voiceCaptureStop"' in source
+    assert 'id="voiceCaptureContinue"' in source
+    assert 'id="voiceCaptureApply"' in source
+    assert "voiceCaptureSetDraft" in source
+    assert "voiceCaptureCopy" in source
+    assert "voiceCaptureModal.hidden=false" in source
+    assert "voiceCaptureText.readOnly" not in source
     assert "applyAiLiveTranscript" in source
     assert "aiChatInput.disabled=aiChatBusy;" in source
     assert "uploadVoiceRecording(blob,aiVoiceBaseText)" in source
     assert "max-height:min(280px,34dvh)" in source
     assert "voice_live_unavailable" in source
+
+
+def test_voice_modal_has_no_literal_newline_escape_in_new_text_path():
+    source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert "normalizeVoiceText(value)" in source
+    assert "voiceCaptureSetDraft(prefix+(prefix?'\\n\\n':'')+transcript)" not in source
+    assert "voiceCaptureSetDraft((normalizedBase?normalizedBase+'\\n\\n':'')+transcript)" not in source
 
 
 def test_voice_recording_and_email_hint_are_localized():

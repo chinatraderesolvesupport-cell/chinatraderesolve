@@ -493,6 +493,36 @@ def _soften_unverified_claims(text: str, language: str) -> str:
             (r"\bprevara\b", "moguće obmanjujuće predstavljanje"),
         ],
     }
+    common_phrases: dict[str, list[tuple[str, str]]] = {
+        "English": [],
+        "Russian": [
+            (r"\bnot evidenced in the uploaded materials\b", "не подтверждено загруженными материалами"),
+            (r"\bnot evidenced in uploaded materials\b", "не подтверждено загруженными материалами"),
+            (r"\bdate not visible\b", "дата не видна"),
+        ],
+        "Serbian": [
+            (r"\bnot evidenced in the uploaded materials\b", "nije potvrđeno u otpremljenim materijalima"),
+            (r"\bnot evidenced in uploaded materials\b", "nije potvrđeno u otpremljenim materijalima"),
+            (r"\bdate not visible\b", "datum nije vidljiv"),
+        ],
+        "French": [
+            (r"\bnot evidenced in the uploaded materials\b", "n’est pas étayé par les documents téléversés"),
+            (r"\bnot evidenced in uploaded materials\b", "n’est pas étayé par les documents téléversés"),
+            (r"\bdate not visible\b", "date non visible"),
+        ],
+        "German": [
+            (r"\bnot evidenced in the uploaded materials\b", "ist in den hochgeladenen Unterlagen nicht belegt"),
+            (r"\bnot evidenced in uploaded materials\b", "ist in den hochgeladenen Unterlagen nicht belegt"),
+            (r"\bdate not visible\b", "Datum nicht sichtbar"),
+        ],
+        "Spanish": [
+            (r"\bnot evidenced in the uploaded materials\b", "no está acreditado por los materiales cargados"),
+            (r"\bnot evidenced in uploaded materials\b", "no está acreditado por los materiales cargados"),
+            (r"\bdate not visible\b", "fecha no visible"),
+        ],
+    }
+    replacements.setdefault(language, []).extend(common_phrases.get(language, common_phrases["English"]))
+
     def soften_segment(segment: str) -> str:
         result = segment
         for pattern, replacement in replacements.get(language, replacements["English"]):
@@ -511,6 +541,29 @@ def _soften_unverified_claims(text: str, language: str) -> str:
         part if re.fullmatch(r'(".*?"|“.*?”|«.*?»)', part, flags=re.DOTALL) else soften_segment(part)
         for part in parts
     )
+
+
+def localize_report_for_display(report: Any, language: str) -> Any:
+    """Return a display-only localized copy without changing the stored report.
+
+    Older reports may contain a provider's English technical phrase even when
+    the case language is not English. Only generated prose is normalized; exact
+    quoted evidence and filenames remain unchanged by _soften_unverified_claims.
+    """
+    if not isinstance(report, dict):
+        return report
+    copied = json.loads(json.dumps(report, ensure_ascii=False))
+
+    def walk(value: Any) -> Any:
+        if isinstance(value, str):
+            return _soften_unverified_claims(value, language)
+        if isinstance(value, list):
+            return [walk(item) for item in value]
+        if isinstance(value, dict):
+            return {key: walk(item) for key, item in value.items()}
+        return value
+
+    return walk(copied)
 
 
 def _postprocess_report(parsed: dict[str, Any], language: str) -> dict[str, Any]:

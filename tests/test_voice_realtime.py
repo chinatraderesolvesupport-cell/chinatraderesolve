@@ -22,6 +22,7 @@ def test_session_update_uses_pcm_24khz_and_selected_language() -> None:
     assert input_config["format"] == {"type": "audio/pcm", "rate": 24000}
     assert input_config["transcription"]["model"] == "gpt-live-transcribe"
     assert input_config["transcription"]["languages"] == ["ru"]
+    assert input_config["transcription"]["delay"] == "minimal"
     assert input_config["turn_detection"] is None
 
 
@@ -42,6 +43,7 @@ class FakeUpstream:
         self.completed_seen = False
 
     async def __aenter__(self) -> "FakeUpstream":
+        await self.events.put(json.dumps({"type": "session.updated"}))
         return self
 
     async def __aexit__(self, *_args: object) -> None:
@@ -60,6 +62,9 @@ class FakeUpstream:
                 "item_id": "item-1",
                 "transcript": "Привет мир.",
             }))
+
+    async def recv(self) -> str:
+        return await self.events.get()
 
     def __aiter__(self) -> "FakeUpstream":
         return self

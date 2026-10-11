@@ -44,6 +44,7 @@ def build_session_update(language: str, model: str = "gpt-live-transcribe") -> d
                         "model": model,
                         "languages": [language_code],
                         "prompt": TRANSCRIPTION_PROMPTS.get(language_code, TRANSCRIPTION_PROMPTS["en"]),
+                        "delay": "minimal",
                     },
                     "turn_detection": None,
                 }
@@ -125,6 +126,33 @@ async def relay_realtime_transcription(
             max_size=1024 * 1024,
         ) as upstream:
             await upstream.send(json.dumps(build_session_update(language, model), ensure_ascii=False))
+
+            # Do not tell the browser that live capture is ready until the provider
+            # has accepted the transcription session.  Sending "ready" immediately
+            # made provider/session errors fall through to the legacy recorder and
+            # looked like a silent, non-live recording in the modal.
+            session_deadline = asyncio.get_running_loop().time() + 10
+            while True:
+                remaining = session_deadline - asyncio.get_running_loop().time()
+                if remaining <= 0:
+                    raise RealtimeVoiceError("provider")
+                try:
+                    raw_event = await asyncio.wait_for(upstream.recv(), timeout=remaining)
+                except asyncio.TimeoutError as exc:
+                    raise RealtimeVoiceError("provider") from exc
+                try:
+                    session_event = json.loads(raw_event)
+                except (TypeError, ValueError):
+                    continue
+                if not isinstance(session_event, dict):
+                    continue
+                if session_event.get("type") == "error":
+                    mapped = _provider_message(session_event)
+                    if mapped:
+                        await send(mapped)
+                    raise RealtimeVoiceError("provider")
+                if session_event.get("type") == "session.updated":
+                    break
             await send({"type": "ready", "sample_rate": REALTIME_AUDIO_RATE})
             total_audio = 0
             stopping = False

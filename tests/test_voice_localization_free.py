@@ -27,7 +27,16 @@ def test_voice_ui_uses_real_interim_results_and_preserves_editable_text():
 def test_voice_modal_has_no_literal_newline_escape_in_new_text_path():
     source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
     assert "normalizeVoiceText(value)" in source
-    assert "replace(/\\\\n/g,'\\n')" in source
+    assert "voiceCaptureSetDraft(prefix+(prefix?'\\n\\n':'')+transcript)" not in source
+    assert "voiceCaptureSetDraft((normalizedBase?normalizedBase+'\\n\\n':'')+transcript)" not in source
+
+
+def test_voice_fallback_keeps_stop_available_and_locks_consent():
+    source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert "voiceCaptureSetConsentDisabled" in source
+    assert "voiceCaptureUpdateControls(true,true)" in source
+    assert "fallbackSubtitle" in source
+    assert "const currentDescriptionText=voiceCaptureMode==='description'&&!voiceCaptureModal.hidden?voiceCaptureDraft:descriptionField.value" in source
 
 
 def test_voice_recording_and_email_hint_are_localized():

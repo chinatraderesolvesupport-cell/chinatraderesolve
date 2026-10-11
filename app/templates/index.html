@@ -774,12 +774,12 @@ function createCtrLiveRecognition(onText,onUnavailable){
 }
 
 const voiceCaptureCopy={
-  en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant by voice',subtitle:'Speak naturally. The text appears as you speak and remains editable.',label:'Recognized text',recording:'Recording — speak now',connecting:'Connecting live transcription…',error:'Live transcription is unavailable. Try again or type the text.',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'Audio is sent securely for live server transcription. The text remains editable.'},
-  ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику голосом',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',label:'Распознанный текст',recording:'Идёт запись — говорите',connecting:'Подключение живой расшифровки…',error:'Живая расшифровка недоступна. Попробуйте ещё раз или введите текст.',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Аудио защищённо передаётся на сервер для живой расшифровки. Текст можно редактировать.'},
-  sr:{title:'Opišite svoju situaciju',assistantTitle:'Postavite pitanje AI asistentu glasom',subtitle:'Govorite prirodno. Tekst se pojavljuje dok govorite i može da se uređuje.',label:'Prepoznati tekst',recording:'Snimanje je u toku — govorite',connecting:'Povezivanje živog prepoznavanja…',error:'Živo prepoznavanje nije dostupno. Pokušajte ponovo ili unesite tekst.',paused:'Snimanje je zaustavljeno',stop:'Zaustavi snimanje',continue:'Nastavi diktiranje',apply:'Prenesi tekst',close:'Zatvori',discard:'Zatvoriti i obrisati nesačuvani tekst?',footnote:'Audio se bezbedno šalje serveru na živo prepoznavanje. Tekst može da se uređuje.'},
-  de:{title:'Beschreiben Sie Ihre Situation',assistantTitle:'Stellen Sie dem KI-Assistenten eine Sprachfrage',subtitle:'Sprechen Sie natürlich. Der Text erscheint während des Sprechens und bleibt bearbeitbar.',label:'Erkannter Text',recording:'Aufnahme läuft — bitte sprechen',connecting:'Live-Transkription wird verbunden…',error:'Live-Transkription ist nicht verfügbar. Versuchen Sie es erneut oder geben Sie den Text ein.',paused:'Aufnahme angehalten',stop:'Aufnahme stoppen',continue:'Diktat fortsetzen',apply:'Text übernehmen',close:'Schließen',discard:'Schließen und ungespeicherten Text verwerfen?',footnote:'Audio wird sicher zur Live-Transkription übertragen. Der Text bleibt bearbeitbar.'},
-  fr:{title:'Décrivez votre situation',assistantTitle:'Posez votre question à l’assistant IA par la voix',subtitle:'Parlez naturellement. Le texte apparaît pendant que vous parlez et reste modifiable.',label:'Texte reconnu',recording:'Enregistrement en cours — parlez',connecting:'Connexion de la transcription en direct…',error:'La transcription en direct est indisponible. Réessayez ou saisissez le texte.',paused:'Enregistrement arrêté',stop:'Arrêter l’enregistrement',continue:'Continuer la dictée',apply:'Utiliser ce texte',close:'Fermer',discard:'Fermer et supprimer le texte non enregistré ?',footnote:'L’audio est transmis de manière sécurisée pour une transcription en direct. Le texte reste modifiable.'},
-  es:{title:'Describa su situación',assistantTitle:'Haga su pregunta al asistente de IA por voz',subtitle:'Hable con naturalidad. El texto aparece mientras habla y se puede editar.',label:'Texto reconocido',recording:'Grabación en curso — hable',connecting:'Conectando la transcripción en directo…',error:'La transcripción en directo no está disponible. Inténtelo de nuevo o escriba el texto.',paused:'Grabación detenida',stop:'Detener grabación',continue:'Continuar dictado',apply:'Usar este texto',close:'Cerrar',discard:'¿Cerrar y descartar el texto no guardado?',footnote:'El audio se envía de forma segura para la transcripción en directo. El texto se puede editar.'}};
+  en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant by voice',subtitle:'Speak naturally. The text appears as you speak and remains editable.',fallbackSubtitle:'Live transcription is temporarily unavailable. You can keep recording; the text will appear after you stop.',label:'Recognized text',recording:'Recording — speak now',connecting:'Connecting live transcription…',error:'Live transcription is unavailable. Try again or type the text.',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'Audio is sent securely for live server transcription. The text remains editable.'},
+  ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику голосом',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',fallbackSubtitle:'Живое распознавание временно недоступно. Можно продолжить запись; текст появится после остановки.',label:'Распознанный текст',recording:'Идёт запись — говорите',connecting:'Подключение живой расшифровки…',error:'Живая расшифровка недоступна. Попробуйте ещё раз или введите текст.',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Аудио защищённо передаётся на сервер для живой расшифровки. Текст можно редактировать.'},
+  sr:{title:'Opišite svoju situaciju',assistantTitle:'Postavite pitanje AI asistentu glasom',subtitle:'Govorite prirodno. Tekst se pojavljuje dok govorite i može da se uređuje.',fallbackSubtitle:'Živo prepoznavanje je trenutno nedostupno. Možete nastaviti snimanje; tekst će se pojaviti nakon zaustavljanja.',label:'Prepoznati tekst',recording:'Snimanje je u toku — govorite',connecting:'Povezivanje živog prepoznavanja…',error:'Živo prepoznavanje nije dostupno. Pokušajte ponovo ili unesite tekst.',paused:'Snimanje je zaustavljeno',stop:'Zaustavi snimanje',continue:'Nastavi diktiranje',apply:'Prenesi tekst',close:'Zatvori',discard:'Zatvoriti i obrisati nesačuvani tekst?',footnote:'Audio se bezbedno šalje serveru na živo prepoznavanje. Tekst može da se uređuje.'},
+  de:{title:'Beschreiben Sie Ihre Situation',assistantTitle:'Stellen Sie dem KI-Assistenten eine Sprachfrage',subtitle:'Sprechen Sie natürlich. Der Text erscheint während des Sprechens und bleibt bearbeitbar.',fallbackSubtitle:'Die Live-Erkennung ist vorübergehend nicht verfügbar. Sie können weiter aufnehmen; der Text erscheint nach dem Stoppen.',label:'Erkannter Text',recording:'Aufnahme läuft — bitte sprechen',connecting:'Live-Transkription wird verbunden…',error:'Live-Transkription ist nicht verfügbar. Versuchen Sie es erneut oder geben Sie den Text ein.',paused:'Aufnahme angehalten',stop:'Aufnahme stoppen',continue:'Diktat fortsetzen',apply:'Text übernehmen',close:'Schließen',discard:'Schließen und ungespeicherten Text verwerfen?',footnote:'Audio wird sicher zur Live-Transkription übertragen. Der Text bleibt bearbeitbar.'},
+  fr:{title:'Décrivez votre situation',assistantTitle:'Posez votre question à l’assistant IA par la voix',subtitle:'Parlez naturellement. Le texte apparaît pendant que vous parlez et reste modifiable.',fallbackSubtitle:'La transcription en direct est temporairement indisponible. Vous pouvez continuer l’enregistrement ; le texte apparaîtra après l’arrêt.',label:'Texte reconnu',recording:'Enregistrement en cours — parlez',connecting:'Connexion de la transcription en direct…',error:'La transcription en direct est indisponible. Réessayez ou saisissez le texte.',paused:'Enregistrement arrêté',stop:'Arrêter l’enregistrement',continue:'Continuer la dictée',apply:'Utiliser ce texte',close:'Fermer',discard:'Fermer et supprimer le texte non enregistré ?',footnote:'L’audio est transmis de manière sécurisée pour une transcription en direct. Le texte reste modifiable.'},
+  es:{title:'Describa su situación',assistantTitle:'Haga su pregunta al asistente de IA por voz',subtitle:'Hable con naturalidad. El texto aparece mientras habla y se puede editar.',fallbackSubtitle:'El reconocimiento en directo no está disponible temporalmente. Puede seguir grabando; el texto aparecerá después de detener la grabación.',label:'Texto reconocido',recording:'Grabación en curso — hable',connecting:'Conectando la transcripción en directo…',error:'La transcripción en directo no está disponible. Inténtelo de nuevo o escriba el texto.',paused:'Grabación detenida',stop:'Detener grabación',continue:'Continuar dictado',apply:'Usar este texto',close:'Cerrar',discard:'¿Cerrar y descartar el texto no guardado?',footnote:'El audio se envía de forma segura para la transcripción en directo. El texto se puede editar.'}};
 voiceCaptureCopy.en.fallback='Live recognition is unavailable in this browser. The recording will be transcribed after you stop.';
 voiceCaptureCopy.ru.fallback='Живое распознавание недоступно в этом браузере. После остановки запись будет расшифрована сервером.';
 voiceCaptureCopy.sr.fallback='Živo prepoznavanje nije dostupno u ovom pregledaču. Nakon zaustavljanja snimak će biti transkribovan.';
@@ -810,7 +810,8 @@ function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n'
 function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
 function voiceCaptureSetTimer(seconds){if(voiceCaptureTimer)voiceCaptureTimer.textContent=ctrVoiceElapsed(seconds)}
 function voiceCaptureSetDraft(value){voiceCaptureDraft=normalizeVoiceText(value).slice(0,8000);if(voiceCaptureText){voiceCaptureText.value=voiceCaptureDraft;voiceCaptureText.dispatchEvent(new Event('input',{bubbles:true}))}}
-function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCaptureModal)return;voiceCaptureStop.disabled=!recording;voiceCaptureContinue.disabled=recording||busy;voiceCaptureApply.disabled=recording||busy||!voiceCaptureDraft.trim()}
+function voiceCaptureSetConsentDisabled(disabled){const input=voiceCaptureSourceConsent&&voiceCaptureSourceConsent.querySelector('input[type="checkbox"]');if(input)input.disabled=Boolean(disabled)}
+function voiceCaptureUpdateControls(recording=false,busy=false){if(!voiceCaptureModal)return;voiceCaptureStop.disabled=!recording;voiceCaptureContinue.disabled=recording||busy;voiceCaptureApply.disabled=recording||busy||!voiceCaptureDraft.trim();voiceCaptureSetConsentDisabled(Boolean(recording||busy))}
 function voiceCaptureMoveSources(mode){
   const description=mode==='description';
   voiceCaptureSourcePanel=document.getElementById(description?'descriptionVoicePanel':'aiVoicePanel');
@@ -886,6 +887,7 @@ function ctrRealtimeVoiceSetButton(recording){
   if(text)text.textContent=copy[key]||voiceCaptureCopyFor(recording?'stop':'title');
 }
 function ctrRealtimeVoiceCloseSocket(){
+  const closedMode=ctrRealtimeVoice.mode;
   if(ctrRealtimeVoice.closeTimer){window.clearTimeout(ctrRealtimeVoice.closeTimer);ctrRealtimeVoice.closeTimer=null}
   if(ctrRealtimeVoice.timeoutTimer){window.clearTimeout(ctrRealtimeVoice.timeoutTimer);ctrRealtimeVoice.timeoutTimer=null}
   if(ctrRealtimeVoice.processor){ctrRealtimeVoice.processor.onaudioprocess=null;try{ctrRealtimeVoice.processor.disconnect()}catch(_e){}ctrRealtimeVoice.processor=null}
@@ -895,6 +897,8 @@ function ctrRealtimeVoiceCloseSocket(){
   if(ctrRealtimeVoice.stream){ctrRealtimeVoice.stream.getTracks().forEach(track=>track.stop());ctrRealtimeVoice.stream=null}
   if(ctrRealtimeVoice.socket){try{ctrRealtimeVoice.socket.close()}catch(_e){}ctrRealtimeVoice.socket=null}
   ctrRealtimeVoice.ready=false;ctrRealtimeVoice.starting=false;ctrRealtimeVoice.stopping=false;ctrRealtimeVoice.startedAt=0;
+  if(closedMode==='description'&&typeof descriptionVoiceBusy!=='undefined'){descriptionVoiceBusy=false;if(typeof descriptionVoiceElapsedTimer!=='undefined'&&descriptionVoiceElapsedTimer){window.clearInterval(descriptionVoiceElapsedTimer);descriptionVoiceElapsedTimer=null}if(typeof descriptionVoiceStartedAt!=='undefined')descriptionVoiceStartedAt=0;updateDescriptionVoiceButton()}
+  if(closedMode==='assistant'&&typeof aiVoiceBusy!=='undefined'){aiVoiceBusy=false;if(typeof aiVoiceElapsedTimer!=='undefined'&&aiVoiceElapsedTimer){window.clearInterval(aiVoiceElapsedTimer);aiVoiceElapsedTimer=null}if(typeof aiVoiceStartedAt!=='undefined')aiVoiceStartedAt=0;setAiVoiceButtonState(false);updateAiControls()}
   ctrRealtimeVoiceSetButton(false);voiceCaptureUpdateControls(false,false);
 }
 function ctrRealtimeVoiceFailBeforeReady(resolve){ctrRealtimeVoiceCloseSocket();resolve(false)}
@@ -925,12 +929,12 @@ function ctrRealtimeVoiceInstallAudio(){
   if(context.state==='suspended')context.resume().catch(()=>{});
 }
 function ctrRealtimeVoiceHandleEvent(event){
-  let message;try{message=JSON.parse(String(event.data||''))}catch(_e){return}
-  if(!message||typeof message!=='object')return;
+  let message;try{message=JSON.parse(String(event.data||''))}catch(_e){return null}
+  if(!message||typeof message!=='object')return null;
   if(message.type==='ready'){
     try{ctrRealtimeVoiceInstallAudio()}catch(_error){ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('error'),'error');ctrRealtimeVoiceStop(false);return}
     ctrRealtimeVoice.ready=true;ctrRealtimeVoice.startedAt=Date.now();ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('recording'),'recording');ctrRealtimeVoiceSetButton(true);voiceCaptureUpdateControls(true,true);
-    return;
+    return message;
   }
   if(message.type==='delta'||message.type==='completed'){
     const id=String(message.item_id||`item-${ctrRealtimeVoice.order.length+1}`);if(!ctrRealtimeVoice.items.has(id))ctrRealtimeVoice.order.push(id);
@@ -938,9 +942,10 @@ function ctrRealtimeVoiceHandleEvent(event){
     ctrRealtimeVoice.items.set(id,message.type==='completed'?text:`${ctrRealtimeVoice.items.get(id)||''}${text}`);
     ctrRealtimeVoiceRender();
     if(message.type==='completed'&&ctrRealtimeVoice.stopping){ctrRealtimeVoice.closeTimer=window.setTimeout(()=>ctrRealtimeVoiceCloseSocket(),350)}
-    return;
+    return message;
   }
-  if(message.type==='error'){ctrRealtimeVoiceSetStatus(String(message.message||voiceCaptureCopyFor('error')),'error');ctrRealtimeVoiceStop(false)}
+  if(message.type==='error'){ctrRealtimeVoiceSetStatus(String(message.message||voiceCaptureCopyFor('error')),'error');return message}
+  return message;
 }
 async function ctrStartRealtimeVoice({mode,initialText,token}){
   if(ctrRealtimeVoice.socket||ctrRealtimeVoice.starting)return true;
@@ -954,7 +959,7 @@ async function ctrStartRealtimeVoice({mode,initialText,token}){
     const protocol=location.protocol==='https:'?'wss':'ws';
     ctrRealtimeVoice.socket=new WebSocket(`${protocol}://${location.host}/ws/voice/transcribe`);
     ctrRealtimeVoice.socket.onopen=()=>{try{ctrRealtimeVoice.socket.send(JSON.stringify({type:'start',language:document.documentElement.lang||'en',purpose:mode,voice_consent:true,turnstile_token:token||''}))}catch(_e){ctrRealtimeVoiceFailBeforeReady(resolveStart)}};
-    ctrRealtimeVoice.socket.onmessage=event=>{const wasReady=ctrRealtimeVoice.ready;ctrRealtimeVoiceHandleEvent(event);if(!wasReady&&ctrRealtimeVoice.ready){ctrRealtimeVoice.starting=false;resolveStart(true)}};
+    ctrRealtimeVoice.socket.onmessage=event=>{const wasReady=ctrRealtimeVoice.ready;const message=ctrRealtimeVoiceHandleEvent(event);if(!wasReady&&ctrRealtimeVoice.ready){ctrRealtimeVoice.starting=false;resolveStart(true)}else if(!wasReady&&message&&message.type==='error'&&ctrRealtimeVoice.starting){ctrRealtimeVoiceFailBeforeReady(resolveStart)}};
     ctrRealtimeVoice.socket.onerror=()=>{if(!ctrRealtimeVoice.ready){ctrRealtimeVoiceFailBeforeReady(resolveStart)}else{ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('error'),'error');ctrRealtimeVoiceStop(false)}};
     ctrRealtimeVoice.socket.onclose=()=>{if(!ctrRealtimeVoice.ready&&ctrRealtimeVoice.starting)ctrRealtimeVoiceFailBeforeReady(resolveStart);else if(ctrRealtimeVoice.ready&&!ctrRealtimeVoice.stopping)ctrRealtimeVoiceSetStatus(voiceCaptureCopyFor('error'),'error')};
     ctrRealtimeVoice.timeoutTimer=window.setTimeout(()=>{if(!ctrRealtimeVoice.ready){ctrRealtimeVoiceFailBeforeReady(resolveStart)}},12000);
@@ -1038,7 +1043,7 @@ function releaseDescriptionVoiceStream(){if(descriptionVoiceTimer){window.clearT
 function stopDescriptionVoiceRecording(discard=false){
   if(ctrRealtimeVoice.mode==='description'&&ctrRealtimeVoice.socket){ctrRealtimeVoiceStop(discard);return}
   descriptionVoiceDiscard=descriptionVoiceDiscard||discard;stopDescriptionLiveRecognition(discard);
-  if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){descriptionVoiceRecorder.stop();return}
+  if(descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording'){if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);descriptionVoiceRecorder.stop();return}
   releaseDescriptionVoiceStream();descriptionVoiceChunks=[];descriptionVoiceBusy=false;if(discard)hideDescriptionLiveText();updateDescriptionVoiceButton();
 }
 async function uploadDescriptionVoiceLegacy(blob,baseText){
@@ -1085,6 +1090,7 @@ async function startDescriptionVoiceRecordingLegacy(){
       if(!discard&&blob.size)await uploadDescriptionVoice(blob,descriptionVoiceBaseText);else if(discard)hideDescriptionLiveText();descriptionVoiceBusy=false;updateDescriptionVoiceButton();
     },{once:true});
     descriptionVoiceRecorder.start(500);descriptionVoiceStartedAt=Date.now();updateDescriptionRecordingClock();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();
+    if(voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSubtitle.textContent=voiceCaptureCopyFor('fallbackSubtitle');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback');voiceCaptureSetStatus(voiceCaptureCopyFor('fallback'),'recording');voiceCaptureUpdateControls(true,true)}
     descriptionVoiceTimer=window.setTimeout(()=>{setDescriptionVoiceStatus('description_voice_too_long','required');stopDescriptionVoiceRecording(false)},descriptionVoiceMaxSeconds*1000);
   }catch(_error){stopDescriptionLiveRecognition(true);releaseDescriptionVoiceStream();descriptionVoiceBusy=false;hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_permission','error');updateDescriptionVoiceButton()}
 }
@@ -1110,14 +1116,17 @@ async function uploadDescriptionVoice(blob,baseText){
 }
 async function startDescriptionVoiceRecording(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
-  openVoiceCaptureModal('description',descriptionField.value);
+  const continuing=voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden;
+  const startText=continuing?voiceCaptureDraft:descriptionField.value;
+  openVoiceCaptureModal('description',startText);
   voiceCaptureStopAction=()=>stopDescriptionVoiceRecording(false);
   voiceCaptureContinueAction=()=>startDescriptionVoiceRecording();
   descriptionVoicePanel.hidden=false;descriptionVoicePanel.classList.add('needs-attention');window.setTimeout(()=>descriptionVoicePanel.classList.remove('needs-attention'),1800);ensureDescriptionVoiceTurnstile();
   if(!descriptionVoiceConsent||!descriptionVoiceConsent.checked){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_consent_required','required');descriptionVoiceConsent&&descriptionVoiceConsent.focus();return}
   if(!descriptionVoiceVerificationSatisfied()){descriptionVoiceStartPending=true;setDescriptionVoiceStatus('description_voice_verification_required','required');ensureDescriptionVoiceTurnstile();return}
   descriptionVoiceStartPending=false;
-  descriptionVoiceBaseText=descriptionField.value;voiceCaptureSetDraft(descriptionVoiceBaseText);descriptionVoiceBusy=true;
+  const currentDescriptionText=voiceCaptureMode==='description'&&!voiceCaptureModal.hidden?voiceCaptureDraft:descriptionField.value;
+  descriptionVoiceBaseText=currentDescriptionText;voiceCaptureSetDraft(descriptionVoiceBaseText);descriptionVoiceBusy=true;
   const liveStarted=await ctrStartRealtimeVoice({mode:'description',initialText:descriptionVoiceBaseText,token:descriptionVoiceToken()});
   if(liveStarted){descriptionVoiceBusy=false;descriptionVoiceStartedAt=Date.now();descriptionVoiceElapsedTimer=window.setInterval(updateDescriptionRecordingClock,1000);updateDescriptionVoiceButton();return}
   descriptionVoiceBusy=false;
@@ -1596,6 +1605,7 @@ if(aiChatRoot){
     aiVoiceDiscard=aiVoiceDiscard||discard;
     stopAiLiveRecognition(discard);
     if(aiVoiceRecorder&&aiVoiceRecorder.state==='recording'){
+      if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden)voiceCaptureUpdateControls(false,true);
       aiVoiceRecorder.stop();
     }else{
       releaseVoiceStream();
@@ -1714,6 +1724,7 @@ if(aiChatRoot){
       updateAiRecordingClock();
       aiVoiceElapsedTimer=window.setInterval(updateAiRecordingClock,1000);
       updateAiControls();
+      if(voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden){voiceCaptureSubtitle.textContent=voiceCaptureCopyFor('fallbackSubtitle');voiceCaptureFootnote.textContent=voiceCaptureCopyFor('fallback');voiceCaptureSetStatus(voiceCaptureCopyFor('fallback'),'recording');voiceCaptureUpdateControls(true,true)}
       aiVoiceTimer=window.setTimeout(()=>{
         setVoiceStatus('ai_voice_too_long');
         stopVoiceRecording(false);
@@ -1888,4 +1899,3 @@ if(aiChatRoot){
 </script>
 </body>
 </html>
-

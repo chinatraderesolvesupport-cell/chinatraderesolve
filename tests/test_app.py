@@ -5755,7 +5755,7 @@ def _admin_case_context(case_reference):
     dashboard = client.get("/admin")
     assert dashboard.status_code == 200
     match = re.search(
-        r'href="/admin/case/(\\d+)">' + re.escape(case_reference),
+        r'href="/admin/case/(\d+)">' + re.escape(case_reference),
         dashboard.text,
     )
     csrf_match = re.search(r'name="csrf_token" value="([^"]+)"', dashboard.text)

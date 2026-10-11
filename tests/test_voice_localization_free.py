@@ -70,6 +70,23 @@ def test_voice_recording_and_email_hint_are_localized():
     assert "message_copy.email_hint" in public_status
 
 
+def test_description_minimum_guidance_is_visible_and_localized():
+    translations = json.loads(
+        (ROOT / "app" / "static" / "translations-v2.json").read_text(encoding="utf-8")
+    )
+    expected = {"en", "ru", "sr", "de", "fr", "es"}
+    for language in expected:
+        assert translations[language]["description_minimum"]
+        assert "{count}" in translations[language]["description_remaining"]
+        assert translations[language]["description_minimum_met"]
+
+    source = (ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    assert 'id="descriptionGuidance"' in source
+    assert 'id="descriptionRequirement"' in source
+    assert "descriptionRequirement.textContent=applicationCopy(key).replace('{count}',String(remaining))" in source
+    assert "descriptionGuidance.classList.toggle('is-ready',ready)" in source
+
+
 def test_legacy_analysis_display_localization_does_not_mutate_report():
     from app.document_analysis import localize_report_for_display
 

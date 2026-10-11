@@ -1,4 +1,4 @@
-# Установка ChinaTradeResolve v3.7.59 на Render
+# Установка ChinaTradeResolve v3.7.60 на Render
 
 ## 1. Сделайте резервную копию
 
@@ -6,9 +6,9 @@
 
 ## 2. Замените файлы в GitHub
 
-Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.59.zip`.
+Распакуйте архив `ChinaTradeResolve_Document_AI_v3.7.60.zip`.
 
-В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.59.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
+В GitHub загрузите **содержимое архива** `ChinaTradeResolve_Document_AI_v3.7.60.zip`. Файлы `app`, `tests`, `requirements.txt`, `Dockerfile` и остальные должны находиться в корне репозитория, как раньше.
 
 Не загружайте `.env`, пароли, ключ OpenAI, seed-фразы и приватные ключи.
 

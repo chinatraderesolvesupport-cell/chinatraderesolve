@@ -809,7 +809,8 @@ let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCap
 function voiceCaptureCopyFor(key){const lang=document.documentElement.lang||'en';return(voiceCaptureCopy[lang]&&voiceCaptureCopy[lang][key])||voiceCaptureCopy.en[key]||''}
 function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n').replace(/\\n/g,'\n').replace(/\r/g,'\n')}
 function capitalizeVoiceSegment(value){const text=normalizeVoiceText(value).trim();return text.replace(/^(\s*)(\p{L})/u,(match,space,letter)=>space+letter.toLocaleUpperCase())}
-function joinVoiceTranscript(baseText,transcript){const base=normalizeVoiceText(baseText).trim();const text=normalizeVoiceText(transcript).trim();if(!text)return base;return[base,base?capitalizeVoiceSegment(text):text].filter(Boolean).join('\n\n')}
+function formatFinalVoiceText(value){const text=normalizeVoiceText(value).trim().replace(/[ \t]+([,.;!?])/g,'$1').replace(/([,.;!?])(?=\S)/g,'$1 ');if(!text)return '';const capitalized=capitalizeVoiceSegment(text);return /[.!?…]$/.test(capitalized)?capitalized:capitalized+'.'}
+function joinVoiceTranscript(baseText,formatFinalVoiceText(transcript)){const base=normalizeVoiceText(baseText).trim();const text=normalizeVoiceText(transcript).trim();if(!text)return base;return[base,base?capitalizeVoiceSegment(text):text].filter(Boolean).join('\n\n')}
 function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
 function voiceCaptureSetTimer(seconds){if(voiceCaptureTimer)voiceCaptureTimer.textContent=ctrVoiceElapsed(seconds)}
 function voiceCaptureElapsedNow(){return voiceCaptureElapsedBeforeSegment+(voiceCaptureSegmentStartedAt?((Date.now()-voiceCaptureSegmentStartedAt)/1000):0)}
@@ -948,7 +949,7 @@ function ctrRealtimeVoiceHandleEvent(event){
   }
   if(message.type==='delta'||message.type==='completed'){
     const id=String(message.item_id||`item-${ctrRealtimeVoice.order.length+1}`);if(!ctrRealtimeVoice.items.has(id))ctrRealtimeVoice.order.push(id);
-    const text=normalizeVoiceText(String(message.text||''));
+    const text=message.type==='completed'?formatFinalVoiceText(String(message.text||'')):normalizeVoiceText(String(message.text||''));
     ctrRealtimeVoice.items.set(id,message.type==='completed'?text:`${ctrRealtimeVoice.items.get(id)||''}${text}`);
     ctrRealtimeVoiceRender();
     if(message.type==='completed'&&ctrRealtimeVoice.stopping){ctrRealtimeVoice.closeTimer=window.setTimeout(()=>ctrRealtimeVoiceCloseSocket(),350)}
@@ -1096,7 +1097,7 @@ async function uploadDescriptionVoiceLegacy(blob,baseText){
     if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
     markDescriptionVoiceTurnstileSessionVerified();
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-    const combined=joinVoiceTranscript(baseText,transcript);
+    const combined=joinVoiceTranscript(baseText,formatFinalVoiceText(transcript));
     descriptionField.value=combined.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));
     hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');descriptionField.focus();
   }catch(error){descriptionVoiceStatus.textContent=error.name==='AbortError'?descriptionVoiceCopy('voice_timeout'):(error.message||descriptionVoiceCopy('description_voice_error'));descriptionVoiceStatus.dataset.state='error'}
@@ -1144,7 +1145,7 @@ async function uploadDescriptionVoice(blob,baseText){
     if(!response.ok){if(response.status===400){descriptionVoiceTurnstileSessionVerified=false;descriptionVoiceStartPending=true;if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId)}catch(_e){}}ensureDescriptionVoiceTurnstile()}throw new Error(typeof result.detail==='string'?result.detail:descriptionVoiceCopy('description_voice_error'))}
     markDescriptionVoiceTurnstileSessionVerified();
     const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-    const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,transcript));hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');voiceCaptureUpdateControls(false,false);
+    const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,formatFinalVoiceText(transcript)));hideDescriptionLiveText();setDescriptionVoiceStatus('description_voice_review');voiceCaptureUpdateControls(false,false);
   }catch(error){setDescriptionVoiceStatus(error.name==='AbortError'?'voice_timeout':'description_voice_error','error')}
   finally{window.clearTimeout(timeoutId);resetDescriptionVoiceTurnstile()}
 }
@@ -1726,7 +1727,7 @@ if(aiChatRoot){
       markAiTurnstileSessionVerified();
       const transcript=String(result.transcript||'').trim();
       if(!transcript)throw new Error('empty transcript');
-      const combined=joinVoiceTranscript(baseText,transcript);
+      const combined=joinVoiceTranscript(baseText,formatFinalVoiceText(transcript));
       aiChatInput.value=combined.slice(0,1500);
       aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));
       aiVoiceBaseText='';
@@ -1828,7 +1829,7 @@ if(aiChatRoot){
       const response=await fetch('/api/assistant/transcribe',{method:'POST',credentials:'same-origin',body:data,signal:controller.signal});const result=await response.json().catch(()=>({}));
       if(!response.ok){if(response.status===400){aiTurnstileSessionVerified=false;aiVoiceStartPending=true;showAiTurnstileRequired()}const detail=typeof result.detail==='string'?result.detail:aiCopy('ai_voice_error');setVoiceStatus('ai_voice_error');if(aiVoiceStatus)aiVoiceStatus.textContent=detail||aiCopy('ai_voice_error');return}
       markAiTurnstileSessionVerified();const transcript=String(result.transcript||'').trim();if(!transcript)throw new Error('empty transcript');
-      const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,transcript));setVoiceStatus('ai_voice_review');voiceCaptureUpdateControls(false,false);
+      const normalizedBase=normalizeVoiceText(baseText).trim();voiceCaptureSetDraft(joinVoiceTranscript(normalizedBase,formatFinalVoiceText(transcript)));setVoiceStatus('ai_voice_review');voiceCaptureUpdateControls(false,false);
     }catch(error){setVoiceStatus(error.name==='AbortError'?'voice_timeout':'ai_voice_error')}
     finally{window.clearTimeout(timeoutId);resetAiTurnstile()}
   }

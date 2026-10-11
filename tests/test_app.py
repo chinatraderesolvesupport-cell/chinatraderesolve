@@ -5746,7 +5746,7 @@ def _create_messaging_case(email, preferred_language="Russian"):
             full_name="Synthetic Messaging Client",
         ),
     )
-    assert response.status_code == 200, response.text
+    assert response.status_code == 201, response.text
     return response.json()
 
 
@@ -5785,7 +5785,7 @@ def test_case_messaging_keeps_internal_notes_private_and_adds_admin_history():
     status = client.post(
         f"/admin/case/{case_id}/status",
         data={
-            "status": "needs_information",
+            "status": "pilot_candidate",
             "note": "INTERNAL_ONLY_SYNTHETIC_NOTE",
             "csrf_token": csrf,
         },
@@ -5863,7 +5863,7 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
     assert csrf and message_key
 
     denied = client.post(
-        f"/case/{created['case_reference']}/{created['public_token']}/messages",
+        created["status_url"] + "/messages",
         data={
             "message": "should not be accepted",
             "message_key": message_key.group(1),
@@ -5876,7 +5876,7 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
 
     reply = "Ответ синтетического клиента с дополнительными сведениями."
     accepted = client.post(
-        f"/case/{created['case_reference']}/{created['public_token']}/messages",
+        created["status_url"] + "/messages",
         data={
             "message": reply,
             "message_key": message_key.group(1),
@@ -5899,7 +5899,7 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
     assert reply not in second_page.text
 
     duplicate = client.post(
-        f"/case/{created['case_reference']}/{created['public_token']}/messages",
+        created["status_url"] + "/messages",
         data={
             "message": reply,
             "message_key": message_key.group(1),

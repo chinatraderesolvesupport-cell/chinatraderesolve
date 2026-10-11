@@ -196,6 +196,7 @@ class Settings:
     max_daily_ai_assistant_requests: int = max_daily_ai_assistant_requests_per_session
     enable_voice_input: bool = _env_bool("ENABLE_VOICE_INPUT", True)
     openai_transcription_model: str | None = os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe")
+    openai_realtime_transcription_model: str | None = os.getenv("OPENAI_REALTIME_TRANSCRIPTION_MODEL", "gpt-live-transcribe")
     voice_max_seconds: int = _env_int("VOICE_MAX_SECONDS", 120, minimum=15, maximum=300)
     # Assistant dictation and application-description dictation are counted in
     # separate per-browser and site-wide buckets.  The legacy variable is used

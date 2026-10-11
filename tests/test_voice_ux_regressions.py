@@ -24,3 +24,9 @@ def test_ai_uses_the_large_composer_modal_for_manual_input():
     assert "voiceCaptureApplyAction=()=>{const text=voiceCaptureDraft.slice(0,1500).trim();" in SOURCE
     assert "assistantLabel:'Вопрос для ИИ-помощника'" in SOURCE
     assert "assistantApply:'Отправить ИИ'" in SOURCE
+
+
+def test_ai_consent_in_large_composer_does_not_leave_recording_pending():
+    assert "function requestAiVoiceStart()" in SOURCE
+    assert "const modalOpen=voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden" in SOURCE
+    assert "if(modalOpen&&!voiceCaptureRecordingStarted)requestAiVoiceStart()" in SOURCE

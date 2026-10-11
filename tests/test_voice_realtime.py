@@ -93,7 +93,10 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
         async def send(message: dict) -> None:
             outgoing.append(message)
 
+        captured: dict[str, object] = {}
+
         def connect_factory(*_args: object, **_kwargs: object) -> FakeUpstream:
+            captured.update(_kwargs)
             return upstream
 
         await relay_realtime_transcription(
@@ -104,6 +107,7 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
             connect_factory=connect_factory,
             max_seconds=15,
         )
+        assert "OpenAI-Beta" not in captured["additional_headers"]
         return upstream, outgoing
 
     upstream, outgoing = asyncio.run(scenario())

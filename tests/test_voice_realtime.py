@@ -51,12 +51,13 @@ class FakeUpstream:
 
     async def send(self, value: str) -> None:
         self.sent.append(json.loads(value))
-        if self.sent[-1]["type"] == "input_audio_buffer.commit":
+        if self.sent[-1]["type"] == "input_audio_buffer.append":
             await self.events.put(json.dumps({
                 "type": "conversation.item.input_audio_transcription.delta",
                 "item_id": "item-1",
                 "delta": "Привет",
             }))
+        if self.sent[-1]["type"] == "input_audio_buffer.commit":
             await self.events.put(json.dumps({
                 "type": "conversation.item.input_audio_transcription.completed",
                 "item_id": "item-1",
@@ -97,6 +98,7 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
 
         def connect_factory(*_args: object, **_kwargs: object) -> FakeUpstream:
             captured.update(_kwargs)
+            captured["url"] = _args[0]
             return upstream
 
         await relay_realtime_transcription(
@@ -108,6 +110,7 @@ def test_relay_forwards_audio_and_commit_and_maps_interim_results() -> None:
             max_seconds=15,
         )
         assert "OpenAI-Beta" not in captured["additional_headers"]
+        assert captured["url"] == "wss://api.openai.com/v1/realtime"
         return upstream, outgoing
 
     upstream, outgoing = asyncio.run(scenario())

@@ -119,8 +119,12 @@ async def relay_realtime_transcription(
 
     stage = "connect"
     try:
+        # Transcription sessions select the model in session.update.  Passing the
+        # transcription model as the query parameter of the generic realtime
+        # endpoint makes the provider validate it as a conversation model and
+        # close the socket with invalid_model before session.updated.
         async with connect_factory(
-            f"{REALTIME_URL}?model={model}",
+            REALTIME_URL,
             additional_headers=headers,
             open_timeout=10,
             ping_interval=20,

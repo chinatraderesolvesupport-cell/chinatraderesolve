@@ -810,7 +810,7 @@ function voiceCaptureCopyFor(key){const lang=document.documentElement.lang||'en'
 function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n').replace(/\\n/g,'\n').replace(/\r/g,'\n')}
 function capitalizeVoiceSegment(value){const text=normalizeVoiceText(value).trim();return text.replace(/^(\s*)(\p{L})/u,(match,space,letter)=>space+letter.toLocaleUpperCase())}
 function formatFinalVoiceText(value){const text=normalizeVoiceText(value).trim().replace(/[ \t]+([,.;!?])/g,'$1').replace(/([,.;!?])(?=\S)/g,'$1 ');if(!text)return '';const capitalized=capitalizeVoiceSegment(text);return /[.!?…]$/.test(capitalized)?capitalized:capitalized+'.'}
-function joinVoiceTranscript(baseText,formatFinalVoiceText(transcript)){const base=normalizeVoiceText(baseText).trim();const text=normalizeVoiceText(transcript).trim();if(!text)return base;return[base,base?capitalizeVoiceSegment(text):text].filter(Boolean).join('\n\n')}
+function joinVoiceTranscript(baseText,transcript){const base=normalizeVoiceText(baseText).trim();const text=normalizeVoiceText(transcript).trim();if(!text)return base;return[base,base?capitalizeVoiceSegment(text):text].filter(Boolean).join('\n\n')}
 function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
 function voiceCaptureSetTimer(seconds){if(voiceCaptureTimer)voiceCaptureTimer.textContent=ctrVoiceElapsed(seconds)}
 function voiceCaptureElapsedNow(){return voiceCaptureElapsedBeforeSegment+(voiceCaptureSegmentStartedAt?((Date.now()-voiceCaptureSegmentStartedAt)/1000):0)}

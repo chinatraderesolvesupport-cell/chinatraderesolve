@@ -43,7 +43,7 @@ TRANSCRIPTION_PROMPTS: dict[str, str] = {
 
 def transcription_prompt(language_code: str) -> str:
     code = language_code if language_code in LANGUAGE_CODES else "en"
-    return f"{TRANSCRIPTION_PROMPTS.get(code, TRANSCRIPTION_PROMPTS["en"])} {TRANSCRIPTION_STYLE_INSTRUCTIONS.get(code, TRANSCRIPTION_STYLE_INSTRUCTIONS["en"])}"
+    return f"{TRANSCRIPTION_PROMPTS.get(code, TRANSCRIPTION_PROMPTS['en'])} {TRANSCRIPTION_STYLE_INSTRUCTIONS.get(code, TRANSCRIPTION_STYLE_INSTRUCTIONS['en'])}"
 
 
 class VoiceConfigurationError(RuntimeError):

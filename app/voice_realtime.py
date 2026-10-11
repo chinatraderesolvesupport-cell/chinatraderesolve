@@ -16,7 +16,7 @@ from .voice_transcription import LANGUAGE_CODES, TRANSCRIPTION_PROMPTS
 
 logger = logging.getLogger("chinatraderesolve.voice_realtime")
 
-REALTIME_URL = "wss://api.openai.com/v1/realtime"
+REALTIME_URL = "wss://api.openai.com/v1/realtime?intent=transcription"
 REALTIME_AUDIO_RATE = 24_000
 MAX_AUDIO_CHUNK_BYTES = 96 * 1024
 MAX_AUDIO_BYTES = REALTIME_AUDIO_RATE * 2 * 300
@@ -122,10 +122,10 @@ async def relay_realtime_transcription(
     session_started_at = time.monotonic()
     interim_delta_count = 0
     try:
-        # Transcription sessions select the model in session.update.  Passing the
-        # transcription model as the query parameter of the generic realtime
-        # endpoint makes the provider validate it as a conversation model and
-        # close the socket with invalid_model before session.updated.
+        # Transcription sessions select the model in session.update.  The
+        # transcription intent is required on the generic realtime endpoint;
+        # passing the model as a query parameter instead makes the provider
+        # validate it as a conversation model and close before session.updated.
         async with connect_factory(
             REALTIME_URL,
             additional_headers=headers,
@@ -163,12 +163,16 @@ async def relay_realtime_transcription(
                         await send(mapped)
                     error = session_event.get("error")
                     error_type = error.get("type") if isinstance(error, dict) else "provider_error"
+                    error_code = error.get("code") if isinstance(error, dict) else ""
+                    error_param = error.get("param") if isinstance(error, dict) else ""
                     logger.warning(
-                        "realtime upstream error stage=%s model=%s language=%s error_type=%s",
+                        "realtime upstream error stage=%s model=%s language=%s error_type=%s error_code=%s error_param=%s",
                         stage,
                         model,
                         normalize_language(language),
                         str(error_type or "provider_error")[:80],
+                        str(error_code or "")[:80],
+                        str(error_param or "")[:120],
                     )
                     raise RealtimeVoiceError("provider")
                 if session_event.get("type") == "session.updated":

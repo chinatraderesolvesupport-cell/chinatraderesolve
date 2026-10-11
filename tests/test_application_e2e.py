@@ -187,6 +187,9 @@ def test_browser_application_mobile_case_upload_and_local_mail_delivery():
                 link = page.locator("#statusLink").get_attribute("href")
                 assert link and link.startswith(base + "/case/" + reference + "/")
                 assert case_count(database) == 1
+                deadline = time.time() + 5
+                while len(sink.messages) < 2 and time.time() < deadline:
+                    time.sleep(0.05)
                 assert len(sink.messages) == 2
                 assert {message["to"] for message in sink.messages} == {"buyer@example.com", "admin@example.com"}
                 assert all(reference in message["subject"] for message in sink.messages)

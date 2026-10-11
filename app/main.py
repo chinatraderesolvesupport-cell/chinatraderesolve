@@ -87,6 +87,7 @@ from .document_analysis import (
     DocumentAnalysisProviderError,
     analyse_case_documents,
     document_analysis_is_enabled,
+    localize_report_for_display,
 )
 from .documents import (
     pdf_security_self_test,
@@ -1163,6 +1164,7 @@ MESSAGE_COPY = {
         "failed": "The email notification could not be delivered. The message remains saved.",
         "closed": "This case is closed and no longer accepts replies.", "closed_issue": "This case is closed and no longer accepts replies.",
         "csrf_issue": "This page has expired. Reload the private case page and try again.", "rate_issue": "Too many replies. Please try again later.",
+        "email_hint": "Email notifications about new messages are sent to your inbox. If the email does not appear, check your Spam folder.",
     },
     "Russian": {
         "heading": "Переписка по делу", "intro": "Сообщения ChinaTradeResolve и ваши ответы сохраняются только на этой приватной странице дела.",
@@ -1172,6 +1174,7 @@ MESSAGE_COPY = {
         "failed": "Уведомление не удалось доставить. Само сообщение сохранено.",
         "closed": "Дело закрыто и больше не принимает ответы.", "closed_issue": "Дело закрыто и больше не принимает ответы.",
         "csrf_issue": "Страница устарела. Обновите приватную страницу дела и попробуйте снова.", "rate_issue": "Слишком много ответов. Попробуйте позже.",
+        "email_hint": "Уведомления о новых сообщениях приходят на вашу электронную почту. Если письмо не появилось, проверьте папку «Спам».",
     },
     "Serbian": {
         "heading": "Poruke o slučaju", "intro": "Poruke ChinaTradeResolve i vaši odgovori čuvaju se samo na ovoj privatnoj stranici slučaja.",
@@ -1181,6 +1184,7 @@ MESSAGE_COPY = {
         "failed": "Obaveštenje nije isporučeno. Poruka je sačuvana.",
         "closed": "Slučaj je zatvoren i više ne prima odgovore.", "closed_issue": "Slučaj je zatvoren i više ne prima odgovore.",
         "csrf_issue": "Stranica je istekla. Osvežite privatnu stranicu slučaja i pokušajte ponovo.", "rate_issue": "Previše odgovora. Pokušajte kasnije.",
+        "email_hint": "Obaveštenja o novim porukama stižu na vašu e-poštu. Ako se poruka ne pojavi, proverite fasciklu Neželjena pošta.",
     },
     "French": {
         "heading": "Messages concernant votre dossier", "intro": "Les messages de ChinaTradeResolve et vos réponses restent sur cette page privée.",
@@ -1190,6 +1194,7 @@ MESSAGE_COPY = {
         "failed": "La notification e-mail n’a pas pu être délivrée. Le message est enregistré.",
         "closed": "Ce dossier est clôturé et n’accepte plus de réponses.", "closed_issue": "Ce dossier est clôturé et n’accepte plus de réponses.",
         "csrf_issue": "Cette page a expiré. Rechargez la page privée et réessayez.", "rate_issue": "Trop de réponses. Réessayez plus tard.",
+        "email_hint": "Les notifications de nouveaux messages sont envoyées à votre adresse e-mail. Si le message n’apparaît pas, vérifiez le dossier « Spam ».",
     },
     "German": {
         "heading": "Nachrichten zu Ihrem Fall", "intro": "Nachrichten von ChinaTradeResolve und Ihre Antworten bleiben auf dieser privaten Fallseite.",
@@ -1199,6 +1204,7 @@ MESSAGE_COPY = {
         "failed": "Die E-Mail-Benachrichtigung konnte nicht zugestellt werden. Die Nachricht ist gespeichert.",
         "closed": "Dieser Fall ist geschlossen und nimmt keine Antworten mehr an.", "closed_issue": "Dieser Fall ist geschlossen und nimmt keine Antworten mehr an.",
         "csrf_issue": "Diese Seite ist abgelaufen. Laden Sie die private Fallseite neu und versuchen Sie es erneut.", "rate_issue": "Zu viele Antworten. Bitte versuchen Sie es später erneut.",
+        "email_hint": "Benachrichtigungen über neue Nachrichten werden an Ihre E-Mail-Adresse gesendet. Wenn die E-Mail nicht erscheint, prüfen Sie den Spam-Ordner.",
     },
     "Spanish": {
         "heading": "Mensajes sobre su caso", "intro": "Los mensajes de ChinaTradeResolve y sus respuestas permanecen en esta página privada.",
@@ -1208,6 +1214,7 @@ MESSAGE_COPY = {
         "failed": "No se pudo entregar la notificación por correo. El mensaje se ha guardado.",
         "closed": "Este caso está cerrado y ya no acepta respuestas.", "closed_issue": "Este caso está cerrado y ya no acepta respuestas.",
         "csrf_issue": "Esta página ha caducado. Recargue la página privada e inténtelo de nuevo.", "rate_issue": "Demasiadas respuestas. Inténtelo más tarde.",
+        "email_hint": "Las notificaciones de nuevos mensajes se envían a su correo electrónico. Si el mensaje no aparece, revise la carpeta de spam.",
     },
 }
 
@@ -2332,7 +2339,11 @@ def public_case_status(
             "message_issue": message_issue,
             "private_csrf_token": private_csrf_token(reference, token),
             "client_message_key": secrets.token_urlsafe(24),
-            "document_analysis": document_analysis,
+            "document_analysis": (
+                {**document_analysis, "result": localize_report_for_display(document_analysis.get("result"), language)}
+                if document_analysis and isinstance(document_analysis.get("result"), dict)
+                else document_analysis
+            ),
             "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "document_copy": DOCUMENT_COPY.get(language, DOCUMENT_COPY["English"]),
@@ -2832,7 +2843,11 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "audit": get_audit(case_id),
             "feedback": get_feedback(case_id),
             "documents": list_case_documents(case_id),
-            "document_analysis": document_analysis,
+            "document_analysis": (
+                {**document_analysis, "result": localize_report_for_display(document_analysis.get("result"), "Russian")}
+                if document_analysis and isinstance(document_analysis.get("result"), dict)
+                else document_analysis
+            ),
             "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
             "status_labels": STATUS_LABELS,

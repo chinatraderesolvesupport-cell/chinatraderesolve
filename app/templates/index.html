@@ -185,7 +185,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-input-label{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:8px 12px 0;background:#fff;color:#0f172a;font-size:12px;font-weight:900;flex:0 0 auto}
 .ai-chat-input-label span{font-size:10px;font-weight:600;color:#64748b}
 .ai-chat-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:7px 12px 9px;background:#fff;align-items:end;flex:0 0 auto}
-.ai-chat-form textarea{min-height:46px;max-height:100px;resize:vertical;padding:9px 10px}
+.ai-chat-form textarea{min-height:74px;max-height:min(280px,34dvh);resize:vertical;padding:9px 10px;overflow-y:auto}
 .ai-chat-send{border:0;border-radius:10px;background:#14b8a6;color:#042f2e;font-weight:900;padding:12px 14px;cursor:pointer}
 .ai-chat-voice{grid-column:1/-1;min-height:54px;width:100%;border:2px solid #0f766e;border-radius:12px;background:linear-gradient(135deg,#ccfbf1,#ecfeff);color:#115e59;font-size:14px;font-weight:950;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;box-shadow:0 7px 18px rgba(15,118,110,.12)}
 .ai-chat-voice .mic-icon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:0 0 30px;background:#0f766e;color:#fff}.ai-chat-voice .mic-icon svg{width:20px;height:20px;display:block}.ai-chat-voice-copy{display:grid;text-align:left;line-height:1.15}.ai-chat-voice-copy small{font-size:10px;font-weight:750;color:#475569;margin-top:3px}.ai-chat-voice:hover{background:#99f6e4;transform:translateY(-1px)}
@@ -234,7 +234,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .consent-group{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px}
 .consent-row label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer}.consent-row input{margin-top:5px!important;width:auto}
 .description-compose{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
-.description-compose textarea{min-width:0}
+.description-compose textarea{min-width:0;min-height:150px;max-height:min(420px,55dvh);overflow-y:auto;resize:vertical}
 .description-voice-button{width:100%;min-height:48px;border:1px solid #0f766e;border-radius:11px;background:linear-gradient(135deg,#ecfeff,#ccfbf1);color:#0f766e;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;padding:9px 14px}
 .description-voice-button .mic-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 24px}.description-voice-button .mic-icon svg{width:24px;height:24px;display:block}.description-voice-button .voice-button-copy{display:grid;text-align:left;line-height:1.2}.description-voice-button .voice-button-copy small{font-size:10px;font-weight:700;color:#475569;margin-top:2px}.description-voice-button:hover{background:#ccfbf1}.description-voice-button.recording{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));z-index:96;width:min(520px,calc(100vw - 24px));transform:translateX(-50%);background:#fee2e2;color:#b91c1c;border-color:#ef4444;animation:voice-pulse 1.2s ease-in-out infinite;box-shadow:0 12px 34px rgba(127,29,29,.28)}.description-voice-button:disabled{opacity:.55;cursor:not-allowed}
 .description-voice-panel{display:grid;gap:7px;margin-top:7px;padding:10px 12px;border:1px solid #f59e0b;border-radius:11px;background:#fff7ed;color:#475569;font-size:12px;line-height:1.4}
@@ -503,6 +503,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
   <div class="private-link-row"><input id="privateStatusUrl" readonly><button class="btn dark" id="copyStatusLink" type="button" data-i18n="copy_private_link">{{ home_copy['copy_private_link'] }}</button></div>
   <div class="copy-result" id="copyResult" role="status" aria-live="polite"></div>
   <p class="email-state" id="emailDeliveryState"></p>
+  <p class="email-hint" data-i18n="email_spam_hint">{{ home_copy['email_spam_hint'] }}</p>
   <div class="status-link-row"><a class="btn dark" data-i18n="view_case_status" hidden id="statusLink">{{ home_copy['view_case_status'] }}</a></div>
 </div>
 </div>
@@ -617,6 +618,13 @@ if('IntersectionObserver' in window){
   },{threshold:0.08}).observe(submitSection);
 }
 
+function autoGrowTextarea(field,maxHeight){
+  if(!field)return;
+  const cap=Math.max(140,Math.min(maxHeight,Math.floor(window.innerHeight*.42)));
+  field.style.height='auto';
+  field.style.height=`${Math.min(field.scrollHeight,cap)}px`;
+  field.style.overflowY=field.scrollHeight>cap?'auto':'hidden';
+}
 const descriptionField=document.getElementById('description');
 const descriptionCount=document.getElementById('descriptionCount');
 const formSubmitButton=document.getElementById('submitBtn');
@@ -699,7 +707,8 @@ if(applicationTurnstileRetry)applicationTurnstileRetry.addEventListener('click',
 document.addEventListener('ctr:language-changed',removeApplicationTurnstile);
 function updateDescriptionCount(){descriptionCount.textContent=`${descriptionField.value.length} / 8000`;updateSubmitAvailability()}
 requiredApplicationFields.forEach(field=>{field.addEventListener('blur',()=>{field.dataset.touched='true';setApplicationFieldValidity(field);updateSubmitAvailability()});field.addEventListener('input',()=>{setApplicationFieldValidity(field);updateSubmitAvailability()})});
-descriptionField.addEventListener('input',updateDescriptionCount);
+descriptionField.addEventListener('input',()=>{updateDescriptionCount();autoGrowTextarea(descriptionField,420)});
+autoGrowTextarea(descriptionField,420);
 caseFormElement.addEventListener('change',updateSubmitAvailability);
 if(formReadiness&&'IntersectionObserver' in window){
   new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)&&!applicationReady())drawFormReadinessAttention()},{threshold:.6}).observe(formReadiness);
@@ -764,6 +773,7 @@ function setDescriptionVoiceStatus(key,state=''){if(!descriptionVoiceStatus)retu
 function updateDescriptionVoicePanelState(){if(!descriptionVoicePanel)return;const verified=descriptionVoiceVerificationSatisfied();const ready=Boolean(descriptionVoiceConsent&&descriptionVoiceConsent.checked&&verified);descriptionVoicePanel.classList.toggle('is-ready',ready);const turnstile=document.getElementById('descriptionVoiceTurnstile');if(turnstile)turnstile.classList.toggle('is-verified',verified)}
 function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state;updateDescriptionVoicePanelState()}
 function setDescriptionLiveText(text,unavailable=false){if(!descriptionVoiceLive||!descriptionVoiceLiveText)return;descriptionVoiceLive.hidden=false;descriptionVoiceLiveText.textContent=text||(unavailable?descriptionVoiceCopy('voice_live_unavailable'):'')}
+function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=descriptionVoiceBaseText.trim();descriptionField.value=`${prefix}${prefix?'\\n\\n':''}${transcript}`.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));setDescriptionLiveText(transcript)}
 function hideDescriptionLiveText(){if(descriptionVoiceLive)descriptionVoiceLive.hidden=true;if(descriptionVoiceLiveText)descriptionVoiceLiveText.textContent=''}
 function descriptionVoiceToken(){return descriptionVoiceTurnstileResponse?String(descriptionVoiceTurnstileResponse.value||''):''}
 function descriptionVoiceVerificationSatisfied(){return !descriptionVoicePanel||descriptionVoicePanel.dataset.turnstileRequired!=='true'||descriptionVoiceTurnstileSessionVerified||Boolean(descriptionVoiceToken())}
@@ -841,7 +851,7 @@ async function startDescriptionVoiceRecording(){
     if(!mimeType){releaseDescriptionVoiceStream();setDescriptionVoiceStatus('description_voice_unsupported','error');return}
     descriptionVoiceBaseText=descriptionField.value;
     setDescriptionLiveText('');
-    descriptionVoiceRecognition=createCtrLiveRecognition(text=>setDescriptionLiveText(text),()=>setDescriptionLiveText('',true));
+    descriptionVoiceRecognition=createCtrLiveRecognition(text=>applyDescriptionLiveTranscript(text),()=>setDescriptionLiveText('',true));
     if(descriptionVoiceRecognition)descriptionVoiceRecognition.start();
     descriptionVoiceRecorder=new MediaRecorder(descriptionVoiceStream,{mimeType});descriptionVoiceChunks=[];descriptionVoiceDiscard=false;descriptionVoiceBusy=true;
     descriptionVoiceRecorder.addEventListener('dataavailable',event=>{if(event.data&&event.data.size)descriptionVoiceChunks.push(event.data)});
@@ -1118,6 +1128,7 @@ if(aiChatRoot){
   let aiTurnstileRenderPending=false;
   let aiTurnstileLoadAttempts=0;
   let aiVoiceStartPending=false;
+  let aiVoiceBaseText='';
 
   function showAiQuickQuestions(){
     if(aiTurnstileSection)aiTurnstileSection.hidden=true;
@@ -1207,8 +1218,9 @@ if(aiChatRoot){
     if(aiTurnstileSection)aiTurnstileSection.classList.toggle('is-verified',state==='verified');
   }
   function updateAiControls(){
+    autoGrowTextarea(aiChatInput,280);
     aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim();
-    aiChatInput.disabled=aiChatBusy||aiVoiceBusy;
+    aiChatInput.disabled=aiChatBusy;
     if(aiVoiceButton)aiVoiceButton.disabled=aiChatBusy||aiVoiceBusy&&!(aiVoiceRecorder&&aiVoiceRecorder.state==='recording');
   }
   function showAiTurnstileRequired(){
@@ -1296,6 +1308,14 @@ if(aiChatRoot){
     aiVoiceLiveText.textContent=text||(unavailable?aiCopy('voice_live_unavailable'):'');
     window.requestAnimationFrame(()=>aiChatForm.scrollTo({top:aiChatForm.scrollHeight,behavior:'smooth'}));
   }
+  function applyAiLiveTranscript(text){
+    const transcript=String(text||'').trim();
+    if(!transcript||!aiChatInput)return;
+    const prefix=aiVoiceBaseText.trim();
+    aiChatInput.value=`${prefix}${prefix?'\\n\\n':''}${transcript}`.slice(0,1500);
+    aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));
+    setAiLiveText(transcript);
+  }
   function hideAiLiveText(){if(aiVoiceLive)aiVoiceLive.hidden=true;if(aiVoiceLiveText)aiVoiceLiveText.textContent=''}
   function updateAiRecordingClock(){
     if(!aiVoiceStatus||!aiVoiceStartedAt)return;
@@ -1326,7 +1346,7 @@ if(aiChatRoot){
       updateAiControls();
     }
   }
-  async function uploadVoiceRecording(blob){
+  async function uploadVoiceRecording(blob,baseText=''){
     const token=aiTurnstileToken();
     if(!aiTurnstileSatisfied()){
       aiVoiceStartPending=true;
@@ -1359,7 +1379,10 @@ if(aiChatRoot){
       markAiTurnstileSessionVerified();
       const transcript=String(result.transcript||'').trim();
       if(!transcript)throw new Error('empty transcript');
-      aiChatInput.value=transcript.slice(0,1500);
+      const combined=[String(baseText||'').trim(),transcript].filter(Boolean).join('\\n\\n');
+      aiChatInput.value=combined.slice(0,1500);
+      aiChatInput.dispatchEvent(new Event('input',{bubbles:true}));
+      aiVoiceBaseText='';
       hideAiLiveText();
       setVoiceStatus('ai_voice_review');
       collapseAiVoicePanel();
@@ -1399,8 +1422,9 @@ if(aiChatRoot){
         setVoiceStatus('ai_voice_unsupported');
         return;
       }
+      aiVoiceBaseText=aiChatInput.value;
       setAiLiveText('');
-      aiVoiceRecognition=createCtrLiveRecognition(text=>setAiLiveText(text),()=>setAiLiveText('',true));
+      aiVoiceRecognition=createCtrLiveRecognition(text=>applyAiLiveTranscript(text),()=>setAiLiveText('',true));
       if(aiVoiceRecognition)aiVoiceRecognition.start();
       aiVoiceRecorder=new MediaRecorder(aiVoiceStream,{mimeType});
       aiVoiceChunks=[];
@@ -1417,7 +1441,7 @@ if(aiChatRoot){
         if(aiVoiceButton){
           setAiVoiceButtonState(false);
         }
-        if(!discard&&blob.size)await uploadVoiceRecording(blob);else if(discard)hideAiLiveText();
+        if(!discard&&blob.size)await uploadVoiceRecording(blob,aiVoiceBaseText);else if(discard)hideAiLiveText();
         aiVoiceBusy=false;
         updateAiControls();
         if(!discard)aiChatInput.focus();

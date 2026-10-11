@@ -9,6 +9,7 @@
 <div class="card" id="messages">
   <h2>{{ message_copy.heading }}</h2>
   <p>{{ message_copy.intro }}</p>
+  <p class="fine email-hint">{{ message_copy.email_hint }}</p>
   {% if message_sent %}<p class="success">{{ message_copy.sent }}</p>{% endif %}
   {% if message_issue == 'closed' %}<p class="warning">{{ message_copy.closed_issue }}</p>{% elif message_issue == 'rate' %}<p class="error">{{ message_copy.rate_issue }}</p>{% endif %}
   {% if messages %}

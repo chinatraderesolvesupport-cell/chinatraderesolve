@@ -164,12 +164,12 @@ def test_client_confirmation_email_matches_current_service_policy():
         "main_problem": "Goods not delivered",
     }
     expectations = {
-        "Russian": ("Оплата услуг сейчас не принимается", "Ключевые документы запрашиваются только после предварительного отбора заявки", "Добровольная поддержка проекта не является оплатой услуг"),
-        "English": ("Payment for services is not currently accepted", "Key documents are requested only after the application has passed preliminary screening", "Voluntary support for the project is not payment for services"),
-        "French": ("Le paiement des services n’est pas accepté actuellement", "Les documents essentiels ne sont demandés qu’après la présélection", "Le soutien volontaire au projet ne constitue pas un paiement"),
-        "German": ("Eine Bezahlung von Dienstleistungen wird derzeit nicht angenommen", "Wichtige Dokumente werden erst nach der Vorprüfung", "Freiwillige Unterstützung des Projekts ist keine Bezahlung"),
-        "Spanish": ("Actualmente no se acepta el pago de servicios", "Los documentos esenciales solo se solicitan después de la evaluación preliminar", "El apoyo voluntario al proyecto no constituye el pago"),
-        "Serbian": ("Plaćanje usluga se trenutno ne prihvata", "Ključni dokumenti se traže tek nakon preliminarnog pregleda", "Dobrovoljna podrška projektu nije plaćanje usluge"),
+        "Russian": ("ChinaTradeResolve работает бесплатно", "Добровольная поддержка проекта необязательна"),
+        "English": ("ChinaTradeResolve is a free service", "Voluntary support is optional"),
+        "French": ("ChinaTradeResolve est un service gratuit", "Le soutien volontaire est facultatif"),
+        "German": ("ChinaTradeResolve ist ein kostenloser Dienst", "Freiwillige Unterstützung ist optional"),
+        "Spanish": ("ChinaTradeResolve es un servicio gratuito", "El apoyo voluntario es opcional"),
+        "Serbian": ("ChinaTradeResolve je besplatna usluga", "Dobrovoljna podrška je opciona"),
     }
     obsolete = (
         "На этом этапе оплата и загрузка документов не требуются",

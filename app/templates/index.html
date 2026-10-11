@@ -202,7 +202,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 .ai-chat-turnstile-label{display:grid;gap:2px;color:#334155;line-height:1.35}
 .ai-chat-turnstile-label strong{font-size:12px;color:#0f172a}.ai-chat-turnstile-label span{font-size:11px}
 .ai-chat-turnstile-widget{width:100%;min-width:0;min-height:65px;display:flex;align-items:center;justify-content:flex-start;overflow:visible}.ai-chat-turnstile-widget iframe{max-width:100%!important}
-.ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}
+.ai-chat-turnstile-status{min-height:16px;color:#475569;font-size:11px;line-height:1.35}.ai-chat-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.ai-chat-turnstile-status[data-state="error"],.ai-chat-turnstile-status[data-state="required"]{color:#b45309;font-weight:800}.ai-turnstile-retry{justify-self:start;min-height:32px;padding:6px 10px;border:1px solid #f59e0b;border-radius:8px;background:#fff7ed;color:#92400e;font-size:12px;font-weight:800;cursor:pointer}.ai-turnstile-retry[hidden]{display:none}
 .ai-chat-turnstile.needs-attention{background:#fff7ed;box-shadow:inset 0 0 0 2px #f59e0b}
 .ai-message-content{display:block}
 @keyframes voice-pulse{50%{box-shadow:0 0 0 5px rgba(239,68,68,.16)}}
@@ -481,7 +481,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 <div class="form-step" id="stepTwo">
 <div class="form-choice-intro"><strong data-i18n="description_mode_title">{{ home_copy['description_mode_title'] }}</strong><span data-i18n="description_mode_text">{{ home_copy['description_mode_text'] }}</span></div>
-<div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div id="descriptionVoiceConsentHome"></div><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div id="descriptionVoiceTurnstileHome"></div><div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
+<div class="field full description-field"><label data-i18n="description" for="description">{{ home_copy['description'] }}</label><div class="description-compose"><textarea aria-describedby="descriptionHelp descriptionCount descriptionVoiceStatus" data-i18n-placeholder="description_ph" id="description" maxlength="8000" minlength="50" name="description" placeholder="{{ home_copy['description_ph'] }}" required=""></textarea>{% if voice_input_enabled %}<button aria-label="{{ home_copy['description_voice_start_label'] }}" aria-pressed="false" class="description-voice-button" data-i18n-aria-label="description_voice_start_label" id="descriptionVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="voice-button-copy"><span data-i18n="description_voice_cta" id="descriptionVoiceButtonText">{{ home_copy['description_voice_cta'] }}</span><small data-i18n="description_voice_cta_hint" id="descriptionVoiceButtonHint">{{ home_copy['description_voice_cta_hint'] }}</small></span></button>{% endif %}</div><div class="description-meta"><div class="hint" data-i18n="description_hint" id="descriptionHelp">{{ home_copy['description_hint'] }}</div><div aria-live="polite" class="char-count" id="descriptionCount">0 / 8000</div></div>{% if voice_input_enabled %}<div class="description-voice-panel" data-turnstile-required="{{ 'true' if turnstile_site_key else 'false' }}" data-turnstile-session-verified="{{ 'true' if ai_turnstile_session_verified else 'false' }}" data-voice-max-seconds="{{ voice_max_seconds }}" hidden id="descriptionVoicePanel"><div id="descriptionVoiceConsentHome"></div><div class="description-voice-help" data-i18n="description_voice_help">{{ home_copy['description_voice_help'] }}</div><label class="description-voice-consent"><input id="descriptionVoiceConsent" type="checkbox"><span data-i18n="description_voice_consent">{{ home_copy['description_voice_consent'] }}</span></label>{% if turnstile_site_key %}<div id="descriptionVoiceTurnstileHome"></div><div class="description-voice-turnstile" id="descriptionVoiceTurnstile"><div class="description-voice-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="descriptionVoiceTurnstileWidget"></div><input id="descriptionVoiceTurnstileResponse" type="hidden"><div aria-live="polite" class="description-voice-status" data-i18n="description_voice_verification_loading" id="descriptionVoiceVerificationStatus" role="status">{{ home_copy['description_voice_verification_loading'] }}</div><button class="ai-turnstile-retry" data-turnstile-retry="description" hidden id="descriptionVoiceTurnstileRetry" type="button">Повторить проверку</button></div>{% endif %}<div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="descriptionVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="descriptionVoiceLiveText"></div></div><div aria-live="polite" class="description-voice-status" id="descriptionVoiceStatus" role="status"></div></div>{% endif %}</div>
 <div class="field"><label for="supplierName"><span data-i18n="supplier_name">{{ home_copy['supplier_name'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="supplierName" name="supplier_name"/></div>
 <div class="field"><label for="orderNumber"><span data-i18n="order_number">{{ home_copy['order_number'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderNumber" name="order_number"/></div>
 <div class="field"><label for="orderValue"><span data-i18n="order_value">{{ home_copy['order_value'] }}</span> <small>(<span data-i18n="optional">{{ home_copy['optional'] }}</span>)</small></label><input id="orderValue" name="order_value"/></div>
@@ -570,7 +570,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="ai-chat-head"><div><strong id="aiChatTitle"><span data-i18n="ai_chat_title">{{ home_copy['ai_chat_title'] }}</span><span class="ai-chat-badge" data-i18n="ai_chat_badge">{{ home_copy['ai_chat_badge'] }}</span></strong><small data-i18n="ai_chat_subtitle">{{ home_copy['ai_chat_subtitle'] }}</small></div><button aria-label="{{ home_copy['ai_chat_close'] }}" class="ai-chat-close" data-i18n-aria-label="ai_chat_close" id="aiChatClose" type="button">×</button></div>
 <p class="ai-chat-notice" data-i18n="ai_chat_notice">{{ home_copy['ai_chat_notice'] }}</p>
 <div aria-live="polite" class="ai-chat-messages" id="aiChatMessages" role="log"><div class="ai-chat-message assistant" data-i18n="ai_chat_welcome">{{ home_copy['ai_chat_welcome'] }}</div></div>
-{% if turnstile_site_key %}<div id="aiTurnstileHome"></div><div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">{{ home_copy['ai_turnstile_title'] }}</strong><span data-i18n="ai_turnstile_help">{{ home_copy['ai_turnstile_help'] }}</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">{{ home_copy['ai_turnstile_loading'] }}</div></div>{% endif %}
+{% if turnstile_site_key %}<div id="aiTurnstileHome"></div><div class="ai-chat-turnstile" id="aiChatTurnstileSection"><div class="ai-chat-turnstile-label"><strong data-i18n="ai_turnstile_title">{{ home_copy['ai_turnstile_title'] }}</strong><span data-i18n="ai_turnstile_help">{{ home_copy['ai_turnstile_help'] }}</span></div><div aria-describedby="aiChatTurnstileStatus" class="ai-chat-turnstile-widget" data-sitekey="{{ turnstile_site_key }}" id="aiChatTurnstileWidget"></div><input id="aiTurnstileResponse" name="ai-turnstile-response" type="hidden"><div aria-live="polite" class="ai-chat-turnstile-status" data-i18n="ai_turnstile_loading" id="aiChatTurnstileStatus" role="status">{{ home_copy['ai_turnstile_loading'] }}</div><button class="ai-turnstile-retry" data-turnstile-retry="assistant" hidden id="aiTurnstileRetry" type="button">Повторить проверку</button></div>{% endif %}
 <div class="ai-chat-quick" id="aiChatQuick"{% if turnstile_site_key %} hidden{% endif %}><button data-i18n="ai_chat_quick_docs" type="button">{{ home_copy['ai_chat_quick_docs'] }}</button><button data-i18n="ai_chat_quick_scope" type="button">{{ home_copy['ai_chat_quick_scope'] }}</button><button data-i18n="ai_chat_quick_process" type="button">{{ home_copy['ai_chat_quick_process'] }}</button></div>
 <label class="ai-chat-input-label" for="aiChatInput"><strong data-i18n="ai_chat_input_title">{{ home_copy['ai_chat_input_title'] }}</strong><span data-i18n="ai_chat_input_help">{{ home_copy['ai_chat_input_help'] }}</span></label>
 <form class="ai-chat-form" id="aiChatForm">{% if voice_input_enabled %}<button aria-label="{{ home_copy['ai_voice_start_label'] }}" aria-pressed="false" class="ai-chat-voice" data-i18n-aria-label="ai_voice_start_label" id="aiVoiceButton" type="button"><span class="mic-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></span><span class="ai-chat-voice-copy"><span data-i18n="ai_voice_cta" id="aiVoiceButtonText">{{ home_copy['ai_voice_cta'] }}</span><small data-i18n="ai_voice_cta_hint" id="aiVoiceButtonHint">{{ home_copy['ai_voice_cta_hint'] }}</small></span></button><div class="ai-voice-panel" hidden id="aiVoicePanel"><div id="aiVoiceConsentHome"></div><label class="ai-voice-consent"><input id="aiVoiceConsent" type="checkbox"><span><strong data-i18n="ai_voice_consent_title">{{ home_copy['ai_voice_consent_title'] }}</strong><span data-i18n="ai_voice_consent">{{ home_copy['ai_voice_consent'] }}</span></span></label><div class="voice-live-note" data-i18n="voice_live_privacy">{{ home_copy['voice_live_privacy'] }}</div><div aria-live="polite" class="voice-live-preview" hidden id="aiVoiceLive"><strong data-i18n="voice_live_title">{{ home_copy['voice_live_title'] }}</strong><div class="voice-live-text" id="aiVoiceLiveText"></div></div><div aria-live="polite" class="ai-voice-status" id="aiVoiceStatus" role="status"></div></div>{% endif %}<textarea aria-label="{{ home_copy['ai_chat_message_label'] }}" data-i18n-aria-label="ai_chat_message_label" data-i18n-placeholder="ai_chat_placeholder" id="aiChatInput" maxlength="1500" placeholder="{{ home_copy['ai_chat_placeholder'] }}" required rows="2"></textarea><button class="ai-chat-send" data-i18n="ai_chat_send" disabled id="aiChatSend" type="submit">{{ home_copy['ai_chat_send'] }}</button></form>
@@ -773,6 +773,7 @@ function createCtrLiveRecognition(onText,onUnavailable){
   };
 }
 
+const voiceTurnstileRetryCopy={en:'Retry security check',ru:'Повторить проверку безопасности',sr:'Ponovi bezbednosnu proveru',de:'Sicherheitsprüfung wiederholen',fr:'Réessayer le contrôle de sécurité',es:'Repetir la comprobación de seguridad'};
 const voiceCaptureCopy={
   en:{title:'Describe your situation',assistantTitle:'Ask the AI assistant by voice',subtitle:'Speak naturally. The text appears as you speak and remains editable.',fallbackSubtitle:'Live transcription is temporarily unavailable. You can keep recording; the text will appear after you stop.',label:'Recognized text',recording:'Recording — speak now',connecting:'Connecting live transcription…',error:'Live transcription is unavailable. Try again or type the text.',paused:'Recording paused',stop:'Stop recording',continue:'Continue recording',apply:'Use this text',close:'Close',discard:'Close and discard the unsaved text?',footnote:'Audio is sent securely for live server transcription. The text remains editable.'},
   ru:{title:'Расскажите о своей ситуации',assistantTitle:'Задайте вопрос ИИ-помощнику голосом',subtitle:'Говорите естественно. Текст появляется во время речи и остаётся редактируемым.',fallbackSubtitle:'Живое распознавание временно недоступно. Можно продолжить запись; текст появится после остановки.',label:'Распознанный текст',recording:'Идёт запись — говорите',connecting:'Подключение живой расшифровки…',error:'Живая расшифровка недоступна. Попробуйте ещё раз или введите текст.',paused:'Запись остановлена',stop:'Остановить запись',continue:'Продолжить диктовку',apply:'Перенести текст',close:'Закрыть',discard:'Закрыть и удалить несохранённый текст?',footnote:'Аудио защищённо передаётся на сервер для живой расшифровки. Текст можно редактировать.'},
@@ -804,7 +805,7 @@ const voiceCaptureStop=document.getElementById('voiceCaptureStop');
 const voiceCaptureContinue=document.getElementById('voiceCaptureContinue');
 const voiceCaptureApply=document.getElementById('voiceCaptureApply');
 const voiceCaptureClose=document.getElementById('voiceCaptureClose');
-let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCaptureSourcePanel=null,voiceCaptureSourceConsent=null,voiceCaptureSourceTurnstile=null,voiceCaptureConsentHome=null,voiceCaptureTurnstileHome=null,voiceCaptureStopAction=null,voiceCaptureContinueAction=null,voiceCaptureApplyAction=null;
+let voiceCaptureMode='',voiceCaptureDraft='',voiceCaptureInitialText='',voiceCaptureSourcePanel=null,voiceCaptureSourceConsent=null,voiceCaptureSourceTurnstile=null,voiceCaptureConsentHome=null,voiceCaptureTurnstileHome=null,voiceCaptureStopAction=null,voiceCaptureContinueAction=null,voiceCaptureApplyAction=null,voiceCaptureAfterRestore=null;
 function voiceCaptureCopyFor(key){const lang=document.documentElement.lang||'en';return(voiceCaptureCopy[lang]&&voiceCaptureCopy[lang][key])||voiceCaptureCopy.en[key]||''}
 function normalizeVoiceText(value){return String(value||'').replace(/\r\n/g,'\n').replace(/\\n/g,'\n').replace(/\r/g,'\n')}
 function voiceCaptureSetStatus(text,state='idle'){if(!voiceCaptureStatusbar)return;voiceCaptureStatus.textContent=text||'';voiceCaptureStatusbar.dataset.state=state}
@@ -842,7 +843,7 @@ function openVoiceCaptureModal(mode,initialText){
 function closeVoiceCaptureModal(discard=false,skipConfirm=false){
   if(!voiceCaptureModal||voiceCaptureModal.hidden)return;
   if(discard&&!skipConfirm&&voiceCaptureDraft!==voiceCaptureInitialText&&!window.confirm(voiceCaptureCopyFor('discard')))return;
-  voiceCaptureRestoreSources();voiceCaptureModal.hidden=true;voiceCaptureModal.setAttribute('aria-hidden','true');document.documentElement.classList.remove('voice-modal-open');document.body.classList.remove('voice-modal-open');voiceCaptureMode='';voiceCaptureDraft='';voiceCaptureInitialText='';voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=null;
+  const afterRestore=voiceCaptureAfterRestore;voiceCaptureAfterRestore=null;voiceCaptureRestoreSources();voiceCaptureModal.hidden=true;voiceCaptureModal.setAttribute('aria-hidden','true');document.documentElement.classList.remove('voice-modal-open');document.body.classList.remove('voice-modal-open');voiceCaptureMode='';voiceCaptureDraft='';voiceCaptureInitialText='';voiceCaptureStopAction=null;voiceCaptureContinueAction=null;voiceCaptureApplyAction=null;if(afterRestore)window.setTimeout(afterRestore,0);
 }
 function requestCloseVoiceCaptureModal(){
   if(voiceCaptureStopAction&&voiceCaptureStop.disabled===false){voiceCaptureStopAction();return}
@@ -994,13 +995,18 @@ const descriptionVoiceTurnstileMount=document.getElementById('descriptionVoiceTu
 const descriptionVoiceTurnstileResponse=document.getElementById('descriptionVoiceTurnstileResponse');
 const descriptionVoiceVerificationStatus=document.getElementById('descriptionVoiceVerificationStatus');
 let descriptionVoiceRecorder=null,descriptionVoiceStream=null,descriptionVoiceChunks=[],descriptionVoiceTimer=null,descriptionVoiceElapsedTimer=null,descriptionVoiceStartedAt=0,descriptionVoiceBusy=false,descriptionVoiceDiscard=false,descriptionVoiceRecognition=null,descriptionVoiceBaseText='';
-let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPending=false,descriptionVoiceTurnstileLoadAttempts=0,descriptionVoiceStartPending=false;
+let descriptionVoiceTurnstileWidgetId=null,descriptionVoiceTurnstileRenderPending=false,descriptionVoiceTurnstileLoadAttempts=0,descriptionVoiceTurnstileWatchdog=null,descriptionVoiceStartPending=false;
+const descriptionVoiceTurnstileRetry=document.getElementById('descriptionVoiceTurnstileRetry');
 let descriptionVoiceTurnstileSessionVerified=Boolean(descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileSessionVerified==='true');
 const descriptionVoiceMaxSeconds=Math.max(15,Number(descriptionVoicePanel&&descriptionVoicePanel.dataset.voiceMaxSeconds)||120);
 function descriptionVoiceCopy(key){const copy=window.CTR_TRANSLATIONS||{};const lang=document.documentElement.lang||'en';return(copy[lang]&&copy[lang][key])||(copy.en&&copy.en[key])||''}
 function setDescriptionVoiceStatus(key,state=''){if(!descriptionVoiceStatus)return;descriptionVoiceStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceStatus.dataset.state=state}
 function updateDescriptionVoicePanelState(){if(!descriptionVoicePanel)return;const verified=descriptionVoiceVerificationSatisfied();const ready=Boolean(descriptionVoiceConsent&&descriptionVoiceConsent.checked&&verified);descriptionVoicePanel.classList.toggle('is-ready',ready);const turnstile=document.getElementById('descriptionVoiceTurnstile');if(turnstile)turnstile.classList.toggle('is-verified',verified)}
 function setDescriptionVoiceVerificationStatus(key,state=''){if(!descriptionVoiceVerificationStatus)return;descriptionVoiceVerificationStatus.textContent=key?descriptionVoiceCopy(key):'';descriptionVoiceVerificationStatus.dataset.state=state;updateDescriptionVoicePanelState()}
+function clearDescriptionVoiceTurnstileWatchdog(){if(descriptionVoiceTurnstileWatchdog){window.clearTimeout(descriptionVoiceTurnstileWatchdog);descriptionVoiceTurnstileWatchdog=null}}
+function showDescriptionVoiceTurnstileRetry(show=true){if(!descriptionVoiceTurnstileRetry)return;const lang=document.documentElement.lang||'en';descriptionVoiceTurnstileRetry.textContent=voiceTurnstileRetryCopy[lang]||voiceTurnstileRetryCopy.en;descriptionVoiceTurnstileRetry.hidden=!show}
+function removeDescriptionVoiceTurnstileWidget({clearToken=false}={}){clearDescriptionVoiceTurnstileWatchdog();if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileRenderPending=false;descriptionVoiceTurnstileLoadAttempts=0;if(clearToken&&descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value=''}
+function retryDescriptionVoiceTurnstile(){removeDescriptionVoiceTurnstileWidget({clearToken:true});showDescriptionVoiceTurnstileRetry(false);ensureDescriptionVoiceTurnstile()}
 function setDescriptionLiveText(text,unavailable=false){if(!descriptionVoiceLive||!descriptionVoiceLiveText)return;descriptionVoiceLive.hidden=false;descriptionVoiceLiveText.textContent=text||(unavailable?descriptionVoiceCopy('voice_live_unavailable'):'')}
 function applyDescriptionLiveTranscript(text){const transcript=String(text||'').trim();if(!transcript||!descriptionField)return;const prefix=descriptionVoiceBaseText.trim();descriptionField.value=`${prefix}${prefix?'\\n\\n':''}${transcript}`.slice(0,8000);descriptionField.dispatchEvent(new Event('input',{bubbles:true}));setDescriptionLiveText(transcript)}
 function hideDescriptionLiveText(){if(descriptionVoiceLive)descriptionVoiceLive.hidden=true;if(descriptionVoiceLiveText)descriptionVoiceLiveText.textContent=''}
@@ -1014,29 +1020,34 @@ function ensureDescriptionVoiceTurnstile(){
   if(descriptionVoicePanel.hidden)return;
   if(!window.turnstile||typeof window.turnstile.render!=='function'){
     descriptionVoiceTurnstileLoadAttempts+=1;
-    setDescriptionVoiceVerificationStatus(descriptionVoiceTurnstileLoadAttempts>50?'description_voice_verification_error':'description_voice_verification_loading',descriptionVoiceTurnstileLoadAttempts>50?'error':'');
+    const failed=descriptionVoiceTurnstileLoadAttempts>50;setDescriptionVoiceVerificationStatus(failed?'description_voice_verification_error':'description_voice_verification_loading',failed?'error':'');showDescriptionVoiceTurnstileRetry(failed);
     if(descriptionVoiceTurnstileLoadAttempts<=50)window.setTimeout(ensureDescriptionVoiceTurnstile,100);
     return;
   }
   descriptionVoiceTurnstileRenderPending=true;
+  showDescriptionVoiceTurnstileRetry(false);
   try{
     descriptionVoiceTurnstileWidgetId=window.turnstile.render(descriptionVoiceTurnstileMount,{
       sitekey:descriptionVoiceTurnstileMount.dataset.sitekey,
-      size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'interaction-only',language:document.documentElement.lang||'auto','response-field':false,
-      callback:token=>{descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoicePanelState();if(descriptionVoiceStartPending&&descriptionVoiceConsent&&descriptionVoiceConsent.checked)window.setTimeout(startDescriptionVoiceRecording,80)},
-      'expired-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_expired','required')},
-      'error-callback':()=>{descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
+      size:descriptionVoiceTurnstileMount.clientWidth<300?'compact':'flexible',theme:'light',appearance:'interaction-only',execution:'execute',language:document.documentElement.lang||'auto','response-field':false,
+      callback:token=>{clearDescriptionVoiceTurnstileWatchdog();descriptionVoiceTurnstileResponse.value=String(token||'');setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');showDescriptionVoiceTurnstileRetry(false);updateDescriptionVoicePanelState();if(descriptionVoiceStartPending&&descriptionVoiceConsent&&descriptionVoiceConsent.checked)window.setTimeout(startDescriptionVoiceRecording,80)},
+      'expired-callback':()=>{clearDescriptionVoiceTurnstileWatchdog();descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_expired','required');showDescriptionVoiceTurnstileRetry(true)},
+      'error-callback':()=>{clearDescriptionVoiceTurnstileWatchdog();descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_error','error');showDescriptionVoiceTurnstileRetry(true)}
     });
-  }catch(_error){descriptionVoiceTurnstileWidgetId=null;setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
+    descriptionVoiceTurnstileWatchdog=window.setTimeout(()=>{if(!descriptionVoiceTurnstileSessionVerified&&!descriptionVoiceToken()){setDescriptionVoiceVerificationStatus('description_voice_verification_error','error');showDescriptionVoiceTurnstileRetry(true)}},10000);
+    if(typeof window.turnstile.execute==='function')window.turnstile.execute(descriptionVoiceTurnstileWidgetId);
+  }catch(_error){removeDescriptionVoiceTurnstileWidget();setDescriptionVoiceVerificationStatus('description_voice_verification_error','error');showDescriptionVoiceTurnstileRetry(true)}
   finally{descriptionVoiceTurnstileRenderPending=false}
 }
 function resetDescriptionVoiceTurnstile(){
+  clearDescriptionVoiceTurnstileWatchdog();
   if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';
-  if(descriptionVoiceTurnstileSessionVerified){updateDescriptionVoicePanelState();return}
+  if(descriptionVoiceTurnstileSessionVerified){showDescriptionVoiceTurnstileRetry(false);updateDescriptionVoicePanelState();return}
   updateDescriptionVoicePanelState();
   if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
     try{window.turnstile.reset(descriptionVoiceTurnstileWidgetId);setDescriptionVoiceVerificationStatus('description_voice_verification_loading')}catch(_e){setDescriptionVoiceVerificationStatus('description_voice_verification_error','error')}
   }
+  showDescriptionVoiceTurnstileRetry(false);
 }
 function stopDescriptionLiveRecognition(discard=false){if(descriptionVoiceRecognition){discard?descriptionVoiceRecognition.abort():descriptionVoiceRecognition.stop();descriptionVoiceRecognition=null}}
 function releaseDescriptionVoiceStream(){if(descriptionVoiceTimer){window.clearTimeout(descriptionVoiceTimer);descriptionVoiceTimer=null}if(descriptionVoiceElapsedTimer){window.clearInterval(descriptionVoiceElapsedTimer);descriptionVoiceElapsedTimer=null}descriptionVoiceStartedAt=0;if(descriptionVoiceStream){descriptionVoiceStream.getTracks().forEach(track=>track.stop());descriptionVoiceStream=null}}
@@ -1118,6 +1129,8 @@ async function startDescriptionVoiceRecording(){
   if(!descriptionVoiceButton||descriptionVoiceBusy)return;
   const continuing=voiceCaptureMode==='description'&&voiceCaptureModal&&!voiceCaptureModal.hidden;
   const startText=continuing?voiceCaptureDraft:descriptionField.value;
+  if(descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true'&&!descriptionVoiceTurnstileSessionVerified)removeDescriptionVoiceTurnstileWidget();
+  voiceCaptureAfterRestore=()=>{if(descriptionVoicePanel&&descriptionVoicePanel.dataset.turnstileRequired==='true'&&!descriptionVoiceTurnstileSessionVerified&&!descriptionVoiceToken()){descriptionVoicePanel.hidden=false;ensureDescriptionVoiceTurnstile()}};
   openVoiceCaptureModal('description',startText);
   voiceCaptureStopAction=()=>stopDescriptionVoiceRecording(false);
   voiceCaptureContinueAction=()=>startDescriptionVoiceRecording();
@@ -1139,6 +1152,7 @@ document.addEventListener('ctr:ai-turnstile-session-verified',()=>{descriptionVo
 document.addEventListener('ctr:language-changed',()=>{stopDescriptionVoiceRecording(true);setDescriptionVoiceStatus('');hideDescriptionLiveText();if(descriptionVoicePanel&&!descriptionVoicePanel.hidden){if(descriptionVoiceTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(descriptionVoiceTurnstileWidgetId)}catch(_e){}}descriptionVoiceTurnstileWidgetId=null;descriptionVoiceTurnstileLoadAttempts=0;if(descriptionVoiceTurnstileResponse)descriptionVoiceTurnstileResponse.value='';setDescriptionVoiceVerificationStatus('description_voice_verification_loading');ensureDescriptionVoiceTurnstile()}updateDescriptionVoiceButton()});
 window.addEventListener('pagehide',()=>stopDescriptionVoiceRecording(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&descriptionVoiceRecorder&&descriptionVoiceRecorder.state==='recording')stopDescriptionVoiceRecording(true)});
+if(descriptionVoiceTurnstileRetry)descriptionVoiceTurnstileRetry.addEventListener('click',retryDescriptionVoiceTurnstile);
 if(descriptionVoiceTurnstileSessionVerified)setDescriptionVoiceVerificationStatus('description_voice_verification_ready','verified');updateDescriptionVoiceButton();updateDescriptionVoicePanelState();
 
 const privateAccessCopy={
@@ -1397,8 +1411,10 @@ if(aiChatRoot){
   let aiTurnstileWidgetId=null;
   let aiTurnstileRenderPending=false;
   let aiTurnstileLoadAttempts=0;
+  let aiTurnstileWatchdog=null;
   let aiVoiceStartPending=false;
   let aiVoiceBaseText='';
+  const aiTurnstileRetry=document.getElementById('aiTurnstileRetry');
 
   function showAiQuickQuestions(){
     if(aiTurnstileSection)aiTurnstileSection.hidden=true;
@@ -1487,6 +1503,20 @@ if(aiChatRoot){
     aiTurnstileStatus.dataset.state=state;
     if(aiTurnstileSection)aiTurnstileSection.classList.toggle('is-verified',state==='verified');
   }
+  function clearAiTurnstileWatchdog(){if(aiTurnstileWatchdog){window.clearTimeout(aiTurnstileWatchdog);aiTurnstileWatchdog=null}}
+  function showAiTurnstileRetry(show=true){if(!aiTurnstileRetry)return;const lang=document.documentElement.lang||'en';aiTurnstileRetry.textContent=voiceTurnstileRetryCopy[lang]||voiceTurnstileRetryCopy.en;aiTurnstileRetry.hidden=!show}
+  function removeAiTurnstileWidget({clearToken=false}={}){
+    clearAiTurnstileWatchdog();
+    if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.remove==='function'){try{window.turnstile.remove(aiTurnstileWidgetId)}catch(_e){}}
+    aiTurnstileWidgetId=null;aiTurnstileRenderPending=false;aiTurnstileLoadAttempts=0;
+    if(clearToken&&aiTurnstileResponse)aiTurnstileResponse.value='';
+  }
+  function retryAiTurnstile(){
+    removeAiTurnstileWidget({clearToken:true});
+    showAiTurnstileRequired();
+    showAiTurnstileRetry(false);
+    ensureAiTurnstile();
+  }
   function updateAiControls(){
     autoGrowTextarea(aiChatInput,280);
     aiChatSend.disabled=aiChatBusy||aiVoiceBusy||!aiChatInput.value.trim();
@@ -1508,12 +1538,13 @@ if(aiChatRoot){
     if(aiChatPanel.hidden)return;
     if(!window.turnstile||typeof window.turnstile.render!=='function'){
       aiTurnstileLoadAttempts+=1;
-      setAiTurnstileStatus(aiTurnstileLoadAttempts>50?'ai_turnstile_error':'ai_turnstile_loading',aiTurnstileLoadAttempts>50?'error':'');
+      const failed=aiTurnstileLoadAttempts>50;setAiTurnstileStatus(failed?'ai_turnstile_error':'ai_turnstile_loading',failed?'error':'');showAiTurnstileRetry(failed);
       if(aiTurnstileLoadAttempts<=50)window.setTimeout(ensureAiTurnstile,100);
       return;
     }
     aiTurnstileRenderPending=true;
     setAiTurnstileStatus('ai_turnstile_loading');
+    showAiTurnstileRetry(false);
     try{
       const widgetSize=aiTurnstileMount.clientWidth<300?'compact':'flexible';
       aiTurnstileWidgetId=window.turnstile.render(aiTurnstileMount,{
@@ -1521,37 +1552,48 @@ if(aiChatRoot){
         size:widgetSize,
         theme:'light',
         appearance:'interaction-only',
+        execution:'execute',
         language:document.documentElement.lang||'auto',
         'response-field':false,
         callback:token=>{
+          clearAiTurnstileWatchdog();
           if(aiTurnstileResponse)aiTurnstileResponse.value=String(token||'');
           setAiTurnstileStatus('ai_turnstile_ready','verified');
+          showAiTurnstileRetry(false);
           aiTurnstileSection&&aiTurnstileSection.classList.remove('needs-attention');
           showAiQuickQuestions();
           updateAiControls();
           if(aiVoiceStartPending&&aiVoiceConsent&&aiVoiceConsent.checked)window.setTimeout(startVoiceRecording,80);
         },
         'expired-callback':()=>{
+          clearAiTurnstileWatchdog();
           if(aiTurnstileResponse)aiTurnstileResponse.value='';
           setAiTurnstileStatus('ai_turnstile_expired','required');
+          showAiTurnstileRetry(true);
           updateAiControls();
         },
         'error-callback':()=>{
+          clearAiTurnstileWatchdog();
           if(aiTurnstileResponse)aiTurnstileResponse.value='';
           setAiTurnstileStatus('ai_turnstile_error','error');
+          showAiTurnstileRetry(true);
           updateAiControls();
         }
       });
+      aiTurnstileWatchdog=window.setTimeout(()=>{if(!aiTurnstileSessionVerified&&!aiTurnstileToken()){setAiTurnstileStatus('ai_turnstile_error','error');showAiTurnstileRetry(true)}},10000);
+      if(typeof window.turnstile.execute==='function')window.turnstile.execute(aiTurnstileWidgetId);
     }catch(_error){
-      aiTurnstileWidgetId=null;
+      removeAiTurnstileWidget();
       setAiTurnstileStatus('ai_turnstile_error','error');
+      showAiTurnstileRetry(true);
     }finally{
       aiTurnstileRenderPending=false;
     }
   }
   function resetAiTurnstile({silent=true}={}){
+    clearAiTurnstileWatchdog();
     if(aiTurnstileResponse)aiTurnstileResponse.value='';
-    if(aiTurnstileSessionVerified){if(aiTurnstileSection)aiTurnstileSection.hidden=true;updateAiControls();return}
+    if(aiTurnstileSessionVerified){showAiTurnstileRetry(false);if(aiTurnstileSection)aiTurnstileSection.hidden=true;updateAiControls();return}
     if(silent){
       if(aiTurnstileSection)aiTurnstileSection.hidden=true;
       aiChatQuick.hidden=true;
@@ -1559,8 +1601,10 @@ if(aiChatRoot){
     if(aiTurnstileWidgetId!==null&&window.turnstile&&typeof window.turnstile.reset==='function'){
       try{window.turnstile.reset(aiTurnstileWidgetId);setAiTurnstileStatus('ai_turnstile_loading')}catch(_e){setAiTurnstileStatus('ai_turnstile_error','error')}
     }
+    showAiTurnstileRetry(false);
     updateAiControls();
   }
+  if(aiTurnstileRetry)aiTurnstileRetry.addEventListener('click',retryAiTurnstile);
   function setVoiceStatus(key){
     if(aiVoiceStatus)aiVoiceStatus.textContent=key?aiCopy(key):'';
   }
@@ -1758,6 +1802,8 @@ if(aiChatRoot){
   async function startVoiceRecording(){
     if(!aiVoiceButton||aiVoiceBusy)return;
     const continuing=voiceCaptureMode==='assistant'&&voiceCaptureModal&&!voiceCaptureModal.hidden;const startText=continuing?voiceCaptureDraft:aiChatInput.value;
+    if(aiTurnstileRequired&&!aiTurnstileSessionVerified)removeAiTurnstileWidget();
+    voiceCaptureAfterRestore=()=>{if(aiTurnstileRequired&&!aiTurnstileSessionVerified&&!aiTurnstileToken()){showAiVerification();ensureAiTurnstile()}};
     openVoiceCaptureModal('assistant',startText);voiceCaptureStopAction=()=>stopVoiceRecording(false);voiceCaptureContinueAction=()=>startVoiceRecording();
     if(aiVoicePanel){revealAiVoicePanel();aiVoicePanel.classList.remove('needs-attention');void aiVoicePanel.offsetWidth;aiVoicePanel.classList.add('needs-attention');window.setTimeout(()=>aiVoicePanel.classList.remove('needs-attention'),1800)}
     if(!aiVoiceConsent||!aiVoiceConsent.checked){aiVoiceStartPending=true;setVoiceStatus('ai_voice_consent_required');aiVoiceConsent&&aiVoiceConsent.focus({preventScroll:true});return}

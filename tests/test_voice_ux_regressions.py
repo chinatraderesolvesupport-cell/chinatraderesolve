@@ -33,6 +33,8 @@ def test_ai_consent_in_large_composer_does_not_leave_recording_pending():
 
 
 def test_completed_voice_text_gets_safe_readable_formatting():
+    assert "function joinVoiceTranscript(baseText,transcript)" in SOURCE
+    assert "function joinVoiceTranscript(baseText,formatFinalVoiceText(transcript))" not in SOURCE
     assert "function formatFinalVoiceText(value)" in SOURCE
     assert "message.type==='completed'?formatFinalVoiceText" in SOURCE
     assert "joinVoiceTranscript(normalizedBase,formatFinalVoiceText(transcript))" in SOURCE

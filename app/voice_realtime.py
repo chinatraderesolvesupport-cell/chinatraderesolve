@@ -5,6 +5,7 @@ import base64
 import binascii
 import json
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -118,6 +119,8 @@ async def relay_realtime_transcription(
         headers["OpenAI-Safety-Identifier"] = safety_identifier
 
     stage = "connect"
+    session_started_at = time.monotonic()
+    interim_delta_count = 0
     try:
         # Transcription sessions select the model in session.update.  Passing the
         # transcription model as the query parameter of the generic realtime
@@ -217,6 +220,7 @@ async def relay_realtime_transcription(
                         raise RealtimeVoiceError("invalid_message")
 
             async def upstream_to_client() -> None:
+                nonlocal interim_delta_count
                 async for raw_event in upstream:
                     try:
                         event = json.loads(raw_event)
@@ -226,6 +230,14 @@ async def relay_realtime_transcription(
                         continue
                     mapped = _provider_message(event)
                     if mapped:
+                        if mapped.get("type") == "delta":
+                            interim_delta_count += 1
+                            if interim_delta_count == 1:
+                                logger.info(
+                                    "realtime transcription interim delta received model=%s language=%s",
+                                    model,
+                                    normalize_language(language),
+                                )
                         await send(mapped)
                     if mapped and mapped.get("type") == "error":
                         raise RealtimeVoiceError("provider")
@@ -258,6 +270,14 @@ async def relay_realtime_transcription(
                     if not task.done():
                         task.cancel()
                 await asyncio.gather(client_task, provider_task, return_exceptions=True)
+        logger.info(
+            "realtime transcription session finished stage=%s model=%s language=%s duration_ms=%s interim_delta_count=%s",
+            stage,
+            model,
+            normalize_language(language),
+            int((time.monotonic() - session_started_at) * 1000),
+            interim_delta_count,
+        )
     except RealtimeVoiceError:
         raise
     except asyncio.CancelledError:
@@ -267,12 +287,14 @@ async def relay_realtime_transcription(
         close_code = getattr(exc, "code", None)
         close_reason = getattr(exc, "reason", None)
         logger.warning(
-            "realtime transcription connection failed stage=%s model=%s language=%s error_type=%s close_code=%s close_reason=%s",
+            "realtime transcription connection failed stage=%s model=%s language=%s error_type=%s close_code=%s close_reason=%s duration_ms=%s interim_delta_count=%s",
             stage,
             model,
             normalize_language(language),
             type(exc).__name__,
             str(close_code)[:32] if close_code is not None else "",
             str(close_reason)[:80] if close_reason is not None else "",
+            int((time.monotonic() - session_started_at) * 1000),
+            interim_delta_count,
         )
         raise RealtimeVoiceError("provider") from exc

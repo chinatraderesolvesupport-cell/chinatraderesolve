@@ -618,6 +618,13 @@ if('IntersectionObserver' in window){
   },{threshold:0.08}).observe(submitSection);
 }
 
+function autoGrowTextarea(field,maxHeight){
+  if(!field)return;
+  const cap=Math.max(140,Math.min(maxHeight,Math.floor(window.innerHeight*.42)));
+  field.style.height='auto';
+  field.style.height=`${Math.min(field.scrollHeight,cap)}px`;
+  field.style.overflowY=field.scrollHeight>cap?'auto':'hidden';
+}
 const descriptionField=document.getElementById('description');
 const descriptionCount=document.getElementById('descriptionCount');
 const formSubmitButton=document.getElementById('submitBtn');
@@ -1209,13 +1216,6 @@ if(aiChatRoot){
     aiTurnstileStatus.textContent=key?aiCopy(key):'';
     aiTurnstileStatus.dataset.state=state;
     if(aiTurnstileSection)aiTurnstileSection.classList.toggle('is-verified',state==='verified');
-  }
-  function autoGrowTextarea(field,maxHeight){
-    if(!field)return;
-    const cap=Math.max(140,Math.min(maxHeight,Math.floor(window.innerHeight*.42)));
-    field.style.height='auto';
-    field.style.height=`${Math.min(field.scrollHeight,cap)}px`;
-    field.style.overflowY=field.scrollHeight>cap?'auto':'hidden';
   }
   function updateAiControls(){
     autoGrowTextarea(aiChatInput,280);

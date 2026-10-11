@@ -133,6 +133,24 @@ def _ensure_notification_retry_columns(conn: Any) -> None:
 
 
 
+def _ensure_notification_message_id(conn: Any) -> None:
+    """Add the message link to the durable mail outbox without losing existing rows."""
+    if using_postgres():
+        execute(
+            conn,
+            "ALTER TABLE notification_outbox ADD COLUMN IF NOT EXISTS message_id BIGINT",
+        )
+    else:
+        rows = execute(conn, "PRAGMA table_info(notification_outbox)").fetchall()
+        columns = {str(row["name"]) for row in rows}
+        if "message_id" not in columns:
+            execute(conn, "ALTER TABLE notification_outbox ADD COLUMN message_id INTEGER")
+    execute(
+        conn,
+        "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id,id)",
+    )
+
+
 def _ensure_document_analysis_run_token(conn: Any) -> None:
     """Add a per-run claim token so late workers cannot overwrite newer analyses."""
     if using_postgres():
@@ -258,7 +276,20 @@ def init_db() -> None:
                 attempts INTEGER NOT NULL DEFAULT 0,
                 next_attempt_at TEXT,
                 claim_token TEXT NOT NULL DEFAULT '',
-                claimed_at TEXT
+                claimed_at TEXT,
+                message_id BIGINT
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS case_messages (
+                id BIGSERIAL PRIMARY KEY,
+                case_id BIGINT NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+                created_at TEXT NOT NULL,
+                author TEXT NOT NULL,
+                body TEXT NOT NULL,
+                idempotency_key TEXT UNIQUE,
+                delivery_status TEXT NOT NULL DEFAULT 'not_required',
+                notification_outbox_id BIGINT
             )
             """,
             """
@@ -309,6 +340,7 @@ def init_db() -> None:
             "CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC)",
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256)",
             "CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_case_messages_case ON case_messages(case_id, id)",
         ]
         with transaction() as conn:
             # Render can briefly run the old and new service instances at the
@@ -320,6 +352,8 @@ def init_db() -> None:
             for statement in statements:
                 execute(conn, statement)
             _ensure_notification_retry_columns(conn)
+            _ensure_notification_message_id(conn)
+            execute(conn, "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id)")
             _ensure_document_analysis_run_token(conn)
             _ensure_case_document_page_count(conn)
             _ensure_case_admin_viewed_at(conn)
@@ -385,7 +419,20 @@ def init_db() -> None:
                 next_attempt_at TEXT,
                 claim_token TEXT NOT NULL DEFAULT '',
                 claimed_at TEXT,
+                message_id INTEGER,
                 FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS case_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                case_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                author TEXT NOT NULL,
+                body TEXT NOT NULL,
+                idempotency_key TEXT UNIQUE,
+                delivery_status TEXT NOT NULL DEFAULT 'not_required',
+                notification_outbox_id INTEGER,
+                FOREIGN KEY(case_id) REFERENCES cases(id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS feedback (
@@ -435,9 +482,12 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_audit_case ON audit_log(case_id, created_at DESC);
             CREATE UNIQUE INDEX IF NOT EXISTS idx_case_documents_hash ON case_documents(case_id, sha256);
             CREATE INDEX IF NOT EXISTS idx_case_documents_case ON case_documents(case_id, created_at);
+            CREATE INDEX IF NOT EXISTS idx_case_messages_case ON case_messages(case_id, id);
             """
         )
         _ensure_notification_retry_columns(conn)
+        _ensure_notification_message_id(conn)
+        execute(conn, "CREATE INDEX IF NOT EXISTS idx_notification_outbox_message ON notification_outbox(message_id, id)")
         _ensure_document_analysis_run_token(conn)
         _ensure_case_document_page_count(conn)
         _ensure_case_admin_viewed_at(conn)
@@ -474,20 +524,118 @@ def _insert_notifications(
     conn: Any,
     case_id: int | None,
     notifications: list[dict[str, str]] | None,
-) -> None:
-    """Insert outbox messages in the caller's transaction."""
+) -> list[int]:
+    """Insert outbox messages in the caller's transaction and return their IDs."""
+    ids: list[int] = []
     for notification in notifications or []:
+        values = (
+            utcnow(),
+            case_id,
+            str(notification["recipient"]),
+            str(notification["subject"]),
+            str(notification["body"]),
+            notification.get("message_id"),
+        )
+        sql = (
+            "INSERT INTO notification_outbox("
+            "created_at,case_id,recipient,subject,body,message_id"
+            ") VALUES (?,?,?,?,?,?)"
+        )
+        if using_postgres():
+            row = execute(conn, sql + " RETURNING id", values).fetchone()
+            ids.append(int(row["id"]))
+        else:
+            cursor = execute(conn, sql, values)
+            ids.append(int(cursor.lastrowid))
+    return ids
+
+
+def _message_select_sql() -> str:
+    return (
+        "SELECT m.*, "
+        "COALESCE(n.status, m.delivery_status) AS delivery_status, "
+        "COALESCE(n.error, '') AS delivery_error, n.sent_at "
+        "FROM case_messages m "
+        "LEFT JOIN notification_outbox n ON n.id=m.notification_outbox_id "
+    )
+
+
+def _get_case_message(conn: Any, message_id: int) -> dict[str, Any] | None:
+    row = execute(
+        conn,
+        _message_select_sql() + "WHERE m.id=?",
+        (message_id,),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def add_case_message(
+    case_id: int,
+    author: str,
+    body: str,
+    idempotency_key: str,
+    *,
+    notification: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Persist one case message and its optional email outbox row atomically."""
+    if author not in {"admin", "client"}:
+        raise ValueError("Invalid message author")
+    normalized_body = str(body or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    normalized_body = "\n".join(line.rstrip() for line in normalized_body.split("\n"))
+    if not normalized_body or len(normalized_body) > 6000:
+        raise ValueError("Message must contain between 1 and 6000 characters")
+    key = str(idempotency_key or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{20,120}", key):
+        raise ValueError("Invalid message idempotency key")
+
+    with transaction() as conn:
+        existing = execute(
+            conn,
+            "SELECT id FROM case_messages WHERE idempotency_key=?",
+            (key,),
+        ).fetchone()
+        if existing:
+            return _get_case_message(conn, int(existing["id"])) or {}
+
+        now = utcnow()
+        insert_sql = (
+            "INSERT INTO case_messages("
+            "case_id,created_at,author,body,idempotency_key"
+            ") VALUES (?,?,?,?,?) ON CONFLICT(idempotency_key) DO NOTHING"
+        )
+        execute(conn, insert_sql, (case_id, now, author, normalized_body, key))
+        row = execute(
+            conn,
+            "SELECT id FROM case_messages WHERE idempotency_key=?",
+            (key,),
+        ).fetchone()
+        if not row:
+            raise RuntimeError("Unable to persist case message")
+        message_id = int(row["id"])
+        message = _get_case_message(conn, message_id) or {}
+        if message.get("delivery_status") != "not_required":
+            return message
+
+        notification_id = None
+        delivery_status = "not_configured"
+        if notification and str(notification.get("recipient") or "").strip():
+            notification_id = _insert_notifications(
+                conn,
+                case_id,
+                [{**notification, "message_id": message_id}],
+            )[0]
+            delivery_status = "pending"
         execute(
             conn,
-            "INSERT INTO notification_outbox(created_at,case_id,recipient,subject,body) VALUES (?,?,?,?,?)",
-            (
-                utcnow(),
-                case_id,
-                str(notification["recipient"]),
-                str(notification["subject"]),
-                str(notification["body"]),
-            ),
+            "UPDATE case_messages SET notification_outbox_id=?,delivery_status=? WHERE id=?",
+            (notification_id, delivery_status, message_id),
         )
+        execute(conn, "UPDATE cases SET updated_at=? WHERE id=?", (now, case_id))
+        add_audit(conn, case_id, author, "case_message_created", {
+            "message_id": message_id,
+            "delivery_status": delivery_status,
+        })
+        return _get_case_message(conn, message_id) or {}
 
 
 def create_case(
@@ -548,6 +696,16 @@ def get_case_by_public(reference: str, token: str) -> dict[str, Any] | None:
             (reference, token),
         ).fetchone()
         return dict(row) if row else None
+
+
+def list_case_messages(case_id: int) -> list[dict[str, Any]]:
+    with transaction() as conn:
+        rows = execute(
+            conn,
+            _message_select_sql() + "WHERE m.case_id=? ORDER BY m.id",
+            (case_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
 
 
 def get_case(case_id: int) -> dict[str, Any] | None:
@@ -992,6 +1150,7 @@ def _anonymize_case_for_connection(conn: Any, case_id: int, deleted_at: str) -> 
     """Remove related personal content and leave only a non-identifying tombstone."""
     execute(conn, "DELETE FROM feedback WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM notification_outbox WHERE case_id=?", (case_id,))
+    execute(conn, "DELETE FROM case_messages WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM case_documents WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM document_analyses WHERE case_id=?", (case_id,))
     execute(conn, "DELETE FROM audit_log WHERE case_id=?", (case_id,))

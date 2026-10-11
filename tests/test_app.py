@@ -5735,3 +5735,180 @@ def test_v3759_hero_example_is_explicitly_training_in_every_language():
         assert title in page.text
         assert status in page.text
 
+
+
+def _create_messaging_case(email, preferred_language="Russian"):
+    response = client.post(
+        "/api/applications",
+        json=valid_payload(
+            email=email,
+            preferred_language=preferred_language,
+            full_name="Synthetic Messaging Client",
+        ),
+        headers={"x-forwarded-for": "203.0.113.201"},
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _admin_case_context(case_reference):
+    import re
+    dashboard = client.get("/admin")
+    assert dashboard.status_code == 200
+    match = re.search(
+        r'href="/admin/case/(\d+)">' + re.escape(case_reference),
+        dashboard.text,
+    )
+    csrf_match = re.search(r'name="csrf_token" value="([^"]+)"', dashboard.text)
+    assert match and csrf_match
+    case_id = int(match.group(1))
+    detail = client.get(f"/admin/case/{case_id}")
+    assert detail.status_code == 200
+    detail_csrf = re.search(r'name="csrf_token" value="([^"]+)"', detail.text)
+    message_key = re.search(r'name="message_key" value="([^"]+)"', detail.text)
+    assert detail_csrf and message_key
+    return case_id, detail, detail_csrf.group(1), message_key.group(1)
+
+
+def test_case_messaging_keeps_internal_notes_private_and_adds_admin_history():
+    import re
+    from app.db import list_case_messages
+
+    created = _create_messaging_case("synthetic-internal@example.com")
+    login = client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        headers={"x-forwarded-for": "203.0.113.201"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+
+    case_id, detail, csrf, message_key = _admin_case_context(created["case_reference"])
+    status = client.post(
+        f"/admin/case/{case_id}/status",
+        data={
+            "status": "pilot_candidate",
+            "note": "INTERNAL_ONLY_SYNTHETIC_NOTE",
+            "csrf_token": csrf,
+        },
+        follow_redirects=False,
+    )
+    assert status.status_code == 303
+    assert list_case_messages(case_id) == []
+
+    detail = client.get(f"/admin/case/{case_id}")
+    assert "INTERNAL_ONLY_SYNTHETIC_NOTE" in detail.text
+    detail_csrf = re.search(r'name="csrf_token" value="([^"]+)"', detail.text)
+    message_key_match = re.search(r'name="message_key" value="([^"]+)"', detail.text)
+    assert detail_csrf and message_key_match
+
+    message_body = "Синтетическое сообщение клиенту <важная информация>"
+    sent = client.post(
+        f"/admin/case/{case_id}/message",
+        data={
+            "message": message_body,
+            "message_key": message_key_match.group(1),
+            "csrf_token": detail_csrf.group(1),
+        },
+        follow_redirects=False,
+    )
+    assert sent.status_code == 303
+    messages = list_case_messages(case_id)
+    assert len(messages) == 1
+    assert messages[0]["author"] == "admin"
+    assert messages[0]["body"] == message_body
+    assert messages[0]["delivery_status"] in {
+        "pending",
+        "sending",
+        "sent",
+        "failed",
+        "not_configured",
+        "not_required",
+    }
+
+    public = client.get(created["status_url"])
+    assert public.status_code == 200
+    assert message_body not in public.text
+    assert "Синтетическое сообщение клиенту" in public.text
+    assert "INTERNAL_ONLY_SYNTHETIC_NOTE" not in public.text
+    assert "&lt;важная информация&gt;" in public.text
+
+    duplicate = client.post(
+        f"/admin/case/{case_id}/message",
+        data={
+            "message": message_body,
+            "message_key": message_key_match.group(1),
+            "csrf_token": detail_csrf.group(1),
+        },
+        follow_redirects=False,
+    )
+    assert duplicate.status_code == 303
+    assert len(list_case_messages(case_id)) == 1
+
+
+def test_case_messaging_client_reply_csrf_and_case_isolation():
+    import re
+    from app.db import list_case_messages
+
+    created = _create_messaging_case("synthetic-reply@example.com")
+    client.post(
+        "/admin/login",
+        data={"token": "test-admin-token-abcdefghijklmnopqrstuvwxyz"},
+        headers={"x-forwarded-for": "203.0.113.201"},
+        follow_redirects=False,
+    )
+    case_id, _, _, _ = _admin_case_context(created["case_reference"])
+
+    public = client.get(created["status_url"])
+    assert public.status_code == 200
+    csrf = re.search(r'name="csrf_token" value="([^"]+)"', public.text)
+    message_key = re.search(r'name="message_key" value="([^"]+)"', public.text)
+    assert csrf and message_key
+
+    denied = client.post(
+        created["status_url"] + "/messages",
+        data={
+            "message": "should not be accepted",
+            "message_key": message_key.group(1),
+            "csrf_token": "invalid",
+        },
+        follow_redirects=False,
+    )
+    assert denied.status_code == 403
+    assert list_case_messages(case_id) == []
+
+    reply = "Ответ синтетического клиента с дополнительными сведениями."
+    accepted = client.post(
+        created["status_url"] + "/messages",
+        data={
+            "message": reply,
+            "message_key": message_key.group(1),
+            "csrf_token": csrf.group(1),
+        },
+        follow_redirects=False,
+    )
+    assert accepted.status_code == 303
+    messages = list_case_messages(case_id)
+    assert len(messages) == 1
+    assert messages[0]["author"] == "client"
+    assert messages[0]["body"] == reply
+
+    admin_page = client.get(f"/admin/case/{case_id}")
+    assert reply in admin_page.text
+
+    second = _create_messaging_case("synthetic-isolation@example.com")
+    second_page = client.get(second["status_url"])
+    assert second_page.status_code == 200
+    assert reply not in second_page.text
+
+    duplicate = client.post(
+        created["status_url"] + "/messages",
+        data={
+            "message": reply,
+            "message_key": message_key.group(1),
+            "csrf_token": csrf.group(1),
+        },
+        follow_redirects=False,
+    )
+    assert duplicate.status_code == 303
+    assert len(list_case_messages(case_id)) == 1

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -42,6 +43,7 @@ from .ai_assistant import (
 from .config import admin_token_is_secure, app_secret_is_secure, settings
 from .db import (
     add_case_documents,
+    add_case_message,
     claim_document_analysis,
     connect,
     create_case,
@@ -64,6 +66,7 @@ from .db import (
     grant_ai_consent,
     init_db,
     list_case_documents,
+    list_case_messages,
     list_cases,
     list_feedback,
     mark_case_viewed,
@@ -97,6 +100,7 @@ from .documents import (
 )
 from .notifications import (
     build_case_notifications,
+    build_case_message_notification,
     build_completion_notifications,
     deliver_pending,
     email_delivery_is_configured,
@@ -466,6 +470,7 @@ voice_attempt_limiter = SlidingWindowRateLimiter(limit=120, window_seconds=600)
 voice_limiter = SlidingWindowRateLimiter(limit=10, window_seconds=1800)
 document_upload_limiter = SlidingWindowRateLimiter(limit=12, window_seconds=900)
 document_analysis_limiter = SlidingWindowRateLimiter(limit=4, window_seconds=1800)
+case_message_limiter = SlidingWindowRateLimiter(limit=10, window_seconds=900)
 init_db()
 
 
@@ -650,6 +655,21 @@ def require_admin_csrf(request: Request, provided: str) -> None:
     expected = str(request.session.get("csrf_token") or "")
     if not expected or not secrets.compare_digest(provided or "", expected):
         raise HTTPException(status_code=403, detail="Invalid administrator form token")
+
+
+def private_csrf_token(reference: str, token: str) -> str:
+    payload = f"{reference}:{token}".encode("utf-8")
+    return hmac.new(
+        _runtime_session_secret.encode("utf-8"),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def require_private_csrf(reference: str, token: str, provided: str) -> None:
+    expected = private_csrf_token(reference, token)
+    if not provided or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid private form token")
 
 
 def public_rate_session_key(request: Request) -> str:
@@ -1133,6 +1153,63 @@ STATUS_COPY = {
     },
 }
 
+
+MESSAGE_COPY = {
+    "English": {
+        "heading": "Messages about your case", "intro": "Messages from ChinaTradeResolve and your replies stay on this private case page.",
+        "empty": "No messages yet.", "admin_author": "ChinaTradeResolve", "client_author": "You",
+        "reply_label": "Your reply", "placeholder": "Write your reply here…", "send": "Send reply",
+        "sent": "Your reply was saved.", "pending": "The email notification is waiting to be sent.",
+        "failed": "The email notification could not be delivered. The message remains saved.",
+        "closed": "This case is closed and no longer accepts replies.", "closed_issue": "This case is closed and no longer accepts replies.",
+        "csrf_issue": "This page has expired. Reload the private case page and try again.", "rate_issue": "Too many replies. Please try again later.",
+    },
+    "Russian": {
+        "heading": "Переписка по делу", "intro": "Сообщения ChinaTradeResolve и ваши ответы сохраняются только на этой приватной странице дела.",
+        "empty": "Сообщений пока нет.", "admin_author": "ChinaTradeResolve", "client_author": "Вы",
+        "reply_label": "Ваш ответ", "placeholder": "Напишите ответ…", "send": "Отправить ответ",
+        "sent": "Ваш ответ сохранён.", "pending": "Уведомление пока ожидает отправки.",
+        "failed": "Уведомление не удалось доставить. Само сообщение сохранено.",
+        "closed": "Дело закрыто и больше не принимает ответы.", "closed_issue": "Дело закрыто и больше не принимает ответы.",
+        "csrf_issue": "Страница устарела. Обновите приватную страницу дела и попробуйте снова.", "rate_issue": "Слишком много ответов. Попробуйте позже.",
+    },
+    "Serbian": {
+        "heading": "Poruke o slučaju", "intro": "Poruke ChinaTradeResolve i vaši odgovori čuvaju se samo na ovoj privatnoj stranici slučaja.",
+        "empty": "Još nema poruka.", "admin_author": "ChinaTradeResolve", "client_author": "Vi",
+        "reply_label": "Vaš odgovor", "placeholder": "Napišite odgovor…", "send": "Pošaljite odgovor",
+        "sent": "Vaš odgovor je sačuvan.", "pending": "Obaveštenje čeka slanje.",
+        "failed": "Obaveštenje nije isporučeno. Poruka je sačuvana.",
+        "closed": "Slučaj je zatvoren i više ne prima odgovore.", "closed_issue": "Slučaj je zatvoren i više ne prima odgovore.",
+        "csrf_issue": "Stranica je istekla. Osvežite privatnu stranicu slučaja i pokušajte ponovo.", "rate_issue": "Previše odgovora. Pokušajte kasnije.",
+    },
+    "French": {
+        "heading": "Messages concernant votre dossier", "intro": "Les messages de ChinaTradeResolve et vos réponses restent sur cette page privée.",
+        "empty": "Aucun message pour le moment.", "admin_author": "ChinaTradeResolve", "client_author": "Vous",
+        "reply_label": "Votre réponse", "placeholder": "Écrivez votre réponse…", "send": "Envoyer la réponse",
+        "sent": "Votre réponse a été enregistrée.", "pending": "La notification e-mail est en attente d’envoi.",
+        "failed": "La notification e-mail n’a pas pu être délivrée. Le message est enregistré.",
+        "closed": "Ce dossier est clôturé et n’accepte plus de réponses.", "closed_issue": "Ce dossier est clôturé et n’accepte plus de réponses.",
+        "csrf_issue": "Cette page a expiré. Rechargez la page privée et réessayez.", "rate_issue": "Trop de réponses. Réessayez plus tard.",
+    },
+    "German": {
+        "heading": "Nachrichten zu Ihrem Fall", "intro": "Nachrichten von ChinaTradeResolve und Ihre Antworten bleiben auf dieser privaten Fallseite.",
+        "empty": "Noch keine Nachrichten.", "admin_author": "ChinaTradeResolve", "client_author": "Sie",
+        "reply_label": "Ihre Antwort", "placeholder": "Schreiben Sie Ihre Antwort…", "send": "Antwort senden",
+        "sent": "Ihre Antwort wurde gespeichert.", "pending": "Die E-Mail-Benachrichtigung wartet auf den Versand.",
+        "failed": "Die E-Mail-Benachrichtigung konnte nicht zugestellt werden. Die Nachricht ist gespeichert.",
+        "closed": "Dieser Fall ist geschlossen und nimmt keine Antworten mehr an.", "closed_issue": "Dieser Fall ist geschlossen und nimmt keine Antworten mehr an.",
+        "csrf_issue": "Diese Seite ist abgelaufen. Laden Sie die private Fallseite neu und versuchen Sie es erneut.", "rate_issue": "Zu viele Antworten. Bitte versuchen Sie es später erneut.",
+    },
+    "Spanish": {
+        "heading": "Mensajes sobre su caso", "intro": "Los mensajes de ChinaTradeResolve y sus respuestas permanecen en esta página privada.",
+        "empty": "Todavía no hay mensajes.", "admin_author": "ChinaTradeResolve", "client_author": "Usted",
+        "reply_label": "Su respuesta", "placeholder": "Escriba su respuesta…", "send": "Enviar respuesta",
+        "sent": "Su respuesta se ha guardado.", "pending": "La notificación por correo está pendiente de envío.",
+        "failed": "No se pudo entregar la notificación por correo. El mensaje se ha guardado.",
+        "closed": "Este caso está cerrado y ya no acepta respuestas.", "closed_issue": "Este caso está cerrado y ya no acepta respuestas.",
+        "csrf_issue": "Esta página ha caducado. Recargue la página privada e inténtelo de nuevo.", "rate_issue": "Demasiadas respuestas. Inténtelo más tarde.",
+    },
+}
 
 DOCUMENT_COPY = {
     "English": {
@@ -2203,6 +2280,8 @@ def public_case_status(
     analysis_unavailable: int = 0,
     analysis_started: int = 0,
     analysis_issue: str = "",
+    message_sent: int = 0,
+    message_issue: str = "",
 ) -> HTMLResponse:
     case = get_case_by_public(reference, token)
     if not case:
@@ -2212,6 +2291,7 @@ def public_case_status(
     copy = STATUS_COPY.get(language, STATUS_COPY["English"])
     feedback = get_feedback(case["id"])
     documents = list_case_documents(case["id"])
+    messages = list_case_messages(case["id"])
     document_analysis = _fresh_document_analysis(case["id"])
     progress_copy = CASE_PROGRESS_COPY.get(language, CASE_PROGRESS_COPY["English"])
     upload_error_copy = DOCUMENT_UPLOAD_ERROR_COPY.get(
@@ -2246,6 +2326,12 @@ def public_case_status(
             "support_url": safe_support_url(),
             "support_available": support_is_available(),
             "documents": documents,
+            "messages": messages,
+            "message_copy": MESSAGE_COPY.get(language, MESSAGE_COPY["English"]),
+            "message_sent": bool(message_sent),
+            "message_issue": message_issue,
+            "private_csrf_token": private_csrf_token(reference, token),
+            "client_message_key": secrets.token_urlsafe(24),
             "document_analysis": document_analysis,
             "document_changes_locked": bool(document_analysis and document_analysis.get("status") == "running"),
             "document_analysis_enabled": document_analysis_is_enabled(),
@@ -2261,6 +2347,48 @@ def public_case_status(
             "risk_label": PUBLIC_RISK_LABELS.get(language, PUBLIC_RISK_LABELS["English"]).get(case["risk_level"], case["risk_level"]),
             "page_language": {"English": "en", "French": "fr", "German": "de", "Spanish": "es", "Russian": "ru", "Serbian": "sr"}.get(language, "en"),
         },
+    )
+
+
+@app.post("/case/{reference}/{token}/messages")
+def public_case_message(
+    reference: str,
+    token: str,
+    request: Request,
+    message: str = Form(...),
+    message_key: str = Form(...),
+    csrf_token: str = Form(...),
+) -> RedirectResponse:
+    case = get_case_by_public(reference, token)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    require_private_csrf(reference, token, csrf_token)
+    if case["status"] in {"declined", "closed"}:
+        return RedirectResponse(
+            f"/case/{quote(reference, safe='')}/{quote(token, safe='')}?message_issue=closed#messages",
+            status_code=303,
+        )
+    if not case_message_limiter.allow(f"case-message:{case['id']}:{client_key(request)}"):
+        return RedirectResponse(
+            f"/case/{quote(reference, safe='')}/{quote(token, safe='')}?message_issue=rate#messages",
+            status_code=303,
+        )
+    try:
+        add_case_message(
+            case["id"],
+            "client",
+            message,
+            message_key,
+            notification=build_case_message_notification(case, "client"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(deliver_pending)
+    return RedirectResponse(
+        f"/case/{quote(reference, safe='')}/{quote(token, safe='')}?message_sent=1#messages",
+        status_code=303,
+        background=background_tasks,
     )
 
 
@@ -2715,6 +2843,16 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
             "problem_labels": PROBLEM_LABELS,
             "result_labels": RESULT_LABELS,
             "channel_labels": CHANNEL_LABELS,
+            "messages": list_case_messages(case_id),
+            "message_send_key": secrets.token_urlsafe(24),
+            "message_status_labels": {
+                "pending": "Ожидает отправки",
+                "sending": "Отправляется",
+                "sent": "Отправлено",
+                "failed": "Не доставлено",
+                "not_configured": "Почта не настроена",
+                "not_required": "Не требуется",
+            },
             "csrf_token": admin_csrf_token(request),
         },
     )
@@ -2787,6 +2925,35 @@ async def admin_analyse_documents(
         return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
     background_tasks.add_task(_run_document_analysis_task, case_id, "admin", run_token)
     return RedirectResponse(f"/admin/case/{case_id}#document-analysis", status_code=303)
+
+
+@app.post("/admin/case/{case_id}/message")
+def admin_send_case_message(
+    case_id: int,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    message: str = Form(...),
+    message_key: str = Form(...),
+    csrf_token: str = Form(...),
+) -> RedirectResponse:
+    require_admin_csrf(request, csrf_token)
+    case = get_case(case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if case["status"] in {"declined", "closed"}:
+        raise HTTPException(status_code=409, detail="Closed cases do not accept new messages")
+    try:
+        add_case_message(
+            case_id,
+            "admin",
+            message,
+            message_key,
+            notification=build_case_message_notification(case, "admin"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    background_tasks.add_task(deliver_pending)
+    return RedirectResponse(f"/admin/case/{case_id}?message_sent=1#messages", status_code=303)
 
 
 @app.post("/admin/case/{case_id}/status")

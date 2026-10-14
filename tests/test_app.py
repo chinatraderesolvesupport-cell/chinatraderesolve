@@ -4736,14 +4736,36 @@ def test_launch_readiness_fails_closed_when_database_is_unavailable(monkeypatch)
     assert response.json()["checks"]["database_storage"] is False
 
 
-def test_health_remains_live_when_database_is_unavailable(monkeypatch):
+def test_health_is_liveness_only_and_does_not_probe_database(monkeypatch):
     import app.main as module
 
-    monkeypatch.setattr(module, "database_is_available", lambda: False)
+    monkeypatch.setattr(module, "using_postgres", lambda: True)
+
+    def unexpected_probe():
+        raise AssertionError("/health must not open a database connection")
+
+    monkeypatch.setattr(module, "database_is_available", unexpected_probe)
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["readiness_checks"]["database_storage"] is False
+    assert response.json()["readiness_checks"]["database_storage"] is True
+    assert response.json()["readiness_probe"] == "configuration_only"
     assert "document_analysis_used_today" not in response.json()
+
+
+def test_event_driven_email_delivery_stops_without_polling(monkeypatch):
+    import asyncio
+    import app.main as module
+
+    calls = []
+    monkeypatch.setattr(module, "email_delivery_is_configured", lambda: True)
+    monkeypatch.setattr(
+        module,
+        "deliver_pending",
+        lambda: calls.append("deliver") or {"sent": 0, "failed": 0, "pending": 0},
+    )
+
+    asyncio.run(module._deliver_pending_with_retries())
+    assert calls == ["deliver"]
 
 
 def test_public_launch_mode_blocks_incomplete_site_without_leaking_config(monkeypatch):

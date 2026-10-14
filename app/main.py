@@ -391,32 +391,59 @@ def _document_analysis_stale_seconds() -> int:
 
 
 async def _maintenance_loop() -> None:
-    """Retry queued mail and enforce retention without relying on a redeploy."""
-    next_retention_check = time.monotonic() + settings.retention_check_interval_seconds
+    """Run the low-frequency recovery sweep without keeping serverless Postgres awake.
+
+    Normal email delivery is triggered by the request that queued the message.
+    This loop is only a safety net for work left behind by a process restart and
+    for retention/recovery housekeeping.  Sleeping before the first sweep is
+    important: startup already performs the same recovery checks and schedules
+    one outbox recovery attempt.
+    """
     while True:
+        await asyncio.sleep(settings.retention_check_interval_seconds)
         try:
             if email_delivery_is_configured():
-                await asyncio.to_thread(deliver_pending)
+                await _deliver_pending_with_retries()
             recovered = await asyncio.to_thread(
                 fail_running_document_analyses_on_startup,
                 _document_analysis_stale_seconds(),
             )
             if recovered:
                 logger.warning("Marked %s stale document analyses as failed", recovered)
-            if time.monotonic() >= next_retention_check:
-                removed = await asyncio.to_thread(
-                    soft_delete_expired,
-                    settings.retention_days,
-                    settings.inactive_retention_days,
-                )
-                if removed:
-                    logger.info("Anonymised %s expired closed or inactive cases", removed)
-                next_retention_check = time.monotonic() + settings.retention_check_interval_seconds
+            removed = await asyncio.to_thread(
+                soft_delete_expired,
+                settings.retention_days,
+                settings.inactive_retention_days,
+            )
+            if removed:
+                logger.info("Anonymised %s expired closed or inactive cases", removed)
         except asyncio.CancelledError:
             raise
         except Exception:
             logger.exception("Periodic maintenance failed")
-        await asyncio.sleep(settings.maintenance_interval_seconds)
+
+
+async def _deliver_pending_with_retries() -> None:
+    """Deliver queued mail now and retry transient failures without DB polling."""
+    if not email_delivery_is_configured():
+        return
+    retry_delays = (30, 60, 120, 240, 480)
+    result = await asyncio.to_thread(deliver_pending)
+    for delay in retry_delays:
+        if not result.get("pending"):
+            return
+        await asyncio.sleep(delay)
+        result = await asyncio.to_thread(deliver_pending)
+
+
+_email_delivery_tasks: set[asyncio.Task[None]] = set()
+
+
+async def _schedule_pending_delivery() -> None:
+    """Start retrying delivery after the response without delaying the client."""
+    task = asyncio.create_task(_deliver_pending_with_retries())
+    _email_delivery_tasks.add(task)
+    task.add_done_callback(_email_delivery_tasks.discard)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -425,6 +452,8 @@ async def lifespan(_app: FastAPI):
     recovered = fail_running_document_analyses_on_startup(_document_analysis_stale_seconds())
     if recovered:
         logger.warning("Marked %s stale document analyses as failed", recovered)
+    if email_delivery_is_configured():
+        await _schedule_pending_delivery()
     maintenance_task = asyncio.create_task(_maintenance_loop())
     telegram_monitor_task = asyncio.create_task(run_telegram_monitor())
     try:
@@ -432,11 +461,15 @@ async def lifespan(_app: FastAPI):
     finally:
         for task in (telegram_monitor_task, maintenance_task):
             task.cancel()
+        for task in tuple(_email_delivery_tasks):
+            task.cancel()
         for task in (telegram_monitor_task, maintenance_task):
             try:
                 await task
             except asyncio.CancelledError:
                 pass
+        if _email_delivery_tasks:
+            await asyncio.gather(*tuple(_email_delivery_tasks), return_exceptions=True)
 
 
 app = FastAPI(
@@ -577,21 +610,31 @@ def persistent_database_is_ready() -> bool:
     return bool(using_postgres() and database_is_available())
 
 
-def launch_readiness_checks() -> dict[str, bool]:
-    """Expose non-secret pre-launch requirements in one auditable place."""
+def launch_configuration_checks() -> dict[str, bool]:
+    """Return launch requirements that never open a database connection."""
     return {
         "administrator_security": admin_configuration_is_secure(),
         "privacy_identity": privacy_configuration_is_complete(),
         "https_public_url": settings.public_base_url.startswith("https://"),
         "email_delivery": email_delivery_is_configured(),
         "bot_protection": turnstile_is_enabled(),
-        "database_storage": persistent_database_is_ready(),
+        "database_storage": using_postgres(),
         "pdf_security": pdf_security_self_test(),
     }
 
 
+def launch_readiness_checks() -> dict[str, bool]:
+    """Probe strict readiness only when an operator explicitly requests it."""
+    checks = launch_configuration_checks()
+    checks["database_storage"] = persistent_database_is_ready()
+    return checks
+
+
 def public_launch_is_ready() -> bool:
-    return all(launch_readiness_checks().values())
+    # Public page views must not wake serverless Postgres merely to decide
+    # whether configuration is complete.  /ready remains the explicit live
+    # dependency probe used after deployment and during diagnostics.
+    return all(launch_configuration_checks().values())
 
 
 def search_indexing_checks() -> dict[str, bool]:
@@ -1772,7 +1815,7 @@ def guide_detail(language: str, slug: str, request: Request) -> HTMLResponse:
 @app.get("/health")
 def health() -> dict[str, Any]:
     """Lightweight liveness information without exposing usage budgets."""
-    readiness = launch_readiness_checks()
+    readiness = launch_configuration_checks()
     return {
         "status": "ok",
         "version": APP_VERSION,
@@ -1808,6 +1851,7 @@ def health() -> dict[str, Any]:
         "search_indexing_checks": search_indexing_checks(),
         "database_backend": database_backend_name(),
         "database_persistent": using_postgres(),
+        "readiness_probe": "configuration_only",
         "readiness_checks": readiness,
     }
 
@@ -2294,7 +2338,7 @@ async def submit_application(
         public_token,
         notifications=build_case_notifications(notification_case),
     )
-    background_tasks.add_task(deliver_pending)
+    background_tasks.add_task(_schedule_pending_delivery)
     status_url = f"/case/{reference}/{public_token}"
     absolute_status_url = f"{settings.public_base_url.rstrip('/')}{status_url}"
     return JSONResponse(
@@ -2488,7 +2532,7 @@ def public_case_message(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     background_tasks = BackgroundTasks()
-    background_tasks.add_task(deliver_pending)
+    background_tasks.add_task(_schedule_pending_delivery)
     return RedirectResponse(
         f"/case/{quote(reference, safe='')}/{quote(token, safe='')}?message_sent=1#messages",
         status_code=303,
@@ -3060,7 +3104,7 @@ def admin_send_case_message(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    background_tasks.add_task(deliver_pending)
+    background_tasks.add_task(_schedule_pending_delivery)
     return RedirectResponse(f"/admin/case/{case_id}?message_sent=1#messages", status_code=303)
 
 
@@ -3090,7 +3134,7 @@ def admin_update_status(
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if old_case and old_case["status"] != "closed" and updated["status"] == "closed":
-        background_tasks.add_task(deliver_pending)
+        background_tasks.add_task(_schedule_pending_delivery)
     return RedirectResponse(f"/admin/case/{case_id}", status_code=303)
 
 

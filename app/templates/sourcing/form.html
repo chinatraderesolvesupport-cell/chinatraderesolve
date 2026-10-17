@@ -21,4 +21,4 @@
 <details><summary>{{ t('assessment') }}</summary><p>{{ t('assessment_note') }}</p><p>{{ t('archive_note') }}</p></details>
 </details>
 {% with ux=sourcing_ux %}{% include 'sourcing/sample.html' %}{% endwith %}
-{% endblock %}{% block scripts %}<script id="sourcingCopy" type="application/json">{{ js_copy|tojson }}</script><script src="/static/sourcing.js" defer></script>{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}{% endblock %}
+{% endblock %}{% block scripts %}<script id="sourcingCopy" type="application/json">{{ js_copy|tojson }}</script><script src="/static/sourcing.js?v=20261017-research" defer></script>{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}{% endblock %}

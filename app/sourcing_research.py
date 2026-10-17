@@ -21,7 +21,8 @@ from .db import execute, transaction, using_postgres, utcnow
 from . import sourcing_store as store
 from .ai_triage import _extract_output_text
 
-logger = logging.getLogger(__name__)
+# Uvicorn configures this logger hierarchy; root INFO messages are otherwise lost.
+logger = logging.getLogger('uvicorn.error.sourcing_research')
 _tasks: set[asyncio.Task] = set()
 _wake: asyncio.Event | None = None
 
@@ -338,6 +339,14 @@ async def startup():
         brief = json.loads(row['brief_json'])
         if brief.get('ai_processing_consent') or row['id'] in backfill:
             enqueue(row['id'])
+    for request_id in backfill:
+        item = await run_in_threadpool(store.get_request, request_id)
+        if item:
+            job = item['research'] or {}
+            logger.info('Sourcing research checkpoint %s state=%s draft_fields=%s sources=%s',
+                        request_id, job.get('state', 'not_queued'),
+                        sum(bool(item['draft'].get(key)) for key in ('summary','findings','risks','next_steps')),
+                        len(job.get('evidence', {}).get('sources', [])))
     await schedule()
 
 

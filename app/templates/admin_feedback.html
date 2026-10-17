@@ -12,11 +12,11 @@
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}}@media(max-width:480px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body>
+<body>{% include 'admin_navigation.html' %}
 <div class="wrap">
   <div class="top">
-    <div><div class="brand">ChinaTrade<span>Resolve</span></div><a href="/admin">← Вернуться в очередь дел</a><h1>💬 Отзывы клиентов</h1><p class="muted">Все оценки и комментарии в одном месте. Ничего не публикуется автоматически.</p></div>
-    <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn">Выйти</button></form>
+    <div><a href="/admin">← Вернуться в очередь дел</a><h1>💬 Отзывы клиентов</h1><p class="muted">Все оценки и комментарии в одном месте. Ничего не публикуется автоматически.</p></div>
+
   </div>
 
   <div class="grid">

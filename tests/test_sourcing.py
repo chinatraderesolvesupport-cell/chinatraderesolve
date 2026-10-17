@@ -255,8 +255,9 @@ def test_complete_language_flow_free_feedback_and_assessment(pilot,lang):
     admin(c)
     for path in ('/admin/sourcing','/admin/sourcing/feedback','/admin/sourcing/'+rid):
         page=c.get(path+'?lang='+lang)
-        assert page.status_code==200 and copy['free_short'] in page.text
-        if lang!='ru': assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="languages".*?</div>','',page.text))
+        assert page.status_code==200 and copy['admin_workspace'] in page.text
+        assert copy['free_short'] not in page.text
+        if lang!='ru': assert not re.search('[А-Яа-яЁё]',page.text)
     move(c,rid,'reviewing');move(c,rid,'in_progress')
     page=c.get('/admin/sourcing/'+rid)
     assert copy['assessment_optional'] in page.text
@@ -587,3 +588,37 @@ def test_independent_public_directions_keep_private_forms_and_old_links(pilot,mo
     assert 'noindex' in pilot.get('/sourcing?lang='+lang).headers['x-robots-tag']
     sitemap=pilot.get('/sitemap.xml').text
     assert '/buying?lang='+lang in sitemap and '/disputes?lang='+lang in sitemap
+
+
+def test_admin_statistics_disputes_periods_and_workspace_navigation(pilot):
+    from app import sourcing_stats as stats
+    from datetime import datetime,timedelta,timezone
+    payload={'full_name':'Isolated buyer','email':'buyer@example.com','main_problem':'Goods not received',
+             'description':'Synthetic isolated case','ai_consent':True,'sharing_authority':True,
+             'free_access_terms':True,'no_guarantee':True}
+    triage={'decision':'closed','priority':50,'risk_level':'medium','source':'rules','public_message':'Test'}
+    cases=[db.create_case(payload,triage,'CTR-STATS-'+str(i),'private-'+str(i)) for i in range(3)]
+    with db.transaction() as conn:
+        old=(datetime.now(timezone.utc)-timedelta(days=10)).isoformat()
+        db.execute(conn,'UPDATE cases SET created_at=? WHERE id=?',(old,cases[1]['id']))
+        db.execute(conn,'UPDATE cases SET deleted_at=? WHERE id=?',(db.utcnow(),cases[2]['id']))
+    assert [row['disputes'] for row in stats.summary()['periods']]==[1,1,2]
+    rid=create(pilot)
+    admin(pilot)
+    for path in ['/admin','/admin/feedback','/admin/case/'+str(cases[0]['id']),
+                 '/admin/sourcing','/admin/sourcing/'+rid,'/admin/sourcing/feedback',
+                 '/admin/sourcing-statistics?days=30']:
+        page=pilot.get(path)
+        assert page.status_code==200
+        assert 'aria-label="Кабинет администратора"' in page.text
+        assert 'Рабочий кабинет</a>' in page.text and '>Обновить</a>' in page.text
+        assert 'action="/admin/logout"' in page.text
+        assert '/static/admin-workspace.css' in page.text
+        assert 'site-brand' not in page.text
+    page=pilot.get('/admin/sourcing-statistics?days=30')
+    assert 'days=30" aria-current="page"' in page.text
+    assert 'Как считаем показатели' in page.text
+    assert 'Подбор и проверку выполняет оператор' not in page.text
+    assert 'days=7" aria-current="page"' in pilot.get('/admin/sourcing-statistics?days=bad').text
+    assert 'admin-toolbar' not in pilot.get('/sourcing').text
+    assert 'admin-toolbar' not in pilot.get('/sourcing/requests/'+rid).text

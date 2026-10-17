@@ -91,6 +91,8 @@ def summary():
             reports=execute(conn,'''SELECT COUNT(DISTINCT r.request_id) AS n FROM sourcing_reports r
                 JOIN sourcing_requests q ON q.id=r.request_id
                 WHERE r.created_at>=? AND r.created_at<? AND q.brief_json NOT LIKE ? AND q.id<>?''',(start,end,'%"system_test": true%',system_id)).fetchone()['n']
-            result.append(dict(days=days,start=start,views=row['views'],sessions=row['sessions'],requests=requests,reports=reports))
+            disputes=execute(conn,'''SELECT COUNT(*) AS n FROM cases WHERE created_at>=? AND created_at<?
+                AND deleted_at IS NULL''',(start,end)).fetchone()['n']
+            result.append(dict(disputes=disputes,days=days,start=start,views=row['views'],sessions=row['sessions'],requests=requests,reports=reports))
         first=execute(conn,'SELECT MIN(day) AS day FROM sourcing_daily_stats').fetchone()['day']
     return dict(periods=result,first=first,today=today.isoformat())

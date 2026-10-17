@@ -336,6 +336,28 @@ u_legacy|Форма обращения по спору и подробности
 u_choose_service|Выберите подходящую помощь|Choose the help you need|Passende Hilfe auswählen|Choisissez l’aide adaptée|Elija la ayuda que necesita|Izaberite odgovarajuću pomoć
 js_language_error|Не удалось сменить язык. Введённые данные сохранены на этой странице; попробуйте ещё раз.|Could not change the language. Your entries remain on this page; please try again.|Die Sprache konnte nicht gewechselt werden. Ihre Eingaben bleiben auf dieser Seite erhalten. Bitte versuchen Sie es erneut.|Impossible de changer la langue. Vos données restent sur cette page ; réessayez.|No se pudo cambiar el idioma. Los datos siguen en esta página; inténtelo de nuevo.|Nije moguće promeniti jezik. Uneti podaci ostaju na ovoj stranici; pokušajte ponovo.
 '''
+DATA = DATA.rstrip() + """\nadmin_workspace|Рабочий кабинет|Workspace|Arbeitsbereich|Espace de travail|Panel de trabajo|Radni prostor
+admin_heading|Кабинет администратора|Administrator workspace|Administrationsbereich|Espace administrateur|Panel de administración|Administratorski prostor
+admin_refresh|Обновить|Refresh|Aktualisieren|Actualiser|Actualizar|Osveži
+admin_site|Открыть сайт|Open website|Website öffnen|Ouvrir le site|Abrir sitio|Otvori sajt
+admin_logout|Выйти|Sign out|Abmelden|Se déconnecter|Cerrar sesión|Odjavi se
+admin_sourcing|Заявки на подбор|Supplier sourcing|Lieferantensuche|Recherche de fournisseurs|Búsqueda de proveedores|Pronalaženje dobavljača
+admin_visits|Посещаемость|Traffic|Besucherzahlen|Fréquentation|Tráfico|Posećenost
+admin_dispute_feedback|Отзывы по спорам|Dispute feedback|Bewertungen zu Streitfällen|Avis sur les litiges|Opiniones sobre disputas|Utisci o sporovima
+admin_site_feedback|Отзывы и ошибки сайта|Website feedback and bugs|Website-Feedback und Fehler|Avis et erreurs du site|Opiniones y errores del sitio|Utisci i greške na sajtu
+stats_all_scope|Публичные страницы сайта и обращения по двум направлениям.|Public website pages and requests for both services.|Öffentliche Seiten und Anfragen für beide Dienste.|Pages publiques et demandes pour les deux services.|Páginas públicas y solicitudes de ambos servicios.|Javne stranice i zahtevi za obe usluge.
+stats_disputes|Обращения по спорам|Dispute requests|Anfragen zu Streitfällen|Demandes liées aux litiges|Solicitudes sobre disputas|Zahtevi za sporove
+stats_compare|Сравнение периодов|Compare periods|Zeiträume vergleichen|Comparer les périodes|Comparar períodos|Poređenje perioda
+stats_how|Как считаем показатели|How we count|So zählen wir|Méthode de comptage|Cómo contamos|Kako računamo
+stats_today|Сегодня|Today|Heute|Aujourd’hui|Hoy|Danas
+stats_7|7 дней|7 days|7 Tage|7 jours|7 días|7 dana
+stats_30|30 дней|30 days|30 Tage|30 jours|30 días|30 dana
+stats_no_history|Более ранних данных посещений нет.|Earlier visit data is unavailable.|Frühere Besuchsdaten sind nicht verfügbar.|Les données de visites antérieures sont indisponibles.|No hay datos de visitas anteriores.|Raniji podaci o posetama nisu dostupni.
+stats_dispute_rule|Споры считаются по дате создания, включая закрытые обращения, исключая удалённые.|Disputes are counted by creation date, including closed requests and excluding deleted ones.|Streitfälle werden nach Erstellungsdatum gezählt, einschließlich geschlossener und ohne gelöschte Anfragen.|Les litiges sont comptés par date de création, y compris les demandes clôturées et hors demandes supprimées.|Las disputas se cuentan por fecha de creación, incluidas las cerradas y excluidas las eliminadas.|Sporovi se računaju po datumu kreiranja, uključujući zatvorene i isključujući obrisane zahteve.
+"""
+DATA += """stats_sourcing_requests|Заявки на подбор|Sourcing requests|Anfragen zur Lieferantensuche|Demandes de recherche|Solicitudes de búsqueda|Zahtevi za dobavljače
+stats_sourcing_reports|Заявки с отчётом по подбору|Sourcing requests with a report|Suchanfragen mit Bericht|Demandes de recherche avec rapport|Solicitudes de búsqueda con informe|Zahtevi za dobavljače sa izveštajem
+"""
 COPY={lang:{} for lang in LANGUAGES}
 for line in DATA.strip().splitlines():
     values=line.split('|')

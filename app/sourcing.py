@@ -90,7 +90,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
             't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
             'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
-            'is_error':status>=400}
+            'is_error':status>=400,'sourcing_statistics_enabled':enabled()}
+        if request.url.path.startswith('/admin/') and request.session.get('admin'):
+            context.setdefault('csrf_token',admin_csrf_token(request))
         if 'message_key' in context: context['message']=t(context.pop('message_key'))
         elif 'message' in context: context['message']=localize_error(context['message'],lang)
         public_info=status==200 and name in {'help.html','buying.html'} and live() and indexing_ready and indexing_ready()
@@ -148,7 +150,11 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
     @router.get('/admin/sourcing-statistics')
     def statistics(request:Request):
         require_admin(request)
-        return render(request,'statistics.html',{'statistics':sourcing_stats.summary()})
+        period=request.query_params.get('days','7')
+        days=int(period) if period in {'1','7','30'} else 7
+        statistics=sourcing_stats.summary()
+        selected=next(row for row in statistics['periods'] if row['days']==days)
+        return render(request,'statistics.html',{'statistics':statistics,'selected':selected})
 
     @router.get('/sourcing/help')
     def help_hub(request:Request):

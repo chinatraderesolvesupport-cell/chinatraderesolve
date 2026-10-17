@@ -676,6 +676,7 @@ def test_admin_single_deletion_confirmation_isolation_and_cascades(pilot,kind):
     response=pilot.post(path,data={**data,'confirm':'delete'},follow_redirects=False)
     assert response.status_code==303,response.text
     assert 'deleted=1' in response.headers['location']
+    if kind=='case':assert 'view=closed' in response.headers['location']
     assert pilot.post(path,data={**data,'confirm':'delete'}).status_code==409
     assert pilot.get('/admin').status_code==200
     assert db.get_case(other_case['id']) and store.get_request(other_rid)

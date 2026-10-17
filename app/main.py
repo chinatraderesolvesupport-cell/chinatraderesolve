@@ -3096,6 +3096,10 @@ async def admin_purge_case(case_id:int,request:Request):
         require_admin_csrf(request,str(form.get('csrf_token') or ''))
         nonce=str(form.get('delete_nonce') or '')
         version=admin_deletion.validate(request,'case:'+str(case_id),nonce,form.get('confirm'))
+        case=get_case(case_id)
+        if not case:
+            raise HTTPException(404,'Дело не найдено.')
+        return_view='closed' if case['status']=='closed' else 'archive' if case['status']=='declined' else 'active'
         try:
             deleted=await asyncio.to_thread(purge_case_now,case_id,version)
         except (ValueError,DocumentAnalysisInProgressError) as exc:
@@ -3103,7 +3107,7 @@ async def admin_purge_case(case_id:int,request:Request):
         if not deleted:
             raise HTTPException(404,'Дело не найдено.')
     admin_deletion.finish(request,nonce)
-    return RedirectResponse('/admin?deleted=1',303)
+    return RedirectResponse('/admin?view='+return_view+'&deleted=1',303)
 
 
 @app.post("/admin/case/{case_id}/documents/{document_id}/delete")

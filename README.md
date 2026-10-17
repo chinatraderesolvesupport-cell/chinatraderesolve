@@ -1,4 +1,4 @@
-# ChinaTradeResolve Document AI v3.7.60
+# ChinaTradeResolve Document AI v3.8.0
 
 **Official website:** https://chinatraderesolve.com/ — China Trade Resolve (ChinaTradeResolve), an independent service for preliminary assessment of disputes with Chinese suppliers.
 

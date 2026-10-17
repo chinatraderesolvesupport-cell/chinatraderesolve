@@ -276,7 +276,7 @@ def test_mail_transport_failure_keeps_notifications_for_retry():
 
 def test_sourcing_mobile_photo_to_operator_report():
     """Real UI: multipart photo, private ownership, operator report, buyer delivery."""
-    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true", "TURNSTILE_SITE_KEY":"", "TURNSTILE_SECRET_KEY":""}) as (base, database, sink, http, env):
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true", "ENABLE_SOURCING_LIVE":"true", "TURNSTILE_SITE_KEY":"", "TURNSTILE_SECRET_KEY":""}) as (base, database, sink, http, env):
         with sync_playwright() as playwright:
             browser=playwright.chromium.launch(headless=True)
             buyer=browser.new_context(viewport={"width":390,"height":844},locale="ru-RU")
@@ -284,6 +284,11 @@ def test_sourcing_mobile_photo_to_operator_report():
             try:
                 page=buyer.new_page()
                 for language in ("ru","en","de","fr","es","sr"):
+                    page.goto(base+"/?lang="+language)
+                    expect(page.locator('.combined-card')).to_have_count(2)
+                    expect(page.locator('#homeBuy')).to_have_attribute('href','/sourcing?lang='+language+'&service=search')
+                    expect(page.locator('#caseForm')).to_have_count(1)
+                    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                     page.goto(base+"/sourcing/preview?lang="+language)
                     expect(page.locator("html")).to_have_attribute("lang",language)
                     expect(page.locator(".path-card")).to_have_count(2)
@@ -293,8 +298,15 @@ def test_sourcing_mobile_photo_to_operator_report():
                 expect(page.locator('#existingDisputeForm')).to_have_attribute('href','/?lang=ru#submit')
                 page.goto(base+"/sourcing/preview/account?lang=ru")
                 expect(page.locator('.dashboard-example')).to_contain_text('Только пример интерфейса')
-                page.goto(base+"/sourcing/preview?lang=ru")
-                page.locator('#previewBuy').click()
+                page.goto(base+"/?lang=ru")
+                page.locator('#langSelect').select_option('en')
+                expect(page.locator('#homeBuy')).to_have_attribute('href','/sourcing?lang=en&service=search')
+                expect(page.locator('.combined-free').first).to_have_text('Help is free')
+                page.locator('#langSelect').select_option('ru')
+                page.locator('#homeDispute').click()
+                expect(page.locator('#fullName')).to_be_visible()
+                page.goto(base+"/?lang=ru")
+                page.locator('#homeBuy').click()
                 expect(page.locator('#service')).to_have_value('search')
                 photo=BytesIO();Image.new("RGB",(16,16),"blue").save(photo,format="JPEG")
                 page.locator("#photos").set_input_files({"name":"key.jpg","mimeType":"image/jpeg","buffer":photo.getvalue()})
@@ -348,7 +360,7 @@ def test_sourcing_mobile_photo_to_operator_report():
                 page.goto(base+"/sourcing?lang=en")
                 expect(page.locator("html")).to_have_attribute("lang","en")
                 expect(page.locator("#counter")).to_have_text("At least 50 more characters needed.")
-                expect(page.locator(".free")).to_contain_text("Free during launch")
+                expect(page.locator(".free")).to_contain_text("Help is free")
                 for code,title in {"de":"Lieferanten finden","fr":"Trouver un fournisseur","es":"Buscar un proveedor","sr":"Pronađi dobavljača"}.items():
                     page.goto(base+"/sourcing?lang="+code)
                     expect(page.locator("html")).to_have_attribute("lang",code)

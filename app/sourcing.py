@@ -32,6 +32,10 @@ def enabled():
     return os.getenv('ENABLE_SOURCING_PILOT','').lower() in {'1','true','yes'}
 
 
+def live():
+    return enabled() and os.getenv('ENABLE_SOURCING_LIVE','').lower() in {'1','true','yes'}
+
+
 def require_enabled():
     if not enabled():
         raise HTTPException(404)
@@ -60,7 +64,7 @@ def valid_sources(raw):
 
 
 def install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
-                     verify_turnstile, turnstile_site_key, schedule_delivery=None):
+                     verify_turnstile, turnstile_site_key, schedule_delivery=None, indexing_ready=None):
     if enabled():
         store.init_sourcing_db()
         sourcing_stats.init_db()
@@ -78,18 +82,26 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
     router=APIRouter(dependencies=[Depends(require_enabled)],route_class=LocalizedRoute)
 
     def render(request,name,context=None,status=200):
-        lang=language(request);t=translator(lang)
+        lang=language(request);base_t=translator(lang)
+        t=lambda key:base_t("live_operator" if live() and key=="pilot" else key)
         if status==200:
             sourcing_stats.record_view(request)
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
-            't':t,'lang':lang,'languages':LANGUAGES,
+            't':t,'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
             'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
             'is_error':status>=400}
         if 'message_key' in context: context['message']=t(context.pop('message_key'))
         elif 'message' in context: context['message']=localize_error(context['message'],lang)
+        public_info=status==200 and name=='help.html' and live() and indexing_ready and indexing_ready()
+        context['public_info']=bool(public_info)
+        if public_info:
+            base=sourcing_mail.settings.public_base_url.rstrip('/')
+            context['canonical_url']=base+request.url.path+'?lang='+lang
+            context['help_alternates']=[{'lang':code,'url':base+request.url.path+'?lang='+code} for code in LANGUAGES]
         return templates.TemplateResponse(request=request,name='sourcing/'+name,context=context,
-            status_code=status,headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
+            status_code=status,headers={'Cache-Control':'no-store',
+                'X-Robots-Tag':'index, follow' if public_info else 'noindex, nofollow, noarchive'})
 
     def csrf(request):
         token=request.session.get('sourcing_csrf')

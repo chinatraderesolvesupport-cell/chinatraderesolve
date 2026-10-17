@@ -484,3 +484,66 @@ def test_sourcing_lifecycle_preserves_existing_dispute(pilot):
     assert db.get_case(dispute['id'])==before
     assert db.get_case_by_public('CTR-TEST-COEXIST','synthetic-private-token')==before
     assert pilot.get('/case/CTR-TEST-COEXIST/synthetic-private-token').status_code==200
+
+
+@pytest.mark.parametrize('lang',['ru','en','de','fr','es','sr'])
+def test_combined_home_free_and_privacy(pilot,monkeypatch,lang):
+    monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
+    page=pilot.get('/?lang='+lang)
+    assert page.status_code==200
+    assert 'id="homeBuy"' in page.text and 'id="homeDispute"' in page.text
+    assert sourcing.COPY[lang]['u_headline'] in page.text
+    assert 'id="caseForm"' in page.text
+    assert sourcing.COPY[lang]['free_short'] in page.text
+    assert sourcing.COPY[lang]['sourcing_privacy'] in pilot.get('/privacy?lang='+lang).text
+    assert sourcing.COPY[lang]['live_operator'] in pilot.get('/sourcing?lang='+lang).text
+
+
+def test_combined_home_counter_does_not_wake_database(pilot,monkeypatch):
+    from app import sourcing_stats as stats
+    monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
+    stats._pending.clear()
+    original=stats.transaction
+    def forbidden():raise AssertionError('homepage must not wake database')
+    monkeypatch.setattr(stats,'transaction',forbidden)
+    response=pilot.get('/',headers={'user-agent':'Mozilla/5.0 Chrome/130'})
+    assert response.status_code==200
+    assert sum(v[0] for v in stats._pending.values())==1
+    monkeypatch.setattr(stats,'transaction',original)
+    assert stats.summary()['periods'][0]['views']==1
+    assert not stats._pending
+
+
+def test_only_public_buyer_guides_enter_live_search_index(pilot,monkeypatch):
+    monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
+    monkeypatch.setattr(main,'search_indexing_checks',lambda:{'ready':True})
+    page=pilot.get('/sourcing/help/supplier?lang=de&utm_source=test')
+    assert page.headers['x-robots-tag']=='index, follow'
+    assert '/sourcing/help/supplier?lang=de"' in page.text
+    assert 'rel="alternate" hreflang="sr"' in page.text
+    assert 'utm_source=test' not in page.text
+    sitemap=pilot.get('/sitemap.xml').text
+    assert '/sourcing/help/supplier?lang=de' in sitemap
+    assert '/sourcing/requests/' not in sitemap
+    rid=create(pilot)
+    assert 'noindex' in pilot.get('/sourcing/requests/'+rid).headers['x-robots-tag']
+    assert 'noindex' in pilot.get('/sourcing').headers['x-robots-tag']
+    monkeypatch.setattr(main,'search_indexing_checks',lambda:{'ready':False})
+    assert 'noindex' in pilot.get('/sourcing/help').headers['x-robots-tag']
+    assert '/sourcing/help/supplier' not in pilot.get('/sitemap.xml').text
+
+
+def test_private_integration_archive_is_complete_and_read_only(pilot,tmp_path):
+    import gzip,json,stat
+    from scripts.backup_for_integration import backup
+    rid=create(pilot)
+    original=store.get_request(rid)
+    path=tmp_path/'private-backup.jsonl.gz'
+    result=backup(path)
+    assert result['verified_complete'] and result['counts']['sourcing_requests']==1
+    assert stat.S_IMODE(path.stat().st_mode)==0o600
+    with gzip.open(path,'rt',encoding='utf-8') as stream:rows=[json.loads(line) for line in stream]
+    assert rows[-1]['complete'] is True
+    assert any(r.get('table')=='sourcing_requests' and r['row']['id']==rid for r in rows)
+    assert store.get_request(rid)==original
+    with pytest.raises(FileExistsError):backup(path)

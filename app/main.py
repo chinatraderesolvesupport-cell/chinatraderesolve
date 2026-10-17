@@ -150,7 +150,7 @@ PUBLIC_LANGUAGE_NAMES = {
 }
 
 BASE = Path(__file__).resolve().parent
-APP_VERSION = "3.7.60"
+APP_VERSION = "3.8.0"
 logger = logging.getLogger("chinatraderesolve")
 
 
@@ -461,6 +461,8 @@ async def lifespan(_app: FastAPI):
     try:
         yield
     finally:
+        if sourcing_live():
+            await asyncio.to_thread(sourcing_stats.flush)
         for task in (telegram_monitor_task, maintenance_task):
             task.cancel()
         for task in tuple(_email_delivery_tasks):
@@ -1637,6 +1639,8 @@ def home(request: Request) -> HTMLResponse:
     ]
     x_default_url = base_url + "/"
     wallets = crypto_wallets()
+    if sourcing_live():
+        sourcing_stats.record_view(request,buffered=True)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -1658,6 +1662,9 @@ def home(request: Request) -> HTMLResponse:
             "page_language": page_language,
             "seo": seo,
             "home_copy": HOME_TRANSLATIONS[page_language],
+            "sourcing_live": sourcing_live(),
+            "sourcing_copy": SOURCING_COPY[page_language],
+            "sourcing_public_copy": {code:{key:value for key,value in copy.items() if key.startswith("u_") or key in {"free_short","access","choose_help","help_hub","support_project"}} for code,copy in SOURCING_COPY.items()} if sourcing_live() else {},
             "featured_guide_cards": [
                 {"slug": slug, **GUIDE_CARD_COPY[page_language][slug]}
                 for slug in ("supplier-not-refunding", "alibaba-dispute-closed-no-refund")
@@ -1697,6 +1704,8 @@ def guides_index(language: str, request: Request) -> HTMLResponse:
         {"lang": code, "url": f"{base_url}/{code}/guides"}
         for code in SUPPORTED_LANGUAGES
     ]
+    if sourcing_live():
+        sourcing_stats.record_view(request,buffered=True)
     structured_data = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
@@ -1733,6 +1742,8 @@ def guide_detail(language: str, slug: str, request: Request) -> HTMLResponse:
         return unavailable_until_configured(request)
     if language not in GUIDES or slug not in GUIDES[language]:
         raise HTTPException(status_code=404, detail="Guide not found")
+    if sourcing_live():
+        sourcing_stats.record_view(request,buffered=True)
     guide = GUIDES[language][slug]
     base_url = settings.public_base_url.rstrip("/")
     canonical_url = f"{base_url}/{language}/guides/{slug}"
@@ -1945,6 +1956,12 @@ def sitemap() -> Response:
         }
         urls.extend(entry(path, detail_alternates) for path in detail_paths.values())
 
+    if sourcing_live() and search_indexing_is_ready():
+        for topic in ('','/supplier','/spec','/cost','/photo'):
+            paths={code:'/sourcing/help'+topic+'?lang='+code for code in SUPPORTED_LANGUAGES}
+            alternates={**paths,'x-default':paths['ru']}
+            urls.extend(entry(path,alternates,lastmod='2026-10-17') for path in paths.values())
+
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
@@ -2003,6 +2020,9 @@ def privacy_page(request: Request) -> HTMLResponse:
             "controller_registration": (settings.data_controller_registration or "").strip() if privacy_ready else "",
             "privacy_configuration_complete": privacy_ready,
             "contact_email": settings.contact_email,
+            "sourcing_live": sourcing_live(),
+            "sourcing_privacy": SOURCING_COPY[language]["sourcing_privacy"],
+            "sourcing_heading": SOURCING_COPY[language]["title"],
         },
     )
 
@@ -3195,9 +3215,11 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # old Render URL changes origin before route handling or request-body parsing.
 # All route decorators above are already bound to ``fastapi_app``.
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
-from .sourcing import install_sourcing, enabled as sourcing_enabled
+from .sourcing import install_sourcing, enabled as sourcing_enabled, live as sourcing_live
+from .sourcing_i18n import COPY as SOURCING_COPY
+from . import sourcing_stats
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
-                 verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery)
+                 verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery, search_indexing_is_ready)
 
 fastapi_app = app
 body_limited_app = RequestBodyLimitMiddleware(fastapi_app)

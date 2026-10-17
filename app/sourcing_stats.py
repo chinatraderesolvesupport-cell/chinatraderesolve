@@ -2,15 +2,21 @@
 
 Session-day counts are estimates, not unique people. Only successfully rendered
 public pilot pages are counted. Existing signed-session flags deduplicate visits;
-DNT/GPC and administrators are excluded. Production routes never call this module.
+DNT/GPC and administrators are excluded. When the combined site is enabled, homepage/guide views are buffered without DB access.
+The buffer is saved on an admin statistics read or a graceful shutdown; a crash
+can lose unflushed counts.
 """
 import logging
+from collections import defaultdict
+from threading import Lock
 from datetime import datetime, timedelta, timezone
 from .db import execute, transaction
 from .security import SlidingWindowRateLimiter, client_key
 
 log=logging.getLogger(__name__)
 limiter=SlidingWindowRateLimiter(limit=120,window_seconds=60)
+_pending=defaultdict(lambda:[0,0])
+_lock=Lock()
 PUBLIC={'/sourcing','/sourcing/preview','/sourcing/preview/dispute','/sourcing/preview/account',
         '/sourcing/reviews','/sourcing/help'}
 
@@ -22,9 +28,9 @@ def init_db():
             sessions INTEGER NOT NULL DEFAULT 0)''')
 
 
-def record_view(request):
+def record_view(request, *, buffered=False):
     path=request.url.path
-    if path not in PUBLIC and not path.startswith('/sourcing/help/'):
+    if not buffered and path not in PUBLIC and not path.startswith('/sourcing/help/'):
         return
     if request.session.get('admin') or request.headers.get('dnt')=='1' or request.headers.get('sec-gpc')=='1':
         return
@@ -35,6 +41,11 @@ def record_view(request):
         return
     day=datetime.now(timezone.utc).date().isoformat()
     first=request.session.get('sourcing_stats_day')!=day
+    if buffered:
+        with _lock:
+            _pending[day][0]+=1;_pending[day][1]+=int(first)
+        request.session['sourcing_stats_day']=day
+        return
     try:
         with transaction() as conn:
             execute(conn,'''INSERT INTO sourcing_daily_stats(day,pageviews,sessions) VALUES (?,1,?)
@@ -46,7 +57,25 @@ def record_view(request):
         log.warning('Pilot visit aggregate could not be saved',exc_info=False)
 
 
+def flush():
+    with _lock:
+        batch=dict(_pending);_pending.clear()
+    if not batch:return
+    try:
+        with transaction() as conn:
+            for day,(views,sessions) in batch.items():
+                execute(conn,"""INSERT INTO sourcing_daily_stats(day,pageviews,sessions) VALUES (?,?,?)
+                    ON CONFLICT(day) DO UPDATE SET pageviews=sourcing_daily_stats.pageviews+?,
+                    sessions=sourcing_daily_stats.sessions+?""",(day,views,sessions,views,sessions))
+    except Exception:
+        with _lock:
+            for day,(views,sessions) in batch.items():
+                _pending[day][0]+=views;_pending[day][1]+=sessions
+        log.warning('Public visit buffer could not be saved',exc_info=False)
+
+
 def summary():
+    flush()
     today=datetime.now(timezone.utc).date()
     result=[]
     with transaction() as conn:

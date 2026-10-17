@@ -124,7 +124,7 @@ def main() -> int:
             urls = ET.fromstring(sitemap.content).findall("s:url", ns)
             locations = {entry.findtext("s:loc", namespaces=ns): entry for entry in urls}
             sourcing_live=bool(payload.get('sourcing_live'))
-            expected_count=120 if sourcing_live else 90
+            expected_count=132 if sourcing_live else 90
             check(len(locations) == len(urls) == expected_count, f"sitemap contains {expected_count} unique public URLs", failures)
             if sourcing_live:
                 check(sum('/sourcing/help' in url for url in locations)==30, 'six languages include all buyer help pages', failures)

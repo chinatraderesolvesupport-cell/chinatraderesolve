@@ -50,3 +50,54 @@ function revealSourcingExample(){
 window.addEventListener('hashchange',revealSourcingExample);
 window.addEventListener('pageshow',revealSourcingExample);
 revealSourcingExample();
+
+// Translate an open request in place. Do not store drafts or move file/CAPTCHA controls.
+if(form){
+ let changingLanguage=false;
+ function translateTree(current,incoming){
+  if(!current||!incoming||current.nodeType!==incoming.nodeType)return;
+  if(current.nodeType===Node.TEXT_NODE){current.textContent=incoming.textContent;return;}
+  if(current.nodeType!==Node.ELEMENT_NODE)return;
+  if(current.id==='preview'||current.id==='sourcingCopy'||current.matches('.cf-turnstile,iframe,script'))return;
+  if(current.matches('input,textarea')){
+   if(incoming.hasAttribute('placeholder'))current.setAttribute('placeholder',incoming.getAttribute('placeholder'));
+   return;
+  }
+  if(current.tagName==='SELECT'){
+   Array.from(current.options).forEach(option=>{const translated=Array.from(incoming.options).find(other=>other.value===option.value);if(translated)option.textContent=translated.textContent;});return;
+  }
+  for(const name of ['href','lang','aria-label','aria-current']){
+   if(incoming.hasAttribute(name))current.setAttribute(name,incoming.getAttribute(name));
+   else if(current.hasAttribute(name))current.removeAttribute(name);
+  }
+  Array.from(current.childNodes).forEach((child,index)=>translateTree(child,incoming.childNodes[index]));
+ }
+ document.addEventListener('click',async event=>{
+  const link=event.target.closest('.languages a');
+  if(!link||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  event.preventDefault();if(changingLanguage)return;changingLanguage=true;
+  try{
+   const url=new URL(link.href);url.hash=location.hash;url.searchParams.set('service',form.elements.namedItem('service').value);
+   const response=await fetch(url,{credentials:'same-origin'});
+   if(!response.ok)throw new Error('language response');
+   const incoming=new DOMParser().parseFromString(await response.text(),'text/html');
+   if(!incoming.querySelector('#sourcingForm'))throw new Error('missing form');
+   const nextCopy=JSON.parse(incoming.querySelector('#sourcingCopy').textContent);
+   for(const selector of ['header','.languages','main','footer'])translateTree(document.querySelector(selector),incoming.querySelector(selector));
+   for(const name of ['csrf_token','submission'])form.elements.namedItem(name).value=incoming.querySelector('#sourcingForm').elements.namedItem(name).value;
+   Object.assign(copy,nextCopy);document.documentElement.lang=incoming.documentElement.lang;document.title=incoming.title;
+   history.replaceState(null,'',url);form.dispatchEvent(new Event('input'));
+   document.getElementById('submitStatus').textContent='';
+  }catch(error){document.getElementById('submitStatus').textContent=t('js_language_error');}
+  finally{changingLanguage=false;}
+ });
+}
+const feedbackForm=document.querySelector('[data-feedback-form]');
+if(feedbackForm){
+ const kind=feedbackForm.querySelector('[name="kind"]');
+ function syncFeedback(){
+  const review=kind.value==='review';
+  feedbackForm.querySelectorAll('.review-only').forEach(group=>{group.hidden=!review;group.querySelectorAll('input,select').forEach(control=>{control.disabled=!review;if(!review){if(control.type==='checkbox')control.checked=false;else control.value='';}});});
+ }
+ kind.addEventListener('change',syncFeedback);syncFeedback();
+}

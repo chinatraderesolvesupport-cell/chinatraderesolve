@@ -93,7 +93,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             'is_error':status>=400}
         if 'message_key' in context: context['message']=t(context.pop('message_key'))
         elif 'message' in context: context['message']=localize_error(context['message'],lang)
-        public_info=status==200 and name=='help.html' and live() and indexing_ready and indexing_ready()
+        public_info=status==200 and name in {'help.html','buying.html'} and live() and indexing_ready and indexing_ready()
         context['public_info']=bool(public_info)
         if public_info:
             base=sourcing_mail.settings.public_base_url.rstrip('/')
@@ -131,6 +131,10 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         while len(accesses)>8:
             accesses.pop(next(iter(accesses)))
         request.session['sourcing_access']=accesses
+
+    @router.get('/buying')
+    def buying(request:Request):
+        return render(request,'buying.html')
 
     @router.get('/sourcing')
     def home(request:Request):

@@ -475,3 +475,45 @@ def test_language_switch_keeps_draft_photos_and_a_valid_submission():
                 expect(page.locator('input[name="publish_consent"]')).to_be_disabled()
             finally:
                 browser.close()
+
+
+def test_admin_workspace_refresh_periods_and_navigation():
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}) as (base,database,sink,http,env):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            page=browser.new_page(viewport={"width":1280,"height":900})
+            try:
+                page.goto(base+'/admin/login')
+                page.locator('input[name="token"]').fill(env['ADMIN_TOKEN'])
+                page.locator('button[type="submit"]').click()
+                nav=page.locator('.admin-toolbar')
+                nav.get_by_role('link',name='Посещаемость',exact=True).click()
+                expect(page.locator('.admin-metric')).to_have_count(5)
+                page.get_by_role('link',name='30 дней',exact=True).click()
+                nav.get_by_role('link',name='Обновить',exact=True).click()
+                expect(page.locator('.admin-periods a[aria-current="page"]')).to_have_text('30 дней')
+                expect(page.locator('details.admin-panel')).not_to_have_attribute('open','')
+                for width in (1280,390):
+                    page.set_viewport_size({"width":width,"height":900})
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                    for href in ('/admin/sourcing','/admin/sourcing/feedback','/admin/feedback','/admin'):
+                        nav.locator('a[href="'+href+'"]').click()
+                        expect(page.locator('.admin-toolbar')).to_be_visible()
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                    nav.get_by_role('link',name='Посещаемость',exact=True).click()
+                    if os.environ.get('CTR_ADMIN_SCREENSHOT_DIR'):
+                        target=Path(os.environ['CTR_ADMIN_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
+                        page.screenshot(path=str(target/('admin-statistics-'+str(width)+'.png')),full_page=True)
+                nav.get_by_role('link',name='Рабочий кабинет',exact=True).click()
+                page.get_by_role('link',name='Закрытые 0',exact=True).click()
+                nav.get_by_role('link',name='Обновить',exact=True).click()
+                assert 'view=closed' in page.url
+                nav.get_by_role('link',name='Открыть сайт',exact=True).click()
+                expect(page.locator('.combined-card')).to_have_count(2)
+                page.goto(base+'/admin')
+                page.locator('.admin-toolbar').get_by_role('button',name='Выйти',exact=True).click()
+                expect(page.locator('input[name="token"]')).to_be_visible()
+                assert http.get(base+'/admin/sourcing-statistics').status_code==401
+                assert sink.messages==[]
+            finally:
+                browser.close()

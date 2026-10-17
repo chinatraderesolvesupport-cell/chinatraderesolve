@@ -2988,6 +2988,7 @@ def admin_feedback_centre(
         request=request,
         name="admin_feedback.html",
         context={
+            "sourcing_statistics_enabled": sourcing_enabled(),
             "feedback_items": feedback_items,
             "total_feedback": total,
             "average_rating": average,
@@ -3018,6 +3019,7 @@ def admin_case_detail(case_id: int, request: Request) -> HTMLResponse:
         name="admin_case.html",
         context={
             "case": case,
+            "sourcing_statistics_enabled": sourcing_enabled(),
             "acquisition": get_case_acquisition(case_id),
             "triage": json.loads(case["triage_json"]),
             "audit": get_audit(case_id),

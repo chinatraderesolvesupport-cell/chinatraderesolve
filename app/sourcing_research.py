@@ -280,6 +280,7 @@ async def _drain_queue():
             await run_in_threadpool(finish,job,{}, {})
             continue
         try:
+            logger.info('Sourcing research %s started', job['request_id'])
             draft, evidence = await research(item)
             saved = await run_in_threadpool(finish, job, draft, evidence)
             logger.info('Sourcing research %s %s sources=%s', job['request_id'], 'ready' if saved else 'stale', len(evidence['sources']))
@@ -337,14 +338,25 @@ async def startup():
     backfill = set(filter(None, os.getenv('SOURCING_RESEARCH_BACKFILL_IDS', '').split(',')))
     for row in rows:
         brief = json.loads(row['brief_json'])
-        if brief.get('ai_processing_consent') or row['id'] in backfill:
-            enqueue(row['id'])
+        if brief.get('ai_processing_consent'):
+            try:
+                enqueue(row['id'])
+            except store.Conflict:
+                pass  # An administrator may have edited the request meanwhile.
     for request_id in backfill:
         item = await run_in_threadpool(store.get_request, request_id)
         if item:
+            if item['status'] in {'received','reviewing','in_progress'} and not item['draft'] and not item['research']:
+                try:
+                    await run_in_threadpool(enqueue,request_id,item['version'])
+                    item = await run_in_threadpool(store.get_request,request_id)
+                except store.Conflict:
+                    pass
+            if not item:
+                continue
             job = item['research'] or {}
-            logger.info('Sourcing research checkpoint %s state=%s draft_fields=%s sources=%s',
-                        request_id, job.get('state', 'not_queued'),
+            logger.info('Sourcing research checkpoint %s request_status=%s state=%s draft_fields=%s sources=%s',
+                        request_id,item['status'],job.get('state', 'not_queued'),
                         sum(bool(item['draft'].get(key)) for key in ('summary','findings','risks','next_steps')),
                         len(job.get('evidence', {}).get('sources', [])))
     await schedule()

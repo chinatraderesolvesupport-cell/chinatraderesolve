@@ -79,7 +79,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         lang=language(request);t=translator(lang)
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
-            't':t,'lang':lang,'languages':LANGUAGES,'js_copy':COPY[lang],'is_error':status>=400}
+            't':t,'lang':lang,'languages':LANGUAGES,
+            'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
+            'is_error':status>=400}
         if 'message_key' in context: context['message']=t(context.pop('message_key'))
         elif 'message' in context: context['message']=localize_error(context['message'],lang)
         return templates.TemplateResponse(request=request,name='sourcing/'+name,context=context,
@@ -120,7 +122,20 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         pending=list(request.session.get('sourcing_submissions',[]))
         request.session['sourcing_submissions']=(pending+[submission])[-6:]
         return render(request,'form.html',{'csrf_token':csrf(request),
-            'submission':submission,'turnstile_site_key':turnstile_site_key})
+            'submission':submission,'turnstile_site_key':turnstile_site_key,
+            'selected_service':request.query_params.get('service') if request.query_params.get('service') in SERVICES else 'search'})
+
+    @router.get('/sourcing/preview')
+    def unified_preview(request:Request):
+        return render(request,'unified.html',{'preview_view':'home'})
+
+    @router.get('/sourcing/preview/dispute')
+    def unified_dispute(request:Request):
+        return render(request,'unified.html',{'preview_view':'dispute'})
+
+    @router.get('/sourcing/preview/account')
+    def unified_account(request:Request):
+        return render(request,'unified.html',{'preview_view':'account'})
 
     @router.post('/sourcing/requests')
     async def submit(request:Request, background_tasks:BackgroundTasks):

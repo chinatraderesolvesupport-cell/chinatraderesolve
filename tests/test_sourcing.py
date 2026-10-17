@@ -339,3 +339,31 @@ def test_supplier_evidence_and_archived_review_are_validated(pilot):
     page=pilot.get(path+'?lang=en')
     assert 'Public snapshot found' in page.text and 'Example supplier' in page.text
     assert 'proves neither removal' in page.text
+
+
+@pytest.mark.parametrize('lang',['ru','en','de','fr','es','sr'])
+def test_unified_preview_languages_routes_and_honest_examples(pilot,lang):
+    from app.sourcing_i18n import COPY
+    copy=COPY[lang]
+    for path in ('/sourcing/preview','/sourcing/preview/dispute','/sourcing/preview/account'):
+        page=pilot.get(path+'?lang='+lang)
+        assert page.status_code==200
+        assert '<html lang="'+lang+'">' in page.text
+        assert 'noindex' in page.headers['x-robots-tag']
+        assert copy['u_preview'] in page.text
+        if lang!='ru':
+            assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="wrap languages".*?</div>','',page.text))
+    page=pilot.get('/sourcing/preview?lang='+lang)
+    assert '/sourcing?lang='+lang+'&amp;service=search' in page.text
+    assert '/sourcing/preview/dispute?lang='+lang in page.text
+    assert copy['u_samples_note'] in page.text
+    assert page.text.count('class="example"')==3
+    assert copy['u_step1'] in page.text and copy['u_step3_text'] in page.text
+    assert not store.list_requests()
+
+
+@pytest.mark.parametrize('service',['search','check','prepare','invalid'])
+def test_unified_preview_passes_service_choice(pilot,service):
+    page=pilot.get('/sourcing?service='+service)
+    selected=service if service!='invalid' else 'search'
+    assert re.search(r'<option value="'+selected+r'" selected>',page.text)

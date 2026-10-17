@@ -6,6 +6,7 @@ DNT/GPC and administrators are excluded. When the combined site is enabled, home
 The buffer is saved on an admin statistics read or a graceful shutdown; a crash
 can lose unflushed counts.
 """
+import os
 import logging
 from collections import defaultdict
 from threading import Lock
@@ -78,15 +79,18 @@ def summary():
     flush()
     today=datetime.now(timezone.utc).date()
     result=[]
+    system_id=os.getenv('SOURCING_SYSTEM_TEST_REQUEST_ID','')
     with transaction() as conn:
         for days in (1,7,30):
             start=(today-timedelta(days=days-1)).isoformat()
             end=(today+timedelta(days=1)).isoformat()
             row=execute(conn,'''SELECT COALESCE(SUM(pageviews),0) AS views,
                 COALESCE(SUM(sessions),0) AS sessions FROM sourcing_daily_stats WHERE day>=? AND day<?''',(start,end)).fetchone()
-            requests=execute(conn,'SELECT COUNT(*) AS n FROM sourcing_requests WHERE created_at>=? AND created_at<?',(start,end)).fetchone()['n']
-            reports=execute(conn,'''SELECT COUNT(DISTINCT request_id) AS n FROM sourcing_reports
-                WHERE created_at>=? AND created_at<?''',(start,end)).fetchone()['n']
+            requests=execute(conn,'''SELECT COUNT(*) AS n FROM sourcing_requests WHERE created_at>=? AND created_at<?
+                AND brief_json NOT LIKE ? AND id<>?''',(start,end,'%"system_test": true%',system_id)).fetchone()['n']
+            reports=execute(conn,'''SELECT COUNT(DISTINCT r.request_id) AS n FROM sourcing_reports r
+                JOIN sourcing_requests q ON q.id=r.request_id
+                WHERE r.created_at>=? AND r.created_at<? AND q.brief_json NOT LIKE ? AND q.id<>?''',(start,end,'%"system_test": true%',system_id)).fetchone()['n']
             result.append(dict(days=days,start=start,views=row['views'],sessions=row['sessions'],requests=requests,reports=reports))
         first=execute(conn,'SELECT MIN(day) AS day FROM sourcing_daily_stats').fetchone()['day']
     return dict(periods=result,first=first,today=today.isoformat())

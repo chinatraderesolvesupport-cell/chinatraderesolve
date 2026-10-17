@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production-safe SEO checks for ChinaTradeResolve v3.7.59.
+"""Production-safe SEO checks for ChinaTradeResolve v3.8.0.
 
 Usage:
     python scripts/seo_smoke_test.py
@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 import httpx
 
 BASE_URL = os.getenv("CTR_BASE_URL", "https://chinatraderesolve.com").rstrip("/")
-EXPECTED_VERSION = "3.7.59"
+EXPECTED_VERSION = "3.8.0"
 EXPECTED_GUIDE_DATE = "2026-10-09"
 SAMPLE_PATHS = [
     "/ru/guides",
@@ -82,24 +82,25 @@ def check(condition: bool, label: str, failures: list[str]) -> None:
 
 def main() -> int:
     failures: list[str] = []
-    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.7.59"}) as client:
-        # The Render auto-deploy starts independently of GitHub CI. Wait for the
-        # new sitemap marker so a successful smoke test cannot inspect old code.
+    with httpx.Client(timeout=25.0, follow_redirects=True, headers={"User-Agent": "ChinaTradeResolve-SEO-Smoke/3.8.0"}) as client:
+        # Render deploys independently of CI. Wait for the actual release version,
+        # not an older guide date that is also present in the previous deployment.
         for attempt in range(24):
             try:
-                marker = client.get(BASE_URL + "/sitemap.xml")
-                if marker.status_code == 200 and f"<lastmod>{EXPECTED_GUIDE_DATE}</lastmod>" in marker.text:
+                marker = client.get(BASE_URL + "/health")
+                if marker.status_code == 200 and marker.json().get("version")==EXPECTED_VERSION:
                     break
             except httpx.RequestError:
                 pass
             if attempt < 23:
                 time.sleep(5)
         else:
-            print("FAIL  October guide deployment was not visible within two minutes")
+            print("FAIL  Expected release version was not visible within two minutes")
             return 1
 
         ready = client.get(urljoin(BASE_URL + "/", "ready"))
         check(ready.status_code == 200 and ready.json().get("status") == "ready", "/ready returns HTTP 200 and ready", failures)
+        payload={}
         health = client.get(urljoin(BASE_URL + "/", "health"))
         check(health.status_code == 200, "health returns HTTP 200", failures)
         if health.status_code == 200:
@@ -122,7 +123,12 @@ def main() -> int:
             ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
             urls = ET.fromstring(sitemap.content).findall("s:url", ns)
             locations = {entry.findtext("s:loc", namespaces=ns): entry for entry in urls}
-            check(len(locations) == len(urls) == 90, "sitemap contains 90 unique public URLs", failures)
+            sourcing_live=bool(payload.get('sourcing_live'))
+            expected_count=120 if sourcing_live else 90
+            check(len(locations) == len(urls) == expected_count, f"sitemap contains {expected_count} unique public URLs", failures)
+            if sourcing_live:
+                check(sum('/sourcing/help' in url for url in locations)==30, 'six languages include all buyer help pages', failures)
+                check(not any('/sourcing/requests/' in url or '/admin/' in url for url in locations), 'private sourcing pages stay out of sitemap', failures)
             for language in ("ru", "en", "fr", "de", "es", "sr"):
                 check(sum(f"/{language}/guides/" in url for url in locations) == 12, f"{language} has all 12 guides", failures)
             check(locations.get(BASE_URL + "/ru/guides/supplier-not-refunding") is not None, "refund page has a sitemap entry", failures)

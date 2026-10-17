@@ -1844,6 +1844,9 @@ def health() -> dict[str, Any]:
         "ai_assistant_enabled": assistant_is_enabled(),
         "document_analysis_enabled": document_analysis_is_enabled(),
         "free_access_mode": settings.free_access_mode,
+        "sourcing_enabled": sourcing_enabled(),
+        "sourcing_live": sourcing_live(),
+        "sourcing_email_configured": sourcing_mail.configured(),
         "support_enabled": support_is_available(),
         "paypal_support_enabled": bool(
             settings.enable_voluntary_support and safe_paypal_support_url()
@@ -3217,7 +3220,7 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
 from .sourcing import install_sourcing, enabled as sourcing_enabled, live as sourcing_live
 from .sourcing_i18n import COPY as SOURCING_COPY
-from . import sourcing_stats
+from . import sourcing_stats, sourcing_mail
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
                  verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery, search_indexing_is_ready)
 

@@ -85,7 +85,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         lang=language(request);base_t=translator(lang)
         t=lambda key:base_t("live_operator" if live() and key=="pilot" else key)
         if status==200:
-            sourcing_stats.record_view(request)
+            sourcing_stats.record_view(request,buffered=request.url.path=='/buying')
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
             't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),

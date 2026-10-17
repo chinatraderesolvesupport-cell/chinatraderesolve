@@ -500,14 +500,15 @@ def test_combined_home_free_and_privacy(pilot,monkeypatch,lang):
     assert sourcing.COPY[lang]['live_operator'] in pilot.get('/sourcing?lang='+lang).text
 
 
-def test_combined_home_counter_does_not_wake_database(pilot,monkeypatch):
+@pytest.mark.parametrize('path',['/','/buying','/disputes'])
+def test_combined_home_counter_does_not_wake_database(pilot,monkeypatch,path):
     from app import sourcing_stats as stats
     monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
     stats._pending.clear()
     original=stats.transaction
     def forbidden():raise AssertionError('homepage must not wake database')
     monkeypatch.setattr(stats,'transaction',forbidden)
-    response=pilot.get('/',headers={'user-agent':'Mozilla/5.0 Chrome/130'})
+    response=pilot.get(path,headers={'user-agent':'Mozilla/5.0 Chrome/130'})
     assert response.status_code==200
     assert sum(v[0] for v in stats._pending.values())==1
     monkeypatch.setattr(stats,'transaction',original)

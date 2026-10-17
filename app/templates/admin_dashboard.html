@@ -24,10 +24,12 @@
 <body>{% include 'admin_navigation.html' %}
 <div class="wrap">
   <div class="top">
-    <div><h1>Рабочая очередь</h1><div class="muted">Очередь дел, требующих внимания: сначала новые и срочные, закрытые обращения находятся отдельно.</div></div>
+    <div><h1>Рабочая очередь</h1><div class="muted">Очередь дел, требующих внимания. Ниже — споры; заявки на подбор открываются отдельно.</div></div>
 
   </div>
 
+  {% if sourcing_statistics_enabled %}<div class="admin-directions"><a class="card" href="/admin?view=active"><strong>Споры с поставщиками</strong><span>Активных: {{ counts.active }} · Всего: {{ counts.total }}</span></a><a class="card" href="/admin/sourcing"><strong>Подбор поставщиков</strong><span>В работе: {{ sourcing_counts.active }} · Всего: {{ sourcing_counts.total }}</span><span>Новых: {{ sourcing_counts.get('received',0) }} · С отчётом: {{ sourcing_counts.get('completed',0) }}</span></a></div>{% endif %}
+  {% if request.query_params.get('deleted')=='1' %}<p role="status" class="card">Заявка удалена из рабочей базы.</p>{% endif %}
   <div class="queue-nav-wrap">
     <nav class="queue-nav" aria-label="Разделы очереди">
       <a class="queue-tab {{ 'active' if current_view=='new' else '' }}" href="/admin?view=new">Новые <span class="count new-count">{{ counts.new or 0 }}</span></a>
@@ -74,7 +76,7 @@
           <td class="col-applicant" data-label="Заявитель"><div class="person-name">{{ case.full_name }}</div><div class="person-email">{{ case.email }}</div></td>
           <td class="col-source" data-label="Источник"><div class="source-short">{{ case.source_short }}</div>{% if case.acquisition.utm_campaign %}<div class="source-detail">{{ case.acquisition.utm_campaign }}</div>{% endif %}</td>
           <td class="col-date" data-label="Создано">{{ case.created_display }}</td>
-          <td class="col-open" data-label="Действие"><a class="btn primary open-link" href="/admin/case/{{ case.id }}">Открыть</a></td>
+          <td class="col-open" data-label="Действие"><a class="btn primary open-link" href="/admin/case/{{ case.id }}">Открыть</a><a class="admin-delete-link" href="/admin/case/{{ case.id }}/delete">Удалить</a></td>
         </tr>
       {% else %}<tr><td class="empty-state" colspan="7">В этом разделе дел нет. Попробуйте другой раздел или сбросьте фильтры.</td></tr>{% endfor %}
       </tbody>

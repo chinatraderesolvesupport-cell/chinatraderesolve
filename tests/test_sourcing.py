@@ -622,3 +622,108 @@ def test_admin_statistics_disputes_periods_and_workspace_navigation(pilot):
     assert 'days=7" aria-current="page"' in pilot.get('/admin/sourcing-statistics?days=bad').text
     assert 'admin-toolbar' not in pilot.get('/sourcing').text
     assert 'admin-toolbar' not in pilot.get('/sourcing/requests/'+rid).text
+
+
+def deletion_form(client,path):
+    page=client.get(path)
+    assert page.status_code==200,page.text
+    return {key:re.search(r'name="'+key+r'" value="([^"]+)"',page.text).group(1)
+            for key in ('csrf_token','delete_nonce')}
+
+
+def deletion_case(reference):
+    return db.create_case(
+        {'full_name':'Isolated buyer','email':'buyer@example.com','main_problem':'Goods not received',
+         'description':'Isolated deletion test','ai_consent':True,'sharing_authority':True,
+         'free_access_terms':True,'no_guarantee':True},
+        {'decision':'closed','priority':1,'risk_level':'low','source':'rules','public_message':'Test'},
+        reference,'private-test-'+reference)
+
+
+@pytest.mark.parametrize('kind',['case','sourcing'])
+def test_admin_single_deletion_confirmation_isolation_and_cascades(pilot,kind):
+    case=deletion_case('CTR-DELETE');other_case=deletion_case('CTR-KEEP')
+    rid=create(pilot);other_rid=create(pilot)
+    with db.transaction() as conn:
+        db.execute(conn,'INSERT INTO case_documents(case_id,created_at,original_name,content_type,size_bytes,page_count,sha256,content_blob) VALUES (?,?,?,?,?,?,?,?)',
+                   (case['id'],db.utcnow(),'proof.txt','text/plain',4,1,'test',b'test'))
+        db.execute(conn,'INSERT INTO sourcing_photos VALUES (?,?,?,?,?)',('photo',rid,'key.jpg','image/jpeg',image_bytes()))
+        db.execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',(rid,1,'{}',db.utcnow()))
+    # Populate every personal-content relation so cascade assertions are meaningful.
+    db.save_feedback(case['id'],{'rating':3,'feedback_text':'Synthetic feedback','display_name':'Test','testimonial_consent':False})
+    db.queue_notification(case['id'],'buyer@example.com','Synthetic subject','Synthetic body')
+    store.create_feedback('isolated-feedback',rid,'review',3,'Synthetic sourcing feedback','ru',True)
+    with db.transaction() as conn:
+        db.execute(conn,"INSERT INTO case_messages(case_id,created_at,author,body) VALUES (?,?,'client','Synthetic message')",(case['id'],db.utcnow()))
+        db.execute(conn,"INSERT INTO document_analyses(case_id,created_at,updated_at,status) VALUES (?,?,?,'completed')",(case['id'],db.utcnow(),db.utcnow()))
+        notification_id=db._insert_notifications(conn,None,[{'recipient':'buyer@example.com','subject':'Test','body':'Synthetic sourcing notification'}])[0]
+        db.execute(conn,'INSERT INTO sourcing_notifications VALUES (?,?,?)',(rid,notification_id,'received'))
+    path='/admin/case/'+str(case['id'])+'/delete' if kind=='case' else '/admin/sourcing/'+rid+'/delete'
+    other_path='/admin/case/'+str(other_case['id'])+'/delete' if kind=='case' else '/admin/sourcing/'+other_rid+'/delete'
+    assert pilot.get(path).status_code==401
+    assert pilot.post(path,data={'confirm':'delete'}).status_code==401
+    admin(pilot)
+    data=deletion_form(pilot,path)
+    assert db.get_case(case['id']) and store.get_request(rid)
+    assert pilot.post(path,data={**data,'csrf_token':'invalid','confirm':'delete'}).status_code==403
+    assert pilot.post(path,data=data).status_code==400
+    assert pilot.post(other_path,data={**data,'confirm':'delete'}).status_code==409
+    with db.transaction() as conn:
+        if kind=='case':db.execute(conn,'UPDATE cases SET updated_at=? WHERE id=?',('changed',case['id']))
+        else:db.execute(conn,'UPDATE sourcing_requests SET version=version+1 WHERE id=?',(rid,))
+    assert pilot.post(path,data={**data,'confirm':'delete'}).status_code==409
+    data=deletion_form(pilot,path)
+    response=pilot.post(path,data={**data,'confirm':'delete'},follow_redirects=False)
+    assert response.status_code==303,response.text
+    assert 'deleted=1' in response.headers['location']
+    assert pilot.post(path,data={**data,'confirm':'delete'}).status_code==409
+    assert pilot.get('/admin').status_code==200
+    assert db.get_case(other_case['id']) and store.get_request(other_rid)
+    with db.transaction() as conn:
+        if kind=='case':
+            assert not db.get_case(case['id'])
+            assert db.execute(conn,'SELECT COUNT(*) AS n FROM cases WHERE id=?',(case['id'],)).fetchone()['n']==0
+            for table in ('case_documents','case_messages','document_analyses','audit_log','feedback','notification_outbox'):
+                assert db.execute(conn,'SELECT COUNT(*) AS n FROM '+table+' WHERE case_id=?',(case['id'],)).fetchone()['n']==0
+            assert store.get_request(rid)
+        else:
+            assert store.get_request(rid) is None
+            for table in ('sourcing_photos','sourcing_reports','sourcing_events','sourcing_feedback','sourcing_notifications'):
+                assert db.execute(conn,'SELECT COUNT(*) AS n FROM '+table+' WHERE request_id=?',(rid,)).fetchone()['n']==0
+            assert db.get_case(case['id'])
+    if kind=='case':assert pilot.get('/case/CTR-DELETE/private-test-CTR-DELETE').status_code==404
+    else:assert pilot.get('/sourcing/requests/'+rid).status_code==404
+
+
+def test_admin_dispute_deletion_waits_for_running_analysis(pilot):
+    case=deletion_case('CTR-RUNNING');admin(pilot)
+    with db.transaction() as conn:
+        db.execute(conn,"INSERT INTO document_analyses(case_id,created_at,updated_at,status,model,result_json,error,run_token) VALUES (?,?,?,'running','','{}','','active')",(case['id'],db.utcnow(),db.utcnow()))
+    path='/admin/case/'+str(case['id'])+'/delete'
+    data=deletion_form(pilot,path)
+    assert pilot.post(path,data={**data,'confirm':'delete'}).status_code==409
+    assert db.get_case(case['id']) is not None
+
+
+def test_admin_delete_intents_expire_and_keep_multiple_tabs(monkeypatch):
+    from app import admin_deletion
+    from types import SimpleNamespace
+    request=SimpleNamespace(session={})
+    now=admin_deletion.time.time()
+    first=admin_deletion.begin(request,'case:1','v1')
+    second=admin_deletion.begin(request,'sourcing:2','v2')
+    assert admin_deletion.validate(request,'case:1',first,'delete')=='v1'
+    admin_deletion.finish(request,first)
+    assert admin_deletion.validate(request,'sourcing:2',second,'delete')=='v2'
+    monkeypatch.setattr(admin_deletion.time,'time',lambda:now+601)
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as error:admin_deletion.validate(request,'sourcing:2',second,'delete')
+    assert error.value.status_code==409
+
+
+def test_main_workspace_shows_both_request_directions(pilot):
+    deletion_case('CTR-DIRECTION');create(pilot);admin(pilot)
+    page=pilot.get('/admin')
+    assert 'Споры с поставщиками' in page.text and 'Подбор поставщиков' in page.text
+    assert 'Активных: 0 · Всего: 1' in page.text
+    assert 'В работе: 1 · Всего: 1' in page.text

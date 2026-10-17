@@ -13,7 +13,7 @@ from starlette.concurrency import run_in_threadpool
 from .documents import prepare_upload, DocumentValidationError, unique_display_filename
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
-from . import sourcing_mail
+from . import sourcing_mail, admin_deletion
 from . import sourcing_stats
 from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
@@ -356,6 +356,31 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         item=authorize(request,request_id,True)
         return render(request,'detail.html',{'item':item,'admin':True,
             'csrf_token':admin_csrf_token(request),'transitions':store.TRANSITIONS[item['status']]})
+
+    @router.get('/admin/sourcing/{request_id}/delete')
+    def confirm_admin_delete(request:Request,request_id:str):
+        item=authorize(request,request_id,True)
+        nonce=admin_deletion.begin(request,'sourcing:'+request_id,item['version'])
+        return render(request,'delete.html',{'delete_nonce':nonce,'target_label':request_id,
+            'target_description':item['email'],'cancel_url':'/admin/sourcing/'+request_id})
+
+    @router.post('/admin/sourcing/{request_id}/delete')
+    async def admin_delete(request:Request,request_id:str):
+        require_admin(request)
+        async with request.form(max_files=0,max_fields=4) as form:
+            require_admin_csrf(request,str(form.get('csrf_token') or ''))
+            nonce=str(form.get('delete_nonce') or '')
+            version=admin_deletion.validate(request,'sourcing:'+request_id,nonce,form.get('confirm'))
+            try:
+                deleted=await run_in_threadpool(store.delete_request,request_id,version)
+            except store.Conflict as exc:
+                return render(request,'error.html',{'message':str(exc)},409)
+            if not deleted:
+                raise HTTPException(404,'Заявка не найдена.')
+        admin_deletion.finish(request,nonce)
+        accesses=dict(request.session.get('sourcing_access',{}));accesses.pop(request_id,None)
+        request.session['sourcing_access']=accesses
+        return RedirectResponse('/admin/sourcing?deleted=1',303)
 
     @router.get('/admin/sourcing/{request_id}/photos/{photo_id}')
     def admin_photo(request:Request,request_id:str,photo_id:str):

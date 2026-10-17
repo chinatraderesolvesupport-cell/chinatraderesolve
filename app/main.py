@@ -51,6 +51,7 @@ from .db import (
     DailyAnalysisLimitError,
     DailyUsageLimitError,
     delete_case_now,
+    purge_case_now,
     delete_case_document,
     DocumentAnalysisInProgressError,
     DocumentLimitError,
@@ -2944,6 +2945,7 @@ def admin_dashboard(
             "sort_filter": sort,
             "traffic_sources": traffic_source_counts(),
             "sourcing_statistics_enabled": sourcing_enabled(),
+            "sourcing_counts": sourcing_store.request_counts() if sourcing_enabled() else {},
             "search_indexing_enabled": search_indexing_is_ready(),
             "search_indexing_checks": search_indexing_checks(),
             "google_search_console_connected": settings.google_search_console_connected,
@@ -3071,6 +3073,37 @@ def admin_download_document(case_id: int, document_id: int, request: Request) ->
             "X-Content-Type-Options": "nosniff",
         },
     )
+
+
+@app.get('/admin/case/{case_id}/delete',response_class=HTMLResponse)
+def admin_confirm_case_delete(case_id:int,request:Request):
+    require_admin(request)
+    case=get_case(case_id)
+    if not case:
+        raise HTTPException(404,'Дело не найдено.')
+    nonce=admin_deletion.begin(request,'case:'+str(case_id),case['updated_at'])
+    return templates.TemplateResponse(request=request,name='sourcing/delete.html',context={
+        'lang':'ru','t':sourcing_translator('ru'),'csrf_token':admin_csrf_token(request),
+        'sourcing_statistics_enabled':sourcing_enabled(),'delete_nonce':nonce,
+        'target_label':case['case_reference'],'target_description':case['full_name']+' · '+case['email'],
+        'cancel_url':'/admin/case/'+str(case_id)},headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
+
+
+@app.post('/admin/case/{case_id}/delete')
+async def admin_purge_case(case_id:int,request:Request):
+    require_admin(request)
+    async with request.form(max_files=0,max_fields=4) as form:
+        require_admin_csrf(request,str(form.get('csrf_token') or ''))
+        nonce=str(form.get('delete_nonce') or '')
+        version=admin_deletion.validate(request,'case:'+str(case_id),nonce,form.get('confirm'))
+        try:
+            deleted=await asyncio.to_thread(purge_case_now,case_id,version)
+        except (ValueError,DocumentAnalysisInProgressError) as exc:
+            raise HTTPException(409,str(exc)) from exc
+        if not deleted:
+            raise HTTPException(404,'Дело не найдено.')
+    admin_deletion.finish(request,nonce)
+    return RedirectResponse('/admin?deleted=1',303)
 
 
 @app.post("/admin/case/{case_id}/documents/{document_id}/delete")
@@ -3239,7 +3272,8 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
 from .sourcing import install_sourcing, enabled as sourcing_enabled, live as sourcing_live
 from .sourcing_i18n import COPY as SOURCING_COPY
-from . import sourcing_stats, sourcing_mail
+from . import sourcing_stats, sourcing_mail, sourcing_store, admin_deletion
+from .sourcing_i18n import translator as sourcing_translator
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
                  verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery, search_indexing_is_ready)
 

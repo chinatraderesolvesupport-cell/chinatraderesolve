@@ -1,0 +1,4 @@
+<details class="sample-report" id="sample-report"><summary>{{ ux.sample_title }}</summary>
+<p class="notice">{{ ux.sample_notice }}</p><p><strong>{{ ux.sample_task }}</strong></p>
+<div class="sample-grid">{% for key in ['a','b'] %}<article><h3>{{ ux['sample_'+key] }}</h3><p>{{ ux['sample_'+key+'_text'] }}</p></article>{% endfor %}</div>
+<h3>{{ ux.sample_quantity }}</h3><p>{{ ux.sample_quantity_text }}</p><h3>{{ ux.sample_next }}</h3><p>{{ ux.sample_next_text }}</p></details>

@@ -88,7 +88,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             sourcing_stats.record_view(request)
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
-            't':t,'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
+            't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
             'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
             'is_error':status>=400}
         if 'message_key' in context: context['message']=t(context.pop('message_key'))

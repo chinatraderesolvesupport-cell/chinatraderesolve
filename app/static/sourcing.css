@@ -3,3 +3,21 @@
 /* Long request IDs and report words must wrap at phone widths. */
 main{min-width:0;overflow-wrap:anywhere}.cards>*,.grid>*{min-width:0}h1,h2,h3{overflow-wrap:anywhere}
 .languages{max-width:1100px;margin:auto;padding:0 24px;display:flex;flex-wrap:wrap;gap:14px}.languages [aria-current]{font-weight:800;text-decoration-thickness:3px}.free{margin:20px 0;border-left:5px solid #006c57}.supplier-assessment article{border:1px solid #cad9cc;padding:20px;border-radius:12px;margin:18px 0}fieldset{min-width:0;border:1px solid #cad9cc;margin:20px 0;padding:16px}blockquote{margin:15px 0}header{flex-wrap:wrap}nav{font-size:16px}input[type=date]{max-width:100%}
+
+/* Shared China Trade visual language. Keep the existing form and report controls. */
+:root{color-scheme:light;--ink:#0f172a;--teal:#0f766e;--line:#cbd5e1}
+html{scroll-padding-top:24px}body{background:#f8fafc;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{max-width:none;background:#0f172a;color:#f8fafc;padding:20px max(24px,calc((100vw - 1100px)/2 + 24px));align-items:center;gap:16px;border-bottom:1px solid #334155}
+header a{color:#e2e8f0;text-decoration:none}header a:hover{text-decoration:underline}.site-brand{font-size:23px;font-weight:800;letter-spacing:-.6px;white-space:nowrap}.site-brand span{color:#2dd4bf}
+nav{gap:16px;align-items:center}nav a{min-height:44px;display:inline-flex;align-items:center}
+a{color:var(--teal);text-underline-offset:3px}.languages{padding-top:16px;padding-bottom:12px;gap:10px 18px}.languages a{min-height:36px;display:inline-flex;align-items:center;font-size:16px}
+main{padding-top:8px}h1{font-size:clamp(32px,4vw,46px);letter-spacing:-.7px;margin:24px 0 16px}h2{font-size:25px}h3{font-size:21px}.lead{font-size:21px;color:#475569;max-width:850px}
+.notice{background:#eef6f5;border:1px solid #cce5e1;color:#234b47;padding:12px 16px;border-radius:12px;margin:12px 0}.free{border-left:4px solid var(--teal);font-size:17px}.free a{font-size:16px}
+button,.button{background:#0f766e;border-radius:10px;min-height:48px}button:hover,.button:hover{background:#115e59;color:white}.button{text-decoration:none}.secondary{background:#e2e8f0;color:#0f172a}.secondary:hover{background:#cbd5e1;color:#0f172a}
+form,.report,.cards article{border-color:var(--line);border-radius:16px;box-shadow:0 6px 20px #0f172a05}.cards article{margin:8px 0}.cards article h2{margin-top:0}
+input,textarea,select{border-color:#94a3b8;min-height:48px}input[type=checkbox]{min-height:0;width:20px;height:20px;vertical-align:middle;accent-color:var(--teal)}
+small{color:#475569;font-size:16px}details{background:#eef2f6;border:1px solid #dbe3ed;border-radius:12px}summary{min-height:32px}footer{border-color:var(--line);color:#475569}
+.quick-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:20px 0}.quick-actions .button{margin:0}.sample-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.sample-grid article{padding:18px;border:1px solid var(--line);background:white;border-radius:12px}.sample-grid h3{margin-top:0}.sample-report{scroll-margin-top:24px}.sample-report[open]{background:white}#sourcingForm{scroll-margin-top:24px}#counter{font-weight:700;color:#115e59;background:#f0fdfa;border-radius:8px;padding:10px 14px}
+.skip-link{position:absolute;top:-100px;left:12px;background:white;padding:12px;z-index:10}.skip-link:focus{top:12px}
+@media(max-width:650px){header{padding:18px}.site-brand{font-size:22px}nav{gap:4px 16px}nav a{font-size:16px}.languages{padding:12px 18px 4px}h1{font-size:34px}.lead{font-size:19px}.sample-grid{grid-template-columns:1fr}.quick-actions{align-items:flex-start;flex-direction:column}.quick-actions .button{width:100%;text-align:center}.notice{font-size:16px}form{padding:18px}.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

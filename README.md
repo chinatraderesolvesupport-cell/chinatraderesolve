@@ -666,3 +666,18 @@ When both variables are present, queued confirmation and admin-alert emails are 
 ## PDF security verification
 
 Run `python scripts/verify_pdf_security.py` after dependencies are installed. Public readiness remains false if this production-engine self-test fails.
+
+
+## Supplier research and administrator approval
+
+`ENABLE_SOURCING_RESEARCH=true` enables event-driven, durable research jobs when the existing OpenAI API key, model and billing-ready setting are configured. `SOURCING_RESEARCH_MODEL` optionally overrides the document model; it must support Responses, web search, images and structured output. No new secret is stored in the repository. `/health` exposes only `sourcing_research_configured`, not credentials.
+
+New submissions consent to AI processing. The model receives product/supplier fields and resized reference images; the recipient email and access credentials are excluded. Web search uses up to eight tool calls, followed by one structured formatting request. A draft requires completed search, actual citation metadata and valid numbered source references. Sources and the original research remain available to the administrator. Model conclusions still require human verification.
+
+Drafts are private. Only the CSRF-protected publish action with explicit human-review confirmation publishes a report and queues the client notification. A request remains new until opened by an administrator, independently of AI progress. Unpublished ready drafts and failed jobs stay in the main inbox. Photographs are available for all three services.
+
+`SOURCING_RESEARCH_DAILY_LIMIT` defaults to ten research attempts per UTC day, shared across processes. Each attempt can make two API requests. Failed attempts consume the daily quota and require an explicit administrator retry; there is no automatic billing loop. The quota bounds attempts, not a currency amount. Persistent queue records recover queued work on restart; interrupted running work expires after ten minutes and is marked for manual retry. Opening the request also recovers an expired lease. No idle database polling is used. Version checks prevent late jobs from replacing manual edits or resurrecting deleted requests.
+
+Older requests are not automatically researched unless their IDs are explicitly authorized in `SOURCING_RESEARCH_BACKFILL_IDS` or an administrator starts them. Older photographs without the new AI consent flag are not sent. Keep the backfill list limited to authorized IDs; completed requests are excluded.
+
+Verify with `pytest tests/test_sourcing.py tests/test_sourcing_research.py` and the sourcing browser tests. Provider-adapter tests use isolated HTTP responses and do not spend API credits; verify a real authorized request after deployment before declaring the production AI flow operational.

@@ -6,14 +6,14 @@ from urllib.parse import urlsplit
 from datetime import date, datetime, timezone
 from fastapi.routing import APIRoute
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response, JSONResponse
 from pydantic import TypeAdapter, EmailStr, ValidationError
 from starlette.datastructures import UploadFile
 from starlette.concurrency import run_in_threadpool
 from .documents import prepare_upload, DocumentValidationError, unique_display_filename
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
-from . import sourcing_mail, admin_deletion
+from . import sourcing_mail, admin_deletion, sourcing_research
 from . import sourcing_stats
 from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
@@ -83,7 +83,13 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     def render(request,name,context=None,status=200):
         lang=language(request);base_t=translator(lang)
-        t=lambda key:base_t("live_operator" if live() and key=="pilot" else key)
+        ai_ready=sourcing_research.configured()
+        def t(key):
+            if key=='pilot' and (live() or ai_ready):
+                key='live_ai' if ai_ready else 'live_operator'
+            elif ai_ready and key in {'u_honest_text','g_photo_3'}:
+                key += '_ai'
+            return base_t(key)
         if status==200:
             sourcing_stats.record_view(request,buffered=request.url.path=='/buying')
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
@@ -91,6 +97,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
             'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
             'is_error':status>=400,'sourcing_statistics_enabled':enabled()}
+        context['research_configured']=sourcing_research.configured()
         if request.url.path.startswith('/admin/') and request.session.get('admin'):
             context.setdefault('csrf_token',admin_csrf_token(request))
         if 'message_key' in context: context['message']=t(context.pop('message_key'))
@@ -208,14 +215,12 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 brief[key]=text(form,key,30)
                 if brief[key] not in allowed:
                     raise ValueError('Проверьте выбранный вариант.')
-            brief.update(service=service,schema_version=3,locale=language(request),pricing_mode='launch_free')
+            brief.update(service=service,schema_version=4,locale=language(request),pricing_mode='launch_free',ai_processing_consent=True)
             if not brief['quantity'] or not brief['destination']:
                 raise ValueError('Укажите количество и страну доставки.')
             if service!='search' and not brief['supplier']:
                 raise ValueError('Для этой услуги укажите поставщика или ссылку.')
             uploads=[v for v in form.getlist('photos') if isinstance(v,UploadFile) and v.filename]
-            if uploads and service!='search':
-                raise ValueError('Фото товара прикладываются к услуге подбора.')
             if sum(u.size or 0 for u in uploads)>MAX_TOTAL_BYTES:
                 raise ValueError('Общий размер фотографий — до 25 МБ.')
             photos=[];used=set();total=0
@@ -246,6 +251,12 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 raise ValueError('Пройдите проверку защиты от роботов.')
             request_id,access=await run_in_threadpool(store.create_request,brief,email,photos,submission)
             remember(request,request_id,access)
+            if sourcing_research.configured():
+                try:
+                    await run_in_threadpool(sourcing_research.enqueue,request_id)
+                except store.Conflict:
+                    pass  # Idempotent replay may refer to an already processed request.
+                background_tasks.add_task(sourcing_research.schedule)
             if schedule_delivery and sourcing_mail.configured():
                 background_tasks.add_task(schedule_delivery)
             return RedirectResponse('/sourcing/requests/'+request_id,status_code=303,background=background_tasks)
@@ -278,6 +289,15 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
     def detail(request:Request,request_id:str):
         item=authorize(request,request_id)
         return render(request,'detail.html',{'item':item,'access_code':request.session['sourcing_access'][request_id],'csrf_token':csrf(request)})
+
+    @router.get('/sourcing/requests/{request_id}/progress')
+    def progress(request:Request,request_id:str):
+        item=authorize(request,request_id)
+        t=translator(language(request))
+        return JSONResponse({'mail':[{'label':t('mail_received') if mail['event']=='received' else t('mail_report'),
+            'text':t('mail_sent') if mail['status']=='sent' else t('mail_failed') if mail['status']=='failed' else t('mail_pending'),
+            'pending':mail['status'] not in {'sent','failed'}} for mail in item['notifications']]},
+            headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
 
     @router.get('/sourcing/requests/{request_id}/photos/{photo_id}')
     def photo(request:Request,request_id:str,photo_id:str):
@@ -353,9 +373,34 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     @router.get('/admin/sourcing/{request_id}')
     def admin_detail(request:Request,request_id:str):
+        require_admin(request)
+        sourcing_research.recover_stale(request_id)
         item=authorize(request,request_id,True)
+        sourcing_research.mark_viewed(request_id)
         return render(request,'detail.html',{'item':item,'admin':True,
             'csrf_token':admin_csrf_token(request),'transitions':store.TRANSITIONS[item['status']]})
+
+    @router.post('/admin/sourcing/{request_id}/research')
+    async def start_research(request:Request,request_id:str,background_tasks:BackgroundTasks):
+        require_admin(request)
+        async with request.form(max_files=0,max_fields=3) as form:
+            require_admin_csrf(request,str(form.get('csrf_token') or ''))
+            if not sourcing_research.configured():
+                return render(request,'error.html',{'message_key':'research_disabled'},503)
+            try:
+                await run_in_threadpool(sourcing_research.enqueue,request_id,int(form.get('version') or 0),True)
+            except (ValueError,store.Conflict) as exc:
+                return render(request,'error.html',{'message':str(exc)},409)
+        background_tasks.add_task(sourcing_research.schedule)
+        return RedirectResponse('/admin/sourcing/'+request_id,303,background=background_tasks)
+
+    @router.get('/admin/sourcing/{request_id}/research-progress')
+    def research_progress(request:Request,request_id:str):
+        item=authorize(request,request_id,True)
+        state=item['research']['state'] if item['research'] else ''
+        t=translator(language(request))
+        return JSONResponse({'state':state,'label':t('research_'+state) if state else '',
+            'refresh':t('refresh_status')},headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
 
     @router.get('/admin/sourcing/{request_id}/delete')
     def confirm_admin_delete(request:Request,request_id:str):

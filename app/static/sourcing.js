@@ -5,7 +5,7 @@ const form=document.querySelector('#sourcingForm');
 if(form){
  const $=id=>document.getElementById(id),files=$('photos'),service=$('service');let urls=[];
  function sync(){
-  const search=service.value==='search',photo=search&&files.files.length>0,unknown=photo&&$('unknown').checked;
+  const search=service.value==='search',photo=files.files.length>0,unknown=search&&photo&&$('unknown').checked;
   $('searchFields').hidden=!search;
   $('searchFields').querySelectorAll('input,select').forEach(el=>el.disabled=!search);
   const alternative=search&&$('alternatives').checked;

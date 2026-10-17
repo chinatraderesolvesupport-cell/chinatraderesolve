@@ -457,11 +457,14 @@ async def lifespan(_app: FastAPI):
         logger.warning("Marked %s stale document analyses as failed", recovered)
     if email_delivery_is_configured():
         await _schedule_pending_delivery()
+    if sourcing_enabled():
+        await sourcing_research.startup()
     maintenance_task = asyncio.create_task(_maintenance_loop())
     telegram_monitor_task = asyncio.create_task(run_telegram_monitor())
     try:
         yield
     finally:
+        await sourcing_research.shutdown()
         if sourcing_live():
             await asyncio.to_thread(sourcing_stats.flush)
         for task in (telegram_monitor_task, maintenance_task):
@@ -1861,6 +1864,7 @@ def health() -> dict[str, Any]:
         "sourcing_enabled": sourcing_enabled(),
         "sourcing_live": sourcing_live(),
         "sourcing_email_configured": sourcing_mail.configured(),
+        "sourcing_research_configured": sourcing_research.configured(),
         "support_enabled": support_is_available(),
         "paypal_support_enabled": bool(
             settings.enable_voluntary_support and safe_paypal_support_url()
@@ -2946,6 +2950,8 @@ def admin_dashboard(
             "traffic_sources": traffic_source_counts(),
             "sourcing_statistics_enabled": sourcing_enabled(),
             "sourcing_counts": sourcing_store.request_counts() if sourcing_enabled() else {},
+            "sourcing_inbox": sourcing_research.inbox() if sourcing_enabled() else [],
+            "sourcing_research_configured": sourcing_research.configured(),
             "search_indexing_enabled": search_indexing_is_ready(),
             "search_indexing_checks": search_indexing_checks(),
             "google_search_console_connected": settings.google_search_console_connected,
@@ -3276,7 +3282,7 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
 from .sourcing import install_sourcing, enabled as sourcing_enabled, live as sourcing_live
 from .sourcing_i18n import COPY as SOURCING_COPY
-from . import sourcing_stats, sourcing_mail, sourcing_store, admin_deletion
+from . import sourcing_stats, sourcing_mail, sourcing_store, admin_deletion, sourcing_research
 from .sourcing_i18n import translator as sourcing_translator
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
                  verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery, search_indexing_is_ready)

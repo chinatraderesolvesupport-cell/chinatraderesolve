@@ -500,14 +500,15 @@ def test_combined_home_free_and_privacy(pilot,monkeypatch,lang):
     assert sourcing.COPY[lang]['live_operator'] in pilot.get('/sourcing?lang='+lang).text
 
 
-def test_combined_home_counter_does_not_wake_database(pilot,monkeypatch):
+@pytest.mark.parametrize('path',['/','/buying','/disputes'])
+def test_combined_home_counter_does_not_wake_database(pilot,monkeypatch,path):
     from app import sourcing_stats as stats
     monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
     stats._pending.clear()
     original=stats.transaction
     def forbidden():raise AssertionError('homepage must not wake database')
     monkeypatch.setattr(stats,'transaction',forbidden)
-    response=pilot.get('/',headers={'user-agent':'Mozilla/5.0 Chrome/130'})
+    response=pilot.get(path,headers={'user-agent':'Mozilla/5.0 Chrome/130'})
     assert response.status_code==200
     assert sum(v[0] for v in stats._pending.values())==1
     monkeypatch.setattr(stats,'transaction',original)
@@ -564,3 +565,25 @@ def test_internal_checks_do_not_count_as_customer_requests(pilot,monkeypatch):
     monkeypatch.setenv('SOURCING_SYSTEM_TEST_REQUEST_ID',rid)
     assert stats.summary()['periods'][0]['requests']==0
     assert store.get_request(rid) is not None
+
+
+@pytest.mark.parametrize('lang',['ru','en','de','fr','es','sr'])
+def test_independent_public_directions_keep_private_forms_and_old_links(pilot,monkeypatch,lang):
+    monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
+    monkeypatch.setattr(main,'search_indexing_checks',lambda:{'ready':True})
+    home=pilot.get('/?lang='+lang)
+    assert 'combined-number' not in home.text.split('<main',1)[1].split('</main>',1)[0]
+    assert 'href="/buying?lang='+lang+'"' in home.text
+    assert 'href="/disputes?lang='+lang+'"' in home.text
+    assert 'id="legacyDispute"' in home.text and 'id="caseForm"' in home.text
+    buying=pilot.get('/buying?lang='+lang)
+    assert buying.status_code==200 and 'index, follow'==buying.headers['x-robots-tag']
+    assert sourcing.COPY[lang]['u_buy_risk'] in buying.text
+    assert '/disputes?lang='+lang in buying.text
+    dispute=pilot.get('/disputes?lang='+lang)
+    assert dispute.status_code==200 and 'id="disputeApply"' in dispute.text
+    assert 'id="legacyDispute"' not in dispute.text
+    assert 'id="caseForm"' in dispute.text and '/buying?lang='+lang in dispute.text
+    assert 'noindex' in pilot.get('/sourcing?lang='+lang).headers['x-robots-tag']
+    sitemap=pilot.get('/sitemap.xml').text
+    assert '/buying?lang='+lang in sitemap and '/disputes?lang='+lang in sitemap

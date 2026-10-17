@@ -1624,13 +1624,20 @@ def public_case_progress(
     return stages, next_step
 
 
+@app.get("/disputes", response_class=HTMLResponse)
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
+    if request.url.path == "/disputes" and not sourcing_live():
+        raise HTTPException(status_code=404)
     if public_launch_is_blocked():
         return unavailable_until_configured(request)
     requested_language = (request.query_params.get("lang") or "ru").strip().lower()
     page_language = requested_language if requested_language in SUPPORTED_LANGUAGES else "ru"
+    dispute_direction = request.url.path == "/disputes"
     seo = HOME_SEO[page_language]
+    if sourcing_live() and not dispute_direction:
+        direction_copy = SOURCING_COPY[page_language]
+        seo = {**seo, "title": direction_copy["u_headline"]+" — China Trade Resolve", "description": direction_copy["u_intro"], "og_description": direction_copy["u_intro"]}
     base_url = settings.public_base_url.rstrip("/")
     canonical_url = base_url + ("/" if page_language == "ru" else f"/?lang={page_language}")
     language_alternates = [
@@ -1638,6 +1645,10 @@ def home(request: Request) -> HTMLResponse:
         for code in SUPPORTED_LANGUAGES
     ]
     x_default_url = base_url + "/"
+    if dispute_direction:
+        canonical_url = base_url + "/disputes?lang=" + page_language
+        language_alternates = [{"lang":code,"url":base_url+"/disputes?lang="+code} for code in SUPPORTED_LANGUAGES]
+        x_default_url = base_url + "/disputes?lang=ru"
     wallets = crypto_wallets()
     if sourcing_live():
         sourcing_stats.record_view(request,buffered=True)
@@ -1663,6 +1674,7 @@ def home(request: Request) -> HTMLResponse:
             "seo": seo,
             "home_copy": HOME_TRANSLATIONS[page_language],
             "sourcing_live": sourcing_live(),
+            "dispute_direction": dispute_direction,
             "sourcing_copy": SOURCING_COPY[page_language],
             "sourcing_public_copy": {code:{key:value for key,value in copy.items() if key.startswith("u_") or key in {"free_short","access","choose_help","help_hub","support_project"}} for code,copy in SOURCING_COPY.items()} if sourcing_live() else {},
             "featured_guide_cards": [
@@ -1678,6 +1690,7 @@ def home(request: Request) -> HTMLResponse:
             },
             "language_alternates": language_alternates,
             "x_default_url": x_default_url,
+            "site_root_url": base_url + "/",
             "social_image_url": base_url + "/static/social-preview.png",
             "logo_url": base_url + "/static/logo-512.png",
             "google_site_verification": (settings.google_site_verification or "").strip(),
@@ -1960,6 +1973,10 @@ def sitemap() -> Response:
         urls.extend(entry(path, detail_alternates) for path in detail_paths.values())
 
     if sourcing_live() and search_indexing_is_ready():
+        for direction in ('/buying','/disputes'):
+            paths={code:direction+'?lang='+code for code in SUPPORTED_LANGUAGES}
+            alternates={**paths,'x-default':paths['ru']}
+            urls.extend(entry(path,alternates,lastmod='2026-10-17') for path in paths.values())
         for topic in ('','/supplier','/spec','/cost','/photo'):
             paths={code:'/sourcing/help'+topic+'?lang='+code for code in SUPPORTED_LANGUAGES}
             alternates={**paths,'x-default':paths['ru']}

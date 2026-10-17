@@ -1,5 +1,6 @@
 {% extends 'sourcing/base.html' %}{% block content %}
 <h1>{{ t('headline') }}</h1><p class="lead">{{ t('lead') }}</p>
+<p><a href="/disputes?lang={{ lang }}">{{ t('u_cross_dispute') }}</a></p>
 <div class="quick-actions"><a class="button" href="#sourcingForm">{{ t('start_form') }}</a><a href="#sample-report">{{ t('u_sample_link') }}</a></div>
 <form id="sourcingForm" action="/sourcing/requests" method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="submission" value="{{ submission }}">

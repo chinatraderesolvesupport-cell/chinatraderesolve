@@ -286,7 +286,7 @@ def test_sourcing_mobile_photo_to_operator_report():
                 for language in ("ru","en","de","fr","es","sr"):
                     page.goto(base+"/?lang="+language)
                     expect(page.locator('.combined-card')).to_have_count(2)
-                    expect(page.locator('#homeBuy')).to_have_attribute('href','/sourcing?lang='+language+'&service=search')
+                    expect(page.locator('#homeBuy')).to_have_attribute('href','/buying?lang='+language)
                     expect(page.locator('#caseForm')).to_have_count(1)
                     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                     page.goto(base+"/sourcing/preview?lang="+language)
@@ -301,7 +301,7 @@ def test_sourcing_mobile_photo_to_operator_report():
                 page.goto(base+"/?lang=ru")
                 page.locator('#menuBtn').click()
                 page.locator('#mobileLangSelect').select_option('en')
-                expect(page.locator('#homeBuy')).to_have_attribute('href','/sourcing?lang=en&service=search')
+                expect(page.locator('#homeBuy')).to_have_attribute('href','/buying?lang=en')
                 expect(page.locator('.combined-free').first).to_have_text('Help is free')
                 page.locator('#menuBtn').click()
                 page.locator('#mobileLangSelect').select_option('ru')
@@ -309,6 +309,7 @@ def test_sourcing_mobile_photo_to_operator_report():
                 expect(page.locator('#fullName')).to_be_visible()
                 page.goto(base+"/?lang=ru")
                 page.locator('#homeBuy').click()
+                page.locator('#buyingApply').click()
                 expect(page.locator('#service')).to_have_value('search')
                 photo=BytesIO();Image.new("RGB",(16,16),"blue").save(photo,format="JPEG")
                 page.locator("#photos").set_input_files({"name":"key.jpg","mimeType":"image/jpeg","buffer":photo.getvalue()})
@@ -404,6 +405,8 @@ def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
                         page.goto(base+"/?lang="+language)
                         expect(page.locator('.buyer-overview')).to_contain_text(COPY[language]['u_buy_process'])
                         page.locator('#homeBuy').click()
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                        page.locator('#buyingApply').click()
                         page.locator('.quick-actions a[href="#sourcingForm"]').click()
                         expect(page.locator('#product')).to_be_in_viewport()
                         page.locator('.quick-actions a[href="#sample-report"]').click()
@@ -415,6 +418,9 @@ def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
                         expect(page.locator('input[name="access_code"]')).to_have_attribute('type','password')
                         page.locator('details summary').click()
                         expect(page.locator('main')).to_contain_text(COPY[language]['lost_code_help'])
+                        page.goto(base+'/disputes?lang='+language)
+                        expect(page.locator('#caseForm')).to_be_visible()
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                         if language=='ru' and os.environ.get('CTR_UX_SCREENSHOT_DIR'):
                             target=Path(os.environ['CTR_UX_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
                             page.goto(base+'/sourcing?lang=ru')
@@ -422,5 +428,50 @@ def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
                             page.goto(base+'/?lang=ru')
                             page.screenshot(path=str(target/f'home-{width}.png'),full_page=True)
                     context.close()
+            finally:
+                browser.close()
+
+
+def test_language_switch_keeps_draft_photos_and_a_valid_submission():
+    """Language switching must preserve the buyer's work without storing it or reloading."""
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}) as (base,database,sink,http,env):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            page=browser.new_page(viewport={"width":390,"height":844})
+            try:
+                page.goto(base+'/sourcing?lang=ru')
+                page.locator('#product').fill('Cordless drill')
+                page.locator('#quantity').fill('100 or 1000')
+                page.locator('#destination').fill('Serbia')
+                page.locator('#email').fill('buyer@example.com')
+                page.locator('#requirements').fill('A professional cordless drill with two batteries, spare parts and a written specification.')
+                page.locator('#supplier').fill('https://example.com/supplier')
+                photo=BytesIO();Image.new('RGB',(16,16),'blue').save(photo,format='JPEG')
+                page.locator('#photos').set_input_files({'name':'drill.jpg','mimeType':'image/jpeg','buffer':photo.getvalue()})
+                page.locator('#service').select_option('prepare')
+                page.locator('#documents').fill('Please prepare the specification and supplier questions.')
+                for language in ('de','en','fr','es','sr','ru','en'):
+                    page.locator('.languages a[lang="'+language+'"]').click()
+                    expect(page.locator('html')).to_have_attribute('lang',language)
+                    expect(page.locator('#service')).to_have_value('prepare')
+                    expect(page.locator('#product')).to_have_value('Cordless drill')
+                    expect(page.locator('#email')).to_have_value('buyer@example.com')
+                    expect(page.locator('#documents')).to_have_value('Please prepare the specification and supplier questions.')
+                    assert page.locator('#photos').evaluate('el=>el.files.length')==1
+                page.locator('#service').select_option('search')
+                expect(page.locator('#preview img')).to_have_count(1)
+                page.locator('input[name="consent"]').check()
+                page.locator('#submitButton').click()
+                page.wait_for_url(re.compile(r'/sourcing/requests/SRC-'))
+                expect(page.locator('main')).to_contain_text('Cordless drill')
+                assert sink.messages==[]
+                # Old /#submit links must reveal the existing dispute form.
+                page.goto(base+'/?lang=ru#submit')
+                expect(page.locator('#legacyDispute')).to_have_attribute('open','')
+                expect(page.locator('#fullName')).to_be_visible()
+                page.goto(base+'/sourcing/feedback?lang=ru')
+                page.locator('select[name="kind"]').select_option('bug')
+                expect(page.locator('select[name="rating"]')).to_be_hidden()
+                expect(page.locator('input[name="publish_consent"]')).to_be_disabled()
             finally:
                 browser.close()

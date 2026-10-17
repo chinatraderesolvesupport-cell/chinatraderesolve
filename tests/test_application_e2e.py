@@ -517,3 +517,48 @@ def test_admin_workspace_refresh_periods_and_navigation():
                 assert sink.messages==[]
             finally:
                 browser.close()
+
+
+def test_operator_reads_cancels_and_permanently_deletes_one_sourcing_request():
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}) as (base,database,sink,http,env):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            page=browser.new_page(viewport={"width":390,"height":844})
+            try:
+                page.goto(base+'/sourcing?lang=ru')
+                page.locator('#product').fill('Isolated test drill')
+                page.locator('#quantity').fill('100')
+                page.locator('#destination').fill('Serbia')
+                page.locator('#requirements').fill('A professional drill with spare batteries and documented safety specifications.')
+                page.locator('#email').fill('buyer@example.com')
+                page.locator('input[name="consent"]').check()
+                page.locator('#submitButton').click()
+                page.wait_for_url(re.compile(r'/sourcing/requests/SRC-'))
+                rid=page.locator('h1').inner_text();private_url=page.url
+                page.goto(base+'/admin/login')
+                page.locator('input[name="token"]').fill(env['ADMIN_TOKEN'])
+                page.locator('button[type="submit"]').click()
+                expect(page.locator('.admin-directions')).to_contain_text('В работе: 1 · Всего: 1')
+                page.locator('.admin-toolbar').get_by_role('link',name='Заявки на подбор',exact=True).click()
+                page.get_by_role('link',name=rid,exact=True).click()
+                page.get_by_role('link',name='Удалить навсегда',exact=True).click()
+                expect(page.locator('main')).to_contain_text(rid)
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.get_by_role('link',name='Отмена, вернуться к заявке',exact=True).click()
+                expect(page.locator('h1')).to_have_text(rid)
+                page.get_by_role('link',name='Удалить навсегда',exact=True).click()
+                if os.environ.get('CTR_ADMIN_SCREENSHOT_DIR'):
+                    target=Path(os.environ['CTR_ADMIN_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
+                    page.screenshot(path=str(target/'delete-confirmation-390.png'),full_page=True)
+                page.locator('input[name="confirm"]').check()
+                page.get_by_role('button',name='Удалить навсегда',exact=True).click()
+                expect(page.get_by_role('status')).to_have_text('Заявка удалена из рабочей базы.')
+                expect(page.get_by_role('link',name=rid,exact=True)).to_have_count(0)
+                assert http.get(private_url).status_code==404
+                with sqlite3.connect(database) as conn:
+                    assert conn.execute('SELECT COUNT(*) FROM sourcing_requests WHERE id=?',(rid,)).fetchone()[0]==0
+                page.locator('.admin-toolbar').get_by_role('link',name='Рабочий кабинет',exact=True).click()
+                expect(page.locator('.admin-directions')).to_contain_text('В работе: 0 · Всего: 0')
+                assert sink.messages==[]
+            finally:
+                browser.close()

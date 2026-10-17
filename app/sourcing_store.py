@@ -140,11 +140,20 @@ def publish_report(request_id, expected_version, payload):
         _queue_mail(conn,request_id,recipient['email'],'report',json.loads(recipient['brief_json']).get('locale','ru'))
 
 
-def delete_request(request_id):
+def delete_request(request_id, expected_version=None):
     with transaction() as conn:
+        if expected_version is not None:
+            if not using_postgres():
+                execute(conn,'BEGIN IMMEDIATE')
+            row=execute(conn,'SELECT version FROM sourcing_requests WHERE id=?'+(' FOR UPDATE' if using_postgres() else ''),(request_id,)).fetchone()
+            if not row:
+                return False
+            if str(row['version'])!=str(expected_version):
+                raise Conflict('Заявка изменилась. Откройте её и подтвердите удаление заново.')
         execute(conn,'''DELETE FROM notification_outbox WHERE id IN
             (SELECT notification_id FROM sourcing_notifications WHERE request_id=?)''',(request_id,))
         execute(conn,'DELETE FROM sourcing_requests WHERE id=?',(request_id,))
+        return True
 
 
 def save_draft(request_id, expected_version, payload):
@@ -201,3 +210,12 @@ def moderate_feedback(feedback_id, version, status):
         changed=execute(conn,'''UPDATE sourcing_feedback SET status=?,version=version+1
             WHERE id=? AND version=?''',(status,feedback_id,version))
         if changed.rowcount!=1: raise Conflict('Сообщение изменилось. Обновите страницу.')
+
+
+def request_counts():
+    with transaction() as conn:
+        rows=execute(conn,'SELECT status,COUNT(*) AS n FROM sourcing_requests GROUP BY status').fetchall()
+    counts={row['status']:int(row['n']) for row in rows}
+    counts['total']=sum(counts.values())
+    counts['active']=sum(counts.get(status,0) for status in ('received','reviewing','in_progress'))
+    return counts

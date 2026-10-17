@@ -1225,6 +1225,23 @@ def delete_case_now(case_id: int) -> bool:
         return True
 
 
+def purge_case_now(case_id: int, expected_updated_at: str) -> bool:
+    """Permanently remove one confirmed case and its related working records."""
+    with transaction() as conn:
+        if not _lock_case(conn,case_id):
+            return False
+        row=execute(conn,'SELECT updated_at FROM cases WHERE id=?',(case_id,)).fetchone()
+        if row['updated_at']!=expected_updated_at:
+            raise ValueError('Дело изменилось. Откройте его и подтвердите удаление заново.')
+        analysis=execute(conn,'SELECT status FROM document_analyses WHERE case_id=?',(case_id,)).fetchone()
+        if analysis and analysis['status']=='running':
+            raise DocumentAnalysisInProgressError('Дождитесь окончания анализа документов.')
+        for table in ('feedback','notification_outbox','case_messages','case_documents','document_analyses','audit_log'):
+            execute(conn,'DELETE FROM '+table+' WHERE case_id=?',(case_id,))
+        execute(conn,'DELETE FROM cases WHERE id=?',(case_id,))
+        return True
+
+
 def revoke_ai_consent(case_id: int, actor: str = "client") -> bool:
     """Withdraw consent for future AI work and remove any stored AI report."""
     with transaction() as conn:

@@ -2903,6 +2903,7 @@ def admin_dashboard(
             "search_query": search_query,
             "sort_filter": sort,
             "traffic_sources": traffic_source_counts(),
+            "sourcing_statistics_enabled": sourcing_enabled(),
             "search_indexing_enabled": search_indexing_is_ready(),
             "search_indexing_checks": search_indexing_checks(),
             "google_search_console_connected": settings.google_search_console_connected,
@@ -3194,7 +3195,7 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # old Render URL changes origin before route handling or request-body parsing.
 # All route decorators above are already bound to ``fastapi_app``.
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
-from .sourcing import install_sourcing
+from .sourcing import install_sourcing, enabled as sourcing_enabled
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
                  verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery)
 

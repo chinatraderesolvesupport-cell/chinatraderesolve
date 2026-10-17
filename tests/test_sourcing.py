@@ -19,7 +19,8 @@ def pilot(tmp_path,monkeypatch):
     monkeypatch.setattr(db,'settings',local)
     monkeypatch.setattr(main,'admin_login_limiter',sourcing.SlidingWindowRateLimiter(limit=5,window_seconds=900))
     monkeypatch.setenv('ENABLE_SOURCING_PILOT','true')
-    db.init_db();store.init_sourcing_db()
+    db.init_db();store.init_sourcing_db();sourcing.sourcing_stats.init_db()
+    sourcing.sourcing_stats.limiter.events.clear()
     sourcing.limiter.events.clear();sourcing.access_limiter.events.clear();sourcing.feedback_limiter.events.clear()
     async def allow(*args):return True
     # install_sourcing captured the original function; its settings are patched above.
@@ -367,3 +368,74 @@ def test_unified_preview_passes_service_choice(pilot,service):
     page=pilot.get('/sourcing?service='+service)
     selected=service if service!='invalid' else 'search'
     assert re.search(r'<option value="'+selected+r'" selected>',page.text)
+
+
+@pytest.mark.parametrize('lang',['ru','en','de','fr','es','sr'])
+def test_buyer_guides_and_optional_context(pilot,lang):
+    hub=pilot.get('/sourcing/help?lang='+lang)
+    assert hub.status_code==200
+    assert 'noindex' in hub.headers['x-robots-tag']
+    for topic in ('supplier','spec','cost','photo'):
+        page=pilot.get('/sourcing/help/'+topic+'?lang='+lang)
+        assert page.status_code==200
+        assert f'<html lang="{lang}">' in page.text
+        assert sourcing.COPY[lang]['g_'+topic+'_title'] in page.text
+    assert pilot.get('/sourcing/help/not-a-topic').status_code==404
+    rid=create(pilot,platform='1688',purchase_purpose='resale')
+    item=store.get_request(rid)
+    assert item['brief']['platform']=='1688'
+    assert item['brief']['purchase_purpose']=='resale'
+    page=pilot.get('/sourcing/requests/'+rid+'?lang='+lang)
+    assert sourcing.COPY[lang]['purpose_resale'] in page.text
+    assert pilot.post('/sourcing/requests',data=payload(pilot,platform='arbitrary')).status_code==400
+
+
+def test_visit_aggregates_privacy_and_actual_use(pilot):
+    from app import sourcing_stats as stats
+    from datetime import datetime,timedelta,timezone
+    chrome={'user-agent':'Mozilla/5.0 Chrome/130 Safari/537.36'}
+    assert pilot.get('/admin/sourcing-statistics').status_code==401
+    pilot.get('/sourcing/preview',headers=chrome)
+    pilot.get('/sourcing/help/supplier?lang=en&access_code=must-not-store',headers=chrome)
+    pilot.get('/sourcing/help/not-found',headers=chrome)
+    pilot.get('/sourcing/access',headers=chrome)
+    pilot.get('/health',headers=chrome)
+    pilot.get('/sourcing',headers={**chrome,'dnt':'1'})
+    pilot.get('/sourcing',headers={**chrome,'sec-gpc':'1'})
+    pilot.get('/sourcing',headers={'user-agent':'Googlebot'})
+    row=stats.summary()['periods'][0]
+    assert (row['views'],row['sessions'])==(2,1)
+    rid=create(pilot)
+    pilot.get('/sourcing/requests/'+rid,headers=chrome)
+    assert stats.summary()['periods'][0]['requests']==1
+    now=db.utcnow()
+    with db.transaction() as conn:
+        for revision in (2,3):
+            db.execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',(rid,revision,'{}',now))
+        old=(datetime.now(timezone.utc).date()-timedelta(days=10)).isoformat()
+        db.execute(conn,'INSERT INTO sourcing_daily_stats VALUES (?,?,?)',(old,10,5))
+        rows=[dict(r) for r in db.execute(conn,'SELECT * FROM sourcing_daily_stats').fetchall()]
+        assert all(set(r)=={'day','pageviews','sessions'} for r in rows)
+        assert 'must-not-store' not in str(rows)
+    result=stats.summary()
+    assert result['periods'][0]['reports']==1
+    assert result['periods'][1]['views']==2
+    assert result['periods'][2]['views']==12
+    admin(pilot)
+    pilot.get('/sourcing/preview',headers=chrome)
+    assert stats.summary()['periods'][0]['views']==2
+    page=pilot.get('/admin/sourcing-statistics')
+    assert page.status_code==200 and 'no-store' in page.headers['cache-control']
+    assert '/admin/sourcing-statistics' in pilot.get('/admin').text
+    with db.transaction() as conn:
+        db.execute(conn,'DELETE FROM sourcing_requests WHERE id=?',(rid,))
+    assert stats.summary()['periods'][0]['requests']==0
+    assert stats.summary()['periods'][0]['reports']==0
+
+
+def test_statistics_failure_does_not_block_public_page(pilot,monkeypatch):
+    from app import sourcing_stats as stats
+    def broken():raise RuntimeError('database offline')
+    monkeypatch.setattr(stats,'transaction',broken)
+    response=pilot.get('/sourcing/preview',headers={'user-agent':'Mozilla/5.0 Chrome/130'})
+    assert response.status_code==200

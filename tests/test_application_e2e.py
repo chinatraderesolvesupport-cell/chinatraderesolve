@@ -303,6 +303,9 @@ def test_sourcing_mobile_photo_to_operator_report():
                 page.locator("#quantity").fill("100 or 1000")
                 page.locator("#destination").fill("Serbia")
                 page.locator("#email").fill("buyer@example.com")
+                page.locator('details').filter(has=page.locator('#platform')).locator('summary').click()
+                page.locator('#platform').select_option('alibaba')
+                page.locator('#purchase_purpose').select_option('resale')
                 page.locator("#alternatives").check()
                 page.locator("#goal").fill("Найти современный вариант ключа с экраном")
                 page.locator('input[name="consent"]').check()
@@ -316,7 +319,11 @@ def test_sourcing_mobile_photo_to_operator_report():
                 op=operator.new_page();op.goto(base+"/admin/login")
                 op.locator('input[name="token"]').fill(env["ADMIN_TOKEN"])
                 op.locator('button[type="submit"]').click()
+                op.goto(base+"/admin/sourcing-statistics?lang=ru")
+                expect(op.locator('h1')).to_have_text('Посещения и использование')
+                expect(op.locator('tbody tr')).to_have_count(3)
                 op.goto(base+"/admin/sourcing/"+rid)
+                expect(op.locator('main')).to_contain_text('Для перепродажи')
                 expect(op.locator('img[alt^="Фото товара"]')).to_be_visible()
                 for state in ("reviewing","in_progress"):
                     op.locator('select[name="status"]').select_option(state)
@@ -329,6 +336,11 @@ def test_sourcing_mobile_photo_to_operator_report():
                 op.get_by_role("button",name="Выдать отчёт клиенту").click()
                 page.reload();expect(page.locator(".report")).to_contain_text("Протестированный результат")
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                for language in ("ru","en","de","fr","es","sr"):
+                    page.goto(base+"/sourcing/help/supplier?lang="+language)
+                    expect(page.locator("html")).to_have_attribute("lang",language)
+                    expect(page.locator('main article p')).to_have_count(4)
+                    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 # Language switch also translates dynamic photo-validation copy.
                 page.goto(base+"/sourcing?lang=en")
                 expect(page.locator("html")).to_have_attribute("lang","en")

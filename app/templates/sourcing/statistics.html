@@ -1,0 +1,7 @@
+{% extends 'sourcing/base.html' %}{% block content %}
+<h1>{{ t('stats_link') }}</h1><p><a href="/admin">{{ t('main_admin') }}</a> · <a href="/admin/sourcing">{{ t('queue') }}</a></p>
+<p>{{ t('stats_scope') }}</p><p>{{ t('stats_definition') }}</p>
+<p>{{ t('stats_first') }}: {{ statistics.first or t('stats_empty') }}. UTC.</p>
+<div class="table"><table><thead><tr><th>{{ t('stats_days') }}</th><th>{{ t('stats_sessions') }}</th><th>{{ t('stats_views') }}</th><th>{{ t('stats_requests') }}</th><th>{{ t('stats_reports') }}</th></tr></thead><tbody>{% for row in statistics.periods %}<tr><td>{{ row.start }} — {{ statistics.today }} ({{ row.days }})</td><td>{{ row.sessions }}</td><td>{{ row.views }}</td><td>{{ row.requests }}</td><td>{{ row.reports }}</td></tr>{% endfor %}</tbody></table></div>
+<p>{{ t('stats_limits') }}</p><p>{{ t('stats_records') }}</p>
+{% endblock %}

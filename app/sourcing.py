@@ -14,6 +14,7 @@ from .documents import prepare_upload, DocumentValidationError, unique_display_f
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
 from . import sourcing_mail
+from . import sourcing_stats
 from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
 SERVICES={'search':'Найти поставщика','check':'Проверить поставщика','prepare':'Подготовить сделку'}
@@ -62,6 +63,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                      verify_turnstile, turnstile_site_key, schedule_delivery=None):
     if enabled():
         store.init_sourcing_db()
+        sourcing_stats.init_db()
     class LocalizedRoute(APIRoute):
         def get_route_handler(self):
             handler=super().get_route_handler()
@@ -77,6 +79,8 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     def render(request,name,context=None,status=200):
         lang=language(request);t=translator(lang)
+        if status==200:
+            sourcing_stats.record_view(request)
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
             't':t,'lang':lang,'languages':LANGUAGES,
@@ -125,6 +129,21 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             'submission':submission,'turnstile_site_key':turnstile_site_key,
             'selected_service':request.query_params.get('service') if request.query_params.get('service') in SERVICES else 'search'})
 
+    @router.get('/admin/sourcing-statistics')
+    def statistics(request:Request):
+        require_admin(request)
+        return render(request,'statistics.html',{'statistics':sourcing_stats.summary()})
+
+    @router.get('/sourcing/help')
+    def help_hub(request:Request):
+        return render(request,'help.html',{'topics':['supplier','spec','cost','photo']})
+
+    @router.get('/sourcing/help/{topic}')
+    def help_topic(request:Request,topic:str):
+        if topic not in {'supplier','spec','cost','photo'}:
+            raise HTTPException(404)
+        return render(request,'help.html',{'topic':topic,'topics':['supplier','spec','cost','photo']})
+
     @router.get('/sourcing/preview')
     def unified_preview(request:Request):
         return render(request,'unified.html',{'preview_view':'home'})
@@ -162,7 +181,12 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             brief={k:text(form,k,n) for k,n in {'product':200,'quantity':100,'destination':100,
                 'budget':100,'deadline':100,'supplier':1000,'requirements':10000,
                 'documents':5000,'language':100}.items()}
-            brief.update(service=service,schema_version=2,locale=language(request),pricing_mode='launch_free')
+            for key,allowed in {'platform':{'','alibaba','aliexpress','1688','made_in_china','direct','other','unsure'},
+                                'purchase_purpose':{'','personal','business','resale','unsure'}}.items():
+                brief[key]=text(form,key,30)
+                if brief[key] not in allowed:
+                    raise ValueError('Проверьте выбранный вариант.')
+            brief.update(service=service,schema_version=3,locale=language(request),pricing_mode='launch_free')
             if not brief['quantity'] or not brief['destination']:
                 raise ValueError('Укажите количество и страну доставки.')
             if service!='search' and not brief['supplier']:

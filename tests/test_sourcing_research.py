@@ -269,3 +269,30 @@ def test_authorized_backfill_handles_existing_workflow_statuses(pilot,monkeypatc
     else:
         assert wait_for(rid)['research']['state']=='ready' and len(calls)==2
         assert store.get_request(rid)['report'] is None
+
+
+def test_configured_recovery_retry_has_an_explicit_attempt_ceiling(pilot,monkeypatch):
+    enable(monkeypatch)
+    calls=provider(monkeypatch,[(200,{'status':'incomplete'}),(200,search_response()),(200,draft_response())])
+    rid=create(pilot)
+    assert wait_for(rid)['research']['error_code']=='incomplete'
+    monkeypatch.setenv('SOURCING_RESEARCH_BACKFILL_IDS',rid)
+    pilot.portal.call(research.startup)
+    assert len(calls)==1  # No retry by default.
+    monkeypatch.setenv('SOURCING_RESEARCH_BACKFILL_RETRY_TARGET','2')
+    pilot.portal.call(research.startup)
+    assert wait_for(rid)['research']['state']=='ready' and len(calls)==3
+    assert store.get_request(rid)['research']['attempts']==2
+    pilot.portal.call(research.startup)
+    time.sleep(.03)
+    assert len(calls)==3 and store.get_request(rid)['report'] is None
+
+
+def test_reasoning_budget_is_explicit_and_does_not_leak_other_model_settings(pilot,monkeypatch):
+    enable(monkeypatch)
+    monkeypatch.setenv('SOURCING_RESEARCH_MODEL','gpt-5.4-mini')
+    monkeypatch.setenv('SOURCING_RESEARCH_REASONING_EFFORT','none')
+    calls=provider(monkeypatch,[(200,search_response()),(200,draft_response())])
+    rid=create(pilot)
+    assert wait_for(rid)['research']['state']=='ready'
+    assert len(calls)==2 and all(call['model']=='gpt-5.4-mini' and call['reasoning']=={'effort':'none'} for call in calls)

@@ -405,6 +405,7 @@ def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
                         page.goto(base+"/?lang="+language)
                         expect(page.locator('.buyer-overview')).to_contain_text(COPY[language]['u_buy_process'])
                         page.locator('#homeBuy').click()
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                         page.locator('#buyingApply').click()
                         page.locator('.quick-actions a[href="#sourcingForm"]').click()
                         expect(page.locator('#product')).to_be_in_viewport()
@@ -417,6 +418,9 @@ def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
                         expect(page.locator('input[name="access_code"]')).to_have_attribute('type','password')
                         page.locator('details summary').click()
                         expect(page.locator('main')).to_contain_text(COPY[language]['lost_code_help'])
+                        page.goto(base+'/disputes?lang='+language)
+                        expect(page.locator('#caseForm')).to_be_visible()
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                         if language=='ru' and os.environ.get('CTR_UX_SCREENSHOT_DIR'):
                             target=Path(os.environ['CTR_UX_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
                             page.goto(base+'/sourcing?lang=ru')

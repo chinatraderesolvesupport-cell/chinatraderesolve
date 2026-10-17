@@ -297,6 +297,7 @@ def test_sourcing_mobile_photo_to_operator_report():
                 page.locator("#submitButton").click()
                 page.wait_for_url(re.compile(r"/sourcing/requests/SRC-"))
                 rid=page.locator("h1").inner_text();buyer_url=page.url
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 expect(page.locator("main .badge")).to_have_text("Заявка получена")
                 assert http.get(buyer_url).status_code==404
                 op=operator.new_page();op.goto(base+"/admin/login")

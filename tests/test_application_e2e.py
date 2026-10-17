@@ -59,7 +59,7 @@ def free_port():
 
 
 @contextmanager
-def isolated_app(secret=PASS_SECRET, expected_mail_failure=False):
+def isolated_app(secret=PASS_SECRET, expected_mail_failure=False, extra_env=None):
     with tempfile.TemporaryDirectory(prefix="ctr-e2e-") as directory:
         sink = ThreadingHTTPServer(("127.0.0.1", 0), MailSink)
         sink.messages = []
@@ -88,6 +88,7 @@ def isolated_app(secret=PASS_SECRET, expected_mail_failure=False):
             "NO_PROXY": "localhost,127.0.0.1",
             "no_proxy": "localhost,127.0.0.1",
         })
+        env.update(extra_env or {})
         log_path = Path(directory) / "server.log"
         with log_path.open("w+") as log:
             process = subprocess.Popen(
@@ -271,3 +272,50 @@ def test_mail_transport_failure_keeps_notifications_for_retry():
         assert all(reference in message["subject"] for message in sink.messages)
         with sqlite3.connect(database) as conn:
             assert conn.execute("SELECT COUNT(*) FROM notification_outbox WHERE status='sent'").fetchone()[0] == 2
+
+
+def test_sourcing_mobile_photo_to_operator_report():
+    """Real UI: multipart photo, private ownership, operator report, buyer delivery."""
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true", "TURNSTILE_SITE_KEY":"", "TURNSTILE_SECRET_KEY":""}) as (base, database, sink, http, env):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            buyer=browser.new_context(viewport={"width":390,"height":844},locale="ru-RU")
+            operator=browser.new_context(viewport={"width":1280,"height":900},locale="ru-RU")
+            try:
+                page=buyer.new_page();page.goto(base+"/sourcing")
+                photo=BytesIO();Image.new("RGB",(16,16),"blue").save(photo,format="JPEG")
+                page.locator("#photos").set_input_files({"name":"key.jpg","mimeType":"image/jpeg","buffer":photo.getvalue()})
+                expect(page.locator("#preview img")).to_be_visible()
+                page.locator("#unknown").check()
+                page.locator("#quantity").fill("100 or 1000")
+                page.locator("#destination").fill("Serbia")
+                page.locator("#email").fill("buyer@example.com")
+                page.locator("#alternatives").check()
+                page.locator("#goal").fill("Найти современный вариант ключа с экраном")
+                page.locator('input[name="consent"]').check()
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                page.locator("#submitButton").click()
+                page.wait_for_url(re.compile(r"/sourcing/requests/SRC-"))
+                rid=page.locator("h1").inner_text();buyer_url=page.url
+                expect(page.locator("main .badge")).to_have_text("Заявка получена")
+                assert http.get(buyer_url).status_code==404
+                op=operator.new_page();op.goto(base+"/admin/login")
+                op.locator('input[name="token"]').fill(env["ADMIN_TOKEN"])
+                op.locator('button[type="submit"]').click()
+                op.goto(base+"/admin/sourcing/"+rid)
+                expect(op.locator('img[alt^="Фото товара"]')).to_be_visible()
+                for state in ("reviewing","in_progress"):
+                    op.locator('select[name="status"]').select_option(state)
+                    op.get_by_role("button",name="Обновить статус").click()
+                for name,value in {"summary":"Протестированный результат","findings":"Совпадение требует подтверждения","risks":"Завод не подтверждён","next_steps":"Запросить документы","sources":"https://example.com/source"}.items():
+                    op.locator('textarea[name="'+name+'"]').fill(value)
+                op.get_by_role("button",name="Сохранить черновик").click()
+                page.reload();expect(page.locator(".report")).to_have_count(0)
+                op.locator('input[name="reviewed"]').check()
+                op.get_by_role("button",name="Выдать отчёт клиенту").click()
+                page.reload();expect(page.locator(".report")).to_contain_text("Протестированный результат")
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                assert case_count(database)==0
+                assert sink.messages==[]
+            finally:
+                buyer.close();operator.close();browser.close()

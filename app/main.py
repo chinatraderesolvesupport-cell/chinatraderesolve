@@ -299,6 +299,8 @@ class RequestBodyLimitMiddleware:
         if method not in {"POST", "PUT", "PATCH"}:
             return None
         path = str(scope.get("path") or "")
+        if path == "/sourcing/requests":
+            return 26 * 1024 * 1024
         if path.startswith("/case/") and path.endswith("/documents"):
             return DOCUMENT_UPLOAD_REQUEST_BODY_BYTES
         if path == "/api/assistant/transcribe":
@@ -3191,6 +3193,11 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # a generic body-parsing error. The canonical-host redirect is outermost, so an
 # old Render URL changes origin before route handling or request-body parsing.
 # All route decorators above are already bound to ``fastapi_app``.
+# Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
+from .sourcing import install_sourcing
+install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
+                 verify_turnstile, settings.turnstile_site_key)
+
 fastapi_app = app
 body_limited_app = RequestBodyLimitMiddleware(fastapi_app)
 app = CanonicalHostRedirectMiddleware(

@@ -250,3 +250,22 @@ def test_ai_pages_render_in_all_six_languages(pilot,monkeypatch):
         assert page.status_code==200 and COPY[lang]['research_heading'] in page.text
         page=pilot.get('/buying?lang='+lang)
         assert page.status_code==200 and COPY[lang]['live_ai'] in page.text
+
+
+@pytest.mark.parametrize('status',['reviewing','in_progress','declined'])
+def test_authorized_backfill_handles_existing_workflow_statuses(pilot,monkeypatch,status):
+    rid=create(pilot)
+    store.change_status(rid,1,'reviewing')
+    if status!='reviewing':store.change_status(rid,2,status)
+    with db.transaction() as conn:
+        item=store.get_request(rid)
+        brief=item['brief'];brief.pop('ai_processing_consent',None)
+        db.execute(conn,'UPDATE sourcing_requests SET brief_json=? WHERE id=?',(json.dumps(brief),rid))
+    enable(monkeypatch);monkeypatch.setenv('SOURCING_RESEARCH_BACKFILL_IDS',rid)
+    calls=provider(monkeypatch,[(200,search_response()),(200,draft_response())])
+    pilot.portal.call(research.startup)
+    if status=='declined':
+        assert store.get_request(rid)['research'] is None and calls==[]
+    else:
+        assert wait_for(rid)['research']['state']=='ready' and len(calls)==2
+        assert store.get_request(rid)['report'] is None

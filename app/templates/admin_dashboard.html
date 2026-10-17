@@ -24,12 +24,24 @@
 <body>{% include 'admin_navigation.html' %}
 <div class="wrap">
   <div class="top">
-    <div><h1>Рабочая очередь</h1><div class="muted">Очередь дел, требующих внимания. Ниже — споры; заявки на подбор открываются отдельно.</div></div>
+    <div><h1>Рабочая очередь</h1><div class="muted">Новые обращения и готовые черновики — в общей очереди ниже.</div></div>
 
   </div>
 
-  {% if sourcing_statistics_enabled %}<div class="admin-directions"><a class="card" href="/admin?view=active"><strong>Споры с поставщиками</strong><span>Активных: {{ counts.active }} · Всего: {{ counts.total }}</span></a><a class="card" href="/admin/sourcing"><strong>Подбор поставщиков</strong><span>В работе: {{ sourcing_counts.active }} · Всего: {{ sourcing_counts.total }}</span><span>Новых: {{ sourcing_counts.get('received',0) }} · С отчётом: {{ sourcing_counts.get('completed',0) }}</span></a></div>{% endif %}
+  {% if sourcing_statistics_enabled %}
+  {% set source_new=sourcing_inbox|selectattr('is_new')|list %}
+  {% set ready=sourcing_inbox|selectattr('research_state','equalto','ready')|list %}
+  <section class="card admin-inbox" aria-label="Общая очередь обращений">
+    <h2>Новые обращения: {{ (counts.new or 0) + source_new|length }}</h2>
+    <p>Споры: {{ counts.new or 0 }} · Подбор и проверка: {{ source_new|length }} · <strong>Черновики на проверку: {{ ready|length }}</strong></p>
+    {% for item in sourcing_inbox %}<article class="admin-inbox-item"><div><strong>{% if item.is_new %}НОВАЯ ЗАЯВКА · {% endif %}{{ item.product }}</strong><br><a href="/admin/sourcing/{{ item.id }}">{{ item.id }}</a><br><span class="muted">{{ item.email }}</span></div><div>{% if item.research_state=='ready' %}<strong>Черновик готов — проверьте и разрешите отправку</strong>{% elif item.research_state in ['running','queued'] %}ИИ готовит исследование{% elif item.research_state in ['failed','stale'] %}<strong>Исследование требует внимания</strong>{% else %}Ожидает исследования{% endif %}<br><a class="btn primary" href="/admin/sourcing/{{ item.id }}{{ '#draft-review' if item.research_state=='ready' else '' }}">{{ 'Проверить черновик' if item.research_state=='ready' else 'Открыть заявку' }}</a></div></article>{% endfor %}
+    {% if counts.new %}<p><a class="btn" href="/admin?view=new#dispute-queue">Открыть новые споры: {{ counts.new }}</a></p>{% endif %}
+    {% if not sourcing_research_configured %}<p class="muted">Автоматическое исследование поставщиков пока не подключено.</p>{% endif %}
+  </section>
+  {% endif %}
+  {% if sourcing_statistics_enabled %}<div class="admin-directions"><a class="card" href="/admin?view=active"><strong>Споры с поставщиками</strong><span>Активных: {{ counts.active }} · Всего: {{ counts.total }}</span></a><a class="card" href="/admin/sourcing"><strong>Подбор поставщиков</strong><span>В работе: {{ sourcing_counts.active }} · Всего: {{ sourcing_counts.total }}</span><span>Новых: {{ source_new|length }} · С отчётом: {{ sourcing_counts.get('completed',0) }}</span></a></div>{% endif %}
   {% if request.query_params.get('deleted')=='1' %}<p role="status" class="card">Заявка удалена из рабочей базы.</p>{% endif %}
+  <h2 id="dispute-queue">Очередь споров с поставщиками</h2><p class="muted">Показатели ниже относятся к спорам. Заявки на подбор и проверку — в общей очереди выше.</p>
   <div class="queue-nav-wrap">
     <nav class="queue-nav" aria-label="Разделы очереди">
       <a class="queue-tab {{ 'active' if current_view=='new' else '' }}" href="/admin?view=new">Новые <span class="count new-count">{{ counts.new or 0 }}</span></a>

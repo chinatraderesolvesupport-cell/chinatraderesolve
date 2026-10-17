@@ -36,6 +36,8 @@ def init_sourcing_db():
             notification_id BIGINT NOT NULL REFERENCES notification_outbox(id) ON DELETE CASCADE,
             event TEXT NOT NULL, PRIMARY KEY(request_id,notification_id))''')
         init_feedback_db(conn)
+        from .sourcing_research import init_db
+        init_db(conn)
         execute(conn, 'CREATE INDEX IF NOT EXISTS sourcing_photos_request ON sourcing_photos(request_id)')
 
 
@@ -83,6 +85,10 @@ def get_request(request_id):
                          (request_id,)).fetchone()
         result['report'] = json.loads(report['payload_json']) if report else None
         result['report_revision'] = report['revision'] if report else None
+        research = execute(conn, 'SELECT state,error_code,evidence_json,updated_at,attempts FROM sourcing_research WHERE request_id=?', (request_id,)).fetchone()
+        result['research'] = dict(research) if research else None
+        if result['research']:
+            result['research']['evidence'] = json.loads(result['research'].pop('evidence_json'))
         result['notifications'] = [dict(n) for n in execute(conn,
             '''SELECT n.event,o.status FROM sourcing_notifications n
                JOIN notification_outbox o ON o.id=n.notification_id
@@ -97,7 +103,11 @@ def get_request(request_id):
 def list_requests():
     with transaction() as conn:
         return [dict(r) for r in execute(conn,
-            'SELECT id,email,status,version,created_at FROM sourcing_requests ORDER BY created_at DESC,id LIMIT 200').fetchall()]
+            '''SELECT r.id,r.email,r.status,r.version,r.created_at,j.state AS research_state,
+               CASE WHEN v.request_id IS NULL AND r.status NOT IN ('completed','declined') THEN 1 ELSE 0 END AS is_new
+               FROM sourcing_requests r LEFT JOIN sourcing_research j ON j.request_id=r.id
+               LEFT JOIN sourcing_admin_views v ON v.request_id=r.id
+               ORDER BY is_new DESC,r.created_at DESC,r.id LIMIT 200''').fetchall()]
 
 
 def get_photo(request_id, photo_id):
@@ -135,6 +145,7 @@ def publish_report(request_id, expected_version, payload):
             raise Conflict('Сначала начните работу или обновите изменённую заявку.')
         execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',
                 (request_id,expected_version+1,json.dumps(payload,ensure_ascii=False),utcnow()))
+        execute(conn,"UPDATE sourcing_research SET state='published',updated_at=? WHERE request_id=?",(utcnow(),request_id))
         _event(conn,request_id,'admin','report_published')
         recipient=execute(conn,'SELECT email,brief_json FROM sourcing_requests WHERE id=?',(request_id,)).fetchone()
         _queue_mail(conn,request_id,recipient['email'],'report',json.loads(recipient['brief_json']).get('locale','ru'))

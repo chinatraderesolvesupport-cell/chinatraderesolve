@@ -288,7 +288,7 @@ def test_admin_auth_queue_close_and_feedback():
     assert login.status_code == 303
     dashboard = client.get("/admin")
     assert dashboard.status_code == 200
-    assert "Очередь дел, требующих внимания" in dashboard.text
+    assert "Новые обращения и готовые черновики" in dashboard.text
 
     # Find the case id and the per-session administrator form token.
     import re

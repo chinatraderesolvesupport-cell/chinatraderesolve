@@ -562,3 +562,76 @@ def test_operator_reads_cancels_and_permanently_deletes_one_sourcing_request():
                 assert sink.messages==[]
             finally:
                 browser.close()
+
+
+def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
+    """Real UI with an isolated seeded draft; the provider adapter is tested separately."""
+    with isolated_app(extra_env={'ENABLE_SOURCING_PILOT':'true','ENABLE_SOURCING_LIVE':'true',
+                                'ENABLE_SOURCING_EMAIL':'true','TURNSTILE_SITE_KEY':'','TURNSTILE_SECRET_KEY':''}) as (base,database,sink,http,env):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            buyer=browser.new_context(viewport={'width':390,'height':844})
+            operator=browser.new_context(viewport={'width':1280,'height':900})
+            try:
+                page=buyer.new_page();requests={}
+                photo=BytesIO();Image.new('RGB',(20,20),'blue').save(photo,format='JPEG')
+                for service in ('search','check','prepare'):
+                    page.goto(base+'/sourcing?lang=ru&service='+service)
+                    page.locator('#service').select_option(service)
+                    expect(page.locator('#photos')).to_be_visible()
+                    expect(page.locator('#photos')).to_be_enabled()
+                    page.locator('#product').fill('Leather sofa')
+                    page.locator('#quantity').fill('10')
+                    page.locator('#destination').fill('Serbia')
+                    page.locator('#email').fill('isolated-buyer@example.com')
+                    page.locator('#supplier').fill('Example Furniture Company')
+                    page.locator('#photos').set_input_files({'name':'sofa.jpg','mimeType':'image/jpeg','buffer':photo.getvalue()})
+                    page.locator('#requirements').fill('Black corner sofa')
+                    page.locator('input[name="consent"]').check()
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                    page.locator('#submitButton').click()
+                    page.wait_for_url(re.compile(r'/sourcing/requests/SRC-'))
+                    requests[service]=page.url.split('/')[-1]
+                    expect(page.get_by_text('Прикреплено фотографий: 1',exact=True)).to_be_visible()
+                rid=requests['check']
+                draft={'summary':'PRIVATE SEEDED DRAFT','findings':'The seller claims to operate a factory [1].',
+                       'risks':'Legal identity and factory status need verification.',
+                       'next_steps':'Request a business licence and sample terms.',
+                       'sources':'https://example.com/company','suppliers':[]}
+                with sqlite3.connect(database) as conn:
+                    conn.execute("UPDATE sourcing_requests SET status='in_progress',draft_json=?,version=version+1 WHERE id=?",(json.dumps(draft),rid))
+                    conn.execute("INSERT INTO sourcing_research(request_id,state,base_version,updated_at,evidence_json) VALUES (?,'ready',1,'2026-10-17T00:00:00+00:00',?)",(rid,json.dumps({'text':'Seller claims [1].','sources':['https://example.com/company'],'checked_at':'2026-10-17','model':'isolated fixture'})))
+                page.goto(base+'/sourcing/requests/'+rid)
+                expect(page.locator('main')).not_to_contain_text('PRIVATE SEEDED DRAFT')
+                admin=operator.new_page();admin.goto(base+'/admin/login')
+                admin.locator('input[name="token"]').fill(env['ADMIN_TOKEN']);admin.locator('button[type="submit"]').click()
+                expect(admin.locator('.admin-inbox h2')).to_have_text('Новые обращения: 3')
+                expect(admin.locator('.admin-inbox')).to_contain_text('Черновики на проверку: 1')
+                for width in (390,1280):
+                    admin.set_viewport_size({'width':width,'height':900})
+                    assert admin.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                admin.locator('.admin-inbox a[href="/admin/sourcing/'+rid+'"]').first.click()
+                report=admin.locator('form[action="/admin/sourcing/'+rid+'/report"]')
+                expect(report.locator('textarea[name="summary"]')).to_have_value('PRIVATE SEEDED DRAFT')
+                expect(admin.locator('#research')).to_contain_text('Клиент его не видит')
+                expect(admin.locator('#research a[href="https://example.com/company"]')).to_have_count(2)
+                report.locator('textarea[name="summary"]').fill('Reviewed supplier research')
+                report.locator('input[name="reviewed"]').check()
+                report.get_by_role('button',name='Выдать отчёт клиенту',exact=True).click()
+                expect(admin.locator('.badge').first).to_have_text('Отчёт готов')
+                page.reload()
+                expect(page.locator('article.report')).to_contain_text('Reviewed supplier research')
+                assert page.locator('article.report a[href="https://example.com/company"]').count()==1
+                for _ in range(50):
+                    if any('Готовность отчёта' in msg['subject'] for msg in sink.messages):break
+                    time.sleep(.05)
+                assert any('Готовность отчёта' in msg['subject'] for msg in sink.messages)
+                expect(page.locator('#mailStatus')).to_contain_text('Передано почтовому сервису')
+                admin.goto(base+'/admin')
+                expect(admin.locator('.admin-inbox h2')).to_have_text('Новые обращения: 2')
+                assert rid not in admin.locator('.admin-inbox').inner_text()
+                if os.environ.get('CTR_ADMIN_SCREENSHOT_DIR'):
+                    target=Path(os.environ['CTR_ADMIN_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
+                    admin.screenshot(path=str(target/'admin-unified-inbox.png'),full_page=True)
+            finally:
+                buyer.close();operator.close();browser.close()

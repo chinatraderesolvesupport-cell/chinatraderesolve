@@ -1,0 +1,11 @@
+<section class="notice" id="research" data-state="{{ item.research.state if item.research else '' }}" data-progress-url="{{ request.url.path }}/research-progress?lang={{ lang }}"><h2>{{ t('research_heading') }}</h2>
+{% if item.research %}<p role="status"><strong>{{ t('research_'+item.research.state) }}</strong></p>
+{% if item.research.state in ['failed','stale'] %}<p>{{ t('research_error_help') }}</p><p><code>{{ item.research.error_code }}</code></p>{% endif %}
+{% if item.research.evidence %}<details><summary>{{ t('research_evidence') }}</summary><p>{{ item.research.evidence.checked_at }} · {{ item.research.evidence.model }}</p><p class="pre">{{ item.research.evidence.text }}</p><ol>{% for url in item.research.evidence.sources %}<li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">[{{ loop.index }}] {{ url }}</a></li>{% endfor %}</ol></details>{% endif %}
+{% endif %}
+{% if not research_configured %}<p>{{ t('research_disabled') }}</p>{% elif not item.draft and item.status not in ['completed','declined'] and (not item.research or item.research.state in ['failed','stale','published']) %}
+<form method="post" action="/admin/sourcing/{{ item.id }}/research"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="version" value="{{ item.version }}"><button>{{ t('research_retry') if item.research else t('research_start') }}</button></form>
+{% endif %}
+{% if item.research and item.research.state in ['running','queued'] %}<p><a class="button secondary" href="{{ request.url.path }}?lang={{ lang }}#research">{{ t('refresh_status') }}</a></p>{% endif %}
+{% if item.draft %}<p>{{ t('research_private') }}</p><p class="pre">{{ item.draft.get('summary','') }}</p><p><a class="button" href="#draft-review">{{ t('read_draft') }}</a></p><details><summary>{{ t('sources') }}</summary><ol>{% for url in (item.draft.get('sources','').splitlines() if item.draft.get('sources','') is string else item.draft.get('sources',[])) %}<li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">[{{ loop.index }}] {{ url }}</a></li>{% endfor %}</ol></details>{% endif %}
+</section>

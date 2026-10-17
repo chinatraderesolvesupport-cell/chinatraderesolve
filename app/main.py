@@ -3196,7 +3196,7 @@ def indexnow_root_key_file(key: str) -> PlainTextResponse:
 # Isolated opt-in pilot. Disabled by default; no navigation or existing case changes.
 from .sourcing import install_sourcing
 install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
-                 verify_turnstile, settings.turnstile_site_key)
+                 verify_turnstile, settings.turnstile_site_key, _schedule_pending_delivery)
 
 fastapi_app = app
 body_limited_app = RequestBodyLimitMiddleware(fastapi_app)

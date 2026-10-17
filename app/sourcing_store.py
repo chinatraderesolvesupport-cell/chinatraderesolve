@@ -4,7 +4,8 @@ import hashlib
 import json
 import secrets
 from datetime import datetime, timezone
-from .db import execute, transaction, using_postgres, utcnow
+from .db import execute, transaction, using_postgres, utcnow, _insert_notifications
+from . import sourcing_mail
 
 
 class Conflict(ValueError):
@@ -30,6 +31,10 @@ def init_sourcing_db():
         execute(conn, '''CREATE TABLE IF NOT EXISTS sourcing_events (
             id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES sourcing_requests(id) ON DELETE CASCADE,
             actor TEXT NOT NULL, event TEXT NOT NULL, created_at TEXT NOT NULL)''')
+        execute(conn, '''CREATE TABLE IF NOT EXISTS sourcing_notifications (
+            request_id TEXT NOT NULL REFERENCES sourcing_requests(id) ON DELETE CASCADE,
+            notification_id BIGINT NOT NULL REFERENCES notification_outbox(id) ON DELETE CASCADE,
+            event TEXT NOT NULL, PRIMARY KEY(request_id,notification_id))''')
         execute(conn, 'CREATE INDEX IF NOT EXISTS sourcing_photos_request ON sourcing_photos(request_id)')
 
 
@@ -59,6 +64,7 @@ def create_request(brief, email, photos, submission_secret):
                 execute(conn, 'INSERT INTO sourcing_photos VALUES (?,?,?,?,?)',
                         (secrets.token_urlsafe(18),request_id,photo.original_name,photo.content_type,photo.content))
             _event(conn,request_id,'client','created')
+            _queue_mail(conn,request_id,email,'received')
     return request_id, access
 
 
@@ -76,6 +82,11 @@ def get_request(request_id):
                          (request_id,)).fetchone()
         result['report'] = json.loads(report['payload_json']) if report else None
         result['report_revision'] = report['revision'] if report else None
+        result['notifications'] = [dict(n) for n in execute(conn,
+            '''SELECT n.event,o.status FROM sourcing_notifications n
+               JOIN notification_outbox o ON o.id=n.notification_id
+               WHERE n.request_id=? AND o.recipient=? ORDER BY o.id''',
+            (request_id,result['email'])).fetchall()]
         result['events'] = [dict(e) for e in execute(conn,
             'SELECT actor,event,created_at FROM sourcing_events WHERE request_id=? ORDER BY created_at,id',
             (request_id,)).fetchall()]
@@ -124,10 +135,14 @@ def publish_report(request_id, expected_version, payload):
         execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',
                 (request_id,expected_version+1,json.dumps(payload,ensure_ascii=False),utcnow()))
         _event(conn,request_id,'admin','report_published')
+        recipient=execute(conn,'SELECT email FROM sourcing_requests WHERE id=?',(request_id,)).fetchone()
+        _queue_mail(conn,request_id,recipient['email'],'report')
 
 
 def delete_request(request_id):
     with transaction() as conn:
+        execute(conn,'''DELETE FROM notification_outbox WHERE id IN
+            (SELECT notification_id FROM sourcing_notifications WHERE request_id=?)''',(request_id,))
         execute(conn,'DELETE FROM sourcing_requests WHERE id=?',(request_id,))
 
 
@@ -139,3 +154,10 @@ def save_draft(request_id, expected_version, payload):
         if result.rowcount!=1:
             raise Conflict('Черновик не сохранён: заявка изменилась или работа ещё не начата.')
         _event(conn,request_id,'admin','draft_saved')
+
+
+def _queue_mail(conn, request_id, email, event):
+    ids = _insert_notifications(conn, None, sourcing_mail.messages(request_id, email, event))
+    for notification_id in ids:
+        execute(conn, 'INSERT INTO sourcing_notifications VALUES (?,?,?)',
+                (request_id, notification_id, event))

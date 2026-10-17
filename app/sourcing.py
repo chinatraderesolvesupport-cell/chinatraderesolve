@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import secrets
 from urllib.parse import urlsplit
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse, Response
 from pydantic import TypeAdapter, EmailStr, ValidationError
 from starlette.datastructures import UploadFile
@@ -11,6 +11,7 @@ from starlette.concurrency import run_in_threadpool
 from .documents import prepare_upload, DocumentValidationError, unique_display_filename
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
+from . import sourcing_mail
 
 SERVICES={'search':'Найти поставщика','check':'Проверить поставщика','prepare':'Подготовить сделку'}
 STATUSES={'received':'Заявка получена','reviewing':'Оценка задачи','in_progress':'В работе',
@@ -54,13 +55,13 @@ def valid_sources(raw):
 
 
 def install_sourcing(app, templates, require_admin, admin_csrf_token, require_admin_csrf,
-                     verify_turnstile, turnstile_site_key):
+                     verify_turnstile, turnstile_site_key, schedule_delivery=None):
     if enabled():
         store.init_sourcing_db()
     router=APIRouter(dependencies=[Depends(require_enabled)])
 
     def render(request,name,context=None,status=200):
-        context={**(context or {}),'services':SERVICES,'statuses':STATUSES}
+        context={**(context or {}),'services':SERVICES,'statuses':STATUSES,'sourcing_email_enabled':sourcing_mail.configured()}
         return templates.TemplateResponse(request=request,name='sourcing/'+name,context=context,
             status_code=status,headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
 
@@ -102,7 +103,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             'submission':submission,'turnstile_site_key':turnstile_site_key})
 
     @router.post('/sourcing/requests')
-    async def submit(request:Request):
+    async def submit(request:Request, background_tasks:BackgroundTasks):
         if not limiter.allow(client_key(request)):
             raise HTTPException(429,'Слишком много заявок. Повторите позже.')
         form=await request.form(max_files=5,max_fields=30)
@@ -164,7 +165,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 raise ValueError('Пройдите проверку защиты от роботов.')
             request_id,access=await run_in_threadpool(store.create_request,brief,email,photos,submission)
             remember(request,request_id,access)
-            return RedirectResponse('/sourcing/requests/'+request_id,status_code=303)
+            if schedule_delivery and sourcing_mail.configured():
+                background_tasks.add_task(schedule_delivery)
+            return RedirectResponse('/sourcing/requests/'+request_id,status_code=303,background=background_tasks)
         except DocumentValidationError:
             return render(request,'error.html',{'message':'Не удалось обработать фото. Нужен исправный JPG, PNG или WebP, не больше 8 МБ.'},400)
         except ValueError as exc:
@@ -233,7 +236,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         return RedirectResponse('/admin/sourcing/'+request_id,303)
 
     @router.post('/admin/sourcing/{request_id}/report')
-    async def report(request:Request,request_id:str):
+    async def report(request:Request,request_id:str,background_tasks:BackgroundTasks):
         require_admin(request)
         async with request.form(max_files=0,max_fields=12) as form:
             require_admin_csrf(request,str(form.get('csrf_token') or ''))
@@ -244,11 +247,13 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                     raise ValueError('Подтвердите проверку отчёта человеком.')
                 payload['reviewed_by_human']=True
                 await run_in_threadpool(store.publish_report,request_id,int(form.get('version') or 0),payload)
+                if schedule_delivery and sourcing_mail.configured():
+                    background_tasks.add_task(schedule_delivery)
             except store.Conflict as exc:
                 return render(request,'error.html',{'message':str(exc)},409)
             except ValueError as exc:
                 return render(request,'error.html',{'message':str(exc)},400)
-        return RedirectResponse('/admin/sourcing/'+request_id,303)
+        return RedirectResponse('/admin/sourcing/'+request_id,303,background=background_tasks)
 
     @router.post('/admin/sourcing/{request_id}/draft')
     async def draft(request:Request,request_id:str):

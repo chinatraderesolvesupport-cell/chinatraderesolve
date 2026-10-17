@@ -192,3 +192,42 @@ def test_nonsearch_and_unselected_alternatives_discard_extra_fields(pilot):
     rid=create(pilot,documents='not applicable',language='English',goal='not requested')
     brief=store.get_request(rid)['brief']
     assert not brief['documents'] and not brief['language'] and not brief['goal']
+
+
+def test_sourcing_mail_is_atomic_private_and_deduplicated(pilot, monkeypatch):
+    from app import sourcing_mail
+    monkeypatch.setattr(sourcing_mail, 'configured', lambda: True)
+    monkeypatch.setattr(sourcing_mail, 'settings', replace(main.settings,
+        public_base_url='https://pilot.example', admin_email='operator@example.com'))
+    data=payload(pilot)
+    response=pilot.post('/sourcing/requests',data=data,follow_redirects=False)
+    rid=response.headers['location'].split('/')[-1]
+    assert pilot.post('/sourcing/requests',data=data,follow_redirects=False).status_code==303
+    rows=db.pending_notifications()
+    assert len(rows)==2
+    assert data['requirements'] not in rows[0]['body']
+    assert '/sourcing/access' in rows[0]['body']
+    page=pilot.get(response.headers['location'])
+    code=re.search(r'<code class="access-code">([^<]+)</code>',page.text).group(1)
+    assert code not in rows[0]['body']
+    assert 'ожидает отправки' in page.text and '<details open>' in page.text
+    assert '<dt>Ограничения</dt>' not in page.text
+    admin(pilot)
+    move(pilot,rid,'reviewing');move(pilot,rid,'in_progress')
+    report={'summary':'Готовый вывод','findings':'Установлено','risks':'Ограничения проверки',
+            'next_steps':'Следующие действия','sources':'https://example.com','reviewed':'yes'}
+    f=admin_fields(pilot,rid)
+    assert pilot.post('/admin/sourcing/'+rid+'/report',data={**f,**report},follow_redirects=False).status_code==303
+    assert pilot.post('/admin/sourcing/'+rid+'/report',data={**f,**report},follow_redirects=False).status_code==409
+    assert len(db.pending_notifications())==3
+    assert report['summary'] not in db.pending_notifications()[-1]['body']
+    store.delete_request(rid)
+    assert not db.pending_notifications()
+
+
+def test_disabled_mail_explained_on_confirmation(pilot):
+    rid=create(pilot)
+    page=pilot.get('/sourcing/requests/'+rid)
+    assert 'Письмо не отправляется' in page.text
+    assert 'Что дальше?' in page.text
+    assert not db.pending_notifications()

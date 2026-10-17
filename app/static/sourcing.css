@@ -2,3 +2,4 @@
 
 /* Long request IDs and report words must wrap at phone widths. */
 main{min-width:0;overflow-wrap:anywhere}.cards>*,.grid>*{min-width:0}h1,h2,h3{overflow-wrap:anywhere}
+.languages{max-width:1100px;margin:auto;padding:0 24px;display:flex;flex-wrap:wrap;gap:14px}.languages [aria-current]{font-weight:800;text-decoration-thickness:3px}.free{margin:20px 0;border-left:5px solid #006c57}.supplier-assessment article{border:1px solid #cad9cc;padding:20px;border-radius:12px;margin:18px 0}fieldset{min-width:0;border:1px solid #cad9cc;margin:20px 0;padding:16px}blockquote{margin:15px 0}header{flex-wrap:wrap}nav{font-size:16px}input[type=date]{max-width:100%}

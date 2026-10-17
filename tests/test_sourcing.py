@@ -20,7 +20,7 @@ def pilot(tmp_path,monkeypatch):
     monkeypatch.setattr(main,'admin_login_limiter',sourcing.SlidingWindowRateLimiter(limit=5,window_seconds=900))
     monkeypatch.setenv('ENABLE_SOURCING_PILOT','true')
     db.init_db();store.init_sourcing_db()
-    sourcing.limiter.events.clear();sourcing.access_limiter.events.clear()
+    sourcing.limiter.events.clear();sourcing.access_limiter.events.clear();sourcing.feedback_limiter.events.clear()
     async def allow(*args):return True
     # install_sourcing captured the original function; its settings are patched above.
     with TestClient(main.app,base_url='https://testserver') as client:
@@ -231,3 +231,111 @@ def test_disabled_mail_explained_on_confirmation(pilot):
     assert 'Письмо не отправляется' in page.text
     assert 'Что дальше?' in page.text
     assert not db.pending_notifications()
+
+
+@pytest.mark.parametrize('lang',['ru','en','de','fr','es','sr'])
+def test_complete_language_flow_free_feedback_and_assessment(pilot,lang):
+    from app.sourcing_i18n import COPY
+    c=pilot;copy=COPY[lang]
+    page=c.get('/sourcing?lang='+lang)
+    assert '<html lang="'+lang+'">' in page.text
+    assert copy['free_short'] in page.text and copy['submit'] in page.text
+    if lang!='ru':
+        assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="languages".*?</div>','',page.text))
+    rid=create(c,product='Test product',requirements='A product with compatibility requirements and documentation needs.')
+    assert store.get_request(rid)['brief']['locale']==lang
+    assert store.get_request(rid)['brief']['pricing_mode']=='launch_free'
+    for path in ('/sourcing/access','/sourcing/requests/'+rid,'/sourcing/reviews','/sourcing/feedback?request_id='+rid):
+        page=c.get(path)
+        assert page.status_code==200 and copy['free_short'] in page.text
+        if lang!='ru': assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="languages".*?</div>','',page.text))
+    page=c.post('/sourcing/access',data={'csrf_token':'invalid','request_id':rid,'access_code':'bad'})
+    assert page.status_code==403 and copy['error_expired'] in page.text
+    admin(c)
+    for path in ('/admin/sourcing','/admin/sourcing/feedback','/admin/sourcing/'+rid):
+        page=c.get(path+'?lang='+lang)
+        assert page.status_code==200 and copy['free_short'] in page.text
+        if lang!='ru': assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="languages".*?</div>','',page.text))
+    move(c,rid,'reviewing');move(c,rid,'in_progress')
+    page=c.get('/admin/sourcing/'+rid)
+    assert copy['assessment_optional'] in page.text
+    if lang!='ru': assert not re.search('[А-Яа-яЁё]',re.sub(r'<div class="languages".*?</div>','',page.text))
+
+
+def feedback_fields(c,request_id=''):
+    page=c.get('/sourcing/feedback'+('?request_id='+request_id if request_id else ''))
+    assert page.status_code==200
+    return {k:re.search(r'name="'+k+r'" value="([^"]*)"',page.text).group(1)
+            for k in ('csrf_token','submission','request_id')}
+
+
+def test_feedback_privacy_consent_moderation_and_replay(pilot):
+    c=pilot;rid=create(c)
+    data={**feedback_fields(c,rid),'kind':'review','rating':'1','message':'Неудобно найти кнопку, нужна доработка. <script>alert(1)</script>',
+          'consent':'yes','publish_consent':'yes'}
+    assert c.post('/sourcing/feedback',data=data).status_code==200
+    assert c.post('/sourcing/feedback',data=data).status_code==200
+    entries=store.list_feedback();assert len(entries)==1
+    assert entries[0]['request_id']==rid
+    assert not store.list_feedback(public=True)
+    with TestClient(main.app,base_url='https://testserver') as stranger:
+        assert stranger.get('/sourcing/feedback?request_id='+rid).status_code==404
+        assert stranger.get('/admin/sourcing/feedback').status_code==401
+        assert data['message'] not in stranger.get('/sourcing/reviews').text
+    admin(c)
+    page=c.get('/admin/sourcing/feedback');assert page.status_code==200
+    assert '&lt;script&gt;' in page.text and '<script>alert(1)</script>' not in page.text
+    csrf=re.search(r'name="csrf_token" value="([^"]+)"',page.text).group(1)
+    entry=entries[0];path='/admin/sourcing/feedback/'+entry['id']
+    assert c.post(path,data={'version':'1','status':'published'}).status_code==403
+    assert c.post(path,data={'csrf_token':csrf,'version':'1','status':'published'},follow_redirects=False).status_code==303
+    assert c.post(path,data={'csrf_token':csrf,'version':'1','status':'rejected'}).status_code==409
+    public=c.get('/sourcing/reviews')
+    assert '1 / 5' in public.text and '&lt;script&gt;' in public.text
+    assert rid not in public.text and 'buyer@example.com' not in public.text
+    store.delete_request(rid)
+    assert not store.list_feedback(public=True)
+
+
+@pytest.mark.parametrize('kind,consent',[('bug','yes'),('suggestion','yes'),('review','')])
+def test_feedback_without_publication_permission_cannot_be_published(pilot,kind,consent):
+    data={**feedback_fields(pilot),'kind':kind,'rating':'5','message':'A private note to the team only.',
+          'consent':'yes','publish_consent':consent}
+    assert pilot.post('/sourcing/feedback',data=data).status_code==200
+    entry=store.list_feedback()[0]
+    assert not entry['publish_consent']
+    with pytest.raises(ValueError):store.moderate_feedback(entry['id'],1,'published')
+    assert not store.list_feedback(public=True)
+
+
+def test_feedback_invalid_and_forged_request_are_not_stored(pilot):
+    base={**feedback_fields(pilot),'kind':'review','message':'A valid message to the team.','consent':'yes'}
+    for changes in ({'rating':'9'},{'consent':''},{'message':'short'},{'csrf_token':'bad'},
+                    {'submission':'fake'},{'request_id':'SRC-NOT-OWNED'},{'kind':'other'}):
+        sourcing.feedback_limiter.events.clear()
+        r=pilot.post('/sourcing/feedback',data={**base,**changes})
+        assert r.status_code in {400,403,404}
+    assert not store.list_feedback()
+
+
+def test_supplier_evidence_and_archived_review_are_validated(pilot):
+    rid=create(pilot);admin(pilot)
+    move(pilot,rid,'reviewing');move(pilot,rid,'in_progress')
+    draft={'summary':'Supplier assessment','findings':'Documents checked','risks':'Delivery remains uncertain',
+           'next_steps':'Request a sample','sources':'https://example.com/company','reviewed':'yes',
+           'supplier_1_name':'Example supplier','supplier_1_role':'reseller','supplier_1_outcome':'concerns',
+           'supplier_1_checked_on':'2026-01-01','supplier_1_notes':'Public history needs further clarification.',
+           'supplier_1_sources':'https://example.com/company','supplier_1_archive':'found',
+           'supplier_1_archive_date':'2025-12-01','supplier_1_archive_url':'https://web.archive.org/web/20251201/https://example.com/company'}
+    path='/admin/sourcing/'+rid
+    for bad in ({'supplier_1_archive_url':''},{'supplier_1_sources':'javascript:alert(1)'},
+                {'supplier_1_checked_on':'2999-01-01'},{'supplier_1_archive_date':'2026-02-01'},
+                {'supplier_1_role':'trusted'},{'supplier_1_name':''}):
+        assert pilot.post(path+'/report',data={**draft,**bad,**admin_fields(pilot,rid)}).status_code==400
+    assert pilot.post(path+'/draft',data={**draft,**admin_fields(pilot,rid)},follow_redirects=False).status_code==303
+    assert store.get_request(rid)['draft']['suppliers'][0]['role']=='reseller'
+    assert pilot.post(path+'/report',data={**draft,**admin_fields(pilot,rid)},follow_redirects=False).status_code==303
+    report=store.get_request(rid)['report'];assert len(report['suppliers'])==1
+    page=pilot.get(path+'?lang=en')
+    assert 'Public snapshot found' in page.text and 'Example supplier' in page.text
+    assert 'proves neither removal' in page.text

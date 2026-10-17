@@ -35,6 +35,7 @@ def init_sourcing_db():
             request_id TEXT NOT NULL REFERENCES sourcing_requests(id) ON DELETE CASCADE,
             notification_id BIGINT NOT NULL REFERENCES notification_outbox(id) ON DELETE CASCADE,
             event TEXT NOT NULL, PRIMARY KEY(request_id,notification_id))''')
+        init_feedback_db(conn)
         execute(conn, 'CREATE INDEX IF NOT EXISTS sourcing_photos_request ON sourcing_photos(request_id)')
 
 
@@ -64,7 +65,7 @@ def create_request(brief, email, photos, submission_secret):
                 execute(conn, 'INSERT INTO sourcing_photos VALUES (?,?,?,?,?)',
                         (secrets.token_urlsafe(18),request_id,photo.original_name,photo.content_type,photo.content))
             _event(conn,request_id,'client','created')
-            _queue_mail(conn,request_id,email,'received')
+            _queue_mail(conn,request_id,email,'received',brief.get('locale','ru'))
     return request_id, access
 
 
@@ -135,8 +136,8 @@ def publish_report(request_id, expected_version, payload):
         execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',
                 (request_id,expected_version+1,json.dumps(payload,ensure_ascii=False),utcnow()))
         _event(conn,request_id,'admin','report_published')
-        recipient=execute(conn,'SELECT email FROM sourcing_requests WHERE id=?',(request_id,)).fetchone()
-        _queue_mail(conn,request_id,recipient['email'],'report')
+        recipient=execute(conn,'SELECT email,brief_json FROM sourcing_requests WHERE id=?',(request_id,)).fetchone()
+        _queue_mail(conn,request_id,recipient['email'],'report',json.loads(recipient['brief_json']).get('locale','ru'))
 
 
 def delete_request(request_id):
@@ -156,8 +157,47 @@ def save_draft(request_id, expected_version, payload):
         _event(conn,request_id,'admin','draft_saved')
 
 
-def _queue_mail(conn, request_id, email, event):
-    ids = _insert_notifications(conn, None, sourcing_mail.messages(request_id, email, event))
+def _queue_mail(conn, request_id, email, event, locale='ru'):
+    ids = _insert_notifications(conn, None, sourcing_mail.messages(request_id, email, event, locale))
     for notification_id in ids:
         execute(conn, 'INSERT INTO sourcing_notifications VALUES (?,?,?)',
                 (request_id, notification_id, event))
+
+
+def init_feedback_db(conn):
+    execute(conn, '''CREATE TABLE IF NOT EXISTS sourcing_feedback (
+        id TEXT PRIMARY KEY, submission_hash TEXT NOT NULL UNIQUE,
+        request_id TEXT REFERENCES sourcing_requests(id) ON DELETE CASCADE,
+        kind TEXT NOT NULL, rating INTEGER, message TEXT NOT NULL,
+        locale TEXT NOT NULL, publish_consent INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending', version INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL)''')
+
+
+def create_feedback(submission, request_id, kind, rating, message, locale, publish_consent):
+    hashed=digest(submission)
+    with transaction() as conn:
+        execute(conn, '''INSERT INTO sourcing_feedback
+            (id,submission_hash,request_id,kind,rating,message,locale,publish_consent,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(submission_hash) DO NOTHING''',
+            ('FB-'+hashed[:20].upper(),hashed,request_id or None,kind,rating,message,locale,
+             int(publish_consent and kind=='review'),utcnow()))
+
+
+def list_feedback(public=False):
+    with transaction() as conn:
+        where="WHERE kind='review' AND publish_consent=1 AND status='published'" if public else ''
+        columns='created_at,locale,message,rating,request_id' if public else '*'
+        return [dict(row) for row in execute(conn,
+            'SELECT '+columns+' FROM sourcing_feedback '+where+' ORDER BY created_at DESC,id DESC LIMIT 200').fetchall()]
+
+
+def moderate_feedback(feedback_id, version, status):
+    if status not in {'pending','published','rejected'}: raise ValueError('Некорректный статус.')
+    with transaction() as conn:
+        row=execute(conn,'SELECT kind,publish_consent FROM sourcing_feedback WHERE id=?',(feedback_id,)).fetchone()
+        if not row or (status=='published' and (row['kind']!='review' or not row['publish_consent'])):
+            raise ValueError('Публикация этого сообщения не разрешена.')
+        changed=execute(conn,'''UPDATE sourcing_feedback SET status=?,version=version+1
+            WHERE id=? AND version=?''',(status,feedback_id,version))
+        if changed.rowcount!=1: raise Conflict('Сообщение изменилось. Обновите страницу.')

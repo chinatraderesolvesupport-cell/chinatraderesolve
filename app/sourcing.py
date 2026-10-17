@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import secrets
 from urllib.parse import urlsplit
+from datetime import date, datetime, timezone
+from fastapi.routing import APIRoute
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse, Response
 from pydantic import TypeAdapter, EmailStr, ValidationError
@@ -12,6 +14,7 @@ from .documents import prepare_upload, DocumentValidationError, unique_display_f
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
 from . import sourcing_mail
+from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
 SERVICES={'search':'Найти поставщика','check':'Проверить поставщика','prepare':'Подготовить сделку'}
 STATUSES={'received':'Заявка получена','reviewing':'Оценка задачи','in_progress':'В работе',
@@ -20,6 +23,7 @@ MAX_PHOTOS=5
 MAX_PHOTO_BYTES=8*1024*1024
 MAX_TOTAL_BYTES=25*1024*1024
 limiter=SlidingWindowRateLimiter(limit=6,window_seconds=600)
+feedback_limiter=SlidingWindowRateLimiter(limit=5,window_seconds=600)
 access_limiter=SlidingWindowRateLimiter(limit=8,window_seconds=900)
 
 
@@ -58,10 +62,26 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                      verify_turnstile, turnstile_site_key, schedule_delivery=None):
     if enabled():
         store.init_sourcing_db()
-    router=APIRouter(dependencies=[Depends(require_enabled)])
+    class LocalizedRoute(APIRoute):
+        def get_route_handler(self):
+            handler=super().get_route_handler()
+            async def localized(request):
+                language(request)
+                try:
+                    return await handler(request)
+                except HTTPException as exc:
+                    if not enabled(): raise
+                    return render(request,'error.html',{'message':str(exc.detail)},exc.status_code)
+            return localized
+    router=APIRouter(dependencies=[Depends(require_enabled)],route_class=LocalizedRoute)
 
     def render(request,name,context=None,status=200):
-        context={**(context or {}),'services':SERVICES,'statuses':STATUSES,'sourcing_email_enabled':sourcing_mail.configured()}
+        lang=language(request);t=translator(lang)
+        context={**(context or {}),'services':{key:t(key) for key in SERVICES},
+            'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
+            't':t,'lang':lang,'languages':LANGUAGES,'js_copy':COPY[lang],'is_error':status>=400}
+        if 'message_key' in context: context['message']=t(context.pop('message_key'))
+        elif 'message' in context: context['message']=localize_error(context['message'],lang)
         return templates.TemplateResponse(request=request,name='sourcing/'+name,context=context,
             status_code=status,headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
 
@@ -127,7 +147,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             brief={k:text(form,k,n) for k,n in {'product':200,'quantity':100,'destination':100,
                 'budget':100,'deadline':100,'supplier':1000,'requirements':10000,
                 'documents':5000,'language':100}.items()}
-            brief.update(service=service,schema_version=1)
+            brief.update(service=service,schema_version=2,locale=language(request),pricing_mode='launch_free')
             if not brief['quantity'] or not brief['destination']:
                 raise ValueError('Укажите количество и страну доставки.')
             if service!='search' and not brief['supplier']:
@@ -214,6 +234,62 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         require_admin(request)
         return render(request,'queue.html',{'items':store.list_requests()})
 
+    @router.get('/sourcing/reviews')
+    def reviews(request:Request):
+        return render(request,'reviews.html',{'reviews':store.list_feedback(public=True)})
+
+    @router.get('/sourcing/feedback')
+    def feedback_page(request:Request):
+        request_id=str(request.query_params.get('request_id') or '')[:100]
+        if request_id: authorize(request,request_id)
+        submission=secrets.token_urlsafe(32)
+        request.session['sourcing_feedback_submissions']=(list(request.session.get('sourcing_feedback_submissions',[]))+[submission])[-6:]
+        return render(request,'feedback.html',{'csrf_token':csrf(request),'submission':submission,
+            'request_id':request_id,'turnstile_site_key':turnstile_site_key})
+
+    @router.post('/sourcing/feedback')
+    async def feedback_submit(request:Request):
+        if not feedback_limiter.allow(client_key(request)): raise HTTPException(429,'Слишком много попыток. Повторите позже.')
+        async with request.form(max_files=0,max_fields=15) as form:
+            validate_csrf(request,form)
+            try:
+                submission=text(form,'submission',100,True)
+                if not any(secrets.compare_digest(submission,value) for value in request.session.get('sourcing_feedback_submissions',[])):
+                    raise HTTPException(403,'Форма устарела. Откройте её заново.')
+                if text(form,'website',200) or form.get('consent')!='yes': raise ValueError('Подтвердите согласие.')
+                kind=text(form,'kind',20,True)
+                if kind not in {'review','bug','suggestion'}: raise ValueError('Выберите тип сообщения.')
+                message=text(form,'message',3000,True)
+                if len(message)<10: raise ValueError('Сообщение: не менее 10 символов.')
+                raw_rating=text(form,'rating',1)
+                rating=int(raw_rating) if raw_rating else None
+                if rating is not None and rating not in range(1,6): raise ValueError('Оценка — от 1 до 5.')
+                if kind!='review': rating=None
+                request_id=text(form,'request_id',100)
+                if request_id: authorize(request,request_id)
+                if not await verify_turnstile(str(form.get('cf-turnstile-response') or ''),request): raise ValueError('Пройдите проверку защиты от роботов.')
+                await run_in_threadpool(store.create_feedback,submission,request_id,kind,rating,message,
+                    language(request),form.get('publish_consent')=='yes')
+            except ValueError as exc:
+                return render(request,'error.html',{'message':str(exc)},400)
+        return render(request,'error.html',{'message_key':'feedback_saved'})
+
+    @router.get('/admin/sourcing/feedback')
+    def moderation(request:Request):
+        require_admin(request)
+        return render(request,'moderation.html',{'entries':store.list_feedback(),'csrf_token':admin_csrf_token(request)})
+
+    @router.post('/admin/sourcing/feedback/{feedback_id}')
+    async def moderate(request:Request,feedback_id:str):
+        require_admin(request)
+        async with request.form(max_files=0,max_fields=4) as form:
+            require_admin_csrf(request,str(form.get('csrf_token') or ''))
+            try:
+                await run_in_threadpool(store.moderate_feedback,feedback_id,int(form.get('version') or 0),str(form.get('status') or ''))
+            except (ValueError,store.Conflict) as exc:
+                return render(request,'error.html',{'message':str(exc)},409)
+        return RedirectResponse('/admin/sourcing/feedback',303)
+
     @router.get('/admin/sourcing/{request_id}')
     def admin_detail(request:Request,request_id:str):
         item=authorize(request,request_id,True)
@@ -238,13 +314,14 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
     @router.post('/admin/sourcing/{request_id}/report')
     async def report(request:Request,request_id:str,background_tasks:BackgroundTasks):
         require_admin(request)
-        async with request.form(max_files=0,max_fields=12) as form:
+        async with request.form(max_files=0,max_fields=50) as form:
             require_admin_csrf(request,str(form.get('csrf_token') or ''))
             try:
                 payload={k:text(form,k,30000,True) for k in ('summary','findings','risks','next_steps')}
                 payload['sources']=valid_sources(text(form,'sources',30000,True))
                 if form.get('reviewed')!='yes':
                     raise ValueError('Подтвердите проверку отчёта человеком.')
+                payload['suppliers']=supplier_assessments(form,publish=True)
                 payload['reviewed_by_human']=True
                 await run_in_threadpool(store.publish_report,request_id,int(form.get('version') or 0),payload)
                 if schedule_delivery and sourcing_mail.configured():
@@ -258,10 +335,11 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
     @router.post('/admin/sourcing/{request_id}/draft')
     async def draft(request:Request,request_id:str):
         require_admin(request)
-        async with request.form(max_files=0,max_fields=12) as form:
+        async with request.form(max_files=0,max_fields=50) as form:
             require_admin_csrf(request,str(form.get('csrf_token') or ''))
             try:
                 payload={k:text(form,k,30000) for k in ('summary','findings','risks','next_steps','sources')}
+                payload['suppliers']=supplier_assessments(form,publish=False)
                 await run_in_threadpool(store.save_draft,request_id,int(form.get('version') or 0),payload)
             except ValueError as exc:
                 return render(request,'error.html',{'message':str(exc)},409)
@@ -280,3 +358,38 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         return render(request,'error.html',{'message':'Заявка и фотографии удалены.'},200)
 
     app.include_router(router)
+
+
+def supplier_assessments(form,publish=False):
+    result=[]
+    today=datetime.now(timezone.utc).date()
+    for i in range(1,4):
+        def field(name,length=1000): return text(form,'supplier_'+str(i)+'_'+name,length)
+        name=field('name',200)
+        if not name:
+            # A blank slot is ignored only if its substantive fields are blank.
+            if any(field(key,10000) for key in ('notes','sources','checked_on','archive_url','archive_date')):
+                raise ValueError('Укажите название компании в карточке поставщика.')
+            continue
+        role=field('role') or 'unknown_role';outcome=field('outcome') or 'insufficient';archive=field('archive') or 'not_checked'
+        if role not in {'unknown_role','manufacturer','reseller'} or outcome not in {'insufficient','concerns','documented'} or archive not in {'not_checked','not_found','found'}:
+            raise ValueError('Проверьте поля оценки поставщика.')
+        checked=field('checked_on');notes=field('notes',5000);sources=field('sources',10000)
+        archive_url=field('archive_url',2000);archive_date=field('archive_date')
+        for value in (checked,archive_date):
+            if value:
+                try: parsed_date=date.fromisoformat(value)
+                except ValueError: raise ValueError('Укажите корректную дату.') from None
+                if parsed_date>today: raise ValueError('Дата проверки не может быть в будущем.')
+        urls=valid_sources(sources) if sources else []
+        if archive_url:
+            archive_urls=valid_sources(archive_url)
+            if len(archive_urls)!=1: raise ValueError('Укажите одну ссылку на архивную копию.')
+            archive_url=archive_urls[0]
+        if archive!='found' and (archive_url or archive_date): raise ValueError('Архивная ссылка относится к статусу найденной копии.')
+        if archive_date and checked and archive_date>checked: raise ValueError('Архивная копия не может быть позднее даты проверки.')
+        if publish and (not checked or not notes or not urls or (archive=='found' and (not archive_url or not archive_date))):
+            raise ValueError('Для оценки нужны дата, пояснение и источники; для найденного архива — ссылка и дата копии.')
+        result.append(dict(name=name,role=role,outcome=outcome,checked_on=checked,notes=notes,sources=urls,
+            archive=archive,archive_url=archive_url,archive_date=archive_date))
+    return result

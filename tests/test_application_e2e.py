@@ -316,6 +316,32 @@ def test_sourcing_mobile_photo_to_operator_report():
                 op.get_by_role("button",name="Выдать отчёт клиенту").click()
                 page.reload();expect(page.locator(".report")).to_contain_text("Протестированный результат")
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                # Language switch also translates dynamic photo-validation copy.
+                page.goto(base+"/sourcing?lang=en")
+                expect(page.locator("html")).to_have_attribute("lang","en")
+                expect(page.locator("#counter")).to_have_text("At least 50 more characters needed.")
+                expect(page.locator(".free")).to_contain_text("Free during launch")
+                for code,title in {"de":"Lieferanten finden","fr":"Trouver un fournisseur","es":"Buscar un proveedor","sr":"Pronađi dobavljača"}.items():
+                    page.goto(base+"/sourcing?lang="+code)
+                    expect(page.locator("html")).to_have_attribute("lang",code)
+                    expect(page.locator("#service")).to_contain_text(title)
+                    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                page.goto(base+"/sourcing/feedback?lang=en&request_id="+rid)
+                page.locator('select[name="kind"]').select_option("review")
+                page.locator('select[name="rating"]').select_option("1")
+                page.locator('textarea[name="message"]').fill("The test service needs clearer instructions.")
+                page.locator('input[name="consent"]').check()
+                page.locator('input[name="publish_consent"]').check()
+                page.get_by_role("button",name="Send message",exact=True).click()
+                expect(page.locator('main')).to_contain_text("Your message has been saved")
+                page.goto(base+"/sourcing/reviews")
+                expect(page.locator("blockquote")).to_have_count(0)
+                op.goto(base+"/admin/sourcing/feedback?lang=en")
+                expect(op.locator("main")).to_contain_text("The test service needs clearer instructions.")
+                op.get_by_role("button",name="Publish review",exact=True).click()
+                page.reload()
+                expect(page.locator("blockquote")).to_contain_text("The test service needs clearer instructions.")
+                expect(page.locator(".report")).to_contain_text("1 / 5")
                 assert case_count(database)==0
                 assert sink.messages==[]
             finally:

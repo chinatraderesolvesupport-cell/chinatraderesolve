@@ -321,7 +321,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="langSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
-<a class="btn primary" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>
+{% if sourcing_live %}<a class="btn primary" id="homeChooseHelp" href="#directions" data-sourcing-i18n="choose_help">{{ sourcing_copy.choose_help }}</a>{% else %}<a class="btn primary" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>{% endif %}
 <button aria-controls="mobilePanel" aria-expanded="false" aria-label="{{ home_copy['mobile_menu_open'] }}" class="menu-btn" data-i18n-aria-label="mobile_menu_open" id="menuBtn">☰</button>
 </div>
 </nav>

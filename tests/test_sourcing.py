@@ -160,7 +160,7 @@ def test_disabled_routes_do_not_access_storage(pilot,monkeypatch):
     monkeypatch.setenv('ENABLE_SOURCING_PILOT','false')
     def forbidden(*args):raise AssertionError('disabled pilot must not query DB')
     monkeypatch.setattr(store,'get_request',forbidden)
-    for path in ['/sourcing','/sourcing/requests/SRC-test','/admin/sourcing','/sourcing/access']:
+    for path in ['/sourcing','/sourcing/requests/SRC-test','/admin/sourcing','/sourcing/access','/admin/sourcing-statistics','/sourcing/help','/sourcing/help/supplier','/sourcing/preview','/sourcing/reviews','/sourcing/feedback']:
         assert pilot.get(path).status_code==404
 
 
@@ -439,3 +439,48 @@ def test_statistics_failure_does_not_block_public_page(pilot,monkeypatch):
     monkeypatch.setattr(stats,'transaction',broken)
     response=pilot.get('/sourcing/preview',headers={'user-agent':'Mozilla/5.0 Chrome/130'})
     assert response.status_code==200
+
+
+def test_admin_navigation_and_disabled_pilot_boundary(pilot,monkeypatch):
+    rid=create(pilot)
+    admin(pilot)
+    home=pilot.get('/admin')
+    assert 'href="/admin/sourcing"' in home.text
+    assert 'href="/admin/sourcing-statistics"' in home.text
+    assert '/admin/sourcing/'+rid in pilot.get('/admin/sourcing').text
+    assert pilot.get('/admin/sourcing/'+rid).status_code==200
+    monkeypatch.setenv('ENABLE_SOURCING_PILOT','false')
+    home=pilot.get('/admin')
+    assert home.status_code==200
+    assert 'href="/admin/sourcing"' not in home.text
+    assert 'href="/admin/sourcing-statistics"' not in home.text
+    assert pilot.get('/admin/sourcing').status_code==404
+    # Turning the pilot off does not discard its data or alter dispute records.
+    assert store.get_request(rid)['id']==rid
+    with db.transaction() as conn:
+        assert db.execute(conn,'SELECT COUNT(*) AS n FROM cases').fetchone()['n']==0
+
+
+def test_sourcing_lifecycle_preserves_existing_dispute(pilot):
+    """Both directions share an isolated database; never use a real customer case."""
+    dispute=db.create_case(
+        {'full_name':'Synthetic audit buyer','email':'audit@example.com',
+         'main_problem':'Goods not received','description':'Synthetic non-delivery case used only in isolated tests.',
+         'ai_consent':True,'sharing_authority':True,'free_access_terms':True,'no_guarantee':True},
+        {'decision':'needs_information','priority':50,'risk_level':'medium','source':'rules','public_message':'Synthetic audit'},
+        'CTR-TEST-COEXIST','synthetic-private-token')
+    rid=create(pilot)
+    admin(pilot)
+    assert pilot.get('/admin/case/'+str(dispute['id'])).status_code==200
+    # Opening an existing case may record an admin view; snapshot after that.
+    before=db.get_case(dispute['id'])
+    assert move(pilot,rid,'reviewing').status_code==303
+    assert move(pilot,rid,'in_progress').status_code==303
+    report={'summary':'Synthetic result','findings':'Documented','risks':'Not verified',
+            'next_steps':'Ask supplier','sources':'https://example.com/evidence','reviewed':'yes'}
+    assert pilot.post('/admin/sourcing/'+rid+'/report',data={**admin_fields(pilot,rid),**report},follow_redirects=False).status_code==303
+    assert db.get_case(dispute['id'])==before
+    store.delete_request(rid)
+    assert db.get_case(dispute['id'])==before
+    assert db.get_case_by_public('CTR-TEST-COEXIST','synthetic-private-token')==before
+    assert pilot.get('/case/CTR-TEST-COEXIST/synthetic-private-token').status_code==200

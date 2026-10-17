@@ -1,8 +1,6 @@
 {% extends 'sourcing/base.html' %}{% block content %}
 <h1>{{ t('headline') }}</h1><p class="lead">{{ t('lead') }}</p>
-<div class="cards">{% for code,title in services.items() %}<article><h2>{{ title }}</h2><p>{{ t(code+'_desc') }}</p></article>{% endfor %}</div>
-<details><summary>{{ t('result_question') }}</summary><p>{{ t('result_desc') }}</p></details>
-<details><summary>{{ t('assessment') }}</summary><p>{{ t('assessment_note') }}</p><p>{{ t('archive_note') }}</p></details>
+<div class="quick-actions"><a class="button" href="#sourcingForm">{{ t('start_form') }}</a><a href="#sample-report">{{ t('u_sample_link') }}</a></div>
 <form id="sourcingForm" action="/sourcing/requests" method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="submission" value="{{ submission }}">
 <div class="trap" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
@@ -17,4 +15,9 @@
 <label><input type="checkbox" name="consent" value="yes" required>{{ t('consent') }}</label>
 {% if turnstile_site_key %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-language="{{ lang }}"></div>{% endif %}
 <p><button id="submitButton">{{ t('submit') }}</button></p><p id="submitStatus" role="status"></p></form>
+<details><summary>{{ t('service_details') }}</summary><div class="cards">{% for code,title in services.items() %}<article><h2>{{ title }}</h2><p>{{ t(code+'_desc') }}</p></article>{% endfor %}</div>
+<details><summary>{{ t('result_question') }}</summary><p>{{ t('result_desc') }}</p></details>
+<details><summary>{{ t('assessment') }}</summary><p>{{ t('assessment_note') }}</p><p>{{ t('archive_note') }}</p></details>
+</details>
+{% with ux=sourcing_ux %}{% include 'sourcing/sample.html' %}{% endwith %}
 {% endblock %}{% block scripts %}<script id="sourcingCopy" type="application/json">{{ js_copy|tojson }}</script><script src="/static/sourcing.js" defer></script>{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}{% endblock %}

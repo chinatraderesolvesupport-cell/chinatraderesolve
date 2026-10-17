@@ -40,3 +40,13 @@ if(form){
  window.addEventListener('pageshow',()=>{$('submitButton').disabled=false;$('submitStatus').textContent='';sync();});
  sync();
 }
+
+// A direct example link should reveal its contents, including on a fresh visit.
+function revealSourcingExample(){
+ if(window.location.hash!=='#sample-report')return;
+ const example=document.getElementById('sample-report');
+ if(example){example.open=true;example.scrollIntoView({block:'start'});}
+}
+window.addEventListener('hashchange',revealSourcingExample);
+window.addEventListener('pageshow',revealSourcingExample);
+revealSourcingExample();

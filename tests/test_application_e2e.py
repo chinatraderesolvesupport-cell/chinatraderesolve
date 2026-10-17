@@ -388,3 +388,39 @@ def test_sourcing_mobile_photo_to_operator_report():
                 assert sink.messages==[]
             finally:
                 buyer.close();operator.close();browser.close()
+
+
+def test_unified_sourcing_navigation_and_example_at_phone_and_desktop_widths():
+    """Buyer can reach the form, understand the sample and retain language on return."""
+    from app.sourcing_i18n import COPY
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true", "ENABLE_SOURCING_LIVE":"true", "TURNSTILE_SITE_KEY":"", "TURNSTILE_SECRET_KEY":""}) as (base, *_):
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            try:
+                for width in (390,1280):
+                    context=browser.new_context(viewport={"width":width,"height":900})
+                    page=context.new_page()
+                    for language in COPY:
+                        page.goto(base+"/?lang="+language)
+                        expect(page.locator('.buyer-overview')).to_contain_text(COPY[language]['u_buy_process'])
+                        page.locator('#homeBuy').click()
+                        page.locator('.quick-actions a[href="#sourcingForm"]').click()
+                        expect(page.locator('#product')).to_be_in_viewport()
+                        page.locator('.quick-actions a[href="#sample-report"]').click()
+                        expect(page.locator('#sample-report')).to_have_attribute('open','')
+                        expect(page.locator('#sample-report')).to_contain_text(COPY[language]['sample_notice'])
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                        page.get_by_role('link',name=COPY[language]['access'],exact=True).click()
+                        expect(page.locator('html')).to_have_attribute('lang',language)
+                        expect(page.locator('input[name="access_code"]')).to_have_attribute('type','password')
+                        page.locator('details summary').click()
+                        expect(page.locator('main')).to_contain_text(COPY[language]['lost_code_help'])
+                        if language=='ru' and os.environ.get('CTR_UX_SCREENSHOT_DIR'):
+                            target=Path(os.environ['CTR_UX_SCREENSHOT_DIR']);target.mkdir(parents=True,exist_ok=True)
+                            page.goto(base+'/sourcing?lang=ru')
+                            page.screenshot(path=str(target/f'sourcing-{width}.png'),full_page=True)
+                            page.goto(base+'/?lang=ru')
+                            page.screenshot(path=str(target/f'home-{width}.png'),full_page=True)
+                    context.close()
+            finally:
+                browser.close()

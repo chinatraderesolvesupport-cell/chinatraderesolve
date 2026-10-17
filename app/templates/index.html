@@ -289,9 +289,10 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 .combined-hero{padding:52px 0}.combined-hero h1{max-width:950px;line-height:1.12}.combined-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:32px 0}.combined-card{min-width:0;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-top:5px solid #14b8a6;border-radius:18px;padding:28px;box-shadow:0 14px 34px #0002}.combined-card h2{font-size:clamp(25px,3vw,35px);margin:18px 0}.combined-card p{color:#475569}.combined-card a:not(.btn){text-decoration:underline;text-underline-offset:3px;color:#0f766e}.combined-card .btn{min-height:48px}.combined-free{display:block;font-size:14px;font-weight:800;color:#0f766e;margin-top:8px}.combined-number{color:#64748b;font-weight:800}.combined-problem{border-top-color:#446581}.combined-hero>.wrap>p>a{color:#5eead4;text-decoration:underline}@media(max-width:700px){.combined-grid{grid-template-columns:1fr;gap:18px}.combined-card{padding:22px}.combined-hero{padding:30px 0}.combined-hero h1{font-size:36px}}
-.buyer-overview{background:#f8fafc;color:#0f172a;padding:12px 0}.buyer-overview h2{font-size:25px}.buyer-overview p{color:#475569}.buyer-overview a{color:#0f766e;text-decoration:underline;text-underline-offset:3px}
+.buyer-overview,.contact-overview{background:#f8fafc;color:#0f172a;padding:12px 0}.buyer-overview h2{font-size:25px}.buyer-overview p{color:#475569}.buyer-overview a{color:#0f766e;text-decoration:underline;text-underline-offset:3px}
+.direction-symbol{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:#ccfbf1;color:#115e59;font-size:32px;font-weight:800}.dispute-symbol{background:#e0e7ff;color:#3730a3}.combined-problem{border-top-color:#6366f1}.combined-card .btn{background:#0f766e}.combined-problem .btn{background:#4338ca;color:white}.legacy-dispute{margin:28px auto;max-width:1160px;border:1px solid #475569;border-radius:14px;overflow:hidden}.legacy-dispute>summary{padding:20px;cursor:pointer;font-weight:800}.legacy-dispute[open]>summary{border-bottom:1px solid #475569}.combined-card h2{font-size:clamp(24px,2.6vw,31px)}
 </style>
-<script nonce="{{ request.state.csp_nonce }}" type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":x_default_url},{"@type":"Organization","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
+<script nonce="{{ request.state.csp_nonce }}" type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":site_root_url},{"@type":"Organization","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":site_root_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":site_root_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
 {% if turnstile_site_key %}<script nonce="{{ request.state.csp_nonce }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
 <body data-app-version="{{ asset_version }}">
 {% if yandex_metrika_id %}<noscript><div><img src="https://mc.yandex.ru/watch/{{ yandex_metrika_id }}" class="metrika-pixel" alt=""></div></noscript>{% endif %}
@@ -308,7 +309,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div>
-{% if sourcing_live %}<div class="links"><a href="#directions" data-sourcing-i18n="choose_help">{{ sourcing_copy.choose_help }}</a><a data-lang-link href="/sourcing/help?lang={{ page_language }}" data-sourcing-i18n="help_hub">{{ sourcing_copy.help_hub }}</a>{% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy.nav_support }}</a>{% endif %}</div>{% else %}<div class="links">
+{% if sourcing_live %}<div class="links"><a data-lang-link href="/buying?lang={{ page_language }}" data-sourcing-i18n="u_buy_nav">{{ sourcing_copy.u_buy_nav }}</a><a data-lang-link href="/disputes?lang={{ page_language }}" data-sourcing-i18n="u_dispute_nav">{{ sourcing_copy.u_dispute_nav }}</a>{% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy.nav_support }}</a>{% endif %}</div>{% else %}<div class="links">
 <a data-i18n="nav_services" href="#situations">{{ home_copy['nav_services'] }}</a>
 <a data-i18n="nav_process" href="#process">{{ home_copy['nav_process'] }}</a>
 <a data-i18n="nav_pricing" href="#services">{{ home_copy['nav_pricing'] }}</a>
@@ -322,11 +323,11 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="langSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
 </select>
-{% if sourcing_live %}<a class="btn primary" id="homeChooseHelp" href="#directions" data-sourcing-i18n="choose_help">{{ sourcing_copy.choose_help }}</a>{% else %}<a class="btn primary" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>{% endif %}
+{% if sourcing_live %}<a class="btn primary" id="homeChooseHelp" href="{{ ('/?lang='+page_language+'#directions') if dispute_direction else '#directions' }}" data-sourcing-i18n="choose_help">{{ sourcing_copy.choose_help }}</a>{% else %}<a class="btn primary" data-i18n="submit_case" href="#submit">{{ home_copy['submit_case'] }}</a>{% endif %}
 <button aria-controls="mobilePanel" aria-expanded="false" aria-label="{{ home_copy['mobile_menu_open'] }}" class="menu-btn" data-i18n-aria-label="mobile_menu_open" id="menuBtn">☰</button>
 </div>
 </nav>
-<div class="mobile-panel" id="mobilePanel">{% if sourcing_live %}<a data-lang-link href="/sourcing?lang={{ page_language }}" data-sourcing-i18n="u_buy">{{ sourcing_copy.u_buy }}</a><a data-lang-link href="/sourcing/access?lang={{ page_language }}" data-sourcing-i18n="access">{{ sourcing_copy.access }}</a>{% endif %}
+<div class="mobile-panel" id="mobilePanel">{% if sourcing_live %}<a data-lang-link href="/buying?lang={{ page_language }}" data-sourcing-i18n="u_buy_nav">{{ sourcing_copy.u_buy_nav }}</a><a data-lang-link href="/disputes?lang={{ page_language }}" data-sourcing-i18n="u_dispute_nav">{{ sourcing_copy.u_dispute_nav }}</a><a data-lang-link href="/sourcing/access?lang={{ page_language }}" data-sourcing-i18n="access">{{ sourcing_copy.access }}</a>{% endif %}
 <span class="mobile-lang-label" data-i18n="language_label">{{ home_copy['language_label'] }}</span>
 <select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="mobileLangSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
@@ -342,7 +343,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </header>
 <main id="main-content">
-{% if sourcing_live %}{% include 'sourcing/home_choices.html' %}{% else %}<section class="hero">
+{% if sourcing_live %}{% if dispute_direction %}{% include 'sourcing/dispute_hero.html' %}{% else %}{% include 'sourcing/home_choices.html' %}{% endif %}{% else %}<section class="hero">
 <div class="wrap hero-grid">
 <div>
 <div class="eyebrow" data-i18n="hero_eyebrow">{{ home_copy['hero_eyebrow'] }}</div>
@@ -369,6 +370,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </section>
 {% endif %}
+{% if sourcing_live and not dispute_direction %}<details id="legacyDispute" class="legacy-dispute"><summary>{{ sourcing_copy.u_legacy }}</summary>{% endif %}
 <section id="situations">
 <div class="wrap">
 <div class="eyebrow" data-i18n="choose_situation">{{ home_copy['choose_situation'] }}</div>
@@ -550,6 +552,8 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <details><summary data-i18n="faq5">{{ home_copy['faq5'] }}</summary><p data-i18n="faq5_text">{{ home_copy['faq5_text'] }}</p></details>
 </div>
 </section>
+{% if sourcing_live and not dispute_direction %}</details>{% endif %}
+{% if sourcing_live %}<section class="contact-overview"><div class="wrap"><p>{{ sourcing_copy.u_footer }}</p><p><a data-lang-link href="/sourcing/feedback?lang={{ page_language }}">{{ sourcing_copy.feedback }}</a> · <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p></div></section>{% endif %}
 </main>
 <footer>
 <div class="wrap foot">
@@ -1335,6 +1339,9 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
 });
 
 const translations=window.CTR_TRANSLATIONS||{};
+const legacyDispute=document.getElementById('legacyDispute');
+function revealLegacyDispute(){if(!legacyDispute||!location.hash)return;const target=document.getElementById(location.hash.slice(1));if(target&&legacyDispute.contains(target)){legacyDispute.open=true;requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));}}
+window.addEventListener('hashchange',revealLegacyDispute);revealLegacyDispute();
 const sourcingPublicCopy={{ sourcing_public_copy|tojson }};
 function updateSourcingLanguage(){const lang=document.documentElement.lang;const copy=sourcingPublicCopy[lang]||{};document.querySelectorAll('[data-sourcing-i18n]').forEach(el=>{if(copy[el.dataset.sourcingI18n])el.textContent=copy[el.dataset.sourcingI18n]});}
 document.addEventListener('ctr:language-changed',updateSourcingLanguage);

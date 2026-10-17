@@ -355,6 +355,9 @@ stats_30|30 дней|30 days|30 Tage|30 jours|30 días|30 dana
 stats_no_history|Более ранних данных посещений нет.|Earlier visit data is unavailable.|Frühere Besuchsdaten sind nicht verfügbar.|Les données de visites antérieures sont indisponibles.|No hay datos de visitas anteriores.|Raniji podaci o posetama nisu dostupni.
 stats_dispute_rule|Споры считаются по дате создания, включая закрытые обращения, исключая удалённые.|Disputes are counted by creation date, including closed requests and excluding deleted ones.|Streitfälle werden nach Erstellungsdatum gezählt, einschließlich geschlossener und ohne gelöschte Anfragen.|Les litiges sont comptés par date de création, y compris les demandes clôturées et hors demandes supprimées.|Las disputas se cuentan por fecha de creación, incluidas las cerradas y excluidas las eliminadas.|Sporovi se računaju po datumu kreiranja, uključujući zatvorene i isključujući obrisane zahteve.
 """
+DATA += """stats_sourcing_requests|Заявки на подбор|Sourcing requests|Anfragen zur Lieferantensuche|Demandes de recherche|Solicitudes de búsqueda|Zahtevi za dobavljače
+stats_sourcing_reports|Заявки с отчётом по подбору|Sourcing requests with a report|Suchanfragen mit Bericht|Demandes de recherche avec rapport|Solicitudes de búsqueda con informe|Zahtevi za dobavljače sa izveštajem
+"""
 COPY={lang:{} for lang in LANGUAGES}
 for line in DATA.strip().splitlines():
     values=line.split('|')

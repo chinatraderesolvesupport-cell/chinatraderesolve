@@ -492,6 +492,7 @@ def test_combined_home_free_and_privacy(pilot,monkeypatch,lang):
     page=pilot.get('/?lang='+lang)
     assert page.status_code==200
     assert 'id="homeBuy"' in page.text and 'id="homeDispute"' in page.text
+    assert 'id="homeChooseHelp" href="#directions"' in page.text
     assert sourcing.COPY[lang]['u_headline'] in page.text
     assert 'id="caseForm"' in page.text
     assert sourcing.COPY[lang]['free_short'] in page.text
@@ -547,3 +548,19 @@ def test_private_integration_archive_is_complete_and_read_only(pilot,tmp_path):
     assert any(r.get('table')=='sourcing_requests' and r['row']['id']==rid for r in rows)
     assert store.get_request(rid)==original
     with pytest.raises(FileExistsError):backup(path)
+
+
+def test_internal_checks_do_not_count_as_customer_requests(pilot,monkeypatch):
+    from app import sourcing_stats as stats
+    rid=create(pilot,system_test='true')
+    brief=store.get_request(rid)['brief']
+    assert 'system_test' not in brief  # Public submissions cannot opt out of metrics.
+    internal,access=store.create_request({**brief,'system_test':True},'operator@example.com',[],'internal-system-check')
+    with db.transaction() as conn:
+        db.execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',(internal,2,'{}',db.utcnow()))
+    assert stats.summary()['periods'][0]['requests']==1
+    assert stats.summary()['periods'][0]['reports']==0
+    assert store.get_request(internal)['brief']['system_test'] is True
+    monkeypatch.setenv('SOURCING_SYSTEM_TEST_REQUEST_ID',rid)
+    assert stats.summary()['periods'][0]['requests']==0
+    assert store.get_request(rid) is not None

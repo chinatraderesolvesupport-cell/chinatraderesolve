@@ -1,0 +1,4 @@
+{% extends 'sourcing/base.html' %}{% block title %}{{ t('g_'+topic+'_title') if topic else t('help_hub') }} — China Trade{% endblock %}{% block content %}
+{% if topic %}<article><p><a href="/sourcing/help?lang={{ lang }}">← {{ t('help_hub') }}</a></p><h1>{{ t('g_'+topic+'_title') }}</h1>{% for n in range(1,4) %}<p>{{ t('g_'+topic+'_'+n|string) }}</p>{% endfor %}<a class="button" href="/sourcing?lang={{ lang }}&amp;service={{ 'check' if topic=='supplier' else 'prepare' if topic in ['spec','cost'] else 'search' }}">{{ t('new') }}</a></article>{% else %}<h1>{{ t('help_hub') }}</h1>{% endif %}
+<nav aria-label="{{ t('help_hub') }}"><ul>{% for code in topics %}<li><a href="/sourcing/help/{{ code }}?lang={{ lang }}">{{ t('g_'+code+'_title') }}</a></li>{% endfor %}<li><a href="/{{ lang }}/guides">{{ t('u_problem') }}</a></li></ul></nav>
+{% endblock %}

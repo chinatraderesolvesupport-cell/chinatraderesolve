@@ -36,6 +36,7 @@
   <h2>{{ copy.h_ai }}</h2><p>{{ copy.p_ai }}</p>
   <h2>{{ copy.h_share }}</h2><p>{{ copy.p_share }}</p>
   <h2>{{ copy.h_store }}</h2><p>{{ copy.p_store }}</p>
+  {% if sourcing_live %}<h2>{{ sourcing_heading }}</h2><p>{{ sourcing_privacy }}</p>{% endif %}
   <h2>{{ copy.h_rights }}</h2><p>{{ copy.p_rights }}</p>
   <h2>{{ copy.h_security }}</h2><p>{{ copy.p_security }}</p>
   <p><a href="/?lang={{ lang }}">{{ copy.back }}</a></p>

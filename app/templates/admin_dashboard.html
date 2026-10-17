@@ -26,6 +26,7 @@
   <div class="top">
     <div><div class="brand">ChinaTrade<span>Resolve</span></div><h1>Рабочая очередь</h1><div class="muted">Очередь дел, требующих внимания: сначала новые и срочные, закрытые обращения находятся отдельно.</div></div>
     <div class="top-actions">
+      {% if sourcing_statistics_enabled %}<a class="btn" href="/admin/sourcing">Заявки на подбор</a><a class="btn" href="/admin/sourcing-statistics">Посещения и использование</a>{% endif %}
       <a class="btn feedback-nav" href="/admin/feedback"><span aria-hidden="true">💬</span> Отзывы {% if counts.feedback %}<span class="notification-count">{{ counts.feedback }}</span>{% endif %}</a>
       <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn">Выйти</button></form>
     </div>

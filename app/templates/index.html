@@ -288,6 +288,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 @media(max-width:700px){ #faq .wrap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
+.combined-hero{padding:52px 0}.combined-hero h1{max-width:950px;line-height:1.12}.combined-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:32px 0}.combined-card{min-width:0;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-top:5px solid #14b8a6;border-radius:18px;padding:28px;box-shadow:0 14px 34px #0002}.combined-card h2{font-size:clamp(25px,3vw,35px);margin:18px 0}.combined-card p{color:#475569}.combined-card a:not(.btn){text-decoration:underline;text-underline-offset:3px;color:#0f766e}.combined-card .btn{min-height:48px}.combined-free{display:block;font-size:14px;font-weight:800;color:#0f766e;margin-top:8px}.combined-number{color:#64748b;font-weight:800}.combined-problem{border-top-color:#446581}.combined-hero>.wrap>p>a{color:#5eead4;text-decoration:underline}@media(max-width:700px){.combined-grid{grid-template-columns:1fr;gap:18px}.combined-card{padding:22px}.combined-hero{padding:30px 0}.combined-hero h1{font-size:36px}}
 </style>
 <script nonce="{{ request.state.csp_nonce }}" type="application/ld+json">{{ {"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":x_default_url},{"@type":"Organization","name":"China Trade Resolve","alternateName":["ChinaTradeResolve","China Trade"],"url":x_default_url,"email":contact_email,"logo":logo_url},{"@type":"Service","name":"ChinaTradeResolve supplier dispute assessment","url":canonical_url,"description":seo.description,"provider":{"@type":"Organization","name":"ChinaTradeResolve","url":x_default_url,"email":contact_email},"areaServed":"Worldwide","availableLanguage":["English","Russian","French","German","Spanish","Serbian"]}]}|tojson }}</script>
 {% if turnstile_site_key %}<script nonce="{{ request.state.csp_nonce }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}</head>
@@ -306,7 +307,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </svg>
 <span class="brand-word">ChinaTrade<span>Resolve</span></span>
 </div>
-<div class="links">
+{% if sourcing_live %}<div class="links"><a href="#directions" data-sourcing-i18n="choose_help">{{ sourcing_copy.choose_help }}</a><a data-lang-link href="/sourcing/help?lang={{ page_language }}" data-sourcing-i18n="help_hub">{{ sourcing_copy.help_hub }}</a>{% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy.nav_support }}</a>{% endif %}</div>{% else %}<div class="links">
 <a data-i18n="nav_services" href="#situations">{{ home_copy['nav_services'] }}</a>
 <a data-i18n="nav_process" href="#process">{{ home_copy['nav_process'] }}</a>
 <a data-i18n="nav_pricing" href="#services">{{ home_copy['nav_pricing'] }}</a>
@@ -315,6 +316,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <a class="guides-nav-link" data-i18n="nav_guides" href="/{{ page_language }}/guides">{{ home_copy['nav_guides'] }}</a>
 {% if support_enabled %}<a data-i18n="nav_support" href="#support">{{ home_copy['nav_support'] }}</a>{% endif %}
 </div>
+{% endif %}
 <div class="actions">
 <select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="langSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
@@ -323,7 +325,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <button aria-controls="mobilePanel" aria-expanded="false" aria-label="{{ home_copy['mobile_menu_open'] }}" class="menu-btn" data-i18n-aria-label="mobile_menu_open" id="menuBtn">☰</button>
 </div>
 </nav>
-<div class="mobile-panel" id="mobilePanel">
+<div class="mobile-panel" id="mobilePanel">{% if sourcing_live %}<a data-lang-link href="/sourcing?lang={{ page_language }}" data-sourcing-i18n="u_buy">{{ sourcing_copy.u_buy }}</a><a data-lang-link href="/sourcing/access?lang={{ page_language }}" data-sourcing-i18n="access">{{ sourcing_copy.access }}</a>{% endif %}
 <span class="mobile-lang-label" data-i18n="language_label">{{ home_copy['language_label'] }}</span>
 <select aria-label="{{ home_copy['language_label'] }}" class="lang" data-i18n-aria-label="language_label" id="mobileLangSelect">
 <option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="ru">Русский</option><option value="sr">Srpski</option>
@@ -339,7 +341,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </div>
 </header>
 <main id="main-content">
-<section class="hero">
+{% if sourcing_live %}{% include 'sourcing/home_choices.html' %}{% else %}<section class="hero">
 <div class="wrap hero-grid">
 <div>
 <div class="eyebrow" data-i18n="hero_eyebrow">{{ home_copy['hero_eyebrow'] }}</div>
@@ -365,6 +367,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 </aside>
 </div>
 </section>
+{% endif %}
 <section id="situations">
 <div class="wrap">
 <div class="eyebrow" data-i18n="choose_situation">{{ home_copy['choose_situation'] }}</div>
@@ -1331,6 +1334,10 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
 });
 
 const translations=window.CTR_TRANSLATIONS||{};
+const sourcingPublicCopy={{ sourcing_public_copy|tojson }};
+function updateSourcingLanguage(){const lang=document.documentElement.lang;const copy=sourcingPublicCopy[lang]||{};document.querySelectorAll('[data-sourcing-i18n]').forEach(el=>{if(copy[el.dataset.sourcingI18n])el.textContent=copy[el.dataset.sourcingI18n]});}
+document.addEventListener('ctr:language-changed',updateSourcingLanguage);
+updateSourcingLanguage();
 const featuredGuideTranslations={{ featured_guide_translations|tojson }};
 const supportedLanguages=['en','fr','de','es','ru','sr'];
 const preferredLanguageValues={en:'English',fr:'French',de:'German',es:'Spanish',ru:'Russian',sr:'Serbian'};

@@ -626,6 +626,37 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
                     if any('Готовность отчёта' in msg['subject'] for msg in sink.messages):break
                     time.sleep(.05)
                 assert any('Готовность отчёта' in msg['subject'] for msg in sink.messages)
+                # The actual queued email must work in a brand-new browser context.
+                report_mail=next(msg for msg in sink.messages if 'Готовность отчёта' in msg['subject'])
+                email_url=re.search(r'https?://[^\s]+/sourcing/email-access\?[^\s]+',report_mail['body']).group(0)
+                fresh=browser.new_context(viewport={'width':390,'height':844})
+                try:
+                    reader=fresh.new_page();reader.goto(email_url)
+                    expect(reader.locator('article.report')).to_contain_text('Reviewed supplier research')
+                    assert 'token=' not in reader.url
+                    assert reader.locator('form[action$="/delete"]').count()==0
+                    assert reader.locator('.access-code').count()==0
+                    reader.goto(base+'/sourcing/access?request_id='+rid)
+                    # Existing read-only ownership goes straight to the report.
+                    expect(reader.locator('article.report')).to_be_visible()
+                finally:fresh.close()
+                # Old generic emails can recover access using only the reference.
+                recovery=browser.new_context(viewport={'width':390,'height':844})
+                try:
+                    recovery_page=recovery.new_page();recovery_page.goto(base+'/sourcing/access?request_id='+rid)
+                    expect(recovery_page.locator('input[name="request_id"]')).to_have_value(rid)
+                    recovery_page.get_by_role('button',name='Отправить ссылку на мою почту',exact=True).click()
+                    expect(recovery_page.locator('[role="status"]')).to_contain_text('Если номер верен')
+                    for _ in range(50):
+                        recovery_mail=next((msg for msg in sink.messages if 'Ссылка для просмотра заявки' in msg['subject']),None)
+                        if recovery_mail:break
+                        time.sleep(.05)
+                    assert recovery_mail
+                    recovery_url=re.search(r'https?://[^\s]+/sourcing/email-access\?[^\s]+',recovery_mail['body']).group(0)
+                    recovery_page.goto(recovery_url)
+                    expect(recovery_page.locator('article.report')).to_contain_text('Reviewed supplier research')
+                    assert recovery_page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                finally:recovery.close()
                 expect(page.locator('#mailStatus')).to_contain_text('Передано почтовому сервису')
                 admin.goto(base+'/admin')
                 expect(admin.locator('.admin-inbox h2')).to_have_text('Новые обращения: 2')

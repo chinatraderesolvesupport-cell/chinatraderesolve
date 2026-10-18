@@ -184,6 +184,22 @@ def _queue_mail(conn, request_id, email, event, locale='ru'):
                 (request_id, notification_id, event))
 
 
+def recover_email_access(request_id):
+    """The destination is always the stored owner email; at most three requests/day."""
+    if not sourcing_mail.configured():return False
+    with transaction() as conn:
+        if not using_postgres():execute(conn,'BEGIN IMMEDIATE')
+        row=execute(conn,'SELECT email,brief_json FROM sourcing_requests WHERE id=?'+(' FOR UPDATE' if using_postgres() else ''),(request_id,)).fetchone()
+        if not row:return False
+        count=execute(conn,"""SELECT COUNT(*) AS n FROM sourcing_notifications n
+            JOIN notification_outbox o ON o.id=n.notification_id
+            WHERE n.request_id=? AND n.event='access_link' AND o.created_at>=?""",
+            (request_id,utcnow()[:10])).fetchone()['n']
+        if count>=3:return False
+        _queue_mail(conn,request_id,row['email'],'access_link',json.loads(row['brief_json']).get('locale','ru'))
+        return True
+
+
 def init_feedback_db(conn):
     execute(conn, '''CREATE TABLE IF NOT EXISTS sourcing_feedback (
         id TEXT PRIMARY KEY, submission_hash TEXT NOT NULL UNIQUE,

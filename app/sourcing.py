@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 import secrets
+import re
 from urllib.parse import urlsplit
 from datetime import date, datetime, timezone
 from fastapi.routing import APIRoute
@@ -13,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from .documents import prepare_upload, DocumentValidationError, unique_display_filename
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
-from . import sourcing_mail, admin_deletion, sourcing_research
+from . import sourcing_mail, admin_deletion, sourcing_research, sourcing_links
 from . import sourcing_stats
 from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
@@ -77,6 +78,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                     return await handler(request)
                 except HTTPException as exc:
                     if not enabled(): raise
+                    if request.url.path in {'/sourcing/access','/sourcing/access/email','/sourcing/email-access'}:
+                        key='error_expired' if exc.status_code==403 else 'error_limit' if exc.status_code==429 else 'access_wrong'
+                        return render(request,'access.html',{'csrf_token':csrf(request),'access_error':key},exc.status_code)
                     return render(request,'error.html',{'message':str(exc.detail)},exc.status_code)
             return localized
     router=APIRouter(dependencies=[Depends(require_enabled)],route_class=LocalizedRoute)
@@ -123,12 +127,13 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         if not secrets.compare_digest(str(request.session.get('sourcing_csrf') or ''),str(form.get('csrf_token') or '')) or not request.session.get('sourcing_csrf'):
             raise HTTPException(403,'Форма устарела. Обновите страницу.')
 
-    def authorize(request,request_id,admin=False):
+    def authorize(request,request_id,admin=False,allow_read_only=True):
         if admin:
             require_admin(request)
         item=store.get_request(request_id)
         access=request.session.get('sourcing_access',{}).get(request_id,'')
-        if not item or (not admin and not secrets.compare_digest(store.digest(access),item['access_hash'])):
+        if not item or (not admin and not secrets.compare_digest(store.digest(access),item['access_hash'])
+                        and not (allow_read_only and sourcing_links.allowed(request,request_id))):
             raise HTTPException(404,'Заявка не найдена или нет доступа.')
         return item
 
@@ -269,7 +274,36 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     @router.get('/sourcing/access')
     def access_page(request:Request):
-        return render(request,'access.html',{'csrf_token':csrf(request)})
+        request_id=str(request.query_params.get('request_id') or '').strip().upper()
+        if not re.fullmatch(r'SRC-[A-F0-9]{20}',request_id):request_id=''
+        if request_id:
+            try:
+                authorize(request,request_id)
+                return RedirectResponse('/sourcing/requests/'+request_id,303)
+            except HTTPException:pass
+        return render(request,'access.html',{'csrf_token':csrf(request),'request_id':request_id,'request_id_fixed':bool(request_id)})
+
+    @router.get('/sourcing/email-access')
+    def email_access(request:Request):
+        grant=sourcing_links.verify(str(request.query_params.get('token') or '')[:2000])
+        if not grant or not store.get_request(grant['request_id']):
+            return render(request,'access.html',{'csrf_token':csrf(request),'access_error':'email_link_invalid'},400)
+        sourcing_links.remember(request,grant)
+        return RedirectResponse('/sourcing/requests/'+grant['request_id'],303,headers={
+            'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Robots-Tag':'noindex, nofollow, noarchive'})
+
+    @router.post('/sourcing/access/email')
+    async def recover_access(request:Request,background_tasks:BackgroundTasks):
+        if not access_limiter.allow(client_key(request)):
+            raise HTTPException(429,'Повторите позже.')
+        async with request.form(max_files=0,max_fields=3) as form:
+            validate_csrf(request,form)
+            request_id=str(form.get('request_id') or '').strip().upper()[:100]
+            if not re.fullmatch(r'SRC-[A-F0-9]{20}',request_id):
+                return render(request,'access.html',{'csrf_token':csrf(request),'request_id':request_id,'access_error':'request_id_hint'},400)
+            queued=await run_in_threadpool(store.recover_email_access,request_id)
+            if queued and schedule_delivery:background_tasks.add_task(schedule_delivery)
+        return render(request,'access.html',{'csrf_token':csrf(request),'request_id':request_id,'request_id_fixed':True,'access_notice':'email_access_sent'})
 
     @router.post('/sourcing/access')
     async def access(request:Request):
@@ -277,24 +311,31 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             raise HTTPException(429,'Повторите позже.')
         async with request.form(max_files=0,max_fields=4) as form:
             validate_csrf(request,form)
-            request_id=str(form.get('request_id') or '')[:100]
-            code=str(form.get('access_code') or '')[:100]
+            request_id=str(form.get('request_id') or '').strip().upper()[:100]
+            code=str(form.get('access_code') or '').strip().lower()[:100]
             item=await run_in_threadpool(store.get_request,request_id)
             if not item or not secrets.compare_digest(store.digest(code),item['access_hash']):
-                return render(request,'error.html',{'message':'Номер или код доступа неверен.'},404)
+                return render(request,'access.html',{'csrf_token':csrf(request),'request_id':request_id,'access_error':'access_wrong'},404)
             remember(request,request_id,code)
             return RedirectResponse('/sourcing/requests/'+request_id,303)
 
     @router.get('/sourcing/requests/{request_id}')
     def detail(request:Request,request_id:str):
-        item=authorize(request,request_id)
-        return render(request,'detail.html',{'item':item,'access_code':request.session['sourcing_access'][request_id],'csrf_token':csrf(request)})
+        try:item=authorize(request,request_id)
+        except HTTPException:
+            return render(request,'access.html',{'csrf_token':csrf(request),
+                'request_id':request_id if re.fullmatch(r'SRC-[A-F0-9]{20}',request_id) else '',
+                'access_error':'access_wrong'},404)
+        access=request.session.get('sourcing_access',{}).get(request_id,'')
+        full_access=bool(access) and secrets.compare_digest(store.digest(access),item['access_hash'])
+        return render(request,'detail.html',{'item':item,'access_code':access if full_access else '',
+            'read_only':not full_access,'csrf_token':csrf(request)})
 
     @router.get('/sourcing/requests/{request_id}/progress')
     def progress(request:Request,request_id:str):
         item=authorize(request,request_id)
         t=translator(language(request))
-        return JSONResponse({'mail':[{'label':t('mail_received') if mail['event']=='received' else t('mail_report'),
+        return JSONResponse({'mail':[{'label':t('mail_received') if mail['event']=='received' else t('mail_access') if mail['event']=='access_link' else t('mail_report'),
             'text':t('mail_sent') if mail['status']=='sent' else t('mail_failed') if mail['status']=='failed' else t('mail_pending'),
             'pending':mail['status'] not in {'sent','failed'}} for mail in item['notifications']]},
             headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow, noarchive'})
@@ -478,7 +519,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     @router.post('/sourcing/requests/{request_id}/delete')
     async def delete_request(request:Request,request_id:str):
-        authorize(request,request_id)
+        authorize(request,request_id,allow_read_only=False)
         async with request.form(max_files=0,max_fields=3) as form:
             validate_csrf(request,form)
             if form.get('confirm')!='delete':

@@ -207,7 +207,7 @@ def test_sourcing_mail_is_atomic_private_and_deduplicated(pilot, monkeypatch):
     rows=db.pending_notifications()
     assert len(rows)==2
     assert data['requirements'] not in rows[0]['body']
-    assert '/sourcing/access' in rows[0]['body']
+    assert '/sourcing/email-access?token=' in rows[0]['body']
     page=pilot.get(response.headers['location'])
     code=re.search(r'<code class="access-code">([^<]+)</code>',page.text).group(1)
     assert code not in rows[0]['body']

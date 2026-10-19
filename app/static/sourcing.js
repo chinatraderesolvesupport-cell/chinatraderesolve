@@ -3,9 +3,15 @@ const copy=JSON.parse(document.querySelector('#sourcingCopy')?.textContent||'{}'
 const t=key=>copy[key];
 const form=document.querySelector('#sourcingForm');
 if(form){
- const $=id=>document.getElementById(id),files=$('photos'),service=$('service');let urls=[];
+ const $=id=>document.getElementById(id),files=$('photos'),service=$('service');let urls=[],lastService=null;
  function sync(){
-  const search=service.value==='search',photo=files.files.length>0,unknown=search&&photo&&$('unknown').checked;
+  const check=service.value==='check',search=service.value==='search',photo=files.files.length>0,unknown=search&&photo&&$('unknown').checked;
+  if(lastService!==service.value){$('purchaseFields').open=!check;lastService=service.value;}
+  $('purchaseSummary').textContent=t(check?'purchase_optional':'purchase_details');
+  $('serviceHeadline').textContent=t(check?'check_headline':'headline');
+  $('serviceLead').textContent=t(check?'check_lead':'lead');
+  $('submitButton').textContent=t(check?'check_submit':'submit');
+  for(const id of ['quantity','destination']){$(id).required=!check;$(id+'Hint').textContent=check?t('optional'):'*';}
   $('searchFields').hidden=!search;
   $('searchFields').querySelectorAll('input,select').forEach(el=>el.disabled=!search);
   const alternative=search&&$('alternatives').checked;
@@ -16,12 +22,13 @@ if(form){
   const docs=service.value==='prepare';$('documentFields').hidden=!docs;
   $('documentFields').querySelectorAll('textarea,input').forEach(el=>el.disabled=!docs);
   $('supplier').required=!search;$('supplierHint').textContent=search?t('optional'):'*';
-  $('product').required=!unknown;$('productHint').textContent=unknown?t('optional_name'):'*';
-  $('requirements').required=!photo;$('requirements').minLength=photo?0:50;
+  $('product').required=!check&&!unknown;$('productHint').textContent=check?t('optional'):unknown?t('optional_name'):'*';
+  $('requirements').required=!check&&!photo;$('requirements').minLength=check||photo?0:50;
+  $('requirementsLabel').textContent=check?t('check_question'):copy.requirements;
   const length=$('requirements').value.trim().length;
-  $('requirements').setCustomValidity(!photo&&length<50?t('js_min'):'');
-  $('requirementsHint').textContent=photo?t('optional_photo'):t('min50');
-  $('counter').textContent=photo?t('js_photo'):length<50?t('js_remaining').replace('{n}',50-length):t('js_done');
+  $('requirements').setCustomValidity(!check&&!photo&&length<50?t('js_min'):'');
+  $('requirementsHint').textContent=check?t('optional'):photo?t('optional_photo'):t('min50');
+  $('counter').textContent=check?'':photo?t('js_photo'):length<50?t('js_remaining').replace('{n}',50-length):t('js_done');
  }
  files.addEventListener('change',()=>{
   urls.forEach(URL.revokeObjectURL);urls=[];$('preview').replaceChildren();
@@ -35,6 +42,8 @@ if(form){
   sync();
  });
  $('clearPhotos').addEventListener('click',()=>{files.value='';files.dispatchEvent(new Event('change'));});
+ let startCounted=false;
+ form.addEventListener('input',()=>{if(startCounted||navigator.doNotTrack==='1'||navigator.globalPrivacyControl)return;startCounted=true;const body=new URLSearchParams({csrf_token:form.elements.namedItem('csrf_token').value});fetch('/sourcing/form-start',{method:'POST',body,credentials:'same-origin',keepalive:true}).catch(()=>{});});
  form.addEventListener('input',sync);service.addEventListener('change',sync);
  form.addEventListener('submit',()=>{$('submitButton').disabled=true;$('submitStatus').textContent=t('js_sending');});
  window.addEventListener('pageshow',()=>{$('submitButton').disabled=false;$('submitStatus').textContent='';sync();});

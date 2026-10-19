@@ -111,7 +111,7 @@ section{padding:44px 0;scroll-margin-top:130px}.light{background:var(--light);co
 input,select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
 textarea{min-height:118px;resize:vertical}.hint{font-size:11px;color:#64748b;line-height:1.4}.error{color:#b91c1c;font-size:13px}.submit-status{display:none;margin-top:10px;padding:11px;border-radius:10px;font-size:14px}.submit-status.error-state{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.submit-status.loading-state{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
 input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:#dc2626;box-shadow:0 0 0 2px rgba(220,38,38,.10)}
-.form-readiness{grid-column:1/-1;display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border-radius:12px;background:#fff1f2;color:#991b1b;border:2px solid #ef4444;font-size:14px;font-weight:850;line-height:1.45;box-shadow:0 8px 22px rgba(220,38,38,.12)}.form-readiness:before{content:"!";display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#dc2626;color:#fff;font-weight:950}.form-readiness.needs-attention{animation:form-readiness-attention 1.05s ease-in-out 3}.form-readiness.ready{background:#ecfdf5;color:#065f46;border-color:#10b981;box-shadow:none;font-weight:800}.form-readiness.ready:before{content:"✓";background:#10b981}.application-turnstile-status{min-height:18px;color:#475569;font-size:12px}.application-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.application-turnstile-status[data-state="required"],.application-turnstile-status[data-state="error"]{color:#b45309;font-weight:800}
+.form-readiness{grid-column:1/-1;display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border-radius:12px;background:#fff1f2;color:#991b1b;border:2px solid #ef4444;font-size:14px;font-weight:850;line-height:1.45;box-shadow:0 8px 22px rgba(220,38,38,.12)}.form-readiness:before{content:"!";display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#dc2626;color:#fff;font-weight:950}.form-readiness.needs-attention{animation:form-readiness-attention 1.05s ease-in-out 3}.form-readiness.ready{background:#ecfdf5;color:#065f46;border-color:#10b981;box-shadow:none;font-weight:800}.form-readiness.ready:before{content:"✓";background:#10b981}.form-readiness.security-only{background:#eff6ff;color:#1e40af;border-color:#93c5fd;box-shadow:none}.form-readiness.security-only:before{content:"i";background:#2563eb}.application-turnstile-status{min-height:18px;color:#475569;font-size:12px}.application-turnstile-status[data-state="verified"]{color:#047857;font-weight:800}.application-turnstile-status[data-state="required"],.application-turnstile-status[data-state="error"]{color:#b45309;font-weight:800}
 .form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:3px}.btn.dark{color:#0f172a;border-color:#94a3b8}
 .form-choice-intro{grid-column:1/-1;display:grid;gap:3px;padding:13px 14px;border:1px solid #99f6e4;border-radius:13px;background:linear-gradient(135deg,#ecfeff,#f0fdfa);color:#134e4a}
 .form-choice-intro strong{font-size:16px}.form-choice-intro span{font-size:13px;line-height:1.4}
@@ -680,7 +680,7 @@ function applicationReady(){
   return !applicationSubmitting&&requiredApplicationFields.every(applicationFieldValid)&&requiredConsentInputs.every(input=>input.checked)&&applicationTurnstileVerified;
 }
 function drawFormReadinessAttention(){
-  if(!formReadiness||formReadiness.classList.contains('ready'))return;
+  if(!formReadiness||formReadiness.classList.contains('ready')||requiredApplicationFields.every(applicationFieldValid)&&requiredConsentInputs.every(input=>input.checked))return;
   formReadiness.classList.remove('needs-attention');
   void formReadiness.offsetWidth;
   formReadiness.classList.add('needs-attention');
@@ -691,7 +691,7 @@ function updateSubmitAvailability(){
   if(applicationTurnstileRetry)applicationTurnstileRetry.textContent=applicationCopy('application_turnstile_retry');
   formSubmitButton.disabled=!ready;
   formSubmitButton.setAttribute('aria-disabled',ready?'false':'true');
-  if(formReadiness){const key=ready?'form_ready_status':(applicationTurnstileRequired?'form_incomplete_status':'form_incomplete_status_no_bot');formReadiness.classList.toggle('ready',ready);formReadiness.textContent=applicationCopy(key)}
+  if(formReadiness){const fieldsReady=requiredApplicationFields.every(applicationFieldValid);const consentsReady=requiredConsentInputs.every(input=>input.checked);const key=ready?'form_ready_status':!fieldsReady?'form_fields_needed':!consentsReady?'form_consents_needed':'form_security_needed';formReadiness.dataset.i18n=key;formReadiness.classList.toggle('ready',ready);formReadiness.classList.toggle('security-only',fieldsReady&&consentsReady&&!ready);formReadiness.textContent=applicationCopy(key)}
   maybeStartApplicationTurnstile();
 }
 function setApplicationTurnstileStatus(key,state=''){if(!applicationTurnstileStatus)return;applicationTurnstileStatus.textContent=applicationCopy(key);applicationTurnstileStatus.dataset.state=state;if(applicationTurnstileRetry)applicationTurnstileRetry.hidden=state!=='error'}
@@ -1506,11 +1506,9 @@ if(aiChatRoot){
     aiChatRoot.classList.add('is-open');
     aiChatLauncher.setAttribute('aria-expanded','true');
     if(!aiTurnstileSatisfied()&&aiChatHistory.length===0)showAiVerification();else showAiQuickQuestions();
-    openVoiceCaptureModal('assistant',aiChatInput.value);
-    voiceCaptureStopAction=null;
-    voiceCaptureContinueAction=()=>startVoiceRecording();
-    voiceCaptureApplyAction=()=>{const text=voiceCaptureDraft.slice(0,1500).trim();if(!text)return;if(!aiTurnstileSatisfied()){showAiVerification();ensureAiTurnstile();return}closeVoiceCaptureModal(false,true);sendAiMessage(text)};
-    window.requestAnimationFrame(()=>{ensureAiTurnstile();if(aiTurnstileSatisfied())window.setTimeout(()=>voiceCaptureText&&voiceCaptureText.focus({preventScroll:true}),40)});
+    collapseAiVoicePanel();
+    updateAiControls();
+    window.requestAnimationFrame(()=>{ensureAiTurnstile();aiChatInput.focus({preventScroll:true})});
   }
   function closeAiChat(restoreFocus=true,goToApplication=false){
     if(aiChatAbortController)aiChatAbortController.abort();

@@ -2,6 +2,6 @@
 <h1>{{ t('u_buy_page_title') }}</h1><p class="lead">{{ t('u_buy_desc') }}</p><p>{{ t('u_buy_risk') }}</p>
 <div class="quick-actions"><a class="button" id="buyingApply" href="/sourcing?lang={{ lang }}&amp;service=search">{{ t('start_form') }}</a><a href="/sourcing?lang={{ lang }}#sample-report">{{ t('u_sample_link') }}</a></div>
 <div class="cards">{% for code,title in services.items() %}<article><h2>{{ title }}</h2><p>{{ t(code+'_desc') }}</p><a href="/sourcing?lang={{ lang }}&amp;service={{ code }}">{{ title }} →</a></article>{% endfor %}</div>
-<p>{{ t('g_photo_1') }}</p><p>{{ t('g_spec_1') }}</p><p><a href="/sourcing/help?lang={{ lang }}">{{ t('help_hub') }}</a></p>
+{% include 'sourcing/trust.html' %}<details><summary>{{ t('help_hub') }}</summary><p>{{ t('g_photo_1') }}</p><p>{{ t('g_spec_1') }}</p></details><p><a href="/sourcing/help?lang={{ lang }}">{{ t('help_hub') }}</a></p>
 <aside class="notice cross-direction"><h2>{{ t('u_cross_dispute') }}</h2><p>{{ t('u_problem_desc') }}</p><a href="/disputes?lang={{ lang }}">{{ t('u_start_problem') }} →</a></aside>
 {% endblock %}

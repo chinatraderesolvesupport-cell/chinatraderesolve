@@ -580,6 +580,7 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
                     page.locator('#service').select_option(service)
                     expect(page.locator('#photos')).to_be_visible()
                     expect(page.locator('#photos')).to_be_enabled()
+                    if service=='check':page.locator('#purchaseFields summary').click()
                     page.locator('#product').fill('Leather sofa')
                     page.locator('#quantity').fill('10')
                     page.locator('#destination').fill('Serbia')
@@ -666,3 +667,42 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
                     admin.screenshot(path=str(target/'admin-unified-inbox.png'),full_page=True)
             finally:
                 buyer.close();operator.close();browser.close()
+
+
+def test_first_visit_minimal_company_check_and_text_assistant():
+    from app.sourcing_i18n import COPY
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}) as (base,database,sink,*_):
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+                for width in (390,1280):
+                    context=browser.new_context(viewport={"width":width,"height":900})
+                    page=context.new_page()
+                    for lang in COPY:
+                        page.goto(base+'/?lang='+lang)
+                        page.locator('.combined-card a[href*="service=check"]').click()
+                        expect(page.locator('#service')).to_have_value('check')
+                        expect(page.locator('#serviceHeadline')).to_have_text(COPY[lang]['check_headline'])
+                        expect(page.locator('#purchaseFields')).not_to_have_attribute('open','')
+                        expect(page.locator('#requirements')).not_to_have_attribute('required','')
+                        page.locator('#supplier').fill('Example Furniture Co.')
+                        page.locator('#email').fill('audit@example.com')
+                        page.locator('[name="consent"]').check()
+                        assert page.locator('#sourcingForm').evaluate('(f)=>f.checkValidity()')
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                        if lang=='ru':
+                            page.locator('#submitButton').click()
+                            expect(page).to_have_url(re.compile('/sourcing/requests/SRC-'))
+                            expect(page.locator('main')).to_contain_text('Example Furniture Co.')
+                        page.goto(base+'/?lang='+lang)
+                        page.locator('#aiChatLauncher').click()
+                        expect(page.locator('#aiChatPanel')).to_be_visible()
+                        expect(page.locator('#voiceCaptureModal')).to_be_hidden()
+                        expect(page.locator('#aiChatInput')).to_be_focused()
+                        page.locator('#aiChatInput').fill('How can I check a supplier?')
+                        expect(page.locator('#aiChatSend')).to_be_enabled()
+                        page.locator('#aiChatClose').click()
+                    context.close()
+                assert any('Example Furniture' not in str(m.get('subject','')) for m in sink.messages)
+            finally:
+                browser.close()

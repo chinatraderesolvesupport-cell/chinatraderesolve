@@ -18,6 +18,7 @@ log=logging.getLogger(__name__)
 limiter=SlidingWindowRateLimiter(limit=120,window_seconds=60)
 _pending=defaultdict(lambda:[0,0])
 _lock=Lock()
+_funnel=defaultdict(lambda:defaultdict(int))
 PUBLIC={'/sourcing','/sourcing/preview','/sourcing/preview/dispute','/sourcing/preview/account',
         '/sourcing/reviews','/sourcing/help'}
 
@@ -27,6 +28,24 @@ def init_db():
         execute(conn,'''CREATE TABLE IF NOT EXISTS sourcing_daily_stats (
             day TEXT PRIMARY KEY, pageviews INTEGER NOT NULL DEFAULT 0,
             sessions INTEGER NOT NULL DEFAULT 0)''')
+        execute(conn,'''CREATE TABLE IF NOT EXISTS sourcing_funnel_daily (
+            day TEXT NOT NULL, event TEXT NOT NULL, total INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(day,event))''')
+
+
+def record_event(request,event):
+    """Daily counters only. Never retain form contents or request references."""
+    if event not in {'open','start','attempt','error'}:return
+    if request.session.get('admin') or request.headers.get('dnt')=='1' or request.headers.get('sec-gpc')=='1':return
+    agent=request.headers.get('user-agent','').lower()
+    if not agent or any(word in agent for word in ('bot','spider','crawler','headless','curl','wget','python','httpx','testclient')):return
+    if event in {'open','start'}:
+        key='funnel_'+event
+        day=datetime.now(timezone.utc).date().isoformat()
+        if request.session.get(key)==day:return
+        request.session[key]=day
+    day=datetime.now(timezone.utc).date().isoformat()
+    with _lock:_funnel[day][event]+=1
 
 
 def record_view(request, *, buffered=False):
@@ -60,16 +79,22 @@ def record_view(request, *, buffered=False):
 
 def flush():
     with _lock:
-        batch=dict(_pending);_pending.clear()
-    if not batch:return
+        batch=dict(_pending);_pending.clear();funnel={day:dict(events) for day,events in _funnel.items()};_funnel.clear()
+    if not batch and not funnel:return
     try:
         with transaction() as conn:
+            for day,events in funnel.items():
+                for event,total in events.items():
+                    execute(conn,'''INSERT INTO sourcing_funnel_daily(day,event,total) VALUES (?,?,?)
+                        ON CONFLICT(day,event) DO UPDATE SET total=sourcing_funnel_daily.total+?''',(day,event,total,total))
             for day,(views,sessions) in batch.items():
                 execute(conn,"""INSERT INTO sourcing_daily_stats(day,pageviews,sessions) VALUES (?,?,?)
                     ON CONFLICT(day) DO UPDATE SET pageviews=sourcing_daily_stats.pageviews+?,
                     sessions=sourcing_daily_stats.sessions+?""",(day,views,sessions,views,sessions))
     except Exception:
         with _lock:
+            for day,events in funnel.items():
+                for event,total in events.items():_funnel[day][event]+=total
             for day,(views,sessions) in batch.items():
                 _pending[day][0]+=views;_pending[day][1]+=sessions
         log.warning('Public visit buffer could not be saved',exc_info=False)
@@ -93,6 +118,7 @@ def summary():
                 WHERE r.created_at>=? AND r.created_at<? AND q.brief_json NOT LIKE ? AND q.id<>?''',(start,end,'%"system_test": true%',system_id)).fetchone()['n']
             disputes=execute(conn,'''SELECT COUNT(*) AS n FROM cases WHERE created_at>=? AND created_at<?
                 AND deleted_at IS NULL''',(start,end)).fetchone()['n']
-            result.append(dict(disputes=disputes,days=days,start=start,views=row['views'],sessions=row['sessions'],requests=requests,reports=reports))
+            funnel={r['event']:r['total'] for r in execute(conn,'SELECT event,SUM(total) AS total FROM sourcing_funnel_daily WHERE day>=? AND day<? GROUP BY event',(start,end)).fetchall()}
+            result.append(dict(funnel=funnel,disputes=disputes,days=days,start=start,views=row['views'],sessions=row['sessions'],requests=requests,reports=reports))
         first=execute(conn,'SELECT MIN(day) AS day FROM sourcing_daily_stats').fetchone()['day']
     return dict(periods=result,first=first,today=today.isoformat())

@@ -99,7 +99,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
             't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
-            'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt'}},
+            'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt','headline','lead','submit','check_headline','check_lead','check_question','check_submit','requirements','purchase_optional','purchase_details'}},
             'is_error':status>=400,'sourcing_statistics_enabled':enabled()}
         context['research_configured']=sourcing_research.configured()
         if request.url.path.startswith('/admin/') and request.session.get('admin'):
@@ -152,12 +152,23 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
 
     @router.get('/sourcing')
     def home(request:Request):
+        sourcing_stats.record_event(request,'open')
         submission=secrets.token_urlsafe(32)
         pending=list(request.session.get('sourcing_submissions',[]))
         request.session['sourcing_submissions']=(pending+[submission])[-6:]
         return render(request,'form.html',{'csrf_token':csrf(request),
             'submission':submission,'turnstile_site_key':turnstile_site_key,
             'selected_service':request.query_params.get('service') if request.query_params.get('service') in SERVICES else 'search'})
+
+    @router.post('/sourcing/form-start')
+    async def form_start(request:Request):
+        form=await request.form(max_files=0,max_fields=2)
+        try:
+            validate_csrf(request,form)
+            sourcing_stats.record_event(request,'start')
+            return Response(status_code=204)
+        finally:
+            await form.close()
 
     @router.get('/admin/sourcing-statistics')
     def statistics(request:Request):
@@ -220,8 +231,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 brief[key]=text(form,key,30)
                 if brief[key] not in allowed:
                     raise ValueError('Проверьте выбранный вариант.')
+            sourcing_stats.record_event(request,'attempt')
             brief.update(service=service,schema_version=4,locale=language(request),pricing_mode='launch_free',ai_processing_consent=True)
-            if not brief['quantity'] or not brief['destination']:
+            if service!='check' and (not brief['quantity'] or not brief['destination']):
                 raise ValueError('Укажите количество и страну доставки.')
             if service!='search' and not brief['supplier']:
                 raise ValueError('Для этой услуги укажите поставщика или ссылку.')
@@ -239,9 +251,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 from dataclasses import replace
                 photos.append(replace(document,original_name=unique_display_filename(document.original_name,used)))
             unknown=service=='search' and bool(photos) and form.get('unknown')=='yes'
-            if not brief['product'] and not unknown:
+            if service!='check' and not brief['product'] and not unknown:
                 raise ValueError('Укажите товар или приложите фото и отметьте, что название неизвестно.')
-            if not photos and len(brief['requirements'])<50:
+            if service!='check' and not photos and len(brief['requirements'])<50:
                 raise ValueError('Без фотографии опишите товар минимум в 50 символах.')
             brief['unknown_product']=unknown
             brief['match']=text(form,'match',20) if service=='search' else ''
@@ -266,8 +278,10 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 background_tasks.add_task(schedule_delivery)
             return RedirectResponse('/sourcing/requests/'+request_id,status_code=303,background=background_tasks)
         except DocumentValidationError:
+            sourcing_stats.record_event(request,'error')
             return render(request,'error.html',{'message':'Не удалось обработать фото. Нужен исправный JPG, PNG или WebP, не больше 8 МБ.'},400)
         except ValueError as exc:
+            sourcing_stats.record_event(request,'error')
             return render(request,'error.html',{'message':str(exc)},400)
         finally:
             await form.close()

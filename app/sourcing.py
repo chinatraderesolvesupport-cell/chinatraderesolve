@@ -212,6 +212,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
             pending=request.session.get('sourcing_submissions',[])
             if not any(secrets.compare_digest(submission,s) for s in pending):
                 raise HTTPException(403,'Форма устарела. Откройте новую заявку.')
+            sourcing_stats.record_event(request,'attempt')
             service=text(form,'service',20,True)
             if service not in SERVICES:
                 raise ValueError('Выберите услугу.')
@@ -231,7 +232,6 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
                 brief[key]=text(form,key,30)
                 if brief[key] not in allowed:
                     raise ValueError('Проверьте выбранный вариант.')
-            sourcing_stats.record_event(request,'attempt')
             brief.update(service=service,schema_version=4,locale=language(request),pricing_mode='launch_free',ai_processing_consent=True)
             if service!='check' and (not brief['quantity'] or not brief['destination']):
                 raise ValueError('Укажите количество и страну доставки.')

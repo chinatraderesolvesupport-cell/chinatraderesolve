@@ -408,4 +408,4 @@ def inbox():
             WHERE r.status NOT IN ('completed','declined')
             AND (v.request_id IS NULL OR (j.state='ready' AND r.draft_json<>'{}') OR j.state IN ('failed','stale'))
             ORDER BY r.created_at DESC LIMIT 200""").fetchall()
-    return [{**dict(row), 'product': json.loads(row['brief_json']).get('product', '')} for row in rows]
+    return [{**dict(row), 'product': (json.loads(row['brief_json']).get('product') or json.loads(row['brief_json']).get('supplier', ''))} for row in rows]

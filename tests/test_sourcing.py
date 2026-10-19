@@ -737,6 +737,9 @@ def test_company_check_accepts_minimal_brief_without_weakening_other_services(pi
     item=store.get_request(rid)
     assert item['brief']['supplier']=='Example Furniture Co.'
     assert item['brief']['product']==''
+    assert sourcing.COPY['ru']['photo_ref'] not in c.get('/sourcing/requests/'+rid).text
+    from app import sourcing_research
+    assert sourcing_research.inbox()[0]['product']=='Example Furniture Co.'
     assert c.get('/sourcing/requests/'+rid).status_code==200
     assert c.post('/sourcing/requests',data=payload(c,**{**minimal,'supplier':''})).status_code==400
     assert c.post('/sourcing/requests',data=payload(c,**{**minimal,'consent':''})).status_code==400

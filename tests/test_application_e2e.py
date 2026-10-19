@@ -488,7 +488,7 @@ def test_admin_workspace_refresh_periods_and_navigation():
                 page.locator('button[type="submit"]').click()
                 nav=page.locator('.admin-toolbar')
                 nav.get_by_role('link',name='Посещаемость',exact=True).click()
-                expect(page.locator('.admin-metric')).to_have_count(5)
+                expect(page.locator('.admin-metric')).to_have_count(9)
                 page.get_by_role('link',name='30 дней',exact=True).click()
                 nav.get_by_role('link',name='Обновить',exact=True).click()
                 expect(page.locator('.admin-periods a[aria-current="page"]')).to_have_text('30 дней')
@@ -671,7 +671,7 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
 
 def test_first_visit_minimal_company_check_and_text_assistant():
     from app.sourcing_i18n import COPY
-    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}) as (base,database,sink,*_):
+    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":"","ENABLE_AI_ASSISTANT":"true","OPENAI_BILLING_READY":"true","OPENAI_API_KEY":"isolated-ui-only-dummy-key","OPENAI_ASSISTANT_MODEL":"gpt-4.1-mini"}) as (base,database,sink,*_):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(headless=True)
             try:
@@ -702,6 +702,13 @@ def test_first_visit_minimal_company_check_and_text_assistant():
                         page.locator('#aiChatInput').fill('How can I check a supplier?')
                         expect(page.locator('#aiChatSend')).to_be_enabled()
                         page.locator('#aiChatClose').click()
+                        if lang=='ru':
+                            page.goto(base+'/disputes?lang=ru#submit')
+                            page.locator('#caseForm').scroll_into_view_if_needed()
+                            expect(page.locator('#aiChatLauncher')).to_be_visible()
+                            page.locator('#aiChatLauncher').click()
+                            expect(page.locator('#voiceCaptureModal')).to_be_hidden()
+                            page.locator('#aiChatClose').click()
                     context.close()
                 assert any('Example Furniture' not in str(m.get('subject','')) for m in sink.messages)
             finally:

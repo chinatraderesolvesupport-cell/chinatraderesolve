@@ -671,7 +671,7 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
 
 def test_first_visit_minimal_company_check_and_text_assistant():
     from app.sourcing_i18n import COPY
-    with isolated_app(extra_env={"ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":"","ENABLE_AI_ASSISTANT":"true","OPENAI_BILLING_READY":"true","OPENAI_API_KEY":"isolated-ui-only-dummy-key","OPENAI_ASSISTANT_MODEL":"gpt-4.1-mini"}) as (base,database,sink,*_):
+    with isolated_app(extra_env={"ENABLE_SOURCING_EMAIL":"true","ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":"","ENABLE_AI_ASSISTANT":"true","OPENAI_BILLING_READY":"true","OPENAI_API_KEY":"isolated-ui-only-dummy-key","OPENAI_ASSISTANT_MODEL":"gpt-4.1-mini"}) as (base,database,sink,*_):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(headless=True)
             try:
@@ -710,6 +710,6 @@ def test_first_visit_minimal_company_check_and_text_assistant():
                             expect(page.locator('#voiceCaptureModal')).to_be_hidden()
                             page.locator('#aiChatClose').click()
                     context.close()
-                assert any('Example Furniture' not in str(m.get('subject','')) for m in sink.messages)
+                assert any(m.get('to')=='audit@example.com' and '/sourcing/email-access?token=' in m.get('body','') for m in sink.messages)
             finally:
                 browser.close()

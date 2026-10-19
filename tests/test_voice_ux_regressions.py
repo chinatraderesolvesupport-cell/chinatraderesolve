@@ -19,8 +19,11 @@ def test_voice_segments_use_real_line_breaks_and_capitalization_helper():
     assert "join('\\\\n\\\\n')" not in SOURCE
 
 
-def test_ai_uses_the_large_composer_modal_for_manual_input():
-    assert "openVoiceCaptureModal('assistant',aiChatInput.value)" in SOURCE
+def test_ai_opens_text_first_and_keeps_large_composer_for_voice():
+    opening=SOURCE.split('function openAiChat(){',1)[1].split('function closeAiChat',1)[0]
+    assert 'openVoiceCaptureModal' not in opening
+    assert 'aiChatInput.focus' in opening
+    assert "openVoiceCaptureModal('assistant',startText)" in SOURCE
     assert "voiceCaptureApplyAction=()=>{const text=voiceCaptureDraft.slice(0,1500).trim();" in SOURCE
     assert "assistantLabel:'Вопрос для ИИ-помощника'" in SOURCE
     assert "assistantApply:'Отправить ИИ'" in SOURCE

@@ -728,3 +728,39 @@ def test_main_workspace_shows_both_request_directions(pilot):
     assert 'Споры с поставщиками' in page.text and 'Подбор поставщиков' in page.text
     assert 'Активных: 0 · Всего: 1' in page.text
     assert 'В работе: 1 · Всего: 1' in page.text
+
+
+def test_company_check_accepts_minimal_brief_without_weakening_other_services(pilot):
+    c=pilot
+    minimal=dict(service='check',supplier='Example Furniture Co.',product='',quantity='',destination='',requirements='')
+    rid=create(c,**minimal)
+    item=store.get_request(rid)
+    assert item['brief']['supplier']=='Example Furniture Co.'
+    assert item['brief']['product']==''
+    assert sourcing.COPY['ru']['photo_ref'] not in c.get('/sourcing/requests/'+rid).text
+    from app import sourcing_research
+    assert sourcing_research.inbox()[0]['product']=='Example Furniture Co.'
+    assert c.get('/sourcing/requests/'+rid).status_code==200
+    assert c.post('/sourcing/requests',data=payload(c,**{**minimal,'supplier':''})).status_code==400
+    assert c.post('/sourcing/requests',data=payload(c,**{**minimal,'consent':''})).status_code==400
+    assert c.post('/sourcing/requests',data=payload(c,service='search',quantity='')).status_code==400
+
+
+def test_funnel_counts_no_form_contents_and_respects_privacy(pilot):
+    from app import sourcing_stats as stats
+    stats._funnel.clear()
+    c=pilot
+    c.headers['user-agent']='Mozilla/5.0 Chrome/150.0'
+    f=fields(c);fields(c)
+    assert c.post('/sourcing/form-start',data={'csrf_token':f['csrf_token']}).status_code==204
+    assert c.post('/sourcing/form-start',data={'csrf_token':f['csrf_token']}).status_code==204
+    assert c.post('/sourcing/form-start',data={'csrf_token':'bad'}).status_code==403
+    counts=stats.summary()['periods'][0]['funnel']
+    assert counts=={'open':1,'start':1}
+    c.headers['dnt']='1'
+    c.post('/sourcing/requests',data=payload(c,quantity=''))
+    assert stats.summary()['periods'][0]['funnel']==counts
+    del c.headers['dnt']
+    admin(c)
+    c.get('/sourcing')
+    assert stats.summary()['periods'][0]['funnel']==counts

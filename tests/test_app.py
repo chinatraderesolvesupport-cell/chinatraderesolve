@@ -5358,7 +5358,7 @@ def test_v3738_ai_chat_stacks_send_button_on_very_narrow_screens():
 def test_v3735_mobile_layout_table_hint_and_copy_are_present():
     page = client.get("/?lang=en")
     assert page.status_code == 200
-    assert ".ai-chat-launcher.is-compact{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:52px;opacity:0" in page.text
+    assert ".ai-chat-launcher.is-compact{right:14px;bottom:calc(82px + env(safe-area-inset-bottom));max-width:52px}}" in page.text
     assert "#situations .g4,#services .compact-grid,.guides-preview-grid{display:flex;max-width:100%;min-width:0;overflow-x:auto" in page.text
     assert 'data-i18n="table_swipe_hint" id="tableSwipeHint"' in page.text
     assert 'data-i18n-aria-label="sample_table_label"' in page.text

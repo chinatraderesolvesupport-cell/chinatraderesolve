@@ -43,7 +43,7 @@ if(form){
  });
  $('clearPhotos').addEventListener('click',()=>{files.value='';files.dispatchEvent(new Event('change'));});
  let startCounted=false;
- form.addEventListener('input',()=>{if(startCounted||navigator.doNotTrack==='1'||navigator.globalPrivacyControl)return;startCounted=true;const body=new URLSearchParams({csrf_token:form.elements.namedItem('csrf_token').value});fetch('/sourcing/form-start',{method:'POST',body,credentials:'same-origin',keepalive:true}).catch(()=>{});});
+ form.addEventListener('input',event=>{if(!event.isTrusted||startCounted||navigator.doNotTrack==='1'||navigator.globalPrivacyControl)return;startCounted=true;const body=new URLSearchParams({csrf_token:form.elements.namedItem('csrf_token').value});fetch('/sourcing/form-start',{method:'POST',body,credentials:'same-origin',keepalive:true}).catch(()=>{});});
  form.addEventListener('input',sync);service.addEventListener('change',sync);
  form.addEventListener('submit',()=>{$('submitButton').disabled=true;$('submitStatus').textContent=t('js_sending');});
  window.addEventListener('pageshow',()=>{$('submitButton').disabled=false;$('submitStatus').textContent='';sync();});

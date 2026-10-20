@@ -14,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from .documents import prepare_upload, DocumentValidationError, unique_display_filename
 from .security import SlidingWindowRateLimiter, client_key
 from . import sourcing_store as store
-from . import sourcing_mail, admin_deletion, sourcing_research, sourcing_links
+from . import sourcing_mail, admin_deletion, sourcing_research, sourcing_links, sourcing_checks
 from . import sourcing_stats
 from .sourcing_i18n import LANGUAGES, COPY, language, translator, localize_error
 
@@ -432,18 +432,18 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         sourcing_research.recover_stale(request_id)
         item=authorize(request,request_id,True)
         sourcing_research.mark_viewed(request_id)
-        return render(request,'detail.html',{'item':item,'admin':True,
+        return render(request,'detail.html',{'item':item,'admin':True,'internal_matches':sourcing_checks.internal_matches(item),
             'csrf_token':admin_csrf_token(request),'transitions':store.TRANSITIONS[item['status']]})
 
     @router.post('/admin/sourcing/{request_id}/research')
     async def start_research(request:Request,request_id:str,background_tasks:BackgroundTasks):
         require_admin(request)
-        async with request.form(max_files=0,max_fields=3) as form:
+        async with request.form(max_files=0,max_fields=4) as form:
             require_admin_csrf(request,str(form.get('csrf_token') or ''))
             if not sourcing_research.configured():
                 return render(request,'error.html',{'message_key':'research_disabled'},503)
             try:
-                await run_in_threadpool(sourcing_research.enqueue,request_id,int(form.get('version') or 0),True)
+                await run_in_threadpool(sourcing_research.enqueue,request_id,int(form.get('version') or 0),True,form.get('refresh')=='yes')
             except (ValueError,store.Conflict) as exc:
                 return render(request,'error.html',{'message':str(exc)},409)
         background_tasks.add_task(sourcing_research.schedule)

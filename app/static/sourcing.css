@@ -23,3 +23,7 @@ small{color:#475569;font-size:16px}details{background:#eef2f6;border:1px solid #
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 #counter:empty{display:none}
+
+.draft-document{font-weight:400;line-height:1.7;max-width:100%;min-width:0}.draft-document section{display:block;margin:24px 0}.draft-document h3{font-size:21px;font-weight:750}.draft-document .pre{white-space:pre-wrap;overflow:visible;max-height:none;height:auto;overflow-wrap:anywhere}.draft-document ol{padding-left:24px}.draft-document a,.research-coverage a{overflow-wrap:anywhere}#draftEditor textarea{display:block;overflow-y:auto;max-height:none;resize:vertical;font-weight:400;line-height:1.65;min-height:160px}.research-coverage{border:1px solid var(--line);background:#fff;border-radius:14px;padding:20px;margin:20px 0}.research-coverage>section{padding:12px 0;border-bottom:1px solid var(--line)}
+
+#draftEditor.auto-grow textarea{overflow-y:hidden;resize:none}

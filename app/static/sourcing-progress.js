@@ -36,7 +36,7 @@ if(researchSection&&['queued','running'].includes(researchSection.dataset.state)
    }
    if(!['queued','running'].includes(data.state))return;
   }catch(error){return;}
-  if(++attempts<9)setTimeout(updateResearch,20000);
+  if(++attempts<36)setTimeout(updateResearch,20000);
  }
  setTimeout(updateResearch,5000);
 }

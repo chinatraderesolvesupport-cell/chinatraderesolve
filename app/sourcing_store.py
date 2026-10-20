@@ -143,6 +143,11 @@ def publish_report(request_id, expected_version, payload):
             (utcnow(),request_id,expected_version))
         if updated.rowcount!=1:
             raise Conflict('Сначала начните работу или обновите изменённую заявку.')
+        job=execute(conn,'SELECT evidence_json FROM sourcing_research WHERE request_id=?',(request_id,)).fetchone()
+        if job:
+            stages=json.loads(job['evidence_json']).get('stages',[])
+            payload={**payload,'research_coverage':[{'key':stage['key'],'status':stage['status'],'checked_at':stage.get('checked_at','')}
+                for stage in stages if stage.get('key') in {'identity','forums','records'} and stage.get('status') in {'searched','limited','failed'}]}
         execute(conn,'INSERT INTO sourcing_reports VALUES (?,?,?,?)',
                 (request_id,expected_version+1,json.dumps(payload,ensure_ascii=False),utcnow()))
         execute(conn,"UPDATE sourcing_research SET state='published',updated_at=? WHERE request_id=?",(utcnow(),request_id))

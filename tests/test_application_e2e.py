@@ -616,6 +616,7 @@ def test_supplier_photos_all_services_and_private_draft_approval_in_browser():
                 expect(report.locator('textarea[name="summary"]')).to_have_value('PRIVATE SEEDED DRAFT')
                 expect(admin.locator('#research')).to_contain_text('Клиент его не видит')
                 expect(admin.locator('#research a[href="https://example.com/company"]')).to_have_count(2)
+                report.locator('#draftEditor summary').click()
                 report.locator('textarea[name="summary"]').fill('Reviewed supplier research')
                 report.locator('input[name="reviewed"]').check()
                 report.get_by_role('button',name='Выдать отчёт клиенту',exact=True).click()
@@ -711,5 +712,46 @@ def test_first_visit_minimal_company_check_and_text_assistant():
                             page.locator('#aiChatClose').click()
                     context.close()
                 assert any(m.get('to')=='audit@example.com' and '/sourcing/email-access?token=' in m.get('body','') for m in sink.messages)
+            finally:
+                browser.close()
+
+
+def test_full_width_report_reading_and_autogrowing_editor():
+    """Long drafts read as document flow; editing never needs an inner scrollbar."""
+    from app.sourcing_i18n import COPY
+    with isolated_app(extra_env={'ENABLE_SOURCING_PILOT':'true','ENABLE_SOURCING_LIVE':'true',
+                                'TURNSTILE_SITE_KEY':'','TURNSTILE_SECRET_KEY':''}) as (base,database,sink,http,env):
+        form=http.get(base+'/sourcing')
+        fields={k:re.search('name="'+k+'" value="([^"]+)"',form.text).group(1) for k in ('csrf_token','submission')}
+        response=http.post(base+'/sourcing/requests',data={**fields,'service':'check','supplier':'Example Company',
+                            'email':'test@example.com','consent':'yes'})
+        rid=response.headers['location'].split('/')[-1]
+        paragraph=('Long evidence paragraph with dates, source references and limits [1].\n\n')*70
+        draft={key:paragraph for key in ['summary','findings','risks','next_steps']}
+        draft.update(sources='https://example.com/source',suppliers=[])
+        with sqlite3.connect(database) as conn:
+            conn.execute("UPDATE sourcing_requests SET status='in_progress',draft_json=?,version=version+1 WHERE id=?",(json.dumps(draft),rid))
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+                page=browser.new_page(viewport={'width':1280,'height':900})
+                page.goto(base+'/admin/login');page.locator('input[name="token"]').fill(env['ADMIN_TOKEN'])
+                page.locator('button[type="submit"]').click()
+                for width in (390,1280):
+                    page.set_viewport_size({'width':width,'height':900})
+                    for lang in COPY:
+                        page.goto(base+'/admin/sourcing/'+rid+'?lang='+lang+'#draft-review')
+                        expect(page.locator('#draftDocument')).to_be_visible()
+                        expect(page.locator('#draftEditor')).not_to_have_attribute('open','')
+                        assert page.locator('#draftDocument .pre').evaluate_all('(els)=>els.every(e=>e.scrollHeight<=e.clientHeight+1)')
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                        page.locator('#draftEditor summary').click()
+                        field=page.locator('#draftEditor textarea[name="summary"]')
+                        expect(field).to_have_value(paragraph)
+                        assert field.evaluate('(e)=>e.scrollHeight<=e.clientHeight+2')
+                        field.fill(paragraph+paragraph)
+                        assert field.evaluate('(e)=>e.scrollHeight<=e.clientHeight+2')
+                        # Plain reader remains present; nothing is sent or published by viewing/editing.
+                        assert page.locator('#draftDocument .pre').first.inner_text().startswith('Long evidence')
             finally:
                 browser.close()

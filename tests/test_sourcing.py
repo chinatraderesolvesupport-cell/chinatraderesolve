@@ -764,3 +764,24 @@ def test_funnel_counts_no_form_contents_and_respects_privacy(pilot):
     admin(c)
     c.get('/sourcing')
     assert stats.summary()['periods'][0]['funnel']==counts
+
+
+def test_diagnostic_events_are_bounded_private_and_do_not_accept_server_events(pilot):
+    from app import sourcing_stats as stats
+    stats._funnel.clear()
+    c=pilot;c.headers['user-agent']='Mozilla/5.0 Chrome/150.0'
+    csrf=fields(c)['csrf_token']
+    for event in ('interactive','start','invalid'):
+        for _ in range(2):
+            assert c.post('/sourcing/form-start',data={'csrf_token':csrf,'event':event}).status_code==204
+    for event in ('attempt','error','anything'):
+        assert c.post('/sourcing/form-start',data={'csrf_token':csrf,'event':event}).status_code==400
+    assert c.post('/sourcing/form-start',data={'csrf_token':'bad','event':'interactive'}).status_code==403
+    expected={'open':1,'interactive':1,'start':1,'invalid':1}
+    assert stats.summary()['periods'][0]['funnel']==expected
+    for header in ('dnt','sec-gpc'):
+        c.headers[header]='1'
+        for event in ('interactive','start','invalid'):
+            assert c.post('/sourcing/form-start',data={'csrf_token':csrf,'event':event}).status_code==204
+        del c.headers[header]
+        assert stats.summary()['periods'][0]['funnel']==expected

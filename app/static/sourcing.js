@@ -7,6 +7,8 @@ if(form){
  function sync(){
   const check=service.value==='check',search=service.value==='search',photo=files.files.length>0,unknown=search&&photo&&$('unknown').checked;
   if(lastService!==service.value){$('purchaseFields').open=!check;lastService=service.value;}
+  $('checkPreview').hidden=!check;$('clearPhotos').hidden=!photo;
+  $('sampleLink').href=check?'#checkExample':'#sample-report';$('sampleLink').textContent=t(check?'check_example_title':'u_sample_link');
   $('purchaseSummary').textContent=t(check?'purchase_optional':'purchase_details');
   $('serviceHeadline').textContent=t(check?'check_headline':'headline');
   $('serviceLead').textContent=t(check?'check_lead':'lead');
@@ -42,18 +44,37 @@ if(form){
   sync();
  });
  $('clearPhotos').addEventListener('click',()=>{files.value='';files.dispatchEvent(new Event('change'));});
- let startCounted=false;
- form.addEventListener('input',event=>{if(!event.isTrusted||startCounted||navigator.doNotTrack==='1'||navigator.globalPrivacyControl)return;startCounted=true;const body=new URLSearchParams({csrf_token:form.elements.namedItem('csrf_token').value});fetch('/sourcing/form-start',{method:'POST',body,credentials:'same-origin',keepalive:true}).catch(()=>{});});
+ // A completed request marks the event sent. Network failures can retry on the next interaction.
+ const counted=new Set(),pending=new Set();
+ function metric(event){
+  if(counted.has(event)||pending.has(event)||navigator.doNotTrack==='1'||navigator.globalPrivacyControl)return;
+  pending.add(event);
+  const body=new URLSearchParams({csrf_token:form.elements.namedItem('csrf_token').value,event});
+  fetch('/sourcing/form-start',{method:'POST',body,credentials:'same-origin',keepalive:true})
+   .then(response=>{if(response.ok)counted.add(event);}).catch(()=>{}).finally(()=>pending.delete(event));
+ }
+ function started(event){if(event.isTrusted)metric('start');}
+ form.addEventListener('input',started);form.addEventListener('change',started);
+ form.addEventListener('invalid',event=>{
+  if(!event.isTrusted)return;
+  metric('invalid');$('validationStatus').hidden=false;
+  event.target.setAttribute('aria-invalid','true');
+  const details=event.target.closest('details');if(details)details.open=true;
+ },true);
+ form.addEventListener('input',event=>{
+  if(event.target.matches('input,textarea,select')&&event.target.validity.valid)event.target.removeAttribute('aria-invalid');
+  if(!form.querySelector('[aria-invalid="true"]'))$('validationStatus').hidden=true;
+ });
  form.addEventListener('input',sync);service.addEventListener('change',sync);
  form.addEventListener('submit',()=>{$('submitButton').disabled=true;$('submitStatus').textContent=t('js_sending');});
  window.addEventListener('pageshow',()=>{$('submitButton').disabled=false;$('submitStatus').textContent='';sync();});
- sync();
+ sync();metric('interactive');
 }
 
 // A direct example link should reveal its contents, including on a fresh visit.
 function revealSourcingExample(){
- if(window.location.hash!=='#sample-report')return;
- const example=document.getElementById('sample-report');
+ if(!['#sample-report','#checkExample'].includes(window.location.hash))return;
+ const example=document.getElementById(window.location.hash.slice(1));
  if(example){example.open=true;example.scrollIntoView({block:'start'});}
 }
 window.addEventListener('hashchange',revealSourcingExample);

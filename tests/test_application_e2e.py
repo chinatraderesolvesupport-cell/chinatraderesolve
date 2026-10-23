@@ -755,3 +755,82 @@ def test_full_width_report_reading_and_autogrowing_editor():
                         assert page.locator('#draftDocument .pre').first.inner_text().startswith('Long evidence')
             finally:
                 browser.close()
+
+
+def test_company_check_funnel_measures_real_input_and_browser_errors_without_contents():
+    """Use a normal UA in the isolated app so the production bot exclusion does not hide the test."""
+    from app.sourcing_i18n import COPY
+    env={"ENABLE_SOURCING_EMAIL":"true","ENABLE_SOURCING_PILOT":"true","ENABLE_SOURCING_LIVE":"true","TURNSTILE_SITE_KEY":"","TURNSTILE_SECRET_KEY":""}
+    with isolated_app(extra_env=env) as (base,database,sink,http,*_):
+        http.post(base+'/admin/login',data={'token':'isolated-admin-token-abcdefghijklmnopqrstuvwxyz'})
+        def counts():
+            assert http.get(base+'/admin/sourcing-statistics').status_code==200
+            with sqlite3.connect(database) as conn:
+                return dict(conn.execute('SELECT event,SUM(total) FROM sourcing_funnel_daily GROUP BY event').fetchall())
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+                context=browser.new_context(viewport={'width':390,'height':844},user_agent='Mozilla/5.0 Chrome/150.0')
+                page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+                with page.expect_response(lambda r:r.url.endswith('/sourcing/form-start') and r.request.post_data and 'event=interactive' in r.request.post_data) as response:
+                    page.goto(base+'/sourcing?service=check&lang=ru#sourcingForm')
+                assert response.value.status==204
+                assert counts()=={'open':1,'interactive':1}
+                expect(page.locator('#checkPreview')).to_be_visible()
+                expect(page.locator('#checkExample')).not_to_have_attribute('open','')
+                # No server submission is made by the native validation failure.
+                with page.expect_response(lambda r:r.url.endswith('/sourcing/form-start') and 'event=invalid' in (r.request.post_data or '')) as response:
+                    page.locator('#submitButton').click()
+                assert response.value.status==204
+                expect(page.locator('#validationStatus')).to_be_visible()
+                assert counts()=={'open':1,'interactive':1,'invalid':1}
+                # The first start request fails; the next trusted input must retry.
+                failed=[]
+                def first_start(route):
+                    if 'event=start' in (route.request.post_data or '') and not failed:
+                        failed.append(True);route.fulfill(status=503,body='temporary failure')
+                    else:route.continue_()
+                page.route('**/sourcing/form-start',first_start)
+                with page.expect_response(lambda r:r.url.endswith('/sourcing/form-start') and 'event=start' in (r.request.post_data or '')) as response:
+                    page.locator('#supplier').fill('Example Test Company')
+                assert response.value.status==503
+                with page.expect_response(lambda r:r.url.endswith('/sourcing/form-start') and 'event=start' in (r.request.post_data or '')) as response:
+                    page.locator('#email').fill('funnel@example.com')
+                assert response.value.status==204
+                page.locator('[name="consent"]').check()
+                expect(page.locator('#validationStatus')).to_be_hidden()
+                assert counts()=={'open':1,'interactive':1,'invalid':1,'start':1}
+                # Language changes must preserve data and not count a fresh start.
+                page.locator('.languages a[lang="de"]').click()
+                expect(page.locator('#checkPreviewTitle')).to_have_text(COPY['de']['check_preview_title'])
+                expect(page.locator('#supplier')).to_have_value('Example Test Company')
+                assert counts()['start']==1
+                page.locator('#service').select_option('search')
+                expect(page.locator('#checkPreview')).to_be_hidden()
+                page.locator('#service').select_option('check')
+                expect(page.locator('#checkPreview')).to_be_visible()
+                page.locator('#submitButton').click()
+                expect(page).to_have_url(re.compile('/sourcing/requests/SRC-'))
+                assert counts()=={'open':1,'interactive':1,'invalid':1,'start':1,'attempt':1}
+                assert any(m.get('to')=='funnel@example.com' for m in sink.messages)
+                assert not errors
+                # Verify all localized examples and mobile layout, without submissions.
+                for width in (390,1280):
+                    page.set_viewport_size({'width':width,'height':900})
+                    for lang in COPY:
+                        page.goto(base+'/sourcing?service=check&lang='+lang)
+                        page.locator('#checkExample summary').click()
+                        expect(page.locator('#checkExample')).to_contain_text(COPY[lang]['check_example_text'])
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                context.close()
+                previous=counts()
+                private=browser.new_context(user_agent='Mozilla/5.0 Chrome/150.0',extra_http_headers={'DNT':'1'})
+                private_page=private.new_page();metric_requests=[]
+                private_page.on('request',lambda r:metric_requests.append(r.url) if r.url.endswith('/sourcing/form-start') else None)
+                private_page.goto(base+'/sourcing?service=check&lang=ru')
+                private_page.locator('#supplier').fill('Private Test Company')
+                private_page.locator('#submitButton').click()
+                assert not metric_requests
+                assert counts()==previous
+                private.close()
+            finally:browser.close()

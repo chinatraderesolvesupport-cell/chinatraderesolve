@@ -99,7 +99,7 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         context={**(context or {}),'services':{key:t(key) for key in SERVICES},
             'statuses':{key:t(key) for key in STATUSES},'sourcing_email_enabled':sourcing_mail.configured(),
             't':t,'sourcing_ux':COPY[lang],'lang':lang,'languages':LANGUAGES,'sourcing_live':live(),
-            'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt','headline','lead','submit','check_headline','check_lead','check_question','check_submit','requirements','purchase_optional','purchase_details'}},
+            'js_copy':{key:value for key,value in COPY[lang].items() if key.startswith('js_') or key in {'optional','optional_name','optional_photo','min50','photo_alt','headline','lead','submit','check_headline','check_lead','check_question','check_submit','requirements','purchase_optional','purchase_details','check_example_title','u_sample_link'}},
             'is_error':status>=400,'sourcing_statistics_enabled':enabled()}
         context['research_configured']=sourcing_research.configured()
         if request.url.path.startswith('/admin/') and request.session.get('admin'):
@@ -165,7 +165,10 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         form=await request.form(max_files=0,max_fields=2)
         try:
             validate_csrf(request,form)
-            sourcing_stats.record_event(request,'start')
+            event=str(form.get('event') or 'start')
+            if event not in {'interactive','start','invalid'}:
+                raise HTTPException(400,'Invalid metric event')
+            sourcing_stats.record_event(request,event)
             return Response(status_code=204)
         finally:
             await form.close()

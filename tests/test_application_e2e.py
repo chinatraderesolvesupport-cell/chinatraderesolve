@@ -825,6 +825,7 @@ def test_company_check_funnel_measures_real_input_and_browser_errors_without_con
                 context.close()
                 previous=counts()
                 private=browser.new_context(user_agent='Mozilla/5.0 Chrome/150.0',extra_http_headers={'DNT':'1'})
+                private.add_init_script("Object.defineProperty(navigator,'doNotTrack',{get:()=> '1'});")
                 private_page=private.new_page();metric_requests=[]
                 private_page.on('request',lambda r:metric_requests.append(r.url) if r.url.endswith('/sourcing/form-start') else None)
                 private_page.goto(base+'/sourcing?service=check&lang=ru')

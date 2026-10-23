@@ -31,6 +31,8 @@ if(form){
   $('requirements').setCustomValidity(!check&&!photo&&length<50?t('js_min'):'');
   $('requirementsHint').textContent=check?t('optional'):photo?t('optional_photo'):t('min50');
   $('counter').textContent=check?'':photo?t('js_photo'):length<50?t('js_remaining').replace('{n}',50-length):t('js_done');
+  form.querySelectorAll('[aria-invalid="true"]').forEach(field=>{if(field.validity.valid)field.removeAttribute('aria-invalid');});
+  if(!form.querySelector('[aria-invalid="true"]'))$('validationStatus').hidden=true;
  }
  files.addEventListener('change',()=>{
   urls.forEach(URL.revokeObjectURL);urls=[];$('preview').replaceChildren();
@@ -61,10 +63,6 @@ if(form){
   event.target.setAttribute('aria-invalid','true');
   const details=event.target.closest('details');if(details)details.open=true;
  },true);
- form.addEventListener('input',event=>{
-  if(event.target.matches('input,textarea,select')&&event.target.validity.valid)event.target.removeAttribute('aria-invalid');
-  if(!form.querySelector('[aria-invalid="true"]'))$('validationStatus').hidden=true;
- });
  form.addEventListener('input',sync);service.addEventListener('change',sync);
  form.addEventListener('submit',()=>{$('submitButton').disabled=true;$('submitStatus').textContent=t('js_sending');});
  window.addEventListener('pageshow',()=>{$('submitButton').disabled=false;$('submitStatus').textContent='';sync();});

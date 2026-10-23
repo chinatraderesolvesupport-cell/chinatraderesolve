@@ -35,11 +35,11 @@ def init_db():
 
 def record_event(request,event):
     """Daily counters only. Never retain form contents or request references."""
-    if event not in {'open','start','attempt','error'}:return
+    if event not in {'open','interactive','start','invalid','attempt','error'}:return
     if request.session.get('admin') or request.headers.get('dnt')=='1' or request.headers.get('sec-gpc')=='1':return
     agent=request.headers.get('user-agent','').lower()
     if not agent or any(word in agent for word in ('bot','spider','crawler','headless','curl','wget','python','httpx','testclient')):return
-    if event in {'open','start'}:
+    if event in {'open','interactive','start','invalid'}:
         key='funnel_'+event
         day=datetime.now(timezone.utc).date().isoformat()
         if request.session.get(key)==day:return

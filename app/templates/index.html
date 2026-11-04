@@ -469,12 +469,12 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <div class="eyebrow" data-i18n="form_eyebrow">{{ home_copy['form_eyebrow'] }}</div>
 <h2 data-i18n="form_title">{{ home_copy['form_title'] }}</h2>
 <p class="intro" data-i18n="form_intro">{{ home_copy['form_intro'] }}</p>
-<div class="form-speed" data-i18n="form_speed">{{ home_copy['form_speed'] }}</div>
+{% if voice_input_enabled %}<div class="form-speed" data-i18n="form_speed">{{ home_copy['form_speed'] }}</div>{% else %}<div class="form-speed" data-i18n="form_speed_text_only">{{ home_copy['form_speed_text_only'] }}</div>{% endif %}
 {% if document_analysis_enabled %}<div class="feature-status available" data-i18n="document_analysis_available">{{ home_copy['document_analysis_available'] }}</div>{% else %}<div class="feature-status manual" data-i18n="document_analysis_manual">{{ home_copy['document_analysis_manual'] }}</div>{% endif %}
 <div class="form-shell">
 <div class="progress-labels"><span class="active" data-i18n="form_stage1" id="label1">{{ home_copy['form_stage1'] }}</span><span data-i18n="form_stage2" id="label2">{{ home_copy['form_stage2'] }}</span></div>
 <div class="progress"><span class="active" id="prog1"></span><span id="prog2"></span></div>
-<form id="caseForm" novalidate="">
+<form data-statistics-token="{{ dispute_stats_csrf }}" id="caseForm" novalidate="">
 <div class="form-step active" id="stepOne">
 <div class="field"><label data-i18n="full_name" for="fullName">{{ home_copy['full_name'] }}</label><input autocomplete="name" id="fullName" minlength="2" name="full_name" required=""/></div>
 <div class="field"><label data-i18n="email_label" for="email">{{ home_copy['email_label'] }}</label><input autocomplete="email" id="email" name="email" required="" type="email"/></div>
@@ -598,7 +598,7 @@ footer{padding:36px 0;border-top:1px solid var(--line);color:var(--muted2)}
 <p class="voice-capture-footnote" id="voiceCaptureFootnote">{{ home_copy['voice_live_privacy'] }}</p>
 </section>
 </div>
-<script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js?v={{ asset_version }}"></script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/translations-v2.js?v={{ asset_version }}&amp;copy=20261104"></script>
 <script nonce="{{ request.state.csp_nonce }}" src="/static/launch-i18n-v3.js?v={{ asset_version }}"></script>
 <script nonce="{{ request.state.csp_nonce }}">
 if(window.CTR_TRANSLATIONS_VERSION!==document.body.dataset.appVersion){console.error("ChinaTradeResolve translation asset version mismatch",{html:document.body.dataset.appVersion,asset:window.CTR_TRANSLATIONS_VERSION||"missing"});}
@@ -1280,6 +1280,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
   const controller=new AbortController();
   const timeoutId=window.setTimeout(()=>controller.abort(),25000);
   try{
+    document.dispatchEvent(new Event('ctr:dispute-attempt'));
     const response=await fetch('/api/applications',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1328,6 +1329,7 @@ document.getElementById('caseForm').addEventListener('submit',async e=>{
     confirmation.focus();
     confirmation.scrollIntoView({behavior:'smooth',block:'start'});
   }catch(error){
+    document.dispatchEvent(new Event('ctr:dispute-error'));
     const ui=languageUi[document.documentElement.lang]||languageUi.en;
     statusBox.className='submit-status error-state';
     statusBox.textContent=error.name==='AbortError'?ui.timeout:(error.message||ui.unable);
@@ -2015,5 +2017,6 @@ if(aiChatRoot){
 }
 
 </script>
+<script nonce="{{ request.state.csp_nonce }}" src="/static/dispute-stats.js?v=20261104" defer></script>
 </body>
 </html>

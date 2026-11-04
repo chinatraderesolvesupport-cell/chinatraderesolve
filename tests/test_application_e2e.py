@@ -488,8 +488,8 @@ def test_admin_workspace_refresh_periods_and_navigation():
                 page.locator('button[type="submit"]').click()
                 nav=page.locator('.admin-toolbar')
                 nav.get_by_role('link',name='Посещаемость',exact=True).click()
-                expect(page.locator('.admin-metric')).to_have_count(11)
-                expect(page.locator('.admin-metrics')).to_contain_text(['Посещения, примерно','Форма загрузилась с JavaScript'])
+                expect(page.locator('.admin-metric')).to_have_count(16)
+                expect(page.locator('.admin-metrics')).to_contain_text(['Посещения, примерно','Форма загрузилась с JavaScript','Форма появилась на экране'])
                 page.get_by_role('link',name='30 дней',exact=True).click()
                 nav.get_by_role('link',name='Обновить',exact=True).click()
                 expect(page.locator('.admin-periods a[aria-current="page"]')).to_have_text('30 дней')
@@ -836,4 +836,50 @@ def test_company_check_funnel_measures_real_input_and_browser_errors_without_con
                 assert not metric_requests
                 assert counts()==previous
                 private.close()
+            finally:browser.close()
+
+
+def test_manual_dispute_funnel_and_translations_survive_browser_initialization():
+    """Actual typing, step transition, failed send and retry; no production data or AI calls."""
+    translations=json.loads((ROOT/'app/static/translations-v2.json').read_text())
+    with isolated_app(extra_env={'ENABLE_SOURCING_PILOT':'true','ENABLE_SOURCING_LIVE':'true',
+                                 'OPENAI_BILLING_READY':'false','TURNSTILE_SITE_KEY':'','TURNSTILE_SECRET_KEY':''}) as (base,database,sink,http,env):
+        http.post(base+'/admin/login',data={'token':env['ADMIN_TOKEN']})
+        def counts():
+            assert http.get(base+'/admin/sourcing-statistics').status_code==200
+            with sqlite3.connect(database) as conn:
+                return dict(conn.execute("SELECT event,SUM(total) FROM sourcing_funnel_daily WHERE event LIKE 'dispute_%' GROUP BY event").fetchall())
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+                page=browser.new_page(viewport={'width':390,'height':900},user_agent='Mozilla/5.0 Chrome/150.0')
+                def event_response(event):
+                    return lambda response:response.url.endswith('/api/dispute-events') and 'event='+event in (response.request.post_data or '')
+                with page.expect_response(event_response('open')):
+                    page.goto(base+'/disputes?lang=ru#submit')
+                with page.expect_response(event_response('start')):
+                    page.locator('#fullName').fill('Test Buyer')
+                page.locator('#email').fill('dispute-audit@example.com')
+                page.locator('#channel').select_option('Alibaba')
+                page.locator('#mainProblem').select_option('Goods not delivered')
+                with page.expect_response(event_response('step2')):
+                    page.locator('#nextBtn').click()
+                page.locator('#description').fill('The supplier did not ship the paid order. Messages and an invoice confirm the agreed delivery date and the outstanding goods.')
+                for name in ('free_access_terms','sharing_authority','no_guarantee'):
+                    page.locator('[name="'+name+'"]').check()
+                page.route('**/api/applications',lambda route:route.fulfill(status=503,content_type='application/json',body='{"detail":"Temporary test error"}'))
+                with page.expect_response(event_response('error')):
+                    page.locator('#submitBtn').click()
+                expect(page.locator('#submitStatus')).to_contain_text('Temporary test error')
+                expect(page.locator('#description')).to_have_value(re.compile('The supplier did not ship'))
+                assert counts()=={'dispute_'+event:1 for event in ('open','start','step2','attempt','error')}
+                page.unroute('**/api/applications')
+                page.locator('#submitBtn').click()
+                expect(page.locator('#confirmation')).to_be_visible()
+                assert any(message.get('to')=='dispute-audit@example.com' for message in sink.messages)
+                for lang,copy in translations.items():
+                    page.goto(base+'/disputes?lang='+lang)
+                    expect(page.locator('[data-i18n="services_title"]')).to_have_text(copy['services_title'])
+                    expect(page.locator('[data-i18n="form_speed_text_only"]')).to_have_text(copy['form_speed_text_only'])
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             finally:browser.close()

@@ -1677,6 +1677,7 @@ def home(request: Request) -> HTMLResponse:
             "page_language": page_language,
             "seo": seo,
             "home_copy": HOME_TRANSLATIONS[page_language],
+            "dispute_stats_csrf": request.session.setdefault("dispute_stats_csrf", secrets.token_urlsafe(24)),
             "sourcing_live": sourcing_live(),
             "dispute_direction": dispute_direction,
             "sourcing_copy": SOURCING_COPY[page_language],
@@ -2336,6 +2337,29 @@ async def _run_document_analysis_task(case_id: int, actor: str, run_token: str) 
             case_id, "failed", settings.openai_document_model or "",
             "Unexpected document-analysis failure", actor="document_ai", document_count=len(documents), expected_run_token=run_token,
         )
+
+
+dispute_stats_limiter = SlidingWindowRateLimiter(limit=30, window_seconds=60)
+
+
+@app.post("/api/dispute-events")
+async def dispute_event(request: Request) -> Response:
+    if not sourcing_enabled():
+        return Response(status_code=204)
+    form = await request.form(max_files=0, max_fields=2)
+    try:
+        token = request.session.get("dispute_stats_csrf") or ""
+        if not token or not secrets.compare_digest(token, str(form.get("csrf_token") or "")):
+            raise HTTPException(403, "Invalid statistics token")
+        event = str(form.get("event") or "")
+        if event not in {"open", "start", "step2", "attempt", "error"}:
+            raise HTTPException(400, "Invalid statistics event")
+        if not dispute_stats_limiter.allow(client_key(request)):
+            raise HTTPException(429, "Too many statistics events")
+        sourcing_stats.record_event(request, "dispute_" + event)
+        return Response(status_code=204)
+    finally:
+        await form.close()
 
 
 @app.post("/api/applications")

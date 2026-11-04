@@ -785,3 +785,36 @@ def test_diagnostic_events_are_bounded_private_and_do_not_accept_server_events(p
             assert c.post('/sourcing/form-start',data={'csrf_token':csrf,'event':event}).status_code==204
         del c.headers[header]
         assert stats.summary()['periods'][0]['funnel']==expected
+
+
+def test_dispute_diagnostics_do_not_read_application_contents_and_respect_privacy(pilot,monkeypatch):
+    monkeypatch.setenv('ENABLE_SOURCING_LIVE','true')
+    from app import sourcing_stats as stats
+    stats._funnel.clear();main.dispute_stats_limiter.events.clear()
+    c=pilot;c.headers['user-agent']='Mozilla/5.0 Chrome/150.0'
+    page=c.get('/disputes?lang=ru')
+    token=re.search(r'data-statistics-token="([^"]+)"',page.text).group(1)
+    for event in ('open','start','step2','attempt','error'):
+        for _ in range(2):
+            assert c.post('/api/dispute-events',data={'csrf_token':token,'event':event}).status_code==204
+    assert stats.summary()['periods'][0]['funnel']=={'dispute_'+key:1 for key in ('open','start','step2','attempt','error')}
+    assert c.post('/api/dispute-events',data={'csrf_token':'wrong','event':'start'}).status_code==403
+    assert c.post('/api/dispute-events',data={'csrf_token':token,'event':'invented'}).status_code==400
+    before=stats.summary()['periods'][0]['funnel']
+    for header in ('dnt','sec-gpc'):
+        c.headers[header]='1'
+        c.post('/api/dispute-events',data={'csrf_token':token,'event':'start'})
+        del c.headers[header]
+        assert stats.summary()['periods'][0]['funnel']==before
+    admin(c)
+    assert 'Путь обращения по спору' in c.get('/admin/sourcing-statistics').text
+    admin_page=c.get('/disputes?lang=ru')
+    admin_token=re.search(r'data-statistics-token="([^"]+)"',admin_page.text).group(1)
+    assert c.post('/api/dispute-events',data={'csrf_token':admin_token,'event':'open'}).status_code==204
+    assert stats.summary()['periods'][0]['funnel']==before
+
+
+def test_manual_supplier_check_does_not_promise_disabled_ai(pilot):
+    page=pilot.get('/sourcing?service=check&lang=ru')
+    assert 'Автоматическое исследование сейчас отключено.' in page.text
+    assert 'ИИ подготовит исследование' not in page.text

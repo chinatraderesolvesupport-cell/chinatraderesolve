@@ -5943,3 +5943,13 @@ def test_case_messaging_client_reply_csrf_and_case_isolation():
     )
     assert duplicate.status_code == 303
     assert len(list_case_messages(case_id)) == 1
+
+
+def test_browser_translation_bundle_matches_server_source():
+    """An outdated JS bundle must not silently undo server-rendered wording."""
+    from pathlib import Path
+    import json
+    static=Path(__file__).resolve().parents[1]/'app/static'
+    source=json.loads((static/'translations-v2.json').read_text())
+    bundle=(static/'translations-v2.js').read_text().split('window.CTR_TRANSLATIONS=',1)[1].strip().removesuffix(';')
+    assert json.loads(bundle)==source

@@ -19,6 +19,7 @@ limiter=SlidingWindowRateLimiter(limit=120,window_seconds=60)
 _pending=defaultdict(lambda:[0,0])
 _lock=Lock()
 _funnel=defaultdict(lambda:defaultdict(int))
+DISPUTE_EVENTS={'dispute_'+event for event in ('open','start','step2','attempt','error')}
 PUBLIC={'/sourcing','/sourcing/preview','/sourcing/preview/dispute','/sourcing/preview/account',
         '/sourcing/reviews','/sourcing/help'}
 
@@ -35,11 +36,11 @@ def init_db():
 
 def record_event(request,event):
     """Daily counters only. Never retain form contents or request references."""
-    if event not in {'open','interactive','start','invalid','attempt','error'}:return
+    if event not in {'open','interactive','start','invalid','attempt','error'} | DISPUTE_EVENTS:return
     if request.session.get('admin') or request.headers.get('dnt')=='1' or request.headers.get('sec-gpc')=='1':return
     agent=request.headers.get('user-agent','').lower()
     if not agent or any(word in agent for word in ('bot','spider','crawler','headless','curl','wget','python','httpx','testclient')):return
-    if event in {'open','interactive','start','invalid'}:
+    if event in {'open','interactive','start','invalid'} | DISPUTE_EVENTS:
         key='funnel_'+event
         day=datetime.now(timezone.utc).date().isoformat()
         if request.session.get(key)==day:return

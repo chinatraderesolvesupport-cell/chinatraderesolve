@@ -89,7 +89,9 @@ def install_sourcing(app, templates, require_admin, admin_csrf_token, require_ad
         lang=language(request);base_t=translator(lang)
         ai_ready=sourcing_research.configured()
         def t(key):
-            if key=='pilot' and (live() or ai_ready):
+            if not ai_ready and key in {'check_process','trust_operator'}:
+                key += '_manual'
+            elif key=='pilot' and (live() or ai_ready):
                 key='live_ai' if ai_ready else 'live_operator'
             elif ai_ready and key in {'u_honest_text','g_photo_3'}:
                 key += '_ai'

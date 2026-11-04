@@ -870,7 +870,7 @@ def test_manual_dispute_funnel_and_translations_survive_browser_initialization()
                 page.route('**/api/applications',lambda route:route.fulfill(status=503,content_type='application/json',body='{"detail":"Temporary test error"}'))
                 with page.expect_response(event_response('error')):
                     page.locator('#submitBtn').click()
-                expect(page.locator('#submitStatus')).to_contain_text('Temporary test error')
+                expect(page.locator('#submitStatus')).to_have_text('Не удалось отправить заявку.')
                 expect(page.locator('#description')).to_have_value(re.compile('The supplier did not ship'))
                 assert counts()=={'dispute_'+event:1 for event in ('open','start','step2','attempt','error')}
                 page.unroute('**/api/applications')
